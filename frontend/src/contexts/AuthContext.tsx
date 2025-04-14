@@ -42,22 +42,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        // For now, we'll just check localStorage for a token
         const token = localStorage.getItem('token');
-        if (token) {
-          // TODO: Implement token validation with backend
-          // For now, we'll use a mock user
-          const mockUser: User = JSON.parse(localStorage.getItem('user') || '{}');
-          setUser(mockUser);
+        const tokenTimestamp = localStorage.getItem('tokenTimestamp');
+        const mockUser = localStorage.getItem('user');
+
+        if (token && tokenTimestamp && mockUser) {
+          // Check if token is expired (24 hour expiration)
+          const tokenAge = Date.now() - parseInt(tokenTimestamp);
+          const tokenExpiration = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+          if (tokenAge < tokenExpiration) {
+            setUser(JSON.parse(mockUser));
+          } else {
+            // Token expired, clear everything
+            localStorage.removeItem('token');
+            localStorage.removeItem('tokenTimestamp');
+            localStorage.removeItem('user');
+          }
         }
       } catch (err) {
         console.error('Auth check failed:', err);
+        // On error, clear everything to be safe
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenTimestamp');
+        localStorage.removeItem('user');
       } finally {
         setIsLoading(false);
       }
     };
 
     checkAuthStatus();
+
+    // Set up an interval to check token expiration every minute
+    const interval = setInterval(checkAuthStatus, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   // Login function
@@ -78,8 +96,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           role: 'admin',
         };
 
-        // Store in localStorage (in a real app, you'd store the JWT token)
+        // Store in localStorage with timestamp
         localStorage.setItem('token', 'mock-jwt-token');
+        localStorage.setItem('tokenTimestamp', Date.now().toString());
         localStorage.setItem('user', JSON.stringify(mockUser));
         
         setUser(mockUser);
@@ -98,6 +117,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Logout function
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('tokenTimestamp');
     localStorage.removeItem('user');
     setUser(null);
   };
