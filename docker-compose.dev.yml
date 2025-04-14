@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # Development overrides for all services
+  gateway:
+    build:
+      target: development
+    volumes:
+      - ./services/gateway:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+
+  auth:
+    build:
+      target: development
+    volumes:
+      - ./services/auth:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+    ports:
+      - "3001:3001"
+
+  customer:
+    build:
+      target: development
+    volumes:
+      - ./services/customer:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+    ports:
+      - "3002:3002"
+
+  reservation:
+    build:
+      target: development
+    volumes:
+      - ./services/reservation:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+    ports:
+      - "3003:3003"
+
+  billing:
+    build:
+      target: development
+    volumes:
+      - ./services/billing:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+    ports:
+      - "3004:3004"
+
+  notification:
+    build:
+      target: development
+    volumes:
+      - ./services/notification:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+    ports:
+      - "3005:3005"
+
+  frontend:
+    build:
+      target: development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:3000
+    command: npm start
+    ports:
+      - "8080:3000"

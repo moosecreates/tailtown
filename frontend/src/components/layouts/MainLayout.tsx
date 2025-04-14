@@ -1,0 +1,266 @@
+import React, { useState } from 'react';
+import { SvgIconComponent } from '@mui/icons-material';
+import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { 
+  AppBar, 
+  Box, 
+  CircularProgress,
+  CssBaseline,
+  Divider, 
+  Drawer, 
+  IconButton, 
+  List, 
+  ListItem, 
+  ListItemButton, 
+  ListItemIcon, 
+  ListItemText, 
+  Toolbar, 
+  Typography, 
+  Avatar,
+  Menu,
+  MenuItem
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
+  People as PeopleIcon,
+  Pets as PetsIcon,
+  EventNote as EventNoteIcon,
+  CalendarMonth as CalendarIcon,
+  Settings as SettingsIcon,
+  Logout as LogoutIcon,
+  AccountCircle as AccountCircleIcon
+} from '@mui/icons-material';
+import { useAuth } from '../../contexts/AuthContext';
+
+const drawerWidth = 240;
+
+interface NavItem {
+  path: string;
+  label: string;
+  icon: SvgIconComponent;
+}
+
+const MainLayout = ({ children }: { children?: React.ReactNode }) => {
+  // 1. All hooks must be called unconditionally at the top level
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { user, logout, isLoading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // 2. Event handlers
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // 3. Early returns for loading and unauthenticated states
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+
+
+  const navItems: NavItem[] = [
+    { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
+    { path: '/customers', label: 'Customers', icon: PeopleIcon },
+    { path: '/pets', label: 'Pets', icon: PetsIcon },
+    { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
+    { path: '/calendar', label: 'Calendar', icon: CalendarIcon },
+  ];
+
+  const drawer = (
+    <div>
+      <Toolbar sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        py: 1
+      }}>
+        <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+          Tailtown Pet Resort
+        </Typography>
+      </Toolbar>
+      <Divider />
+      <List>
+        {navItems.map((item) => (
+          <ListItem key={item.path} disablePadding>
+            <ListItemButton
+              component={Link}
+              to={item.path}
+              selected={location.pathname === item.path}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: 'primary.light',
+                  color: 'primary.contrastText',
+                  '&:hover': {
+                    backgroundColor: 'primary.main',
+                  },
+                  '& .MuiListItemIcon-root': {
+                    color: 'primary.contrastText',
+                  },
+                },
+              }}
+            >
+              <ListItemIcon sx={{ 
+                color: location.pathname === item.path ? 'primary.contrastText' : 'inherit' 
+              }}>
+                <item.icon />
+              </ListItemIcon>
+              <ListItemText primary={item.label} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <Divider />
+      <List>
+        <ListItem disablePadding>
+          <ListItemButton component={Link} to="/settings">
+            <ListItemIcon>
+              <SettingsIcon />
+            </ListItemIcon>
+            <ListItemText primary="Settings" />
+          </ListItemButton>
+        </ListItem>
+      </List>
+    </div>
+  );
+
+  return (
+    <Box sx={{ display: 'flex' }}>
+      <CssBaseline />
+      <AppBar
+        position="fixed"
+        sx={{
+          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          ml: { sm: `${drawerWidth}px` },
+        }}
+      >
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mr: 2, display: { sm: 'none' } }}
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            {navItems.find((item) => item.path === location.pathname)?.label || 'Dashboard'}
+          </Typography>
+          <IconButton
+            size="large"
+            edge="end"
+            color="inherit"
+            aria-label="account of current user"
+            aria-controls="menu-appbar"
+            aria-haspopup="true"
+            onClick={handleProfileMenuOpen}
+          >
+            <Avatar sx={{ bgcolor: 'secondary.main' }}>
+              {user?.firstName?.[0] || 'U'}
+            </Avatar>
+          </IconButton>
+          <Menu
+            id="menu-appbar"
+            anchorEl={anchorEl}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            keepMounted
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+            open={Boolean(anchorEl)}
+            onClose={handleProfileMenuClose}
+          >
+            <MenuItem onClick={() => {
+              handleProfileMenuClose();
+              navigate('/profile');
+            }}>
+              <ListItemIcon>
+                <AccountCircleIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Profile</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Logout</ListItemText>
+            </MenuItem>
+          </Menu>
+        </Toolbar>
+      </AppBar>
+      <Box
+        component="nav"
+        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        aria-label="navigation menu"
+      >
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{
+            keepMounted: true, // Better open performance on mobile
+          }}
+          sx={{
+            display: { xs: 'block', sm: 'none' },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          }}
+        >
+          {drawer}
+        </Drawer>
+        <Drawer
+          variant="permanent"
+          sx={{
+            display: { xs: 'none', sm: 'block' },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+          }}
+          open
+        >
+          {drawer}
+        </Drawer>
+      </Box>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          minHeight: '100vh',
+          backgroundColor: 'background.default',
+        }}
+      >
+        <Toolbar />
+        {children || <Outlet />}
+      </Box>
+    </Box>
+  );
+};
+
+export default MainLayout;
