@@ -156,13 +156,6 @@ export const createCustomer = async (
               appointmentReminders: true,
               checkinNotifications: true
             }
-          },
-          customerPortalSettings: {
-            create: {
-              allowBooking: true,
-              allowPayments: true,
-              passwordLastChanged: new Date()
-            }
           }
         }
       });
@@ -215,37 +208,27 @@ export const updateCustomer = async (
     
     // Update customer with transaction to ensure all related records are updated
     const updatedCustomer = await prisma.$transaction(async (prismaClient: any) => {
+      // Remove pets and notifications from the base data since they need special handling
+      const { pets, notifications, ...basicCustomerData } = customerData;
+
       // Update basic customer data
       const customer = await prismaClient.customer.update({
         where: { id },
-        data: customerData,
+        data: {
+          ...basicCustomerData,
+          // Handle pets properly if provided
+          pets: pets ? {
+            set: [] // First disconnect all existing pets
+          } : undefined,
+          // Handle notifications properly
+          notifications: notifications === null ? undefined : notifications
+        },
         include: {
           pets: true,
-          emergencyContacts: true,
-          notifications: true,
-          customerPortalSettings: true
+          notifications: true
         }
       });
       
-      // Update emergency contacts if provided
-      if (customerData.emergencyContacts && customerData.emergencyContacts.length > 0) {
-        // First delete existing emergency contacts
-        await prismaClient.emergencyContact.deleteMany({
-          where: { customerId: id }
-        });
-        
-        // Then create new ones
-        await Promise.all(
-          customerData.emergencyContacts.map((contact: any) => 
-            prismaClient.emergencyContact.create({
-              data: {
-                ...contact,
-                customerId: id
-              }
-            })
-          )
-        );
-      }
       
       return customer;
     });
