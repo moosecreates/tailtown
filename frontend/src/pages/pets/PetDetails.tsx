@@ -121,7 +121,7 @@ const PetDetails = () => {
         type: pet.type,
         breed: pet.breed,
         color: pet.color,
-        birthdate: pet.birthdate,
+        birthdate: pet.birthdate ? new Date(pet.birthdate).toISOString() : null,
         weight: pet.weight,
         gender: pet.gender,
         isNeutered: pet.isNeutered,

@@ -8,6 +8,7 @@ export interface Pet {
   type: 'DOG' | 'CAT' | 'OTHER';
   breed: string | null;
   color: string | null;
+  // Format: YYYY-MM-DD for input, ISO string for API
   birthdate: string | null;
   weight: number | null;
   gender: 'MALE' | 'FEMALE' | null;
