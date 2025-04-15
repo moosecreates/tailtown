@@ -302,7 +302,7 @@ export const uploadPetPhoto = async (
       }
 
       // Update pet with new photo URL
-      const photoUrl = `/api/uploads/pets/${path.basename(req.file.path)}`;
+      const photoUrl = `/uploads/pets/${path.basename(req.file.path)}`;
       console.log('File path:', req.file.path);
       console.log('Photo URL being saved:', photoUrl);
       console.log('File exists check:', fs.existsSync(req.file.path));

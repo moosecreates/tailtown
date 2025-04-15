@@ -28,11 +28,20 @@ const Pets = () => {
   useEffect(() => {
     const loadPets = async () => {
       try {
+        console.log('Loading pets...');
         const data = await petService.getAllPets();
+        console.log('Received pets data:', data);
+        if (!Array.isArray(data)) {
+          console.error('Received non-array pets data:', data);
+          setError('Invalid pets data received');
+          setPets([]);
+          return;
+        }
         setPets(data);
       } catch (err) {
         console.error('Error loading pets:', err);
         setError('Failed to load pets');
+        setPets([]);
       } finally {
         setLoading(false);
       }

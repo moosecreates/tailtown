@@ -1,6 +1,5 @@
-import axios from 'axios';
-
-const API_URL = '/api';  // Using relative URL for proxy support
+import api from './api';
+import { AxiosResponse } from 'axios';
 
 export interface Pet {
   id: string;
@@ -43,10 +42,10 @@ export interface Pet {
 export const petService = {
   getAllPets: async (): Promise<Pet[]> => {
     try {
-      console.log('Making GET request to:', `${API_URL}/pets`);
-      const response = await axios.get(`${API_URL}/pets`);
+      console.log('Getting all pets...');
+      const response: AxiosResponse = await api.get('/pets');
       console.log('Response:', response);
-      return response.data.data || [];
+      return response.data?.data || [];
     } catch (error: any) {
       console.error('Error in getAllPets:', error);
       if (error.response) {
@@ -64,10 +63,10 @@ export const petService = {
 
   getPetById: async (id: string): Promise<Pet> => {
     try {
-      console.log('Making GET request to:', `${API_URL}/pets/${id}`);
-      const response = await axios.get(`${API_URL}/pets/${id}`);
+      console.log('Getting pet by id:', id);
+      const response: AxiosResponse = await api.get(`/pets/${id}`);
       console.log('Response:', response);
-      return response.data.data;
+      return response.data?.data;
     } catch (error: any) {
       console.error('Error in getPetById:', error);
       console.error('Response:', error.response);
@@ -77,14 +76,10 @@ export const petService = {
 
   createPet: async (pet: Omit<Pet, 'id'>): Promise<Pet> => {
     try {
-      console.log('Making POST request to:', `${API_URL}/pets`);
-      console.log('With data:', pet);
-      const response = await axios.post(`${API_URL}/pets`, pet);
+      console.log('Creating pet:', pet);
+      const response: AxiosResponse = await api.post('/pets', pet);
       console.log('Response:', response);
-      if (!response.data?.data) {
-        throw new Error('No data in response');
-      }
-      return response.data.data;
+      return response.data?.data;
     } catch (error: any) {
       console.error('Error in createPet:', error);
       console.error('Response:', error.response);
@@ -94,14 +89,10 @@ export const petService = {
 
   updatePet: async (id: string, pet: Partial<Pet>): Promise<Pet> => {
     try {
-      console.log('Making PUT request to:', `${API_URL}/pets/${id}`);
-      console.log('With data:', pet);
-      const response = await axios.put(`${API_URL}/pets/${id}`, pet);
+      console.log('Updating pet:', id, pet);
+      const response: AxiosResponse = await api.put(`/pets/${id}`, pet);
       console.log('Response:', response);
-      if (!response.data?.data) {
-        throw new Error('No data in response');
-      }
-      return response.data.data;
+      return response.data?.data;
     } catch (error: any) {
       console.error('Error in updatePet:', error);
       console.error('Response:', error.response);
@@ -111,8 +102,8 @@ export const petService = {
 
   deletePet: async (id: string): Promise<void> => {
     try {
-      console.log('Making DELETE request to:', `${API_URL}/pets/${id}?permanent=true`);
-      await axios.delete(`${API_URL}/pets/${id}?permanent=true`);
+      console.log('Deleting pet:', id);
+      await api.delete(`/pets/${id}?permanent=true`);
     } catch (error: any) {
       console.error('Error in deletePet:', error);
       console.error('Response:', error.response);
@@ -125,14 +116,14 @@ export const petService = {
       const formData = new FormData();
       formData.append('photo', file);
 
-      console.log('Making POST request to:', `${API_URL}/pets/${id}/photo`);
-      const response = await axios.post(`${API_URL}/pets/${id}/photo`, formData, {
+      console.log('Uploading pet photo:', id);
+      const response: AxiosResponse = await api.post(`/pets/${id}/photo`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       console.log('Response:', response);
-      return response.data.data;
+      return response.data?.data;
     } catch (error: any) {
       console.error('Error in uploadPetPhoto:', error);
       console.error('Response:', error.response);
@@ -142,10 +133,10 @@ export const petService = {
 
   getPetMedicalRecords: async (id: string): Promise<any[]> => {
     try {
-      console.log('Making GET request to:', `${API_URL}/pets/${id}/medical-records`);
-      const response = await axios.get(`${API_URL}/pets/${id}/medical-records`);
+      console.log('Getting pet medical records:', id);
+      const response: AxiosResponse = await api.get(`/pets/${id}/medical-records`);
       console.log('Response:', response);
-      return response.data.data || [];
+      return response.data?.data || [];
     } catch (error: any) {
       console.error('Error in getPetMedicalRecords:', error);
       console.error('Response:', error.response);
