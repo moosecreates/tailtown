@@ -1,8 +1,39 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 const prisma = new PrismaClient();
+
+// Configure multer for file upload
+const storage = multer.diskStorage({
+  destination: (req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+    const uploadDir = 'uploads/pets';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req: Express.Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'pet-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG and GIF are allowed.'));
+    }
+  }
+}).single('photo');
 
 // Get all pets
 export const getAllPets = async (
@@ -49,6 +80,10 @@ export const getPetById = async (
       where: { id },
       include: { owner: true },
     });
+
+    if (pet?.profilePhoto) {
+      console.log('Retrieved photo URL:', pet.profilePhoto);
+    }
     
     if (!pet) {
       return next(new AppError('Pet not found', 404));
@@ -106,6 +141,34 @@ export const createPet = async (
     } else if (petData.birthdate) {
       petData.birthdate = new Date(petData.birthdate);
     }
+
+    // Handle vaccine data
+    if (petData.vaccineExpirations) {
+      try {
+        if (typeof petData.vaccineExpirations === 'string') {
+          petData.vaccineExpirations = JSON.parse(petData.vaccineExpirations);
+        }
+        // Convert date strings to Date objects
+        for (const key in petData.vaccineExpirations) {
+          if (petData.vaccineExpirations[key]) {
+            petData.vaccineExpirations[key] = new Date(petData.vaccineExpirations[key]);
+          }
+        }
+      } catch (e) {
+        return next(new AppError('Invalid vaccine expiration data', 400));
+      }
+    }
+
+    // Handle vaccination status
+    if (petData.vaccinationStatus) {
+      try {
+        if (typeof petData.vaccinationStatus === 'string') {
+          petData.vaccinationStatus = JSON.parse(petData.vaccinationStatus);
+        }
+      } catch (e) {
+        return next(new AppError('Invalid vaccination status data', 400));
+      }
+    }
     
     // Check if the customer exists
     const customer = await prisma.customer.findUnique({
@@ -145,6 +208,34 @@ export const updatePet = async (
     } else if (petData.birthdate) {
       petData.birthdate = new Date(petData.birthdate);
     }
+
+    // Handle vaccine data
+    if (petData.vaccineExpirations) {
+      try {
+        if (typeof petData.vaccineExpirations === 'string') {
+          petData.vaccineExpirations = JSON.parse(petData.vaccineExpirations);
+        }
+        // Convert date strings to Date objects
+        for (const key in petData.vaccineExpirations) {
+          if (petData.vaccineExpirations[key]) {
+            petData.vaccineExpirations[key] = new Date(petData.vaccineExpirations[key]);
+          }
+        }
+      } catch (e) {
+        return next(new AppError('Invalid vaccine expiration data', 400));
+      }
+    }
+
+    // Handle vaccination status
+    if (petData.vaccinationStatus) {
+      try {
+        if (typeof petData.vaccinationStatus === 'string') {
+          petData.vaccinationStatus = JSON.parse(petData.vaccinationStatus);
+        }
+      } catch (e) {
+        return next(new AppError('Invalid vaccination status data', 400));
+      }
+    }
     
     // If customerId is being updated, check if the customer exists
     if (petData.customerId) {
@@ -172,6 +263,66 @@ export const updatePet = async (
 };
 
 // Delete a pet
+// Upload a pet's photo
+export const uploadPetPhoto = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+
+    // Check if pet exists
+    const pet = await prisma.pet.findUnique({
+      where: { id },
+    });
+
+    if (!pet) {
+      return next(new AppError('Pet not found', 404));
+    }
+
+    // Handle file upload
+    upload(req, res, async (err: any) => {
+      if (err instanceof multer.MulterError) {
+        return next(new AppError(`Upload error: ${err.message}`, 400));
+      } else if (err) {
+        return next(new AppError(err.message, 400));
+      }
+
+      if (!req.file) {
+        return next(new AppError('No file uploaded', 400));
+      }
+
+      // Delete old photo if it exists
+      if (pet.profilePhoto) {
+        const oldPhotoPath = path.join(process.cwd(), pet.profilePhoto);
+        if (fs.existsSync(oldPhotoPath)) {
+          fs.unlinkSync(oldPhotoPath);
+        }
+      }
+
+      // Update pet with new photo URL
+      const photoUrl = `/api/uploads/pets/${path.basename(req.file.path)}`;
+      console.log('File path:', req.file.path);
+      console.log('Photo URL being saved:', photoUrl);
+      console.log('File exists check:', fs.existsSync(req.file.path));
+      console.log('File stats:', fs.statSync(req.file.path));
+      console.log('Directory contents:', fs.readdirSync(path.dirname(req.file.path)));
+      const updatedPet = await prisma.pet.update({
+        where: { id },
+        data: { profilePhoto: photoUrl },
+      });
+
+      res.status(200).json({
+        status: 'success',
+        data: updatedPet,
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const deletePet = async (
   req: Request,
   res: Response,

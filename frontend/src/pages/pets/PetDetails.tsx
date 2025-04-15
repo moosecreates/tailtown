@@ -5,6 +5,7 @@ import {
   Box,
   Paper,
   Button,
+  Avatar,
   Chip,
   Divider,
   TextField,
@@ -19,9 +20,11 @@ import {
   Snackbar
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
+import VaccinationStatus from '../../components/VaccinationStatus';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { Pet, petService } from '../../services/petService';
 import { customerService } from '../../services/customerService';
+
 
 const PetDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,7 +37,9 @@ const PetDetails = () => {
   const [customers, setCustomers] = useState<any[]>([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-  const [pet, setPet] = useState<Omit<Pet, 'id' | 'createdAt' | 'updatedAt' | 'medicalRecords' | 'vaccineStatus'>>({
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  const [pet, setPet] = useState<Omit<Pet, 'id' | 'createdAt' | 'updatedAt' | 'medicalRecords'>>({
     name: '',
     type: 'DOG',
     breed: null,
@@ -44,10 +49,19 @@ const PetDetails = () => {
     gender: null,
     isNeutered: false,
     microchipNumber: null,
+    rabiesTagNumber: null,
+    profilePhoto: null,
     specialNeeds: null,
     behaviorNotes: null,
+    foodNotes: null,
+    medicationNotes: null,
+    allergies: null,
+    vetName: null,
+    vetPhone: null,
     customerId: '',
-    isActive: true
+    isActive: true,
+    vaccinationStatus: undefined,
+    vaccineExpirations: undefined
   });
 
   useEffect(() => {
@@ -59,6 +73,8 @@ const PetDetails = () => {
 
         if (!isNewPet) {
           const petData = await petService.getPetById(id!);
+          console.log('Loaded pet data:', petData);
+
           // Format the birthdate from ISO to YYYY-MM-DD for the input field
           if (petData.birthdate) {
             petData.birthdate = new Date(petData.birthdate).toISOString().split('T')[0];
@@ -116,6 +132,7 @@ const PetDetails = () => {
   };
 
   const handleSave = async () => {
+    console.log('Saving pet with data:', pet);
     try {
       setSaving(true);
       
@@ -145,6 +162,13 @@ const PetDetails = () => {
         microchipNumber: pet.microchipNumber,
         specialNeeds: pet.specialNeeds,
         behaviorNotes: pet.behaviorNotes,
+        foodNotes: pet.foodNotes,
+        medicationNotes: pet.medicationNotes,
+        allergies: pet.allergies,
+        vetName: pet.vetName,
+        vetPhone: pet.vetPhone,
+        vaccinationStatus: pet.vaccinationStatus || {},
+        vaccineExpirations: pet.vaccineExpirations || {},
         customerId: pet.customerId,
         isActive: pet.isActive
       };
@@ -201,6 +225,85 @@ const PetDetails = () => {
         </Typography>
         
         <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Avatar
+              src={pet.profilePhoto || undefined}
+              alt={pet.name}
+              onError={(e) => {
+                console.error('Error loading image:', e);
+                console.log('Attempted URL:', pet.profilePhoto || 'no photo');
+              }}
+              sx={{
+                width: 150,
+                height: 150,
+                border: '2px solid #e0e0e0',
+                '& img': {
+                  objectFit: 'cover',
+                  width: '100%',
+                  height: '100%'
+                }
+              }}
+            />
+            <Box>
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="photo-upload"
+                type="file"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (file && !isNewPet && id) {
+                    // Check file size (5MB limit)
+                    if (file.size > 5 * 1024 * 1024) {
+                      setSnackbar({
+                        open: true,
+                        message: 'File size too large. Please upload an image under 5MB.',
+                        severity: 'error'
+                      });
+                      return;
+                    }
+
+                    try {
+                      setSaving(true);
+                      const updatedPet = await petService.uploadPetPhoto(id, file);
+                      setPet(prev => ({ ...prev, profilePhoto: updatedPet.profilePhoto }));
+                      setSnackbar({
+                        open: true,
+                        message: 'Photo uploaded successfully',
+                        severity: 'success'
+                      });
+                    } catch (error) {
+                      console.error('Error uploading photo:', error);
+                      setSnackbar({
+                        open: true,
+                        message: 'Error uploading photo',
+                        severity: 'error'
+                      });
+                    } finally {
+                      setSaving(false);
+                    }
+                  }
+                }}
+              />
+              <label htmlFor="photo-upload">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  disabled={saving || isNewPet}
+                >
+                  {pet.profilePhoto ? 'Change Photo' : 'Add Photo'}
+                </Button>
+              </label>
+              {isNewPet && (
+                <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 1 }}>
+                  You can add a photo after creating the pet
+                </Typography>
+              )}
+            </Box>
+          </Box>
+
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
             <FormControl fullWidth required>
               <TextField
@@ -278,14 +381,25 @@ const PetDetails = () => {
               </Select>
             </FormControl>
 
-            <FormControl fullWidth>
-              <TextField
-                label="Microchip Number"
-                name="microchipNumber"
-                value={pet.microchipNumber || ''}
-                onChange={handleTextChange}
-              />
-            </FormControl>
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+              <FormControl fullWidth>
+                <TextField
+                  label="Microchip Number"
+                  name="microchipNumber"
+                  value={pet.microchipNumber || ''}
+                  onChange={handleTextChange}
+                />
+              </FormControl>
+
+              <FormControl fullWidth>
+                <TextField
+                  label="Rabies Tag Number"
+                  name="rabiesTagNumber"
+                  value={pet.rabiesTagNumber || ''}
+                  onChange={handleTextChange}
+                />
+              </FormControl>
+            </Box>
 
             <FormControlLabel
               control={
@@ -323,29 +437,124 @@ const PetDetails = () => {
           <Divider sx={{ my: 2 }} />
           
           <Typography variant="h6" gutterBottom>Additional Information</Typography>
-          <Box sx={{ display: 'grid', gap: 2 }}>
-            <FormControl fullWidth>
-              <TextField
-                label="Special Needs"
-                name="specialNeeds"
-                value={pet.specialNeeds || ''}
-                onChange={handleTextChange}
-                multiline
-                rows={2}
-              />
-            </FormControl>
 
-            <FormControl fullWidth>
-              <TextField
-                label="Behavior Notes"
-                name="behaviorNotes"
-                value={pet.behaviorNotes || ''}
-                onChange={handleTextChange}
-                multiline
-                rows={2}
-              />
-            </FormControl>
+
+          <Box sx={{ display: 'grid', gap: 2 }}>
+            {/* Medical Information */}
+            <Typography variant="h6" gutterBottom>Medical Information</Typography>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
+              <FormControl fullWidth>
+                <TextField
+                  label="Veterinarian Name"
+                  name="vetName"
+                  value={pet.vetName || ''}
+                  onChange={handleTextChange}
+                />
+              </FormControl>
+
+              <FormControl fullWidth>
+                <TextField
+                  label="Veterinarian Phone"
+                  name="vetPhone"
+                  value={pet.vetPhone || ''}
+                  onChange={handleTextChange}
+                />
+              </FormControl>
+            </Box>
+
+            <Box sx={{ display: 'grid', gap: 2 }}>
+              <FormControl fullWidth>
+                <TextField
+                  label="Allergies"
+                  name="allergies"
+                  value={pet.allergies || ''}
+                  onChange={handleTextChange}
+                  multiline
+                  rows={2}
+                />
+              </FormControl>
+
+              <FormControl fullWidth>
+                <TextField
+                  label="Medication Notes"
+                  name="medicationNotes"
+                  value={pet.medicationNotes || ''}
+                  onChange={handleTextChange}
+                  multiline
+                  rows={2}
+                />
+              </FormControl>
+
+              <FormControl fullWidth>
+                <TextField
+                  label="Food Notes"
+                  name="foodNotes"
+                  value={pet.foodNotes || ''}
+                  onChange={handleTextChange}
+                  multiline
+                  rows={2}
+                />
+              </FormControl>
+
+              <FormControl fullWidth>
+                <TextField
+                  label="Special Needs"
+                  name="specialNeeds"
+                  value={pet.specialNeeds || ''}
+                  onChange={handleTextChange}
+                  multiline
+                  rows={2}
+                />
+              </FormControl>
+
+              <FormControl fullWidth>
+                <TextField
+                  label="Behavior Notes"
+                  name="behaviorNotes"
+                  value={pet.behaviorNotes || ''}
+                  onChange={handleTextChange}
+                  multiline
+                  rows={2}
+                />
+              </FormControl>
+            </Box>
           </Box>
+
+          <Divider sx={{ my: 2 }} />
+
+          {/* Vaccination Status */}
+          <VaccinationStatus
+            vaccinationStatus={pet.vaccinationStatus}
+            vaccineExpirations={pet.vaccineExpirations}
+            onVaccinationStatusChange={(key, value) => {
+              console.log('Updating vaccination status:', { key, value });
+              setPet(prev => {
+                const newPet = {
+                  ...prev,
+                  vaccinationStatus: {
+                    ...(prev.vaccinationStatus || {}),
+                    [key]: value
+                  }
+                };
+                console.log('Updated pet state:', newPet);
+                return newPet;
+              });
+            }}
+            onVaccineExpirationChange={(key, value) => {
+              console.log('Updating vaccine expiration:', { key, value });
+              setPet(prev => {
+                const newPet = {
+                  ...prev,
+                  vaccineExpirations: {
+                    ...(prev.vaccineExpirations || {}),
+                    [key]: value
+                  }
+                };
+                console.log('Updated pet state:', newPet);
+                return newPet;
+              });
+            }}
+          />
         </Paper>
 
         <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>

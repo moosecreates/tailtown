@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3002/api';
+const API_URL = '/api';  // Using relative URL for proxy support
 
 export interface Pet {
   id: string;
@@ -14,18 +14,29 @@ export interface Pet {
   gender: 'MALE' | 'FEMALE' | null;
   isNeutered: boolean;
   microchipNumber: string | null;
+  rabiesTagNumber: string | null;
+  profilePhoto: string | null;
   specialNeeds: string | null;
   behaviorNotes: string | null;
+  foodNotes: string | null;
+  medicationNotes: string | null;
+  allergies: string | null;
+  vetName: string | null;
+  vetPhone: string | null;
   customerId: string;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
   medicalRecords?: any[];
-  vaccineStatus?: {
+  vaccinationStatus?: {
     [key: string]: {
       status: 'CURRENT' | 'EXPIRED' | 'PENDING';
-      expirationDate: string;
+      lastGiven?: string;
+      notes?: string;
     };
+  };
+  vaccineExpirations?: {
+    [key: string]: string; // ISO date string
   };
 }
 
@@ -38,7 +49,15 @@ export const petService = {
       return response.data.data || [];
     } catch (error: any) {
       console.error('Error in getAllPets:', error);
-      console.error('Response:', error.response);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        console.error('Response headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
       throw error;
     }
   },
@@ -96,6 +115,26 @@ export const petService = {
       await axios.delete(`${API_URL}/pets/${id}?permanent=true`);
     } catch (error: any) {
       console.error('Error in deletePet:', error);
+      console.error('Response:', error.response);
+      throw error;
+    }
+  },
+
+  uploadPetPhoto: async (id: string, file: File): Promise<Pet> => {
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      console.log('Making POST request to:', `${API_URL}/pets/${id}/photo`);
+      const response = await axios.post(`${API_URL}/pets/${id}/photo`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      console.log('Response:', response);
+      return response.data.data;
+    } catch (error: any) {
+      console.error('Error in uploadPetPhoto:', error);
       console.error('Response:', error.response);
       throw error;
     }
