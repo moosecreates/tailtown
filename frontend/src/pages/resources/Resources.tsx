@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import debounce from 'lodash/debounce';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -38,6 +39,27 @@ const Resources: React.FC = () => {
   const [filterType, setFilterType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const debouncedFilter = useMemo(
+    () => debounce((term: string, type: string) => {
+      const filtered = resources.filter(resource => {
+        const matchesType = type === 'all' || getResourceTypeCategory(resource.type) === type;
+        const matchesSearch = resource.name.toLowerCase().includes(term.toLowerCase()) ||
+                            resource.description?.toLowerCase().includes(term.toLowerCase()) ||
+                            resource.location?.toLowerCase().includes(term.toLowerCase());
+        return matchesType && matchesSearch;
+      });
+      setFilteredResources(filtered);
+    }, 300),
+    [resources]
+  );
+
+  useEffect(() => {
+    debouncedFilter(searchTerm, filterType);
+    return () => {
+      debouncedFilter.cancel();
+    };
+  }, [searchTerm, filterType, debouncedFilter]);
+
   useEffect(() => {
     loadResources();
   }, []);
@@ -60,7 +82,7 @@ const Resources: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     if (window.confirm('Are you sure you want to delete this resource?')) {
       try {
         await resourceManagement.deleteResource(id);
@@ -78,19 +100,17 @@ const Resources: React.FC = () => {
         });
       }
     }
-  };
+  }, [loadResources, setSnackbar]);
 
-  const handleSnackbarClose = () => {
+  const handleSnackbarClose = useCallback(() => {
     setSnackbar(prev => ({ ...prev, open: false }));
-  };
+  }, []);
 
-  const filteredResources = resources.filter(resource => {
-    const matchesType = filterType === 'all' || getResourceTypeCategory(resource.type) === filterType;
-    const matchesSearch = resource.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         resource.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         resource.location?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesType && matchesSearch;
-  });
+  const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
+
+  useEffect(() => {
+    setFilteredResources(resources);
+  }, [resources]);
 
   const resourceCategories = ['all', 'Housing', 'Play Areas', 'Grooming', 'Training', 'Staff', 'Other'];
 

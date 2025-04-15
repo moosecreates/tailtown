@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   Typography,
   Container,
@@ -18,7 +18,8 @@ import {
   InputAdornment
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import debounce from 'lodash/debounce';
 import { Customer, customerService } from '../../services/customerService';
 
 const Customers = () => {
@@ -26,6 +27,27 @@ const Customers = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const debouncedSearch = useMemo(
+    () => debounce((query: string) => {
+      const filtered = customers.filter(customer => 
+        `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(query) ||
+        (customer.email || '').toLowerCase().includes(query) ||
+        (customer.phone || '').toLowerCase().includes(query) ||
+        // Search through pet names
+        (customer.pets || []).some(pet => pet.name.toLowerCase().includes(query))
+      );
+      setFilteredCustomers(filtered);
+    }, 300),
+    [customers]
+  );
+
+  useEffect(() => {
+    debouncedSearch(searchQuery);
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [searchQuery, debouncedSearch]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
@@ -50,15 +72,15 @@ const Customers = () => {
     loadCustomers();
   }, []);
 
-  const handleAddNew = () => {
+  const handleAddNew = useCallback(() => {
     navigate('/customers/new');
-  };
+  }, [navigate]);
 
-  const handleRowClick = (customerId: string) => {
+  const handleRowClick = useCallback((customerId: string) => {
     navigate(`/customers/${customerId}`);
-  };
+  }, [navigate]);
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
+  const handleDelete = useCallback(async (e: React.MouseEvent, id: string) => {
     e.stopPropagation(); // Prevent row click
     if (window.confirm('Are you sure you want to permanently delete this customer? This action cannot be undone.')) {
       try {
@@ -86,7 +108,7 @@ const Customers = () => {
         setCustomers(updatedCustomers);
       }
     }
-  };
+  }, [setCustomers, setSnackbar]);
 
   return (
     <Container maxWidth="lg">
@@ -103,18 +125,9 @@ const Customers = () => {
 
           <TextField
             fullWidth
-            placeholder="Search by name, email, or phone..."
+            placeholder="Search by customer name, email, phone, or pet name..."
             value={searchQuery}
-            onChange={(e) => {
-              const query = e.target.value.toLowerCase();
-              setSearchQuery(query);
-              const filtered = customers.filter(customer => 
-                `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(query) ||
-                (customer.email || '').toLowerCase().includes(query) ||
-                (customer.phone || '').toLowerCase().includes(query)
-              );
-              setFilteredCustomers(filtered);
-            }}
+            onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -154,6 +167,17 @@ const Customers = () => {
                     key={customer.id}
                     sx={{ '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
                   >
+                    {/* Add a tooltip showing matching pet names if search matches a pet */}
+                    {searchQuery && customer.pets?.some(pet => pet.name.toLowerCase().includes(searchQuery.toLowerCase())) && (
+                      <TableCell colSpan={6} sx={{ p: 0, borderBottom: 'none' }}>
+                        <Box sx={{ backgroundColor: '#e3f2fd', p: 1, m: 1, borderRadius: 1 }}>
+                          Matching pets: {customer.pets
+                            .filter(pet => pet.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                            .map(pet => pet.name)
+                            .join(', ')}
+                        </Box>
+                      </TableCell>
+                    )}
                     <TableCell 
                       onClick={() => handleRowClick(customer.id)}
                       sx={{ cursor: 'pointer' }}

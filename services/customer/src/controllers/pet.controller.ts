@@ -44,20 +44,33 @@ export const getAllPets = async (
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
+    const search = String(req.query.search || '');
     const skip = (page - 1) * limit;
     
-    const pets = await prisma.pet.findMany({
-      skip,
-      take: limit,
-      orderBy: { name: 'asc' },
-      include: { owner: true },
-    });
+    // Only search name and breed, type is an enum and needs exact match
+    const where = search
+      ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' as const } },
+            { breed: { contains: search, mode: 'insensitive' as const } }
+          ],
+        }
+      : {};
     
-    const total = await prisma.pet.count();
+    const [pets, total] = await prisma.$transaction([
+      prisma.pet.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { name: 'asc' },
+        include: { owner: true },
+      }),
+      prisma.pet.count({ where }),
+    ]);
     
     res.status(200).json({
       status: 'success',
-      results: pets.length,
+      results: total,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
       data: pets,

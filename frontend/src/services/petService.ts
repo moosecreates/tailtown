@@ -1,6 +1,14 @@
 import api from './api';
 import { AxiosResponse } from 'axios';
 
+export interface PaginatedResponse<T> {
+  status: string;
+  results: number;
+  totalPages: number;
+  currentPage: number;
+  data: T[];
+}
+
 export interface Pet {
   id: string;
   name: string;
@@ -40,12 +48,18 @@ export interface Pet {
 }
 
 export const petService = {
-  getAllPets: async (): Promise<Pet[]> => {
+  getAllPets: async (page = 1, limit = 10, search = ''): Promise<PaginatedResponse<Pet>> => {
     try {
       console.log('Getting all pets...');
-      const response: AxiosResponse = await api.get('/pets');
+      const response: AxiosResponse<PaginatedResponse<Pet>> = await api.get('/pets', {
+        params: {
+          page,
+          limit,
+          search
+        }
+      });
       console.log('Response:', response);
-      return response.data?.data || [];
+      return response.data;
     } catch (error: any) {
       console.error('Error in getAllPets:', error);
       if (error.response) {

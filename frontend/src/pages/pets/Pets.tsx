@@ -13,10 +13,20 @@ import {
   TableRow,
   CircularProgress,
   Alert,
-  Snackbar
+  Snackbar,
+  TablePagination,
+  Skeleton,
+  TextField,
+  InputAdornment
 } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import debounce from 'lodash/debounce';
 import { useNavigate } from 'react-router-dom';
-import { Pet, petService } from '../../services/petService';
+import { Pet, petService, PaginatedResponse } from '../../services/petService';
+
+
+
+const PAGE_SIZE = 10;
 
 const Pets = () => {
   const navigate = useNavigate();
@@ -24,31 +34,44 @@ const Pets = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [initialLoad, setInitialLoad] = useState(true);
+
+
+  const loadPets = async (pageNum: number, search: string) => {
+    try {
+      setLoading(true);
+      const response = await petService.getAllPets(pageNum + 1, PAGE_SIZE, search);
+      setPets(response.data);
+      setTotalCount(response.results);
+      setError(null);
+    } catch (err) {
+      console.error('Error loading pets:', err);
+      setError('Failed to load pets');
+      setPets([]);
+    } finally {
+      setLoading(false);
+      if (initialLoad) setInitialLoad(false);
+    }
+  };
+
+  const debouncedSearch = debounce((value: string) => {
+    setPage(0);
+    loadPets(0, value);
+  }, 500);
 
   useEffect(() => {
-    const loadPets = async () => {
-      try {
-        console.log('Loading pets...');
-        const data = await petService.getAllPets();
-        console.log('Received pets data:', data);
-        if (!Array.isArray(data)) {
-          console.error('Received non-array pets data:', data);
-          setError('Invalid pets data received');
-          setPets([]);
-          return;
-        }
-        setPets(data);
-      } catch (err) {
-        console.error('Error loading pets:', err);
-        setError('Failed to load pets');
-        setPets([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+    loadPets(page, searchTerm);
+  }, [page]);
 
-    loadPets();
-  }, []);
+  useEffect(() => {
+    if (!initialLoad) {
+      debouncedSearch(searchTerm);
+    }
+    return () => debouncedSearch.cancel();
+  }, [searchTerm]);
 
   const handleRowClick = (id: string) => {
     navigate(`/pets/${id}`);
@@ -61,8 +84,9 @@ const Pets = () => {
         await petService.deletePet(id);
         
         // Refresh the pet list after deletion
-        const updatedPets = await petService.getAllPets();
-        setPets(updatedPets);
+        const response = await petService.getAllPets(page + 1, PAGE_SIZE, searchTerm);
+        setPets(response.data);
+        setTotalCount(response.results);
         
         setSnackbar({
           open: true,
@@ -78,8 +102,12 @@ const Pets = () => {
         });
         
         // Refresh list to ensure UI is in sync with backend
-        const updatedPets = await petService.getAllPets();
-        setPets(updatedPets);
+        const response = await petService.getAllPets(page + 1, PAGE_SIZE, searchTerm);
+        if (!response?.data || !Array.isArray(response.data)) {
+          throw new Error('Invalid response format');
+        }
+        setPets(response.data);
+        setTotalCount(response.results);
       }
     }
   };
@@ -100,12 +128,31 @@ const Pets = () => {
           </Button>
         </Box>
 
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-            <CircularProgress />
+        <Box sx={{ mb: 2 }}>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Search pets..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+        {loading && initialLoad ? (
+          <Box sx={{ mb: 2 }}>
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} height={53} sx={{ mb: 1 }} />
+            ))}
           </Box>
-        ) : error ? (
-          <Alert severity="error">{error}</Alert>
         ) : (
           <TableContainer component={Paper}>
             <Table>
@@ -172,6 +219,17 @@ const Pets = () => {
               </TableBody>
             </Table>
           </TableContainer>
+        )}
+
+        {!loading && !error && (
+          <TablePagination
+            component="div"
+            count={totalCount}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            rowsPerPage={PAGE_SIZE}
+            rowsPerPageOptions={[PAGE_SIZE]}
+          />
         )}
       </Box>
 
