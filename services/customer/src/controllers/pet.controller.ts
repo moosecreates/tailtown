@@ -98,7 +98,14 @@ export const createPet = async (
   next: NextFunction
 ) => {
   try {
-    const petData = req.body;
+    let petData = { ...req.body };
+    
+    // Handle empty date strings
+    if (petData.birthdate === '') {
+      petData.birthdate = null;
+    } else if (petData.birthdate) {
+      petData.birthdate = new Date(petData.birthdate);
+    }
     
     // Check if the customer exists
     const customer = await prisma.customer.findUnique({
@@ -130,7 +137,14 @@ export const updatePet = async (
 ) => {
   try {
     const { id } = req.params;
-    const petData = req.body;
+    let petData = { ...req.body };
+    
+    // Handle empty date strings
+    if (petData.birthdate === '') {
+      petData.birthdate = null;
+    } else if (petData.birthdate) {
+      petData.birthdate = new Date(petData.birthdate);
+    }
     
     // If customerId is being updated, check if the customer exists
     if (petData.customerId) {
