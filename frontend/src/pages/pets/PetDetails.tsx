@@ -59,6 +59,10 @@ const PetDetails = () => {
 
         if (!isNewPet) {
           const petData = await petService.getPetById(id!);
+          // Format the birthdate from ISO to YYYY-MM-DD for the input field
+          if (petData.birthdate) {
+            petData.birthdate = new Date(petData.birthdate).toISOString().split('T')[0];
+          }
           setPet(petData);
         }
       } catch (err) {
@@ -75,12 +79,21 @@ const PetDetails = () => {
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name) {
-      setPet(prev => ({
-        ...prev,
-        [name]: name === 'weight' ? (value ? parseFloat(value) : null) :
-               name === 'birthdate' ? (value ? value : null) :
-               value
-      }));
+      if (name === 'birthdate') {
+        console.log('Date input value:', value);
+      }
+      setPet(prev => {
+        const newValue = name === 'weight' ? (value ? parseFloat(value) : null) :
+                        name === 'birthdate' ? (value ? value : null) :
+                        value;
+        if (name === 'birthdate') {
+          console.log('Stored date value:', newValue);
+        }
+        return {
+          ...prev,
+          [name]: newValue
+        };
+      });
     }
   };
 
@@ -116,12 +129,16 @@ const PetDetails = () => {
       }
 
       // Clean up the data before sending
+      console.log('Original birthdate:', pet.birthdate);
+      const formattedDate = pet.birthdate ? new Date(pet.birthdate).toISOString() : null;
+      console.log('Formatted birthdate:', formattedDate);
+      
       const cleanPetData = {
         name: pet.name,
         type: pet.type,
         breed: pet.breed,
         color: pet.color,
-        birthdate: pet.birthdate ? new Date(pet.birthdate).toISOString() : null,
+        birthdate: formattedDate,
         weight: pet.weight,
         gender: pet.gender,
         isNeutered: pet.isNeutered,
