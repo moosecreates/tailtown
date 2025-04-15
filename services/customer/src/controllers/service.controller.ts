@@ -110,7 +110,18 @@ export const createService = async (
     const newService = await prisma.$transaction(async (prismaClient: any) => {
       // Create the main service
       const service = await prismaClient.service.create({
-        data: mainServiceData
+        data: {
+          name: mainServiceData.name,
+          description: mainServiceData.description,
+          duration: mainServiceData.duration,
+          price: mainServiceData.price,
+          color: mainServiceData.color,
+          serviceCategory: mainServiceData.serviceCategory,
+          isActive: mainServiceData.isActive,
+          capacityLimit: mainServiceData.capacityLimit,
+          requiresStaff: mainServiceData.requiresStaff,
+          notes: mainServiceData.notes
+        }
       });
       
       // Create any add-on services if provided
@@ -154,7 +165,9 @@ export const updateService = async (
   try {
     const { id } = req.params;
     const serviceData = req.body;
+    console.log('Received service data:', JSON.stringify(serviceData, null, 2));
     const { availableAddOns, ...mainServiceData } = serviceData;
+    console.log('Main service data:', JSON.stringify(mainServiceData, null, 2));
     
     // Check if service exists
     const serviceExists = await prisma.service.findUnique({
@@ -171,23 +184,37 @@ export const updateService = async (
       // Update the main service
       const service = await prismaClient.service.update({
         where: { id },
-        data: mainServiceData
+        data: {
+          name: mainServiceData.name,
+          description: mainServiceData.description,
+          duration: mainServiceData.duration,
+          price: mainServiceData.price,
+          color: mainServiceData.color,
+          serviceCategory: mainServiceData.serviceCategory,
+          isActive: mainServiceData.isActive,
+          capacityLimit: mainServiceData.capacityLimit,
+          requiresStaff: mainServiceData.requiresStaff,
+          notes: mainServiceData.notes
+        }
       });
       
-      // Handle add-ons if provided
+      // Always delete existing add-ons first
+      await prismaClient.addOnService.deleteMany({
+        where: { serviceId: id }
+      });
+      
+      // Create new add-ons if provided
       if (availableAddOns && availableAddOns.length > 0) {
-        // Delete existing add-ons
-        await prismaClient.addOnService.deleteMany({
-          where: { serviceId: id }
-        });
-        
-        // Create new add-ons
         await Promise.all(
           availableAddOns.map((addOn: any) => 
             prismaClient.addOnService.create({
               data: {
-                ...addOn,
-                serviceId: id
+                name: addOn.name,
+                description: addOn.description,
+                price: addOn.price,
+                duration: addOn.duration,
+                serviceId: id,
+                isActive: true
               }
             })
           )
