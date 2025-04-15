@@ -77,7 +77,9 @@ const PetDetails = () => {
     if (name) {
       setPet(prev => ({
         ...prev,
-        [name]: name === 'weight' ? (value ? parseFloat(value) : null) : value
+        [name]: name === 'weight' ? (value ? parseFloat(value) : null) :
+               name === 'birthdate' ? (value ? value : null) :
+               value
       }));
     }
   };
