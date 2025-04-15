@@ -1,20 +1,70 @@
-import React from 'react';
-import { Box, Paper, Typography, Card, CardContent, CardHeader, Button } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Box, Paper, Typography, Card, CardContent, CardHeader, Button, CircularProgress } from '@mui/material';
 import { People as PeopleIcon, Pets as PetsIcon, EventNote as EventNoteIcon, AttachMoney as MoneyIcon } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
+import { customerService } from '../services/customerService';
+import { petService } from '../services/petService';
 
-// Mock data for dashboard
-const stats = [
+const Dashboard = () => {
+  const [customerCount, setCustomerCount] = useState<number | null>(null);
+  const [petCount, setPetCount] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadCounts = async () => {
+    try {
+      const [customers, pets] = await Promise.all([
+        customerService.getAllCustomers(),
+        petService.getAllPets()
+      ]);
+      console.log('Loaded customers count:', customers.length);
+      console.log('Loaded pets count:', pets.length);
+      setCustomerCount(customers.length);
+      setPetCount(pets.length);
+    } catch (err) {
+      console.error('Error loading counts:', err);
+      setError('Failed to load counts');
+    }
+  };
+
+  // Load counts on mount, window focus, and route changes
+  useEffect(() => {
+    loadCounts();
+
+    // Refresh counts when window regains focus
+    const handleFocus = () => {
+      console.log('Window focused, refreshing counts');
+      loadCounts();
+    };
+
+    // Refresh counts when returning to dashboard
+    const handleRouteChange = (event: Event) => {
+      const e = event as CustomEvent;
+      if (e.detail?.pathname === '/dashboard') {
+        console.log('Returned to dashboard, refreshing counts');
+        loadCounts();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('app:route-change', handleRouteChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('app:route-change', handleRouteChange);
+    };
+  }, []);
+
+  const stats = [
   { 
     title: 'Customers', 
-    value: 124, 
+    value: customerCount === null ? <CircularProgress size={20} /> : customerCount, 
     icon: <PeopleIcon sx={{ fontSize: 40, color: 'primary.main' }} />,
     link: '/customers',
     change: '+12%'
   },
   { 
     title: 'Pets', 
-    value: 186, 
+    value: petCount === null ? <CircularProgress size={20} /> : petCount, 
     icon: <PetsIcon sx={{ fontSize: 40, color: 'secondary.main' }} />,
     link: '/pets',
     change: '+8%'
@@ -43,7 +93,7 @@ const upcomingReservations = [
   { id: '4', customerName: 'Emily Davis', petName: 'Luna', service: 'Training', startDate: '2025-04-16', endDate: '2025-04-16' },
 ];
 
-const Dashboard = () => {
+  // Mock upcoming reservations
   return (
     <Box>
       <Typography variant="h4" gutterBottom component="h1">
