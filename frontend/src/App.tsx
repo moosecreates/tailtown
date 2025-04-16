@@ -18,7 +18,7 @@ import PetDetails from './pages/pets/PetDetails';
 import Reservations from './pages/reservations/Reservations';
 import ReservationDetails from './pages/reservations/ReservationDetails';
 import ReservationEdit from './pages/reservations/ReservationEdit';
-import Calendar from './pages/Calendar';
+import CalendarPage from './pages/calendar/CalendarPage';
 import Services from './pages/services/Services';
 import ServiceDetails from './pages/services/ServiceDetails';
 import Resources from './pages/resources/Resources';
@@ -68,7 +68,7 @@ const AppRoutes = () => {
         <Route path="/reservations" element={isAuthenticated ? <Reservations /> : <Navigate to="/login" />} />
         <Route path="/reservations/:id" element={isAuthenticated ? <ReservationDetails /> : <Navigate to="/login" />} />
         <Route path="/reservations/:id/edit" element={isAuthenticated ? <ReservationEdit /> : <Navigate to="/login" />} />
-        <Route path="/calendar" element={isAuthenticated ? <Calendar /> : <Navigate to="/login" />} />
+        <Route path="/calendar" element={isAuthenticated ? <CalendarPage /> : <Navigate to="/login" />} />
         <Route path="/services" element={isAuthenticated ? <Services /> : <Navigate to="/login" />} />
         <Route path="/services/new" element={isAuthenticated ? <ServiceDetails /> : <Navigate to="/login" />} />
         <Route path="/services/:id" element={isAuthenticated ? <ServiceDetails /> : <Navigate to="/login" />} />

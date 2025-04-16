@@ -25,17 +25,21 @@ import { serviceManagement } from '../../services/serviceManagement';
 interface ReservationFormProps {
   onSubmit: (formData: any) => Promise<void>;
   initialData?: any;
+  defaultDates?: {
+    start: Date;
+    end: Date;
+  };
 }
 
-const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData }) => {
+const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData, defaultDates }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [selectedPet, setSelectedPet] = useState<string>('');
   const [selectedService, setSelectedService] = useState<string>('');
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [startDate, setStartDate] = useState<Date | null>(defaultDates?.start || null);
+  const [endDate, setEndDate] = useState<Date | null>(defaultDates?.end || null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
