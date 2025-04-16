@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import * as serviceManagement from '../../services/serviceManagement';
+import { serviceManagement } from '../../services/serviceManagement';
 import { Service, ServiceCategory, AddOnService } from '../../types/service';
 
 interface AddOnFormData {
@@ -145,7 +145,19 @@ const ServiceDetails: React.FC = () => {
       if (isNewService) {
         await serviceManagement.createService(service as Service);
       } else {
-        await serviceManagement.updateService(id!, service as Service);
+        await serviceManagement.updateService(id!, {
+          name: service.name,
+          description: service.description,
+          duration: service.duration,
+          price: service.price,
+          color: service.color,
+          serviceCategory: service.serviceCategory,
+          isActive: service.isActive,
+          capacityLimit: service.capacityLimit,
+          requiresStaff: service.requiresStaff,
+          notes: service.notes,
+          availableAddOns: service.availableAddOns
+        });
       }
       setSnackbar({
         open: true,

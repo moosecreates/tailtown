@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, BrowserRouter, useLocation } from 'react-router-dom';
 import { Box, CircularProgress, CssBaseline, ThemeProvider } from '@mui/material';
 import { createTheme } from '@mui/material/styles';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -18,7 +18,25 @@ import PetDetails from './pages/pets/PetDetails';
 import Reservations from './pages/reservations/Reservations';
 import ReservationDetails from './pages/reservations/ReservationDetails';
 import Calendar from './pages/Calendar';
+import Services from './pages/services/Services';
+import ServiceDetails from './pages/services/ServiceDetails';
+import Resources from './pages/resources/Resources';
+import ResourceDetails from './pages/resources/ResourceDetails';
 import NotFound from './pages/NotFound';
+
+// Custom event for route changes
+export const RouteChangeEvent = 'app:route-change';
+
+// Emit route change event
+const RouteChangeListener = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(RouteChangeEvent, { detail: location }));
+  }, [location]);
+
+  return null;
+};
 
 const AppRoutes = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -49,6 +67,11 @@ const AppRoutes = () => {
         <Route path="/reservations" element={isAuthenticated ? <Reservations /> : <Navigate to="/login" />} />
         <Route path="/reservations/:id" element={isAuthenticated ? <ReservationDetails /> : <Navigate to="/login" />} />
         <Route path="/calendar" element={isAuthenticated ? <Calendar /> : <Navigate to="/login" />} />
+        <Route path="/services" element={isAuthenticated ? <Services /> : <Navigate to="/login" />} />
+        <Route path="/services/new" element={isAuthenticated ? <ServiceDetails /> : <Navigate to="/login" />} />
+        <Route path="/services/:id" element={isAuthenticated ? <ServiceDetails /> : <Navigate to="/login" />} />
+        <Route path="/resources" element={isAuthenticated ? <Resources /> : <Navigate to="/login" />} />
+        <Route path="/resources/:id" element={isAuthenticated ? <ResourceDetails /> : <Navigate to="/login" />} />
       </Route>
 
       {/* 404 Route */}
@@ -70,6 +93,7 @@ const App = () => {
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <RouteChangeListener />
         <AuthProvider>
           <React.Suspense fallback={
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>

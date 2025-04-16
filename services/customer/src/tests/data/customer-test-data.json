@@ -1,0 +1,55 @@
+{
+  "customers": [
+    {
+      "email": "john.doe@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "phone": "555-0100",
+      "address": "123 Main St",
+      "city": "Springfield",
+      "state": "IL",
+      "zipCode": "62701",
+      "notes": "Prefers morning appointments",
+      "portalEnabled": true,
+      "preferredContact": "EMAIL",
+      "emergencyContact": "Jane Doe",
+      "emergencyPhone": "555-0101",
+      "referralSource": "Website",
+      "tags": ["VIP", "Regular"]
+    },
+    {
+      "email": "jane.smith@example.com",
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "phone": "555-0102",
+      "address": "456 Oak Ave",
+      "city": "Springfield",
+      "state": "IL",
+      "zipCode": "62702",
+      "notes": "Allergic to certain shampoos",
+      "portalEnabled": true,
+      "preferredContact": "SMS",
+      "emergencyContact": "John Smith",
+      "emergencyPhone": "555-0103",
+      "referralSource": "Friend",
+      "tags": ["New Client"]
+    },
+    {
+      "email": "bob.wilson@example.com",
+      "firstName": "Bob",
+      "lastName": "Wilson",
+      "phone": "555-0104",
+      "address": "789 Pine St",
+      "city": "Springfield",
+      "state": "IL",
+      "zipCode": "62703",
+      "notes": "Multiple pets",
+      "portalEnabled": true,
+      "preferredContact": "BOTH",
+      "emergencyContact": "Mary Wilson",
+      "emergencyPhone": "555-0105",
+      "referralSource": "Google",
+      "tags": ["Regular"]
+    }
+  ]
+}

@@ -315,7 +315,7 @@ export const uploadPetPhoto = async (
       }
 
       // Update pet with new photo URL
-      const photoUrl = `/uploads/pets/${path.basename(req.file.path)}`;
+      const photoUrl = `/api/uploads/pets/${path.basename(req.file.path)}`;
       console.log('File path:', req.file.path);
       console.log('Photo URL being saved:', photoUrl);
       console.log('File exists check:', fs.existsSync(req.file.path));
@@ -330,6 +330,41 @@ export const uploadPetPhoto = async (
         status: 'success',
         data: updatedPet,
       });
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get all pets for a customer
+export const getPetsByCustomer = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { customerId } = req.params;
+    
+    // Check if customer exists
+    const customer = await prisma.customer.findUnique({
+      where: { id: customerId },
+    });
+    
+    if (!customer) {
+      return next(new AppError('Customer not found', 404));
+    }
+    
+    const pets = await prisma.pet.findMany({
+      where: { customerId },
+      orderBy: { name: 'asc' },
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      results: pets.length,
+      totalPages: 1,
+      currentPage: 1,
+      data: pets,
     });
   } catch (error) {
     next(error);

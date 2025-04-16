@@ -1,37 +1,15 @@
 import axios from 'axios';
+import { PaginatedResponse } from '../types/common';
+import { Customer } from '../types/customer';
 
 const API_URL = 'http://localhost:3002/api';
 
-export interface Customer {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  alternatePhone?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  notes?: string;
-  portalEnabled?: boolean;
-  preferredContact?: 'EMAIL' | 'SMS' | 'BOTH';
-  emergencyContact?: string;
-  emergencyPhone?: string;
-  vatTaxId?: string;
-  referralSource?: string;
-  tags?: string[];
-  isActive?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  pets?: any[];
-  notifications?: any;
-}
+export type { Customer };
 
 export const customerService = {
-  getAllCustomers: async (): Promise<Customer[]> => {
+  getAllCustomers: async (): Promise<PaginatedResponse<Customer>> => {
     const response = await axios.get(`${API_URL}/customers`);
-    return response.data.data || [];
+    return response.data;
   },
 
   getCustomerById: async (id: string): Promise<Customer> => {
@@ -74,6 +52,13 @@ export const customerService = {
   },
 
   deleteCustomer: async (id: string): Promise<void> => {
-    await axios.delete(`${API_URL}/customers/${id}`);
+    try {
+      console.log('Making DELETE request to:', `${API_URL}/customers/${id}?permanent=true`);
+      await axios.delete(`${API_URL}/customers/${id}?permanent=true`);
+    } catch (error: any) {
+      console.error('Error in deleteCustomer:', error);
+      console.error('Response:', error.response);
+      throw error;
+    }
   }
 };

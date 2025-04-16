@@ -41,6 +41,9 @@ model Customer {
   notifications     NotificationPreference?
   
   @@map("customers")
+  @@index([firstName, lastName], name: "customers_name_search_idx")
+  @@index([email], name: "customers_email_search_idx")
+  @@index([phone], name: "customers_phone_search_idx")
 }
 
 model Pet {
@@ -77,6 +80,9 @@ model Pet {
   medicalRecords      MedicalRecord[]
   
   @@map("pets")
+  @@index([customerId], name: "pets_customer_id_idx")
+  @@index([isActive, type], name: "pets_active_type_idx")
+  @@index([lastCheckIn], name: "pets_last_checkin_idx")
 }
 
 model Reservation {
@@ -115,6 +121,9 @@ model Reservation {
   checkIns          CheckIn[]
   
   @@map("reservations")
+  @@index([startDate, endDate], name: "reservations_date_range_idx")
+  @@index([status, startDate], name: "reservations_status_date_idx")
+  @@index([customerId, status], name: "reservations_customer_status_idx")
 }
 
 enum PetType {
@@ -188,11 +197,38 @@ enum InvoiceStatus {
 }
 
 enum ResourceType {
-  ROOM
-  KENNEL
+  // Legacy types (deprecated but kept for backward compatibility)
+  ROOM          // @deprecated - use specific room types instead
+  KENNEL        // @deprecated - use DOG_KENNEL or CAT_CONDO instead
+  PLAYPEN       // @deprecated - use specific play area types instead
+  TRAINING_AREA // @deprecated - use TRAINING_ROOM or AGILITY_COURSE instead
+
+  // Housing
+  DOG_KENNEL
+  CAT_CONDO
+  LUXURY_SUITE
+  
+  // Play Areas
+  INDOOR_PLAY_YARD
+  OUTDOOR_PLAY_YARD
+  PRIVATE_PLAY_AREA
+  
+  // Grooming
   GROOMING_TABLE
-  PLAYPEN
-  TRAINING_AREA
+  BATHING_STATION
+  DRYING_STATION
+  
+  // Training
+  TRAINING_ROOM
+  AGILITY_COURSE
+  
+  // Staff
+  GROOMER
+  TRAINER
+  ATTENDANT
+  BATHER
+  
+  // Other
   OTHER
 }
 
@@ -203,7 +239,7 @@ model Service {
   duration        Int           // Duration in minutes
   price           Float
   color           String?       // For calendar display
-  serviceCategory ServiceCategory
+  serviceCategory ServiceCategory?
   isActive        Boolean       @default(true)
   capacityLimit   Int?          // Max number of pets for this service type
   requiresStaff   Boolean       @default(false)
@@ -247,18 +283,44 @@ model ReservationAddOn {
 }
 
 model Resource {
-  id              String        @id @default(uuid())
-  name            String
-  type            ResourceType
-  description     String?
-  capacity        Int?
-  isActive        Boolean       @default(true)
-  notes           String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  reservations    Reservation[]
+  id                String               @id @default(uuid())
+  name              String
+  type              ResourceType
+  description       String?
+  capacity          Int?                // For areas that can handle multiple pets
+  availability      Json?               // Weekly schedule of availability
+  location          String?             // Physical location within facility
+  maintenanceSchedule Json?             // Schedule for cleaning, maintenance, etc.
+  attributes        Json?               // Additional attributes specific to the resource type
+  isActive          Boolean             @default(true)
+  notes             String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  reservations      Reservation[]
+  availabilitySlots ResourceAvailability[]
   
   @@map("resources")
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  RESERVED
+  MAINTENANCE
+  OUT_OF_SERVICE
+}
+
+model ResourceAvailability {
+  id              String             @id @default(uuid())
+  resourceId      String
+  resource        Resource           @relation(fields: [resourceId], references: [id])
+  startTime       DateTime
+  endTime         DateTime
+  status          AvailabilityStatus
+  reason          String?            // e.g., "Maintenance", "Reserved", "Out of Service"
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  
+  @@map("resource_availability")
 }
 
 model Staff {
@@ -336,6 +398,8 @@ model Payment {
   updatedAt         DateTime        @updatedAt
   
   @@map("payments")
+  @@index([customerId, paymentDate], name: "payments_customer_date_idx")
+  @@index([status, paymentDate], name: "payments_status_date_idx")
 }
 
 model Document {
@@ -395,6 +459,8 @@ model CheckIn {
   activities        Activity[]
   
   @@map("check_ins")
+  @@index([checkInTime], name: "check_ins_time_idx")
+  @@index([petId, checkInTime], name: "check_ins_pet_time_idx")
 }
 
 model Activity {

@@ -29,7 +29,9 @@ import {
   CalendarMonth as CalendarIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
-  AccountCircle as AccountCircleIcon
+  AccountCircle as AccountCircleIcon,
+  LocalOffer as ServicesIcon,
+  Inventory as ResourcesIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -86,6 +88,8 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
     { path: '/customers', label: 'Customers', icon: PeopleIcon },
     { path: '/pets', label: 'Pets', icon: PetsIcon },
+    { path: '/services', label: 'Services', icon: ServicesIcon },
+    { path: '/resources', label: 'Resources', icon: ResourcesIcon },
     { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
     { path: '/calendar', label: 'Calendar', icon: CalendarIcon },
   ];

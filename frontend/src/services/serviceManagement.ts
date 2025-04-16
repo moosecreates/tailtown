@@ -1,58 +1,90 @@
-import axios from 'axios';
 import { Service } from '../types/service';
+import api from './api';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
+export const serviceManagement = {
+  // Get all services
+  getAllServices: async () => {
+    const response = await api.get('/services');
+    return response.data;
+  },
 
-// Get all services
-export const getAllServices = async () => {
-  const response = await axios.get(`${API_URL}/services`);
-  return response.data;
-};
+  // Get a single service by ID
+  getServiceById: async (id: string) => {
+    const response = await api.get(`/services/${id}`);
+    return response.data;
+  },
 
-// Get a single service by ID
-export const getServiceById = async (id: string) => {
-  const response = await axios.get(`${API_URL}/services/${id}`);
-  return response.data;
-};
+  // Create a new service
+  createService: async (serviceData: Omit<Service, 'id'>) => {
+    const response = await api.post('/services', serviceData);
+    return response.data;
+  },
 
-// Create a new service
-export const createService = async (serviceData: Omit<Service, 'id'>) => {
-  const response = await axios.post(`${API_URL}/services`, serviceData);
-  return response.data;
-};
+  // Update a service
+  updateService: async (id: string, serviceData: Partial<Service>) => {
+    // Ensure we only send the fields that the backend expects
+    const {
+      name,
+      description,
+      duration,
+      price,
+      color,
+      serviceCategory,
+      isActive,
+      capacityLimit,
+      requiresStaff,
+      notes,
+      availableAddOns
+    } = serviceData;
 
-// Update a service
-export const updateService = async (id: string, serviceData: Partial<Service>) => {
-  const response = await axios.put(`${API_URL}/services/${id}`, serviceData);
-  return response.data;
-};
+    const response = await api.put(`/services/${id}`, {
+      name,
+      description,
+      duration,
+      price,
+      color,
+      serviceCategory,
+      isActive,
+      capacityLimit,
+      requiresStaff,
+      notes,
+      availableAddOns: availableAddOns?.map(addOn => ({
+        name: addOn.name,
+        description: addOn.description,
+        price: addOn.price,
+        duration: addOn.duration
+      }))
+    });
+    return response.data;
+  },
 
-// Delete a service
-export const deleteService = async (id: string) => {
-  const response = await axios.delete(`${API_URL}/services/${id}`);
-  return response.data;
-};
+  // Delete a service
+  deleteService: async (id: string) => {
+    const response = await api.delete(`/services/${id}`);
+    return response.data;
+  },
 
-// Deactivate a service (soft delete)
-export const deactivateService = async (id: string) => {
-  const response = await axios.patch(`${API_URL}/services/${id}/deactivate`);
-  return response.data;
-};
+  // Deactivate a service (soft delete)
+  deactivateService: async (id: string) => {
+    const response = await api.patch(`/services/${id}/deactivate`);
+    return response.data;
+  },
 
-// Get add-ons for a service
-export const getServiceAddOns = async (id: string) => {
-  const response = await axios.get(`${API_URL}/services/${id}/add-ons`);
-  return response.data;
-};
+  // Get add-ons for a service
+  getServiceAddOns: async (id: string) => {
+    const response = await api.get(`/services/${id}/add-ons`);
+    return response.data;
+  },
 
-// Get reservations for a service
-export const getServiceReservations = async (id: string, params?: {
-  page?: number;
-  limit?: number;
-  status?: string;
-  startDate?: string;
-  endDate?: string;
-}) => {
-  const response = await axios.get(`${API_URL}/services/${id}/reservations`, { params });
-  return response.data;
+  // Get reservations for a service
+  getServiceReservations: async (id: string, params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+  }) => {
+    const response = await api.get(`/services/${id}/reservations`, { params });
+    return response.data;
+  }
 };

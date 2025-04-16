@@ -9,8 +9,18 @@ import {
   Grid,
   CircularProgress,
   Snackbar,
-  Alert
+  Alert,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
+  InputAdornment
 } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Customer, customerService } from '../../services/customerService';
 
@@ -25,6 +35,7 @@ const CustomerDetails = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(isNewCustomer);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [searchQuery, setSearchQuery] = useState('');
   const [customer, setCustomer] = useState<Customer>({
     id: '',
     email: '',
@@ -71,12 +82,12 @@ const CustomerDetails = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setCustomer(prev => ({ ...prev, [name]: value }));
+    setCustomer((prev: Customer) => ({ ...prev, [name]: value }));
   };
 
   const validateForm = () => {
     const errors: string[] = [];
-    const fieldLabels: Record<keyof Customer, string> = {
+    const fieldLabels: Partial<Record<keyof Customer, string>> = {
       id: 'ID',
       email: 'Email',
       firstName: 'First name',
@@ -98,8 +109,7 @@ const CustomerDetails = () => {
       isActive: 'Active status',
       createdAt: 'Created at',
       updatedAt: 'Updated at',
-      pets: 'Pets',
-      notifications: 'Notifications'
+      pets: 'Pets'
     };
 
     // Required field validation
@@ -379,13 +389,77 @@ const CustomerDetails = () => {
 
         {!isNewCustomer && (
           <>
-            <Typography variant="h5" gutterBottom>
-              Pets
-            </Typography>
-            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-              <Typography variant="body1">
-                Pet management will be implemented in the next phase.
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 4, mb: 2 }}>
+              <Typography variant="h5">
+                Pets
               </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<AddIcon />}
+                onClick={() => navigate(`/pets/new?customerId=${id}`)}
+              >
+                Add Pet
+              </Button>
+            </Box>
+            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+              <TextField
+                fullWidth
+                placeholder="Search pets..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                sx={{ mb: 2 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              {customer.pets && customer.pets.length > 0 ? (
+                <List>
+                  {customer.pets
+                    .filter((pet: { name: string; breed?: string; type?: string }) => 
+                      pet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      (pet.breed || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      (pet.type || '').toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .map((pet: { id: string; name: string; breed?: string; type?: string }) => (
+                      <ListItem
+                        key={pet.id}
+                        sx={{
+                          border: '1px solid #e0e0e0',
+                          borderRadius: 1,
+                          mb: 1,
+                          '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }
+                        }}
+                      >
+                        <ListItemText
+                          primary={pet.name}
+                          secondary={
+                            <>
+                              {pet.type}{pet.breed ? ` • ${pet.breed}` : ''}
+                            </>
+                          }
+                        />
+                        <ListItemSecondaryAction>
+                          <IconButton
+                            edge="end"
+                            aria-label="edit"
+                            onClick={() => navigate(`/pets/${pet.id}`)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </ListItemSecondaryAction>
+                      </ListItem>
+                    ))}
+                </List>
+              ) : (
+                <Typography variant="body1" color="textSecondary" align="center">
+                  No pets found. Click "Add Pet" to add one.
+                </Typography>
+              )}
             </Paper>
           </>
         )}

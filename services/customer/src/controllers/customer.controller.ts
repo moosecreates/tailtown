@@ -199,7 +199,7 @@ export const updateCustomer = async (
     // First check if customer exists
     const customerExists = await prisma.customer.findUnique({
       where: { id },
-      select: { id: true }
+      include: { notifications: true }
     });
     
     if (!customerExists) {
@@ -207,30 +207,47 @@ export const updateCustomer = async (
     }
     
     // Update customer with transaction to ensure all related records are updated
-    const updatedCustomer = await prisma.$transaction(async (prismaClient: any) => {
+    const updatedCustomer = await prisma.$transaction(async (prismaClient) => {
       // Remove pets and notifications from the base data since they need special handling
       const { pets, notifications, ...basicCustomerData } = customerData;
 
       // Update basic customer data
       const customer = await prismaClient.customer.update({
         where: { id },
-        data: {
-          ...basicCustomerData,
-          // Handle pets properly if provided
-          pets: pets ? {
-            set: [] // First disconnect all existing pets
-          } : undefined,
-          // Handle notifications properly
-          notifications: notifications === null ? undefined : notifications
-        },
+        data: basicCustomerData,
         include: {
           pets: true,
           notifications: true
         }
       });
+
+      // Handle notification preferences if they exist
+      if (notifications) {
+        if (customerExists.notifications) {
+          // Update existing preferences
+          await prismaClient.notificationPreference.update({
+            where: { customerId: id },
+            data: notifications
+          });
+        } else {
+          // Create new preferences
+          await prismaClient.notificationPreference.create({
+            data: {
+              ...notifications,
+              customerId: id
+            }
+          });
+        }
+      }
       
-      
-      return customer;
+      // Return the updated customer with notifications
+      return prismaClient.customer.findUnique({
+        where: { id },
+        include: {
+          pets: true,
+          notifications: true
+        }
+      });
     });
     
     res.status(200).json({
@@ -238,6 +255,7 @@ export const updateCustomer = async (
       data: updatedCustomer,
     });
   } catch (error) {
+    console.error('Error updating customer:', error);
     next(error);
   }
 };

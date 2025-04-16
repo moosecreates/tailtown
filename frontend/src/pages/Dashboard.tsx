@@ -14,12 +14,12 @@ const Dashboard = () => {
     try {
       const [customers, pets] = await Promise.all([
         customerService.getAllCustomers(),
-        petService.getAllPets()
+        petService.getAllPets(1, 1)
       ]);
-      console.log('Loaded customers count:', customers.length);
-      console.log('Loaded pets count:', pets.length);
-      setCustomerCount(customers.length);
-      setPetCount(pets.length);
+      console.log('Loaded customers count:', customers.data?.length || 0);
+      console.log('Loaded pets count:', pets.results);
+      setCustomerCount(customers.data?.length || 0);
+      setPetCount(pets.results);
     } catch (err) {
       console.error('Error loading counts:', err);
       setError('Failed to load counts');

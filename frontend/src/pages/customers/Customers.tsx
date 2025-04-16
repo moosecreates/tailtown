@@ -59,8 +59,8 @@ const Customers = () => {
         setError(null);
         const data = await customerService.getAllCustomers();
         console.log('Loaded customers:', data);
-        setCustomers(data);
-        setFilteredCustomers(data);
+        setCustomers(data.data || []);
+        setFilteredCustomers(data.data || []);
       } catch (err) {
         console.error('Error loading customers:', err);
         setError('Failed to load customers. Please try again later.');
@@ -88,7 +88,7 @@ const Customers = () => {
         
         // Refresh the customer list after deletion
         const updatedCustomers = await customerService.getAllCustomers();
-        setCustomers(updatedCustomers);
+        setCustomers(updatedCustomers.data || []);
         
         setSnackbar({
           open: true,
@@ -105,7 +105,7 @@ const Customers = () => {
         
         // Refresh list to ensure UI is in sync with backend
         const updatedCustomers = await customerService.getAllCustomers();
-        setCustomers(updatedCustomers);
+        setCustomers(updatedCustomers.data || []);
       }
     }
   }, [setCustomers, setSnackbar]);
@@ -168,12 +168,12 @@ const Customers = () => {
                     sx={{ '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
                   >
                     {/* Add a tooltip showing matching pet names if search matches a pet */}
-                    {searchQuery && customer.pets?.some(pet => pet.name.toLowerCase().includes(searchQuery.toLowerCase())) && (
+                    {searchQuery && customer.pets?.some((pet: { name: string }) => pet.name.toLowerCase().includes(searchQuery.toLowerCase())) && (
                       <TableCell colSpan={6} sx={{ p: 0, borderBottom: 'none' }}>
                         <Box sx={{ backgroundColor: '#e3f2fd', p: 1, m: 1, borderRadius: 1 }}>
                           Matching pets: {customer.pets
-                            .filter(pet => pet.name.toLowerCase().includes(searchQuery.toLowerCase()))
-                            .map(pet => pet.name)
+                            .filter((pet: { name: string }) => pet.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                            .map((pet: { name: string }) => pet.name)
                             .join(', ')}
                         </Box>
                       </TableCell>

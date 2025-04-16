@@ -48,6 +48,18 @@ export interface Pet {
 }
 
 export const petService = {
+  getPetsByCustomer: async (customerId: string): Promise<PaginatedResponse<Pet>> => {
+    try {
+      console.log('Getting pets for customer:', customerId);
+      const response: AxiosResponse<PaginatedResponse<Pet>> = await api.get(`/pets/customer/${customerId}`);
+      console.log('Response:', response);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in getPetsByCustomer:', error);
+      throw error;
+    }
+  },
+
   getAllPets: async (page = 1, limit = 10, search = ''): Promise<PaginatedResponse<Pet>> => {
     try {
       console.log('Getting all pets...');

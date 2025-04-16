@@ -69,7 +69,7 @@ const PetDetails = () => {
       try {
         // Load customers for the dropdown
         const customersData = await customerService.getAllCustomers();
-        setCustomers(customersData);
+        setCustomers(customersData.data || []);
 
         if (!isNewPet) {
           const petData = await petService.getPetById(id!);
@@ -229,7 +229,7 @@ const PetDetails = () => {
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
             <Avatar
-              src={pet.profilePhoto || undefined}
+              src={pet.profilePhoto ? `http://localhost:3002${pet.profilePhoto}` : undefined}
               alt={pet.name}
               onError={(e) => {
                 console.error('Error loading image:', e);

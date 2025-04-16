@@ -22,6 +22,7 @@ export interface Service {
   serviceCategory: ServiceCategory;
   price: number;
   duration: number;
+  color?: string;
   capacityLimit?: number;
   requiresStaff: boolean;
   notes?: string;

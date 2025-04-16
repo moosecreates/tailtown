@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient, ReservationStatus, ServiceCategory } from '@prisma/client';
+import { PrismaClient, ReservationStatus } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 
 const prisma = new PrismaClient();
@@ -22,6 +22,7 @@ export const getAllReservations = async (
       include: {
         customer: true,
         pet: true,
+        service: true,
       },
     });
     
@@ -266,17 +267,19 @@ export const createReservation = async (
   next: NextFunction
 ) => {
   try {
-    const reservationData = req.body;
-    
-    // Validate service category
-    const validServiceCategories = Object.values(ServiceCategory);
-    if (!validServiceCategories.includes(reservationData.serviceCategory)) {
-      return next(new AppError(`Invalid service category. Must be one of: ${validServiceCategories.join(', ')}`, 400));
-    }
-    
+    const {
+      customerId,
+      petId,
+      serviceId,
+      startDate,
+      endDate,
+      status = 'PENDING',
+      notes = ''
+    } = req.body;
+
     // Check if the customer exists
     const customer = await prisma.customer.findUnique({
-      where: { id: reservationData.customerId },
+      where: { id: customerId },
     });
     
     if (!customer) {
@@ -285,20 +288,33 @@ export const createReservation = async (
     
     // Check if the pet exists and belongs to the customer
     const pet = await prisma.pet.findUnique({
-      where: { id: reservationData.petId },
+      where: { id: petId },
     });
     
     if (!pet) {
       return next(new AppError('Pet not found', 404));
     }
     
-    if (pet.customerId !== reservationData.customerId) {
+    if (pet.customerId !== customerId) {
       return next(new AppError('The pet does not belong to this customer', 400));
     }
     
     // Create the reservation
     const newReservation = await prisma.reservation.create({
-      data: reservationData,
+      data: {
+        customerId,
+        petId,
+        serviceId,
+        startDate,
+        endDate,
+        status,
+        notes
+      },
+      include: {
+        customer: true,
+        pet: true,
+        service: true
+      }
     });
     
     res.status(201).json({
@@ -320,13 +336,6 @@ export const updateReservation = async (
     const { id } = req.params;
     const reservationData = req.body;
     
-    // If serviceCategory is being updated, validate it
-    if (reservationData.serviceCategory) {
-      const validServiceCategories = Object.values(ServiceCategory);
-      if (!validServiceCategories.includes(reservationData.serviceCategory)) {
-        return next(new AppError(`Invalid service category. Must be one of: ${validServiceCategories.join(', ')}`, 400));
-      }
-    }
     
     // If status is being updated, validate it
     if (reservationData.status) {

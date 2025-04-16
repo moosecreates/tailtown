@@ -1,10 +1,63 @@
-import React from 'react';
-import { Typography, Container, Box, Button, Paper, Chip, IconButton } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  Typography, 
+  Container, 
+  Box, 
+  Button, 
+  Paper, 
+  Chip, 
+  IconButton, 
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Alert,
+  CircularProgress
+} from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
+import AddIcon from '@mui/icons-material/Add';
+import ReservationForm from '../../components/reservations/ReservationForm';
+import { reservationService } from '../../services/reservationService';
+import { debounce } from 'lodash';
 
 const Reservations = () => {
-  // Mock data for display purposes
-  const mockReservations = [
+  const [reservations, setReservations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const loadReservations = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await reservationService.getAllReservations(page);
+      setReservations(response.data || []);
+      setTotalPages(response.totalPages || 1);
+    } catch (err) {
+      setError('Failed to load reservations');
+      console.error('Error loading reservations:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [page]);
+
+  useEffect(() => {
+    loadReservations();
+  }, [loadReservations]);
+
+  const handleCreateReservation = async (formData: any) => {
+    try {
+      await reservationService.createReservation(formData);
+      setIsFormOpen(false);
+      loadReservations(); // Reload the list
+    } catch (err) {
+      console.error('Error creating reservation:', err);
+      throw err; // Let the form handle the error
+    }
+  };
+
+  const reservationsData = [
     { 
       id: '1', 
       pet: { id: '1', name: 'Buddy', type: 'DOG' },
@@ -25,8 +78,7 @@ const Reservations = () => {
     }
   ];
 
-  // Helper function to format dates
-  const formatDate = (dateString: string) => {
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       month: 'short', 
@@ -35,10 +87,9 @@ const Reservations = () => {
       hour: 'numeric',
       minute: '2-digit'
     });
-  };
+  }, []);
 
-  // Helper function to get chip color based on status
-  const getStatusColor = (status: string) => {
+  const getStatusColor = useCallback((status: string) => {
     switch(status) {
       case 'CONFIRMED': return 'success';
       case 'PENDING': return 'warning';
@@ -46,7 +97,17 @@ const Reservations = () => {
       case 'CANCELLED': return 'error';
       default: return 'default';
     }
-  };
+  }, []);
+
+  if (loading && !reservations.length) {
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="lg">
@@ -55,18 +116,25 @@ const Reservations = () => {
           <Typography variant="h4" gutterBottom>
             Reservations
           </Typography>
-          <Button variant="contained" color="primary">
+          <Button 
+            variant="contained" 
+            color="primary" 
+            startIcon={<AddIcon />}
+            onClick={() => setIsFormOpen(true)}
+          >
             Add New Reservation
           </Button>
         </Box>
+
+        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
         
         <Paper elevation={3}>
           <Box sx={{ p: 2 }}>
-            {mockReservations.length === 0 ? (
+            {reservations.length === 0 ? (
               <Typography variant="body1">No reservations found</Typography>
             ) : (
               <Box sx={{ display: 'grid', gap: 2 }}>
-                {mockReservations.map(reservation => (
+                {reservations.map(reservation => (
                   <Paper key={reservation.id} elevation={1} sx={{ p: 2 }}>
                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2 }}>
                       <Box>
@@ -104,6 +172,20 @@ const Reservations = () => {
           </Box>
         </Paper>
       </Box>
+
+      <Dialog 
+        open={isFormOpen} 
+        onClose={() => setIsFormOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          Create New Reservation
+        </DialogTitle>
+        <DialogContent>
+          <ReservationForm onSubmit={handleCreateReservation} />
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 };

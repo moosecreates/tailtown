@@ -24,9 +24,14 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      imgSrc: ["'self'", 'data:', '*']
+      imgSrc: ["'self'", 'data:', '*'],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      connectSrc: ["'self'", 'http://localhost:3002']
     }
-  }
+  },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginEmbedderPolicy: false
 }));
 app.use(cors());
 app.use(express.json());
@@ -41,10 +46,24 @@ if (!fs.existsSync(path.join(uploadsPath, 'pets'))) {
   fs.mkdirSync(path.join(uploadsPath, 'pets'), { recursive: true });
 }
 console.log('Static file directory:', uploadsPath);
-app.use('/uploads', express.static(uploadsPath, {
+app.use('/api/uploads', express.static(uploadsPath, {
   setHeaders: (res, filePath) => {
     res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Content-Type', 'image/jpeg');
+    // Set correct Content-Type based on file extension
+    const ext = path.extname(filePath).toLowerCase();
+    switch (ext) {
+      case '.png':
+        res.setHeader('Content-Type', 'image/png');
+        break;
+      case '.gif':
+        res.setHeader('Content-Type', 'image/gif');
+        break;
+      case '.jpg':
+      case '.jpeg':
+      default:
+        res.setHeader('Content-Type', 'image/jpeg');
+        break;
+    }
   }
 }));
 

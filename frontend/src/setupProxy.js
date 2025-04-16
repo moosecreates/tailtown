@@ -1,7 +1,7 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function(app) {
-  // Proxy API requests
+  // Proxy all requests through /api
   app.use(
     '/api',
     createProxyMiddleware({
@@ -16,20 +16,6 @@ module.exports = function(app) {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-      }
-    })
-  );
-
-  // Proxy static uploads
-  app.use(
-    '/uploads',
-    createProxyMiddleware({
-      target: 'http://localhost:3002',
-      changeOrigin: true,
-      logLevel: 'debug',
-      onError: (err, req, res) => {
-        console.error('Static Proxy Error:', err);
-        res.status(500).json({ error: 'Static Proxy Error', details: err.message });
       }
     })
   );
