@@ -36,6 +36,13 @@ const upload = multer({
 }).single('photo');
 
 // Get all pets
+/**
+ * Retrieves all pets with pagination and search functionality.
+ * Includes customer information in the response.
+ * @param req - Express request object with query parameters
+ * @param res - Express response object
+ * @param next - Express next function
+ */
 export const getAllPets = async (
   req: Request,
   res: Response,
@@ -141,6 +148,13 @@ export const getPetReservations = async (
 };
 
 // Create a new pet
+/**
+ * Creates a new pet record with associated customer and profile photo.
+ * Validates customer existence and handles photo upload.
+ * @param req - Express request object containing pet data
+ * @param res - Express response object
+ * @param next - Express next function
+ */
 export const createPet = async (
   req: Request,
   res: Response,
@@ -207,6 +221,13 @@ export const createPet = async (
 };
 
 // Update a pet
+/**
+ * Updates an existing pet's information and profile photo.
+ * Validates pet existence and handles photo updates.
+ * @param req - Express request object containing updated pet data
+ * @param res - Express response object
+ * @param next - Express next function
+ */
 export const updatePet = async (
   req: Request,
   res: Response,

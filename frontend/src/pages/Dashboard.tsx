@@ -13,6 +13,10 @@ import { customerService } from '../services/customerService';
 import { petService } from '../services/petService';
 import { reservationService } from '../services/reservationService';
 
+/**
+ * Dashboard component displays key business metrics and upcoming reservations.
+ * Shows customer count, pet count, revenue, and recent activity.
+ */
 const Dashboard = () => {
   const [customerCount, setCustomerCount] = useState<number | null>(null);
   const [petCount, setPetCount] = useState<number | null>(null);
@@ -22,7 +26,11 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async () => {
+  /**
+ * Loads all dashboard data including metrics and upcoming reservations.
+ * Handles loading states and error conditions.
+ */
+const loadData = async () => {
     setLoading(true);
     try {
       const [customers, pets, reservations, upcoming, revenue] = await Promise.all([

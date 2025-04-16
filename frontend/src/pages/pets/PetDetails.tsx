@@ -26,6 +26,10 @@ import { Pet, petService } from '../../services/petService';
 import { customerService } from '../../services/customerService';
 
 
+/**
+ * PetDetails component handles the creation and editing of pet profiles.
+ * It manages pet data, photo uploads, and customer associations.
+ */
 const PetDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -92,7 +96,11 @@ const PetDetails = () => {
     loadData();
   }, [id, isNewPet]);
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  /**
+ * Handles changes to text input fields, with special handling for dates and weights.
+ * @param e - The change event from the input field
+ */
+const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name) {
       if (name === 'birthdate') {

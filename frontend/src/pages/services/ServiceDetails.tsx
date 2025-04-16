@@ -32,6 +32,10 @@ interface AddOnFormData {
   duration: number;
 }
 
+/**
+ * ServiceDetails component handles the creation and editing of service offerings.
+ * Manages service data, pricing, capacity, and add-ons.
+ */
 const ServiceDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -102,7 +106,11 @@ const ServiceDetails: React.FC = () => {
     }));
   };
 
-  const handleCategoryChange = (event: SelectChangeEvent<ServiceCategory>) => {
+  /**
+ * Updates the service category when changed in the dropdown.
+ * @param event - The select change event containing the new category
+ */
+const handleCategoryChange = (event: SelectChangeEvent<ServiceCategory>) => {
     setService((prev: Partial<Service>) => ({
       ...prev,
       serviceCategory: event.target.value as ServiceCategory

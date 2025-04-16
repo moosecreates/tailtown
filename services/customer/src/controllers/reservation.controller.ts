@@ -57,6 +57,13 @@ export const getAllReservations = async (
 };
 
 // Get a single reservation by ID
+/**
+ * Retrieves a single reservation by ID with all related data.
+ * Includes customer, pet, and service information.
+ * @param req - Express request object with reservation ID
+ * @param res - Express response object
+ * @param next - Express next function
+ */
 export const getReservationById = async (
   req: Request,
   res: Response,
@@ -278,6 +285,13 @@ export const getReservationsByStatus = async (
 };
 
 // Create a new reservation
+/**
+ * Creates a new reservation with validation of customer, pet, and service.
+ * Ensures the pet belongs to the customer and service is available.
+ * @param req - Express request object with reservation data
+ * @param res - Express response object
+ * @param next - Express next function
+ */
 export const createReservation = async (
   req: Request,
   res: Response,
@@ -344,6 +358,13 @@ export const createReservation = async (
 };
 
 // Update a reservation
+/**
+ * Updates an existing reservation with validation of status changes.
+ * Ensures all relationships remain valid after the update.
+ * @param req - Express request object with updated reservation data
+ * @param res - Express response object
+ * @param next - Express next function
+ */
 export const updateReservation = async (
   req: Request,
   res: Response,
