@@ -66,9 +66,7 @@ const Resources: React.FC = () => {
 
   const loadResources = async () => {
     try {
-      console.log('Loading resources...');
       const response = await resourceManagement.getAllResources();
-      console.log('Resources loaded:', response);
       if (Array.isArray(response)) {
         setResources(response);
       } else if (response?.data?.data && Array.isArray(response.data.data)) {
@@ -136,7 +134,7 @@ const Resources: React.FC = () => {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => {
-              console.log('Navigating to new resource form');
+
               navigate('/resources/new');
             }}
           >

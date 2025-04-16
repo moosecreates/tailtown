@@ -45,23 +45,19 @@ const ResourceDetails: React.FC = () => {
   });
 
   useEffect(() => {
-    console.log('ResourceDetails mounted, id:', id);
-    const initializeResource = async () => {
+    const initializeData = async () => {
       try {
         if (!id) {
-          console.log('No ID provided, redirecting');
           navigate('/resources');
           return;
         }
 
         if (id === 'new') {
-          console.log('Setting up new resource');
           setResource(initialResource);
           setLoading(false);
           return;
         }
 
-        console.log('Loading existing resource:', id);
         await loadResource();
       } catch (error) {
         console.error('Error initializing resource:', error);
@@ -76,7 +72,7 @@ const ResourceDetails: React.FC = () => {
       }
     };
 
-    initializeResource();
+    initializeData();
   }, [id, navigate]);
 
   const loadResource = async () => {
@@ -111,9 +107,7 @@ const ResourceDetails: React.FC = () => {
         throw new Error('Resource ID is required');
       }
 
-      console.log('Submitting resource:', { id, resource });
       if (id === 'new') {
-        console.log('Creating new resource');
         const { maintenanceSchedule, ...cleanResource } = resource;
         const resourceToCreate = {
           ...cleanResource,
@@ -122,9 +116,8 @@ const ResourceDetails: React.FC = () => {
           type: resource.type || ResourceType.OTHER,
           attributes: resource.attributes || {}
         } as Resource;
-        console.log('Resource to create:', resourceToCreate);
+
         const createdResource = await resourceManagement.createResource(resourceToCreate);
-        console.log('Created resource:', createdResource);
         setSnackbar({
           open: true,
           message: 'Resource created successfully',

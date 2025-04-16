@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 3002;
 
 // Request logging middleware
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - Query:`, req.query);
+  // Request logging handled by Morgan middleware
   next();
 });
 
@@ -51,7 +51,7 @@ if (!fs.existsSync(uploadsPath)) {
 if (!fs.existsSync(path.join(uploadsPath, 'pets'))) {
   fs.mkdirSync(path.join(uploadsPath, 'pets'), { recursive: true });
 }
-console.log('Static file directory:', uploadsPath);
+// Static file directory configured
 app.use('/api/uploads', express.static(uploadsPath, {
   setHeaders: (res, filePath) => {
     res.setHeader('Cache-Control', 'no-cache');
@@ -76,7 +76,7 @@ app.use('/api/uploads', express.static(uploadsPath, {
 // Log the contents of the uploads directory
 if (fs.existsSync(path.join(uploadsPath, 'pets'))) {
   const files = fs.readdirSync(path.join(uploadsPath, 'pets'));
-  console.log('Files in uploads/pets:', files);
+  // Upload directory initialized
 }
 
 // Add test endpoints

@@ -73,7 +73,7 @@ const PetDetails = () => {
 
         if (!isNewPet) {
           const petData = await petService.getPetById(id!);
-          console.log('Loaded pet data:', petData);
+
 
           // Format the birthdate from ISO to YYYY-MM-DD for the input field
           if (petData.birthdate) {
@@ -96,14 +96,13 @@ const PetDetails = () => {
     const { name, value } = e.target;
     if (name) {
       if (name === 'birthdate') {
-        console.log('Date input value:', value);
       }
       setPet(prev => {
         const newValue = name === 'weight' ? (value ? parseFloat(value) : null) :
                         name === 'birthdate' ? (value ? value : null) :
                         value;
         if (name === 'birthdate') {
-          console.log('Stored date value:', newValue);
+
         }
         return {
           ...prev,
@@ -132,7 +131,7 @@ const PetDetails = () => {
   };
 
   const handleSave = async () => {
-    console.log('Saving pet with data:', pet);
+
     try {
       setSaving(true);
       
@@ -146,9 +145,7 @@ const PetDetails = () => {
       }
 
       // Clean up the data before sending
-      console.log('Original birthdate:', pet.birthdate);
-      const formattedDate = pet.birthdate ? new Date(pet.birthdate).toISOString() : null;
-      console.log('Formatted birthdate:', formattedDate);
+      const formattedDate = pet.birthdate ? new Date(pet.birthdate).toISOString().split('T')[0] : null;
       
       const cleanPetData = {
         name: pet.name,
@@ -233,7 +230,7 @@ const PetDetails = () => {
               alt={pet.name}
               onError={(e) => {
                 console.error('Error loading image:', e);
-                console.log('Attempted URL:', pet.profilePhoto || 'no photo');
+
               }}
               sx={{
                 width: 150,
@@ -527,7 +524,6 @@ const PetDetails = () => {
             vaccinationStatus={pet.vaccinationStatus}
             vaccineExpirations={pet.vaccineExpirations}
             onVaccinationStatusChange={(key, value) => {
-              console.log('Updating vaccination status:', { key, value });
               setPet(prev => {
                 const newPet = {
                   ...prev,
@@ -541,7 +537,6 @@ const PetDetails = () => {
               });
             }}
             onVaccineExpirationChange={(key, value) => {
-              console.log('Updating vaccine expiration:', { key, value });
               setPet(prev => {
                 const newPet = {
                   ...prev,

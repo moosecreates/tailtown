@@ -42,8 +42,7 @@ export const getAllPets = async (
   next: NextFunction
 ) => {
   try {
-    console.log('GET /pets request received');
-    console.log('Query params:', req.query);
+    // Process get all pets request
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const search = String(req.query.search || '');
@@ -97,7 +96,7 @@ export const getPetById = async (
     });
 
     if (pet?.profilePhoto) {
-      console.log('Retrieved photo URL:', pet.profilePhoto);
+
     }
     
     if (!pet) {
@@ -318,11 +317,7 @@ export const uploadPetPhoto = async (
 
       // Update pet with new photo URL
       const photoUrl = `/api/uploads/pets/${path.basename(req.file.path)}`;
-      console.log('File path:', req.file.path);
-      console.log('Photo URL being saved:', photoUrl);
-      console.log('File exists check:', fs.existsSync(req.file.path));
-      console.log('File stats:', fs.statSync(req.file.path));
-      console.log('Directory contents:', fs.readdirSync(path.dirname(req.file.path)));
+      // Photo upload successful
       const updatedPet = await prisma.pet.update({
         where: { id },
         data: { profilePhoto: photoUrl },

@@ -45,9 +45,7 @@ const Services: React.FC = () => {
 
   const loadServices = async () => {
     try {
-      console.log('Loading services...');
       const response = await serviceManagement.getAllServices();
-      console.log('Services loaded:', response);
       if (Array.isArray(response)) {
         setServices(response);
       } else if (response?.data?.data && Array.isArray(response.data.data)) {
