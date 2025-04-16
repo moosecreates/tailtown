@@ -5,7 +5,7 @@ import api from './api';
 export const getAllResources = async () => {
   try {
     console.log('Getting all resources...');
-    const response = await api.get('/resources');
+    const response = await api.get('/api/resources');
     console.log('Response:', response);
     if (response.data.status === 'success') {
       return response.data.data || [];
@@ -21,7 +21,7 @@ export const getAllResources = async () => {
 export const getResourceById = async (id: string) => {
   try {
     console.log('Getting resource:', id);
-    const response = await api.get(`/resources/${id}`);
+    const response = await api.get(`/api/resources/${id}`);
     console.log('Response:', response);
     return response.data.data;
   } catch (error: any) {
@@ -34,7 +34,7 @@ export const getResourceById = async (id: string) => {
 export const createResource = async (resourceData: Omit<Resource, 'id' | 'createdAt' | 'updatedAt'>) => {
   try {
     console.log('Creating resource:', resourceData);
-    const response = await api.post('/resources', {
+    const response = await api.post('/api/resources', {
       ...resourceData,
       isActive: true,
       attributes: resourceData.attributes || {}
@@ -54,7 +54,7 @@ export const createResource = async (resourceData: Omit<Resource, 'id' | 'create
 export const updateResource = async (id: string, resourceData: Partial<Resource>) => {
   try {
     console.log('Updating resource:', id, resourceData);
-    const response = await api.put(`/resources/${id}`, resourceData);
+    const response = await api.put(`/api/resources/${id}`, resourceData);
     console.log('Response:', response);
     return response.data.data;
   } catch (error: any) {
@@ -67,7 +67,7 @@ export const updateResource = async (id: string, resourceData: Partial<Resource>
 export const deleteResource = async (id: string) => {
   try {
     console.log('Deleting resource:', id);
-    const response = await api.delete(`/resources/${id}`);
+    const response = await api.delete(`/api/resources/${id}`);
     console.log('Response:', response);
     return response.data.data;
   } catch (error: any) {
@@ -81,7 +81,7 @@ export const createAvailabilitySlot = async (
   resourceId: string,
   slotData: Omit<ResourceAvailability, 'id' | 'resourceId' | 'createdAt' | 'updatedAt'>
 ) => {
-  const response = await api.post(`/resources/${resourceId}/availability`, slotData);
+  const response = await api.post(`/api/resources/${resourceId}/availability`, slotData);
   return response.data;
 };
 
@@ -90,12 +90,12 @@ export const updateAvailabilitySlot = async (
   id: string,
   slotData: Partial<Omit<ResourceAvailability, 'id' | 'resourceId' | 'createdAt' | 'updatedAt'>>
 ) => {
-  const response = await api.put(`/resources/availability/${id}`, slotData);
+  const response = await api.put(`/api/resources/availability/${id}`, slotData);
   return response.data;
 };
 
 // Delete availability slot
 export const deleteAvailabilitySlot = async (id: string) => {
-  const response = await api.delete(`/resources/availability/${id}`);
+  const response = await api.delete(`/api/resources/availability/${id}`);
   return response.data;
 };

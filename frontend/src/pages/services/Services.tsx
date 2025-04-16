@@ -45,11 +45,31 @@ const Services: React.FC = () => {
 
   const loadServices = async () => {
     try {
+      console.log('Loading services...');
       const response = await serviceManagement.getAllServices();
-      setServices(response.data);
+      console.log('Services loaded:', response);
+      if (Array.isArray(response)) {
+        setServices(response);
+      } else if (response?.data?.data && Array.isArray(response.data.data)) {
+        setServices(response.data.data);
+      } else if (response?.data && Array.isArray(response.data)) {
+        setServices(response.data);
+      } else {
+        console.error('Invalid services response format:', response);
+        setServices([]);
+      }
       setLoading(false);
-    } catch (err) {
-      setError('Failed to load services');
+    } catch (err: any) {
+      console.error('Error loading services:', err);
+      if (err.response) {
+        console.error('Response error:', err.response.data);
+      }
+      setSnackbar({
+        open: true,
+        message: 'Failed to load services',
+        severity: 'error'
+      });
+      setServices([]);
       setLoading(false);
     }
   };

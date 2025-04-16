@@ -67,17 +67,30 @@ const Resources: React.FC = () => {
   const loadResources = async () => {
     try {
       console.log('Loading resources...');
-      const resources = await resourceManagement.getAllResources();
-      console.log('Resources loaded:', resources);
-      setResources(resources || []);
+      const response = await resourceManagement.getAllResources();
+      console.log('Resources loaded:', response);
+      if (Array.isArray(response)) {
+        setResources(response);
+      } else if (response?.data?.data && Array.isArray(response.data.data)) {
+        setResources(response.data.data);
+      } else if (response?.data && Array.isArray(response.data)) {
+        setResources(response.data);
+      } else {
+        console.error('Invalid resources response format:', response);
+        setResources([]);
+      }
       setLoading(false);
     } catch (err: any) {
-      console.error('Error loading resources:', err.response?.data || err.message);
+      console.error('Error loading resources:', err);
+      if (err.response) {
+        console.error('Response error:', err.response.data);
+      }
       setSnackbar({
         open: true,
         message: 'Failed to load resources',
         severity: 'error'
       });
+      setResources([]);
       setLoading(false);
     }
   };

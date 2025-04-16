@@ -32,8 +32,14 @@ const Reservations = () => {
       setLoading(true);
       setError('');
       const response = await reservationService.getAllReservations(page);
-      setReservations(response.data || []);
-      setTotalPages(response.totalPages || 1);
+      console.log('Reservations response:', response);
+      if (response?.status === 'success' && Array.isArray(response?.data)) {
+        setReservations(response.data);
+        setTotalPages(response.totalPages || 1);
+      } else {
+        console.error('Invalid reservations response format:', response);
+        setReservations([]);
+      }
     } catch (err) {
       setError('Failed to load reservations');
       console.error('Error loading reservations:', err);

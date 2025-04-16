@@ -19,6 +19,12 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3002;
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - Query:`, req.query);
+  next();
+});
+
 // Middleware
 app.use(helmet({
   contentSecurityPolicy: {

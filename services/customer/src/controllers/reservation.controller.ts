@@ -54,6 +54,7 @@ export const getReservationById = async (
       include: {
         customer: true,
         pet: true,
+        service: true,
       },
     });
     
@@ -419,6 +420,11 @@ export const updateReservation = async (
     const updatedReservation = await prisma.reservation.update({
       where: { id },
       data: reservationData,
+      include: {
+        customer: true,
+        pet: true,
+        service: true,
+      },
     });
     
     res.status(200).json({

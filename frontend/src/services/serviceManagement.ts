@@ -4,19 +4,19 @@ import api from './api';
 export const serviceManagement = {
   // Get all services
   getAllServices: async () => {
-    const response = await api.get('/services');
+    const response = await api.get('/api/services');
     return response.data;
   },
 
   // Get a single service by ID
   getServiceById: async (id: string) => {
-    const response = await api.get(`/services/${id}`);
+    const response = await api.get(`/api/services/${id}`);
     return response.data;
   },
 
   // Create a new service
   createService: async (serviceData: Omit<Service, 'id'>) => {
-    const response = await api.post('/services', serviceData);
+    const response = await api.post('/api/services', serviceData);
     return response.data;
   },
 
@@ -37,7 +37,7 @@ export const serviceManagement = {
       availableAddOns
     } = serviceData;
 
-    const response = await api.put(`/services/${id}`, {
+    const response = await api.put(`/api/services/${id}`, {
       name,
       description,
       duration,
@@ -60,19 +60,19 @@ export const serviceManagement = {
 
   // Delete a service
   deleteService: async (id: string) => {
-    const response = await api.delete(`/services/${id}`);
+    const response = await api.delete(`/api/services/${id}`);
     return response.data;
   },
 
   // Deactivate a service (soft delete)
   deactivateService: async (id: string) => {
-    const response = await api.patch(`/services/${id}/deactivate`);
+    const response = await api.patch(`/api/services/${id}/deactivate`);
     return response.data;
   },
 
   // Get add-ons for a service
   getServiceAddOns: async (id: string) => {
-    const response = await api.get(`/services/${id}/add-ons`);
+    const response = await api.get(`/api/services/${id}/add-ons`);
     return response.data;
   },
 
@@ -84,7 +84,7 @@ export const serviceManagement = {
     startDate?: string;
     endDate?: string;
   }) => {
-    const response = await api.get(`/services/${id}/reservations`, { params });
+    const response = await api.get(`/api/services/${id}/reservations`, { params });
     return response.data;
   }
 };
