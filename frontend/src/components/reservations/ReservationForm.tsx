@@ -22,15 +22,53 @@ import { customerService } from '../../services/customerService';
 import { petService } from '../../services/petService';
 import { serviceManagement } from '../../services/serviceManagement';
 
+/**
+ * Props for the ReservationForm component
+ */
 interface ReservationFormProps {
+  /**
+   * Callback function called when the form is submitted
+   * @param formData - The form data for the reservation
+   */
   onSubmit: (formData: any) => Promise<void>;
+
+  /**
+   * Optional initial data for editing an existing reservation
+   */
   initialData?: any;
+
+  /**
+   * Optional default dates for a new reservation
+   */
   defaultDates?: {
+    /** Start date and time */
     start: Date;
+    /** End date and time */
     end: Date;
   };
 }
 
+/**
+ * Form component for creating and editing reservations
+ * 
+ * This component provides a form interface for managing reservations, including:
+ * - Customer selection
+ * - Pet selection (filtered by selected customer)
+ * - Service selection
+ * - Date and time selection
+ * - Form validation
+ * - Error handling
+ * 
+ * @component
+ * @example
+ * ```tsx
+ * <ReservationForm
+ *   onSubmit={handleSubmit}
+ *   initialData={existingReservation}
+ *   defaultDates={{ start: new Date(), end: new Date() }}
+ * />
+ * ```
+ */
 const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData, defaultDates }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
@@ -77,6 +115,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     loadInitialData();
   }, [initialData]);
 
+  /**
+   * Handle customer selection change
+   * Loads the selected customer's pets and updates the form state
+   * @param event - The select change event
+   */
   const handleCustomerChange = async (event: SelectChangeEvent<string>) => {
     const customerId = event.target.value;
     setSelectedCustomer(customerId);
@@ -95,6 +138,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     }
   };
 
+  /**
+   * Handle form submission
+   * Validates the form data and calls the onSubmit callback
+   * @param event - The form submission event
+   */
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');

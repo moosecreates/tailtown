@@ -1,0 +1,65 @@
+# System Architecture Diagram
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Web Browser                                    │
+└───────────────────────────────────┬─────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Frontend (React)                              │
+│                                                                        │
+│  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐           │
+│  │ Calendar │   │ Customer │   │  Pets    │   │ Services │           │
+│  │   Page   │   │   Page   │   │  Page    │   │   Page   │           │
+│  └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘           │
+│       │              │              │              │                   │
+│  ┌────▼──────────────▼──────────────▼──────────────▼─────┐           │
+│  │                  Service Layer                         │           │
+│  │    (API calls, state management, data formatting)      │           │
+│  └────────────────────────┬───────────────────────────────┘           │
+└───────────────────────────┼────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Backend (Express)                               │
+│                                                                        │
+│  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐           │
+│  │ Calendar │   │ Customer │   │   Pet    │   │ Service  │           │
+│  │ Routes   │   │  Routes  │   │  Routes  │   │  Routes  │           │
+│  └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘           │
+│       │              │              │              │                   │
+│  ┌────▼──────────────▼──────────────▼──────────────▼─────┐           │
+│  │                  Controllers                           │           │
+│  │         (Business logic, data validation)              │           │
+│  └────────────────────────┬───────────────────────────────┘           │
+│                           │                                           │
+│  ┌─────────────────────────────────────────────┐                     │
+│  │               Prisma ORM                     │                     │
+│  └────────────────────────┬────────────────────┘                     │
+└───────────────────────────┼────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      PostgreSQL Database                                │
+└─────────────────────────────────────────────────────────────────────────┘
+
+# Data Flow
+
+1. User interacts with the frontend (e.g., creates a reservation)
+2. Frontend service layer makes API call to backend
+3. Backend routes direct request to appropriate controller
+4. Controller validates data and performs business logic
+5. Prisma ORM handles database operations
+6. Response flows back up through the layers
+7. Frontend updates UI with new data
+
+# Key Features
+
+- JWT Authentication
+- Role-based access control
+- Real-time calendar updates
+- Responsive UI
+- Type safety with TypeScript
+- Data validation at multiple layers
+- Error handling and logging
+- Database migrations with Prisma

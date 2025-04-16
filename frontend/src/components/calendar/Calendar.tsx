@@ -10,10 +10,34 @@ import { reservationService } from '../../services/reservationService';
 import ReservationForm from '../reservations/ReservationForm';
 import { Reservation } from '../../services/reservationService';
 
+/**
+ * Props for the Calendar component
+ */
 interface CalendarProps {
+  /**
+   * Optional callback function called when a reservation is created or updated
+   * @param reservation - The newly created or updated reservation
+   */
   onEventUpdate?: (reservation: Reservation) => void;
 }
 
+/**
+ * Calendar component for managing reservations
+ * 
+ * This component provides a full-featured calendar interface for managing reservations.
+ * Features include:
+ * - Month, week, and day views
+ * - Interactive event creation by clicking time slots
+ * - Event editing by clicking existing events
+ * - Color-coded events based on reservation status
+ * - Drag and drop functionality
+ * 
+ * @component
+ * @example
+ * ```tsx
+ * <Calendar onEventUpdate={(reservation) => console.log('Updated:', reservation)} />
+ * ```
+ */
 const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
   const [events, setEvents] = useState<EventInput[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -45,6 +69,11 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
     loadReservations();
   }, [loadReservations]);
 
+  /**
+   * Get the color for a reservation status
+   * @param status - The reservation status
+   * @returns The color code for the status
+   */
   const getStatusColor = (status: string): string => {
     switch (status) {
       case 'CONFIRMED':
@@ -62,6 +91,11 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
     }
   };
 
+  /**
+   * Handle date selection in the calendar
+   * Opens the reservation form with the selected date range
+   * @param selectInfo - Information about the selected date range
+   */
   const handleDateSelect = (selectInfo: DateSelectArg) => {
     setSelectedDate({
       start: selectInfo.start,
@@ -70,12 +104,21 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
     setIsFormOpen(true);
   };
 
+  /**
+   * Handle clicking on an existing event
+   * Opens the reservation form with the event's data
+   * @param clickInfo - Information about the clicked event
+   */
   const handleEventClick = (clickInfo: EventClickArg) => {
     const reservation = clickInfo.event.extendedProps.reservation;
     setSelectedEvent(reservation);
     setIsFormOpen(true);
   };
 
+  /**
+   * Handle form submission for creating or updating a reservation
+   * @param formData - The form data for the reservation
+   */
   const handleFormSubmit = async (formData: any) => {
     try {
       let updatedReservation;
