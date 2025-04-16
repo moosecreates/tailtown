@@ -40,10 +40,22 @@ export interface Reservation {
 }
 
 export const reservationService = {
-  getAllReservations: async (page = 1, limit = 10): Promise<{ status: string; data: Reservation[]; totalPages: number; currentPage: number; results: number }> => {
+  getAllReservations: async (
+    page = 1,
+    limit = 10,
+    sortBy?: string,
+    sortOrder: 'asc' | 'desc' = 'asc',
+    status?: string
+  ): Promise<{ status: string; data: Reservation[]; totalPages: number; currentPage: number; results: number }> => {
     try {
       const response: AxiosResponse = await api.get('/api/reservations', {
-        params: { page, limit }
+        params: { 
+          page, 
+          limit,
+          sortBy,
+          sortOrder,
+          status
+        }
       });
       return response.data;
     } catch (error: any) {
@@ -113,6 +125,17 @@ export const reservationService = {
       return response.data;
     } catch (error: any) {
       console.error('Error in getReservationsByPet:', error);
+      throw error;
+    }
+  },
+
+  getTodayRevenue: async (): Promise<{ revenue: number }> => {
+    try {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const response: AxiosResponse = await api.get('/api/reservations/revenue/today');
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in getTodayRevenue:', error);
       throw error;
     }
   }

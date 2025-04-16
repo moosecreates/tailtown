@@ -15,7 +15,23 @@ export const getAllReservations = async (
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const where = {
+      status: {
+        notIn: ['PENDING', 'CANCELLED'] as ReservationStatus[]
+      },
+      startDate: {
+        gte: today,
+        lt: tomorrow
+      }
+    };
+
     const reservations = await prisma.reservation.findMany({
+      where,
       skip,
       take: limit,
       orderBy: { startDate: 'desc' },
@@ -26,7 +42,7 @@ export const getAllReservations = async (
       },
     });
     
-    const total = await prisma.reservation.count();
+    const total = await prisma.reservation.count({ where });
     
     res.status(200).json({
       status: 'success',
@@ -452,6 +468,47 @@ export const deleteReservation = async (
     res.status(204).json({
       status: 'success',
       data: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get today's revenue
+export const getTodayRevenue = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const reservations = await prisma.reservation.findMany({
+      where: {
+        startDate: {
+          gte: today,
+          lt: tomorrow
+        },
+        status: {
+          notIn: ['PENDING', 'CANCELLED']
+        }
+      },
+      include: {
+        service: true
+      }
+    });
+    
+    const revenue = reservations.reduce((total, reservation) => {
+      return total + (reservation.service?.price || 0);
+    }, 0);
+    
+    res.status(200).json({
+      status: 'success',
+      revenue
     });
   } catch (error) {
     next(error);

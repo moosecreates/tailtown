@@ -8,7 +8,8 @@ import {
   getReservationsByCustomer,
   getReservationsByPet,
   getReservationsByDateRange,
-  getReservationsByStatus
+  getReservationsByStatus,
+  getTodayRevenue
 } from '../controllers/reservation.controller';
 
 const router = Router();
@@ -24,6 +25,9 @@ router.get('/dates', getReservationsByDateRange);
 
 // GET reservations by customer
 router.get('/customer/:customerId', getReservationsByCustomer);
+
+// GET today's revenue
+router.get('/revenue/today', getTodayRevenue);
 
 // GET reservations by pet
 router.get('/pet/:petId', getReservationsByPet);
