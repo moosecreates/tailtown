@@ -135,41 +135,83 @@ const Reservations = () => {
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
         
         <Paper elevation={3}>
-          <Box sx={{ p: 2 }}>
+          <Box sx={{ p: 1.5 }}>
             {reservations.length === 0 ? (
               <Typography variant="body1">No reservations found</Typography>
             ) : (
-              <Box sx={{ display: 'grid', gap: 2 }}>
+              <Box sx={{ display: 'grid', gap: 1 }}>
                 {reservations.map(reservation => (
-                  <Paper key={reservation.id} elevation={1} sx={{ p: 2 }}>
-                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, gap: 2 }}>
+                  <Paper 
+                    key={reservation.id} 
+                    elevation={1} 
+                    sx={{ 
+                      p: 1.5,
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
+                        transition: 'background-color 0.2s'
+                      }
+                    }}
+                  >
+                    <Box sx={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: { 
+                        xs: '1fr', 
+                        sm: '2fr 2fr 2.5fr 100px' 
+                      }, 
+                      gap: 2,
+                      alignItems: 'center'
+                    }}>
                       <Box>
-                        <Typography variant="subtitle2">Pet</Typography>
-                        <Typography variant="body1">{reservation.pet.name} ({reservation.pet.type})</Typography>
-                        <Typography variant="subtitle2" sx={{ mt: 1 }}>Owner</Typography>
-                        <Typography variant="body1">{reservation.customer.firstName} {reservation.customer.lastName}</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Pet:</Typography>
+                          <Typography variant="body2">{reservation.pet.name}</Typography>
+                          <Typography variant="caption" color="text.secondary">({reservation.pet.type})</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                          <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Owner:</Typography>
+                          <Typography variant="body2">{reservation.customer.firstName} {reservation.customer.lastName}</Typography>
+                        </Box>
                       </Box>
                       <Box>
-                        <Typography variant="subtitle2">Service</Typography>
-                        <Typography variant="body1">{reservation.service.name}</Typography>
-                        <Typography variant="subtitle2" sx={{ mt: 1 }}>Status</Typography>
-                        <Chip 
-                          size="small"
-                          label={reservation.status} 
-                          color={getStatusColor(reservation.status) as any}
-                        />
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Service:</Typography>
+                          <Typography variant="body2">{reservation.service.name}</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                          <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Status:</Typography>
+                          <Chip 
+                            size="small"
+                            label={reservation.status} 
+                            color={getStatusColor(reservation.status) as any}
+                            sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.7rem' } }}
+                          />
+                        </Box>
                       </Box>
                       <Box>
-                        <Typography variant="subtitle2">Check-In</Typography>
-                        <Typography variant="body1">{formatDate(reservation.startDate)}</Typography>
-                        <Typography variant="subtitle2" sx={{ mt: 1 }}>Check-Out</Typography>
-                        <Typography variant="body1">{formatDate(reservation.endDate)}</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Check-In:</Typography>
+                          <Typography variant="body2">{formatDate(reservation.startDate)}</Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                          <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Check-Out:</Typography>
+                          <Typography variant="body2">{formatDate(reservation.endDate)}</Typography>
+                        </Box>
                       </Box>
-                    </Box>
-                    <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
-                      <IconButton color="primary" size="small" href={`/reservations/${reservation.id}`}>
-                        <InfoIcon />
-                      </IconButton>
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <IconButton 
+                          color="primary" 
+                          size="small" 
+                          href={`/reservations/${reservation.id}`}
+                          sx={{ 
+                            '&:hover': { 
+                              backgroundColor: 'primary.light',
+                              color: 'common.white'
+                            }
+                          }}
+                        >
+                          <InfoIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
                     </Box>
                   </Paper>
                 ))}

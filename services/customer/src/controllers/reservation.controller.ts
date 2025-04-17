@@ -11,30 +11,50 @@ export const getAllReservations = async (
   next: NextFunction
 ) => {
   try {
+    console.log('Backend: getAllReservations called with query:', req.query);
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const where = {
-      status: {
-        notIn: ['PENDING', 'CANCELLED'] as ReservationStatus[]
-      },
-      startDate: {
-        gte: today,
-        lt: tomorrow
+    // Build where clause based on query parameters
+    let where: any = {};
+    
+    try {
+      // Handle multiple status values
+      const status = req.query.status as string;
+      if (status) {
+        console.log('Status string received:', status);
+        const statusArray = status.split(',');
+        console.log('Status array after split:', statusArray);
+        
+        // Validate each status is a valid ReservationStatus
+        const validStatuses = Object.values(ReservationStatus);
+        console.log('Valid statuses:', validStatuses);
+        const invalidStatuses = statusArray.filter(s => !validStatuses.includes(s as ReservationStatus));
+        
+        if (invalidStatuses.length > 0) {
+          throw new AppError(`Invalid status values: ${invalidStatuses.join(', ')}. Valid values are: ${validStatuses.join(', ')}`, 400);
+        }
+        
+        where.status = {
+          in: statusArray as ReservationStatus[]
+        };
+        console.log('Final where clause:', where);
       }
-    };
+    } catch (error) {
+      console.error('Error building where clause:', error);
+      throw error;
+    }
+    
+    // Allow sorting
+    const sortBy = req.query.sortBy as string || 'startDate';
+    const sortOrder = req.query.sortOrder as 'asc' | 'desc' || 'asc';
 
     const reservations = await prisma.reservation.findMany({
       where,
       skip,
       take: limit,
-      orderBy: { startDate: 'desc' },
+      orderBy: { [sortBy]: sortOrder },
       include: {
         customer: true,
         pet: true,
@@ -298,6 +318,8 @@ export const createReservation = async (
   next: NextFunction
 ) => {
   try {
+    console.log('Backend: Received create reservation request with body:', req.body);
+    
     const {
       customerId,
       petId,
@@ -307,6 +329,16 @@ export const createReservation = async (
       status = 'PENDING',
       notes = ''
     } = req.body;
+    
+    console.log('Backend: Parsed reservation data:', {
+      customerId,
+      petId,
+      serviceId,
+      startDate,
+      endDate,
+      status,
+      notes
+    });
 
     // Check if the customer exists
     const customer = await prisma.customer.findUnique({
@@ -330,7 +362,7 @@ export const createReservation = async (
       return next(new AppError('The pet does not belong to this customer', 400));
     }
     
-    // Create the reservation
+    console.log('Backend: Creating reservation in database');
     const newReservation = await prisma.reservation.create({
       data: {
         customerId,
@@ -348,10 +380,14 @@ export const createReservation = async (
       }
     });
     
+    console.log('Backend: Successfully created reservation:', newReservation);
+    
     res.status(201).json({
       status: 'success',
       data: newReservation,
     });
+    
+    console.log('Backend: Sent success response');
   } catch (error) {
     next(error);
   }
