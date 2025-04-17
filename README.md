@@ -154,6 +154,27 @@ All responses follow the format:
 
 3. Submit a pull request
 
+## File Storage
+
+### Local File Storage
+The application currently uses local file storage for uploaded files:
+- Upload directory: `services/customer/uploads/`
+- Supported file types: JPEG, PNG, GIF, PDF
+- File size limit: 5MB
+- Directory structure:
+  ```
+  uploads/
+  ├── pets/         # Pet photos and documents
+  ├── customers/    # Customer-related documents
+  └── temp/         # Temporary file storage
+  ```
+
+### Production Considerations
+- For production deployments, consider using a cloud storage solution (e.g., AWS S3)
+- Ensure proper backup of the uploads directory
+- Implement regular cleanup of the temp directory
+- Monitor disk space usage
+
 ## License
 
 Proprietary - All Rights Reserved
