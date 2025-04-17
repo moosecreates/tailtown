@@ -5,10 +5,6 @@ import {
   Box,
   Typography,
   Button,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
   IconButton,
   Chip,
   Dialog,
@@ -18,7 +14,15 @@ import {
   TextField,
   MenuItem,
   Snackbar,
-  Alert
+  Alert,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Grid
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -153,67 +157,84 @@ const Services: React.FC = () => {
           </Button>
         </Box>
 
-        <Grid container spacing={3}>
-          {services.map((service) => (
-            <Grid item xs={12} sm={6} md={4} key={service.id}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" component="h2">
-                    {service.name}
-                  </Typography>
-                  <Typography color="textSecondary" gutterBottom>
-                    {service.serviceCategory}
-                  </Typography>
-                  <Typography variant="body2" component="p" sx={{ mb: 2 }}>
-                    {service.description}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Name</TableCell>
+                <TableCell>Category</TableCell>
+                <TableCell>Description</TableCell>
+                <TableCell>Price</TableCell>
+                <TableCell>Duration</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {services.map((service) => (
+                <TableRow key={service.id}>
+                  <TableCell>{service.name}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={service.serviceCategory}
+                      color="primary"
+                      variant="outlined"
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>{service.description}</TableCell>
+                  <TableCell>
                     <Chip
                       label={`$${service.price}`}
                       color="primary"
                       variant="outlined"
+                      size="small"
                     />
+                  </TableCell>
+                  <TableCell>
                     <Chip
                       label={`${service.duration} min`}
                       color="secondary"
                       variant="outlined"
+                      size="small"
                     />
-                    {service.isActive ? (
-                      <Chip label="Active" color="success" />
-                    ) : (
-                      <Chip label="Inactive" color="error" />
-                    )}
-                  </Box>
-                </CardContent>
-                <CardActions>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleEditService(service.id)}
-                    aria-label="edit"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDeleteClick(service)}
-                    aria-label="delete"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={service.isActive ? 'Active' : 'Inactive'}
+                      color={service.isActive ? 'success' : 'error'}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEditService(service.id)}
+                      aria-label="edit"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteClick(service)}
+                      aria-label="delete"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
-        <DialogTitle>Delete Service</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete {serviceToDelete?.name}? This action cannot be undone.
-          </Typography>
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+          <DialogTitle>Delete Service</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to delete {serviceToDelete?.name}? This action cannot be undone.
+            </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteCancel}>Cancel</Button>
@@ -222,6 +243,7 @@ const Services: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      </Box>
 
       {/* Snackbar for notifications */}
       <Snackbar

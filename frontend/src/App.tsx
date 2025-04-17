@@ -24,7 +24,6 @@ import ServiceDetails from './pages/services/ServiceDetails';
 import Resources from './pages/resources/Resources';
 import ResourceDetails from './pages/resources/ResourceDetails';
 import NotFound from './pages/NotFound';
-import Settings from './pages/settings/Settings';
 
 // Custom event for route changes
 export const RouteChangeEvent = 'app:route-change';
@@ -75,7 +74,6 @@ const AppRoutes = () => {
         <Route path="/services/:id" element={isAuthenticated ? <ServiceDetails /> : <Navigate to="/login" />} />
         <Route path="/resources" element={isAuthenticated ? <Resources /> : <Navigate to="/login" />} />
         <Route path="/resources/:id" element={isAuthenticated ? <ResourceDetails /> : <Navigate to="/login" />} />
-        <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
       </Route>
 
       {/* 404 Route */}

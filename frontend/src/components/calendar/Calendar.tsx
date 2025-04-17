@@ -46,7 +46,9 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
 
   const loadReservations = useCallback(async () => {
     try {
+      console.log('Calendar: Loading reservations...');
       const response = await reservationService.getAllReservations();
+      console.log('Calendar: Got response:', response);
       if (response?.status === 'success' && Array.isArray(response?.data)) {
         const calendarEvents = response.data.map(reservation => ({
           id: reservation.id,
@@ -58,7 +60,10 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
             reservation
           }
         }));
+        console.log('Calendar: Setting events:', calendarEvents);
         setEvents(calendarEvents);
+      } else {
+        console.warn('Calendar: Invalid response format:', response);
       }
     } catch (error) {
       console.error('Error loading reservations:', error);
@@ -121,30 +126,40 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
    */
   const handleFormSubmit = async (formData: any) => {
     try {
+      console.log('Calendar: Starting form submission with data:', formData);
+      console.log('Calendar: Current events:', events);
       let updatedReservation;
+      
       if (selectedEvent) {
-        // Update existing reservation
+        console.log('Calendar: Updating existing reservation:', selectedEvent.id);
         updatedReservation = await reservationService.updateReservation(
           selectedEvent.id,
           formData
         );
       } else {
-        // Create new reservation
+        console.log('Calendar: Creating new reservation');
         updatedReservation = await reservationService.createReservation(formData);
+        console.log('Calendar: Created reservation:', updatedReservation);
       }
 
       if (updatedReservation) {
-        loadReservations();
+        console.log('Calendar: Successfully saved reservation:', updatedReservation);
+        console.log('Calendar: Reloading reservations after successful save');
+        await loadReservations();
+        console.log('Calendar: Events after reload:', events);
         if (onEventUpdate) {
           onEventUpdate(updatedReservation);
         }
+      } else {
+        console.warn('Calendar: No reservation returned from server');
       }
 
       setIsFormOpen(false);
       setSelectedEvent(null);
       setSelectedDate(null);
     } catch (error) {
-      console.error('Error saving reservation:', error);
+      console.error('Calendar: Error saving reservation:', error);
+      throw error; // Re-throw to let the form handle the error
     }
   };
 

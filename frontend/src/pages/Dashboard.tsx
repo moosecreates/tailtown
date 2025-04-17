@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Paper, Typography, Card, CardContent, CardHeader, Button, CircularProgress } from '@mui/material';
+import { Box, Paper, Typography, Card, CardContent, CardHeader, Button, CircularProgress, Chip } from '@mui/material';
 import { 
   People as PeopleIcon, 
   Pets as PetsIcon, 
@@ -81,6 +81,16 @@ const loadData = async () => {
       window.removeEventListener('app:route-change', handleRouteChange);
     };
   }, []);
+
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'CONFIRMED': return 'success';
+      case 'PENDING': return 'warning';
+      case 'CHECKED_IN': return 'info';
+      case 'CANCELLED': return 'error';
+      default: return 'default';
+    }
+  };
 
   const stats = [
   { 
@@ -232,6 +242,7 @@ const loadData = async () => {
                       <Typography variant="subtitle2">Pet</Typography>
                       <Typography variant="subtitle2">Service</Typography>
                       <Typography variant="subtitle2">Time</Typography>
+                      <Typography variant="subtitle2">Status</Typography>
                     </Box>
                     
                     {upcomingReservations.map((reservation) => (
@@ -239,7 +250,7 @@ const loadData = async () => {
                         key={reservation.id}
                         sx={{ 
                           display: 'grid', 
-                          gridTemplateColumns: '1fr 1fr 1fr 1fr',
+                          gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr',
                           p: 1.5,
                           '&:hover': {
                             backgroundColor: 'action.hover',
@@ -260,6 +271,14 @@ const loadData = async () => {
                           {reservation.startDate !== reservation.endDate ? 
                             ` - ${new Date(reservation.endDate).toLocaleDateString()}` : ''}
                         </Typography>
+                        <Box>
+                          <Chip 
+                            size="small"
+                            label={reservation.status} 
+                            color={getStatusColor(reservation.status)}
+                            sx={{ minWidth: '90px' }}
+                          />
+                        </Box>
                       </Box>
                     ))}
                   </Box>
