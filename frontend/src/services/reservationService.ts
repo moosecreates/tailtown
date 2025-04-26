@@ -9,7 +9,7 @@ export interface Reservation {
   serviceId: string;
   startDate: string;
   endDate: string;
-  status: 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED';
+  status: 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
   notes?: string;
   staffNotes?: string;
   createdAt: string;

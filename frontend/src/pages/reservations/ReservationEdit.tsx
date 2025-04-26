@@ -26,7 +26,7 @@ export default function ReservationEdit() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reservation, setReservation] = useState<Reservation | null>(null);
-  type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED';
+  type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
 
   const [formData, setFormData] = useState({
     startDate: new Date(),
@@ -155,7 +155,9 @@ export default function ReservationEdit() {
                 <MenuItem value="CONFIRMED">Confirmed</MenuItem>
                 <MenuItem value="CHECKED_IN">Checked In</MenuItem>
                 <MenuItem value="CHECKED_OUT">Checked Out</MenuItem>
+                <MenuItem value="COMPLETED">Completed</MenuItem>
                 <MenuItem value="CANCELLED">Cancelled</MenuItem>
+                <MenuItem value="NO_SHOW">No Show</MenuItem>
               </Select>
             </FormControl>
 

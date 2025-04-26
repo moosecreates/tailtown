@@ -11,7 +11,9 @@ import {
   DialogTitle,
   DialogContent,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Menu,
+  MenuItem
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import AddIcon from '@mui/icons-material/Add';
@@ -26,6 +28,9 @@ const Reservations = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedReservation, setSelectedReservation] = useState<any>(null);
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
 
   const loadReservations = useCallback(async () => {
     try {
@@ -100,10 +105,57 @@ const Reservations = () => {
       case 'CONFIRMED': return 'success';
       case 'PENDING': return 'warning';
       case 'CHECKED_IN': return 'info';
+      case 'CHECKED_OUT': return 'secondary';
+      case 'COMPLETED': return 'success';
       case 'CANCELLED': return 'error';
+      case 'NO_SHOW': return 'error';
       default: return 'default';
     }
   }, []);
+
+  const handleStatusClick = (event: React.MouseEvent<HTMLDivElement>, reservation: any) => {
+    setStatusMenuAnchorEl(event.currentTarget);
+    setSelectedReservation(reservation);
+  };
+
+  const handleStatusMenuClose = () => {
+    setStatusMenuAnchorEl(null);
+  };
+
+  const handleStatusChange = async (newStatus: 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW') => {
+    if (!selectedReservation) return;
+    
+    try {
+      setStatusUpdateLoading(true);
+      await reservationService.updateReservation(selectedReservation.id, { status: newStatus });
+      
+      // Update the local state to reflect the change immediately
+      setReservations(prevReservations => 
+        prevReservations.map(res => 
+          res.id === selectedReservation.id ? { ...res, status: newStatus } : res
+        )
+      );
+      
+      // Close the menu
+      handleStatusMenuClose();
+    } catch (err) {
+      console.error('Error updating reservation status:', err);
+      setError('Failed to update reservation status');
+    } finally {
+      setStatusUpdateLoading(false);
+    }
+  };
+  
+  // Available statuses for the dropdown
+  const availableStatuses: Array<'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'> = [
+    'PENDING',
+    'CONFIRMED',
+    'CHECKED_IN',
+    'CHECKED_OUT',
+    'COMPLETED',
+    'CANCELLED',
+    'NO_SHOW'
+  ];
 
   if (loading && !reservations.length) {
     return (
@@ -183,7 +235,13 @@ const Reservations = () => {
                             size="small"
                             label={reservation.status} 
                             color={getStatusColor(reservation.status) as any}
-                            sx={{ height: 20, '& .MuiChip-label': { px: 1, fontSize: '0.7rem' } }}
+                            onClick={(e) => handleStatusClick(e, reservation)}
+                            sx={{ 
+                              height: 20, 
+                              '& .MuiChip-label': { px: 1, fontSize: '0.7rem' },
+                              cursor: 'pointer',
+                              '&:hover': { opacity: 0.8 }
+                            }}
                           />
                         </Box>
                       </Box>
@@ -234,6 +292,46 @@ const Reservations = () => {
           <ReservationForm onSubmit={handleCreateReservation} />
         </DialogContent>
       </Dialog>
+
+      {/* Status Change Menu */}
+      <Menu
+        anchorEl={statusMenuAnchorEl}
+        open={Boolean(statusMenuAnchorEl)}
+        onClose={handleStatusMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+      >
+        {availableStatuses.map((status) => (
+          <MenuItem 
+            key={status} 
+            onClick={() => handleStatusChange(status)}
+            disabled={statusUpdateLoading || (selectedReservation && selectedReservation.status === status)}
+            sx={{
+              fontSize: '0.875rem',
+              py: 0.75,
+              minHeight: 'auto',
+              color: selectedReservation && selectedReservation.status === status ? 'text.disabled' : 'inherit'
+            }}
+          >
+            <Chip
+              size="small"
+              label={status}
+              color={getStatusColor(status) as any}
+              sx={{ 
+                height: 20, 
+                '& .MuiChip-label': { px: 1, fontSize: '0.7rem' },
+                minWidth: '80px'
+              }}
+            />
+          </MenuItem>
+        ))}
+      </Menu>
     </Container>
   );
 };
