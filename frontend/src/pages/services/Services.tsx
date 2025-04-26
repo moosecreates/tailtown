@@ -193,7 +193,15 @@ const Services: React.FC = () => {
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={`${service.duration} min`}
+                      label={(() => {
+                        const hours = Math.floor(service.duration / 60);
+                        const minutes = service.duration % 60;
+                        
+                        if (hours === 0 && minutes === 0) return '0m';
+                        if (hours === 0) return `${minutes}m`;
+                        if (minutes === 0) return `${hours}h`;
+                        return `${hours}h ${minutes}m`;
+                      })()}
                       color="secondary"
                       variant="outlined"
                       size="small"

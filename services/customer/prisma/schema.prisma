@@ -197,19 +197,16 @@ enum InvoiceStatus {
 }
 
 enum ResourceType {
-  // Legacy types (deprecated but kept for backward compatibility)
-  ROOM          // @deprecated - use specific room types instead
-  KENNEL        // @deprecated - use DOG_KENNEL or CAT_CONDO instead
-  PLAYPEN       // @deprecated - use specific play area types instead
-  TRAINING_AREA // @deprecated - use TRAINING_ROOM or AGILITY_COURSE instead
-
-  // Housing
-  DOG_KENNEL
-  CAT_CONDO
-  LUXURY_SUITE
+  // Accommodations
+  KENNEL
+  RUN
+  SUITE
+  STANDARD_SUITE
+  STANDARD_PLUS_SUITE
+  VIP_SUITE
   
-  // Play Areas
-  INDOOR_PLAY_YARD
+  // Activity areas
+  PLAY_AREA
   OUTDOOR_PLAY_YARD
   PRIVATE_PLAY_AREA
   
@@ -241,7 +238,6 @@ model Service {
   color           String?       // For calendar display
   serviceCategory ServiceCategory?
   isActive        Boolean       @default(true)
-  capacityLimit   Int?          // Max number of pets for this service type
   requiresStaff   Boolean       @default(false)
   notes           String?
   createdAt       DateTime      @default(now())
@@ -287,13 +283,16 @@ model Resource {
   name              String
   type              ResourceType
   description       String?
-  capacity          Int?                // For areas that can handle multiple pets
-  availability      Json?               // Weekly schedule of availability
-  location          String?             // Physical location within facility
-  maintenanceSchedule Json?             // Schedule for cleaning, maintenance, etc.
-  attributes        Json?               // Additional attributes specific to the resource type
-  isActive          Boolean             @default(true)
+  capacity          Int                 @default(1)
+  availability      String?
+  location          String?
+  maintenanceSchedule String?
+  suiteNumber       Int?
+  lastCleanedAt     DateTime?
+  maintenanceStatus String?
+  attributes        Json?               // Flexible attributes specific to resource type
   notes             String?
+  isActive          Boolean             @default(true)
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   reservations      Reservation[]

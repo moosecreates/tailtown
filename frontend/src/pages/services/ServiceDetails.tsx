@@ -34,7 +34,7 @@ interface AddOnFormData {
 
 /**
  * ServiceDetails component handles the creation and editing of service offerings.
- * Manages service data, pricing, capacity, and add-ons.
+ * Manages service data, pricing, and add-ons.
  */
 const ServiceDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -46,8 +46,7 @@ const ServiceDetails: React.FC = () => {
     description: '',
     serviceCategory: ServiceCategory.DAYCARE,
     price: 0,
-    duration: 0,
-    capacityLimit: 1,
+    duration: 0, // Explicitly set to 0
     requiresStaff: false,
     isActive: true,
     notes: '',
@@ -107,10 +106,10 @@ const ServiceDetails: React.FC = () => {
   };
 
   /**
- * Updates the service category when changed in the dropdown.
- * @param event - The select change event containing the new category
- */
-const handleCategoryChange = (event: SelectChangeEvent<ServiceCategory>) => {
+   * Updates the service category when changed in the dropdown.
+   * @param event - The select change event containing the new category
+   */
+  const handleCategoryChange = (event: SelectChangeEvent<ServiceCategory>) => {
     setService((prev: Partial<Service>) => ({
       ...prev,
       serviceCategory: event.target.value as ServiceCategory
@@ -161,7 +160,6 @@ const handleCategoryChange = (event: SelectChangeEvent<ServiceCategory>) => {
           color: service.color,
           serviceCategory: service.serviceCategory,
           isActive: service.isActive,
-          capacityLimit: service.capacityLimit,
           requiresStaff: service.requiresStaff,
           notes: service.notes,
           availableAddOns: service.availableAddOns
@@ -176,10 +174,9 @@ const handleCategoryChange = (event: SelectChangeEvent<ServiceCategory>) => {
     } catch (err) {
       setSnackbar({
         open: true,
-        message: `Error ${isNewService ? 'creating' : 'updating'} service`,
+        message: `Failed to ${isNewService ? 'create' : 'update'} service`,
         severity: 'error'
       });
-    } finally {
       setSaving(false);
     }
   };
@@ -268,26 +265,56 @@ const handleCategoryChange = (event: SelectChangeEvent<ServiceCategory>) => {
                 </Grid>
 
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Duration (minutes)"
-                    name="duration"
-                    type="number"
-                    value={service.duration}
-                    onChange={handleInputChange}
-                  />
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <Typography variant="body2" sx={{ minWidth: '60px' }}>Duration:</Typography>
+                    <TextField
+                      label="Hours"
+                      type="number"
+                      InputProps={{ inputProps: { min: 0 } }}
+                      value={service.duration !== undefined ? Math.floor(service.duration / 60) : 0}
+                      onChange={(e) => {
+                        const hours = parseInt(e.target.value) || 0;
+                        const minutes = service.duration !== undefined ? (service.duration % 60) : 0;
+                        setService(prev => ({
+                          ...prev,
+                          duration: (hours * 60) + minutes
+                        }));
+                      }}
+                      size="small"
+                      sx={{ width: '100px' }}
+                    />
+                    <TextField
+                      label="Min"
+                      select
+                      value={String(service.duration !== undefined ? (service.duration % 60) : 0)}
+                      onChange={(e) => {
+                        const minutes = parseInt(e.target.value) || 0;
+                        const hours = service.duration !== undefined ? Math.floor(service.duration / 60) : 0;
+                        setService(prev => ({
+                          ...prev,
+                          duration: (hours * 60) + minutes
+                        }));
+                      }}
+                      size="small"
+                      sx={{ width: '100px' }}
+                    >
+                      <MenuItem key={0} value={0}>0</MenuItem>
+                      <MenuItem key={5} value={5}>5</MenuItem>
+                      <MenuItem key={10} value={10}>10</MenuItem>
+                      <MenuItem key={15} value={15}>15</MenuItem>
+                      <MenuItem key={20} value={20}>20</MenuItem>
+                      <MenuItem key={25} value={25}>25</MenuItem>
+                      <MenuItem key={30} value={30}>30</MenuItem>
+                      <MenuItem key={35} value={35}>35</MenuItem>
+                      <MenuItem key={40} value={40}>40</MenuItem>
+                      <MenuItem key={45} value={45}>45</MenuItem>
+                      <MenuItem key={50} value={50}>50</MenuItem>
+                      <MenuItem key={55} value={55}>55</MenuItem>
+                    </TextField>
+                  </Box>
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Capacity"
-                    name="capacityLimit"
-                    type="number"
-                    value={service.capacityLimit}
-                    onChange={handleInputChange}
-                  />
-                </Grid>
+
 
                 <Grid item xs={12}>
                   <TextField
@@ -330,23 +357,25 @@ const handleCategoryChange = (event: SelectChangeEvent<ServiceCategory>) => {
           <Grid item xs={12} md={4}>
             <Paper sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">Add-on Services</Typography>
-                <Button
-                  startIcon={<AddIcon />}
-                  onClick={() => setShowAddOnForm(true)}
-                  disabled={showAddOnForm}
-                >
-                  Add
-                </Button>
+                <Typography variant="h6">Add-On Services</Typography>
+                {!showAddOnForm && (
+                  <Button
+                    startIcon={<AddIcon />}
+                    onClick={() => setShowAddOnForm(true)}
+                    size="small"
+                  >
+                    Add
+                  </Button>
+                )}
               </Box>
 
               {showAddOnForm && (
-                <Box sx={{ mb: 3 }}>
+                <Box sx={{ mb: 3, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                   <Grid container spacing={2}>
                     <Grid item xs={12}>
                       <TextField
                         fullWidth
-                        label="Add-on Name"
+                        label="Name"
                         name="name"
                         value={newAddOn.name}
                         onChange={handleAddOnInputChange}

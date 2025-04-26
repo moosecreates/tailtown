@@ -28,10 +28,8 @@ export const serviceManagement = {
       description,
       duration,
       price,
-      color,
       serviceCategory,
       isActive,
-      capacityLimit,
       requiresStaff,
       notes,
       availableAddOns
@@ -42,10 +40,8 @@ export const serviceManagement = {
       description,
       duration,
       price,
-      color,
       serviceCategory,
       isActive,
-      capacityLimit,
       requiresStaff,
       notes,
       availableAddOns: availableAddOns?.map(addOn => ({
