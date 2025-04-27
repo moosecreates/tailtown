@@ -112,7 +112,7 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ### Available URLs
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:3002
+- Backend API: http://localhost:3003
 
 ## API Documentation
 
