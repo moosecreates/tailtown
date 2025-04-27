@@ -234,18 +234,18 @@ const loadData = async () => {
                     <Box 
                       sx={{ 
                         display: 'grid', 
-                        gridTemplateColumns: '1fr 1fr 1fr 1fr',
+                        gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr',
                         p: 1,
                         fontWeight: 'bold',
                         borderBottom: 1,
                         borderColor: 'divider'
                       }}
                     >
-                      <Typography variant="subtitle2">Customer</Typography>
-                      <Typography variant="subtitle2">Pet</Typography>
-                      <Typography variant="subtitle2">Service</Typography>
-                      <Typography variant="subtitle2">Time</Typography>
-                      <Typography variant="subtitle2">Status</Typography>
+                      <Typography variant="subtitle2" align="left">Customer</Typography>
+                      <Typography variant="subtitle2" align="left">Pet</Typography>
+                      <Typography variant="subtitle2" align="left">Service</Typography>
+                      <Typography variant="subtitle2" align="left">Time</Typography>
+                      <Typography variant="subtitle2" align="left">Status</Typography>
                     </Box>
                     
                     {upcomingReservations.map((reservation) => (
@@ -266,15 +266,15 @@ const loadData = async () => {
                         to={`/reservations/${reservation.id}`}
                         style={{ textDecoration: 'none', color: 'inherit' }}
                       >
-                        <Typography variant="body2">{reservation.customer?.firstName} {reservation.customer?.lastName}</Typography>
-                        <Typography variant="body2">{reservation.pet?.name}</Typography>
-                        <Typography variant="body2">{reservation.service?.name}</Typography>
-                        <Typography variant="body2">
+                        <Typography variant="body2" align="left">{reservation.customer?.firstName} {reservation.customer?.lastName}</Typography>
+                        <Typography variant="body2" align="left">{reservation.pet?.name}</Typography>
+                        <Typography variant="body2" align="left">{reservation.service?.name}</Typography>
+                        <Typography variant="body2" align="left">
                           {new Date(reservation.startDate).toLocaleDateString()}
                           {reservation.startDate !== reservation.endDate ? 
                             ` - ${new Date(reservation.endDate).toLocaleDateString()}` : ''}
                         </Typography>
-                        <Box>
+                        <Box sx={{ textAlign: 'left' }}>
                           <Chip 
                             size="small"
                             label={reservation.status} 
