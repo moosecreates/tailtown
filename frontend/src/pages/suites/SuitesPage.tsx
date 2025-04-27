@@ -141,9 +141,19 @@ const SuitesPage: React.FC = () => {
             ['CONFIRMED', 'CHECKED_IN'].includes(res.status)
           );
         
-        // Set the occupied status based on actual reservations
-        setIsOccupied(hasActiveReservations || false); // Ensure we always pass a boolean
-        console.log(`Suite ${suiteId} has active reservations: ${hasActiveReservations}`);
+        // Determine status using the same logic as the kennel cards
+        let status: 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' = 'AVAILABLE';
+        if (response.data.attributes?.maintenanceStatus === 'MAINTENANCE') {
+          status = 'MAINTENANCE';
+        } else if (hasActiveReservations) {
+          status = 'OCCUPIED';
+        }
+        
+        // Set the occupied status based on the determined status
+        setIsOccupied(status === 'OCCUPIED');
+        
+        // Store the determined status in the suite details for consistency
+        response.data.status = status;
         
         // Store the suite details as received from the API
         setSuiteDetails(response.data);
@@ -309,16 +319,21 @@ const SuitesPage: React.FC = () => {
                   color="primary" 
                   variant="outlined" 
                 />
-                {/* Status chip based on reservations or maintenance status */}
-                {isOccupied ? (
+                {/* Status chip based on determined status */}
+                {suiteDetails.status === 'OCCUPIED' ? (
                   <Chip 
                     label="Occupied" 
                     color="error"
                   />
+                ) : suiteDetails.status === 'MAINTENANCE' ? (
+                  <Chip 
+                    label="Maintenance" 
+                    color="default"
+                  />
                 ) : (
                   <Chip 
-                    label={suiteDetails.attributes?.maintenanceStatus === 'MAINTENANCE' ? 'Maintenance' : 'Available'} 
-                    color={suiteDetails.attributes?.maintenanceStatus === 'MAINTENANCE' ? 'default' : 'success'}
+                    label="Available" 
+                    color="success"
                   />
                 )}
               </Box>
