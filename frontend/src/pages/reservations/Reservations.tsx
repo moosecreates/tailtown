@@ -228,11 +228,13 @@ const Reservations = () => {
                   <Paper 
                     key={reservation.id} 
                     elevation={1} 
+                    onClick={() => window.location.href = `/reservations/${reservation.id}`}
                     sx={{ 
                       p: 1.5,
                       '&:hover': {
                         backgroundColor: 'action.hover',
-                        transition: 'background-color 0.2s'
+                        transition: 'background-color 0.2s',
+                        cursor: 'pointer'
                       }
                     }}
                   >
@@ -267,7 +269,10 @@ const Reservations = () => {
                             size="small"
                             label={reservation.status} 
                             color={getStatusColor(reservation.status) as any}
-                            onClick={(e) => handleStatusClick(e, reservation)}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent triggering the parent onClick
+                              handleStatusClick(e, reservation);
+                            }}
                             sx={{ 
                               height: 20, 
                               '& .MuiChip-label': { px: 1, fontSize: '0.7rem' },
@@ -314,7 +319,10 @@ const Reservations = () => {
                         <IconButton 
                           color="primary" 
                           size="small" 
-                          href={`/reservations/${reservation.id}`}
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent triggering the parent onClick
+                            window.location.href = `/reservations/${reservation.id}`;
+                          }}
                           sx={{ 
                             '&:hover': { 
                               backgroundColor: 'primary.light',
