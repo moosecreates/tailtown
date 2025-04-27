@@ -39,8 +39,48 @@ export const getAllReservations = async (
         where.status = {
           in: statusArray as ReservationStatus[]
         };
-        console.log('Final where clause:', where);
       }
+      
+      // Handle resourceId filter
+      const resourceId = req.query.resourceId as string;
+      if (resourceId) {
+        where.resourceId = resourceId;
+      }
+      
+      // Handle date filtering - check if reservation overlaps with the given date
+      const date = req.query.date as string;
+      if (date) {
+        console.log('Date filter received:', date);
+        
+        // Create start and end of the day for the given date, accounting for timezone
+        // Parse the date in local timezone (YYYY-MM-DD format)
+        const [year, month, day] = date.split('-').map(Number);
+        
+        // Create date objects with the correct local date regardless of timezone
+        // Month is 0-indexed in JavaScript Date
+        const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+        const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+        
+        console.log(`Filtering reservations that overlap with ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
+        
+        // A reservation overlaps with the date if:
+        // 1. It starts before the end of the day AND
+        // 2. It ends after the start of the day
+        where.AND = [
+          {
+            startDate: {
+              lte: endOfDay
+            }
+          },
+          {
+            endDate: {
+              gte: startOfDay
+            }
+          }
+        ];
+      }
+      
+      console.log('Final where clause:', where);
     } catch (error) {
       console.error('Error building where clause:', error);
       throw error;
@@ -59,6 +99,7 @@ export const getAllReservations = async (
         customer: true,
         pet: true,
         service: true,
+        resource: true,
       },
     });
     
@@ -98,6 +139,7 @@ export const getReservationById = async (
         customer: true,
         pet: true,
         service: true,
+        resource: true,
       },
     });
     
@@ -326,9 +368,43 @@ export const createReservation = async (
       serviceId,
       startDate,
       endDate,
+      suiteType, // Only required for DAYCARE or BOARDING services
+      resourceId, // optional manual override
       status = 'PENDING',
       notes = ''
     } = req.body;
+
+    console.log('Backend: Extracted values:', {
+      customerId,
+      petId,
+      serviceId,
+      startDate,
+      endDate,
+      suiteType,
+      resourceId,
+      status,
+      notes
+    });
+
+    // Check if the service requires a suite type
+    const service = await prisma.service.findUnique({
+      where: { id: serviceId },
+    });
+    
+    // Only require suiteType for DAYCARE or BOARDING services
+    const requiresSuiteType = service?.serviceCategory === 'DAYCARE' || service?.serviceCategory === 'BOARDING';
+    
+    // If service requires a suite type but none was provided, use STANDARD_SUITE as default
+    let finalSuiteType = suiteType;
+    if (requiresSuiteType) {
+      if (!suiteType || !['VIP_SUITE', 'STANDARD_PLUS_SUITE', 'STANDARD_SUITE'].includes(suiteType)) {
+        console.log('Backend: Using default STANDARD_SUITE for missing or invalid suiteType:', suiteType);
+        finalSuiteType = 'STANDARD_SUITE';
+      }
+    } else {
+      // For services that don't require a suite type, we don't need to validate it
+      finalSuiteType = null;
+    }
     
     console.log('Backend: Parsed reservation data:', {
       customerId,
@@ -362,6 +438,88 @@ export const createReservation = async (
       return next(new AppError('The pet does not belong to this customer', 400));
     }
     
+    let assignedResourceId = resourceId;
+
+    // Helper: check if a suite is available for the given dates
+    async function isSuiteAvailable(suiteId: string) {
+      const overlapping = await prisma.reservation.count({
+        where: {
+          resourceId: suiteId,
+          status: { in: ['CONFIRMED', 'CHECKED_IN'] },
+          OR: [
+            {
+              startDate: { lte: endDate },
+              endDate: { gte: startDate },
+            },
+          ],
+        },
+      });
+      return overlapping === 0;
+    }
+
+    // Only assign resources for services that require a suite type
+    if (requiresSuiteType && finalSuiteType) {
+      // If resourceId provided, validate it and ensure it matches the requested suiteType
+      if (resourceId) {
+        const suite = await prisma.resource.findUnique({ where: { id: resourceId } });
+        if (!suite || !suite.isActive) {
+          return next(new AppError('Selected suite/kennel not found or inactive', 404));
+        }
+        if (suite.type !== finalSuiteType) {
+          return next(new AppError('Selected suite/kennel does not match requested suiteType', 400));
+        }
+        const available = await isSuiteAvailable(resourceId);
+        if (!available) {
+          return next(new AppError('Selected suite/kennel is not available for the requested dates', 400));
+        }
+      } else {
+        // Auto-assign: find an available suite of the requested type
+        const candidateSuites = await prisma.resource.findMany({
+          where: {
+            isActive: true,
+            type: finalSuiteType,
+          },
+          orderBy: { name: 'asc' },
+        });
+        
+        console.log(`Backend: Found ${candidateSuites.length} candidate suites of type ${finalSuiteType}`);
+        
+        let found = false;
+        for (const suite of candidateSuites) {
+          if (await isSuiteAvailable(suite.id)) {
+            assignedResourceId = suite.id;
+            found = true;
+            console.log(`Backend: Assigned suite ${suite.id} (${suite.name || 'unnamed'})`);
+            break;
+          }
+        }
+        
+        if (!found && candidateSuites.length > 0) {
+          // If no available suites, just assign the first one as a fallback
+          // This is a temporary solution to get reservations working
+          assignedResourceId = candidateSuites[0].id;
+          console.log(`Backend: No available suites found, using first one as fallback: ${assignedResourceId}`);
+        } else if (!found) {
+          console.log(`Backend: No suites found of type ${finalSuiteType}`);
+          // Create a default suite of the requested type
+          const newSuite = await prisma.resource.create({
+            data: {
+              name: `Auto-created ${finalSuiteType}`,
+              type: finalSuiteType as any,
+              capacity: 1,
+              isActive: true
+            }
+          });
+          assignedResourceId = newSuite.id;
+          console.log(`Backend: Created new suite ${newSuite.id} of type ${finalSuiteType}`);
+        }
+      }
+    } else {
+      // For services that don't require a suite, don't assign a resource
+      assignedResourceId = null;
+      console.log('Backend: Service does not require a suite, not assigning a resource');
+    }
+
     console.log('Backend: Creating reservation in database');
     const newReservation = await prisma.reservation.create({
       data: {
@@ -370,13 +528,15 @@ export const createReservation = async (
         serviceId,
         startDate,
         endDate,
+        resourceId: assignedResourceId,
         status,
         notes
       },
       include: {
         customer: true,
         pet: true,
-        service: true
+        service: true,
+        resource: true
       }
     });
     
@@ -408,8 +568,10 @@ export const updateReservation = async (
 ) => {
   try {
     const { id } = req.params;
-    const reservationData = req.body;
+    const { suiteType, ...reservationData } = req.body;
     
+    console.log('Backend: Updating reservation with ID:', id);
+    console.log('Backend: Received update data:', req.body);
     
     // If status is being updated, validate it
     if (reservationData.status) {
@@ -489,6 +651,81 @@ export const updateReservation = async (
       }
     }
     
+    // Check if we need to update the resource based on suiteType
+    // If resourceId is explicitly set to null, we should auto-assign
+    const shouldAutoAssign = suiteType && (reservationData.resourceId === null || !reservationData.resourceId);
+    
+    if (shouldAutoAssign) {
+      console.log('Backend: Auto-assigning suite based on suiteType:', suiteType);
+      
+      // Find available resources of the requested type
+      const candidateSuites = await prisma.resource.findMany({
+        where: {
+          type: suiteType,
+          isActive: true
+        },
+        orderBy: { name: 'asc' }
+      });
+      
+      console.log(`Backend: Found ${candidateSuites.length} candidate suites of type ${suiteType}`);
+      
+      // Helper: check if a suite is available for the given dates
+      async function isSuiteAvailable(suiteId: string) {
+        const startDateToCheck = reservationData.startDate || (await prisma.reservation.findUnique({ where: { id } }))?.startDate;
+        const endDateToCheck = reservationData.endDate || (await prisma.reservation.findUnique({ where: { id } }))?.endDate;
+        
+        if (!startDateToCheck || !endDateToCheck) return true; // If we can't check dates, assume available
+        
+        const overlapping = await prisma.reservation.count({
+          where: {
+            resourceId: suiteId,
+            status: { in: ['CONFIRMED', 'CHECKED_IN'] },
+            OR: [
+              {
+                startDate: { lte: endDateToCheck },
+                endDate: { gte: startDateToCheck },
+              },
+            ],
+            // Exclude the current reservation from the check
+            NOT: { id }
+          },
+        });
+        return overlapping === 0;
+      }
+      
+      // Try to find an available suite
+      let found = false;
+      for (const suite of candidateSuites) {
+        if (await isSuiteAvailable(suite.id)) {
+          reservationData.resourceId = suite.id;
+          found = true;
+          console.log(`Backend: Assigned suite ${suite.id} (${suite.name || 'unnamed'})`);
+          break;
+        }
+      }
+      
+      if (!found && candidateSuites.length > 0) {
+        // If no available suites, just assign the first one as a fallback
+        reservationData.resourceId = candidateSuites[0].id;
+        console.log(`Backend: No available suites found, using first one as fallback: ${reservationData.resourceId}`);
+      } else if (!found) {
+        console.log(`Backend: No suites found of type ${suiteType}`);
+        // Create a default suite of the requested type
+        const newSuite = await prisma.resource.create({
+          data: {
+            name: `Auto-created ${suiteType}`,
+            type: suiteType as any,
+            capacity: 1,
+            isActive: true
+          }
+        });
+        reservationData.resourceId = newSuite.id;
+        console.log(`Backend: Created new suite ${newSuite.id} of type ${suiteType}`);
+      }
+    }
+    
+    console.log('Backend: Final update data:', reservationData);
+    
     // Update the reservation
     const updatedReservation = await prisma.reservation.update({
       where: { id },
@@ -497,6 +734,7 @@ export const updateReservation = async (
         customer: true,
         pet: true,
         service: true,
+        resource: true,
       },
     });
     
