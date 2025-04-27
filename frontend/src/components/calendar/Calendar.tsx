@@ -47,7 +47,17 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
   const loadReservations = useCallback(async () => {
     try {
       console.log('Calendar: Loading reservations...');
-      const response = await reservationService.getAllReservations();
+      
+      // Get all relevant reservations (PENDING, CONFIRMED or CHECKED_IN)
+      // We don't filter by date to ensure we see all current reservations
+      const response = await reservationService.getAllReservations(
+        1,  // page
+        100, // limit - increased to show more reservations
+        'startDate', // sortBy
+        'asc', // sortOrder
+        'PENDING,CONFIRMED,CHECKED_IN' // status - include pending reservations too
+      );
+      
       console.log('Calendar: Got response:', response);
       if (response?.status === 'success' && Array.isArray(response?.data)) {
         const calendarEvents = response.data.map(reservation => ({
@@ -62,11 +72,14 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
         }));
         console.log('Calendar: Setting events:', calendarEvents);
         setEvents(calendarEvents);
+        return calendarEvents; // Return the events for immediate use
       } else {
         console.warn('Calendar: Invalid response format:', response);
+        return [];
       }
     } catch (error) {
       console.error('Error loading reservations:', error);
+      return [];
     }
   }, []);
 
@@ -102,9 +115,20 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
    * @param selectInfo - Information about the selected date range
    */
   const handleDateSelect = (selectInfo: DateSelectArg) => {
+    // Create a default end time that's 1 hour after the start time
+    // This will be overridden by the service duration when a service is selected
+    const defaultEnd = new Date(selectInfo.end.getTime());
+    if (selectInfo.view.type !== 'dayGridMonth') {
+      // For week and day views, we have exact times
+      // For month view, we get full days, so we'll add 1 hour as default
+      if (selectInfo.start.getTime() === selectInfo.end.getTime()) {
+        defaultEnd.setHours(defaultEnd.getHours() + 1);
+      }
+    }
+    
     setSelectedDate({
       start: selectInfo.start,
-      end: selectInfo.end
+      end: defaultEnd
     });
     setIsFormOpen(true);
   };
@@ -116,8 +140,41 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
    */
   const handleEventClick = (clickInfo: EventClickArg) => {
     const reservation = clickInfo.event.extendedProps.reservation;
-    setSelectedEvent(reservation);
-    setIsFormOpen(true);
+    
+    // Wait a moment before opening the form to ensure all data is loaded
+    setTimeout(() => {
+      // Create a clean copy with only the necessary fields from the original reservation
+      // We need to follow the exact Reservation interface
+      const formattedReservation: Reservation = {
+        id: reservation.id || '',
+        customerId: reservation.customerId || (reservation.customer?.id || ''),
+        petId: reservation.petId || (reservation.pet?.id || ''),
+        serviceId: reservation.serviceId || (reservation.service?.id || ''),
+        startDate: reservation.startDate || '',
+        endDate: reservation.endDate || '',
+        status: (reservation.status as any) || 'PENDING',
+        notes: reservation.notes || '',
+        createdAt: reservation.createdAt || new Date().toISOString(),
+        // Include these optional fields if they exist
+        customer: reservation.customer,
+        pet: reservation.pet,
+        service: reservation.service,
+        resource: reservation.resource,
+        staffNotes: reservation.staffNotes || ''
+      };
+      
+      // Add any custom properties needed by the form but not in the interface
+      const formData = {
+        ...formattedReservation,
+        // Make sure we pass the resource ID and suite type for proper kennel display
+        resourceId: reservation.resourceId || reservation.resource?.id || '',
+        suiteType: reservation.suiteType || reservation.resource?.type || reservation.resource?.attributes?.suiteType || ''
+      };
+      
+      console.log('Calendar: Formatted reservation for form:', formData);
+      setSelectedEvent(formData as any);
+      setIsFormOpen(true);
+    }, 100);
   };
 
   /**
@@ -145,21 +202,30 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
       if (updatedReservation) {
         console.log('Calendar: Successfully saved reservation:', updatedReservation);
         console.log('Calendar: Reloading reservations after successful save');
-        await loadReservations();
-        console.log('Calendar: Events after reload:', events);
+        
+        // Load reservations and get the updated events immediately
+        const updatedEvents = await loadReservations();
+        console.log('Calendar: Events after reload:', updatedEvents);
+        
+        // Force a refresh of the calendar by creating a new reference
+        setEvents([...updatedEvents]);
+        
         if (onEventUpdate) {
           onEventUpdate(updatedReservation);
         }
+        
+        // Close the form
+        setIsFormOpen(false);
+        setSelectedEvent(null);
+        setSelectedDate(null);
       } else {
         console.warn('Calendar: No reservation returned from server');
+        // Do NOT close the dialog if reservation failed
       }
-
-      setIsFormOpen(false);
-      setSelectedEvent(null);
-      setSelectedDate(null);
     } catch (error) {
       console.error('Calendar: Error saving reservation:', error);
-      throw error; // Re-throw to let the form handle the error
+      // Do NOT close the dialog on error; let the form show the error
+      // throw error; // No need to re-throw, ReservationForm will handle error state
     }
   };
 
@@ -221,16 +287,23 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
         }}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: { maxHeight: '80vh' }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle sx={{ py: 1, px: 2, fontSize: '1rem' }}>
           {selectedEvent ? 'Edit Reservation' : 'Create New Reservation'}
         </DialogTitle>
-        <DialogContent>
-          <ReservationForm
-            onSubmit={handleFormSubmit}
-            initialData={selectedEvent || undefined}
-            defaultDates={selectedDate || undefined}
-          />
+        <DialogContent sx={{ py: 1, px: 2 }}>
+          {selectedEvent || selectedDate ? (
+            <ReservationForm
+              onSubmit={handleFormSubmit}
+              initialData={selectedEvent || undefined}
+              defaultDates={selectedDate || undefined}
+            />
+          ) : (
+            <div>Loading reservation form...</div>
+          )}
         </DialogContent>
       </Dialog>
     </Box>

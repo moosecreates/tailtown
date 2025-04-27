@@ -13,8 +13,12 @@ import {
   Alert,
   CircularProgress,
   Menu,
-  MenuItem
+  MenuItem,
+  TextField
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import InfoIcon from '@mui/icons-material/Info';
 import AddIcon from '@mui/icons-material/Add';
 import ReservationForm from '../../components/reservations/ReservationForm';
@@ -31,12 +35,21 @@ const Reservations = () => {
   const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); // Default to today's date
 
   const loadReservations = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await reservationService.getAllReservations(page);
+      console.log('Loading reservations for date:', selectedDate);
+      const response = await reservationService.getAllReservations(
+        page,
+        10, // limit
+        'startDate', // sortBy
+        'asc', // sortOrder
+        undefined, // status - get all statuses
+        selectedDate // date filter - use today's date by default
+      );
       console.log('Reservations response:', response);
       if (response?.status === 'success' && Array.isArray(response?.data)) {
         setReservations(response.data);
@@ -51,7 +64,7 @@ const Reservations = () => {
     } finally {
       setLoading(false);
     }
-  }, [page]);
+  }, [page, selectedDate]);
 
   useEffect(() => {
     loadReservations();
@@ -85,7 +98,7 @@ const Reservations = () => {
       service: { name: 'Grooming' },
       startDate: '2025-04-15T13:00:00',
       endDate: '2025-04-15T14:30:00',
-      status: 'PENDING'
+      status: 'CONFIRMED'
     }
   ];
 
@@ -169,19 +182,38 @@ const Reservations = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" gutterBottom>
-            Reservations
-          </Typography>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            startIcon={<AddIcon />}
-            onClick={() => setIsFormOpen(true)}
-          >
-            Add New Reservation
-          </Button>
+      <Box sx={{ mb: 4 }}>  
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h5">Reservations</Typography>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Filter by Date"
+                value={selectedDate ? new Date(selectedDate) : null}
+                onChange={(newDate) => {
+                  if (newDate) {
+                    // Format date as YYYY-MM-DD
+                    const formattedDate = newDate.toISOString().split('T')[0];
+                    setSelectedDate(formattedDate);
+                  }
+                }}
+                slotProps={{ 
+                  textField: { 
+                    size: "small",
+                    sx: { minWidth: '150px' }
+                  } 
+                }}
+              />
+            </LocalizationProvider>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              startIcon={<AddIcon />}
+              onClick={() => setIsFormOpen(true)}
+            >
+              New Reservation
+            </Button>
+          </Box>
         </Box>
 
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
@@ -243,6 +275,29 @@ const Reservations = () => {
                               '&:hover': { opacity: 0.8 }
                             }}
                           />
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                          <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Kennel:</Typography>
+                          {reservation.resource ? (
+                            <Chip
+                              size="small"
+                              label={reservation.resource.attributes?.suiteNumber ? 
+                                `#${reservation.resource.attributes.suiteNumber} - ${reservation.resource.name || 'Suite'}` : 
+                                (reservation.resource.name || `#${reservation.resource.id.substring(0, 6)}`)}
+                              color="primary"
+                              variant="outlined"
+                              sx={{ 
+                                height: 20, 
+                                '& .MuiChip-label': { px: 1, fontSize: '0.7rem' }
+                              }}
+                            />
+                          ) : (
+                            <Typography variant="body2" color="text.secondary">
+                              {reservation.suiteType ? 
+                                `Auto-assigned (${reservation.suiteType.replace('_SUITE', '').replace('_', ' ')})` : 
+                                'Not assigned'}
+                            </Typography>
+                          )}
                         </Box>
                       </Box>
                       <Box>

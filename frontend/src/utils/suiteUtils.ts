@@ -16,9 +16,9 @@ export const determineSuiteStatus = (suite: Resource): 'AVAILABLE' | 'OCCUPIED' 
   
   // Check if suite has active reservations
   if (suite.reservations && suite.reservations.length > 0) {
-    // Check for active reservations (CONFIRMED or CHECKED_IN)
+    // Check for active reservations (PENDING, CONFIRMED or CHECKED_IN)
     const hasActiveReservation = suite.reservations.some(res => 
-      ['CONFIRMED', 'CHECKED_IN'].includes(res.status)
+      ['PENDING', 'CONFIRMED', 'CHECKED_IN'].includes(res.status)
     );
     
     if (hasActiveReservation) {
