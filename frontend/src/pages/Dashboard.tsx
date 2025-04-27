@@ -36,17 +36,20 @@ const loadData = async () => {
       // Get today's date in YYYY-MM-DD format for filtering
       const today = new Date().toISOString().split('T')[0];
       
-      const [customers, pets, reservations, upcoming, revenue] = await Promise.all([
+      // Define statuses to include (all except CANCELLED)
+      const activeStatuses = 'PENDING,CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED,NO_SHOW';
+      
+      const [customers, pets, todayReservations, upcoming, revenue] = await Promise.all([
         customerService.getAllCustomers(),
         petService.getAllPets(1, 1),
-        reservationService.getAllReservations(),
+        reservationService.getAllReservations(1, 100, 'startDate', 'asc', activeStatuses, today),
         reservationService.getAllReservations(1, 5, 'startDate', 'asc', 'CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED', today),
         reservationService.getTodayRevenue()
       ]);
       
       setCustomerCount(customers.data?.length || 0);
       setPetCount(pets.results);
-      setReservationCount(reservations.results);
+      setReservationCount(todayReservations.results || todayReservations.data?.length || 0);
       setUpcomingReservations(upcoming.data || []);
       setTodayRevenue(revenue.revenue);
     } catch (err) {
@@ -111,7 +114,7 @@ const loadData = async () => {
     change: ''
   },
   { 
-    title: 'Reservations', 
+    title: "Today's Reservations", 
     value: reservationCount === null ? <CircularProgress size={20} /> : reservationCount, 
     icon: <EventNoteIcon sx={{ fontSize: 40, color: 'success.main' }} />,
     link: '/reservations',
