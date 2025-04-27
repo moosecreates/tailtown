@@ -33,11 +33,14 @@ const Dashboard = () => {
 const loadData = async () => {
     setLoading(true);
     try {
+      // Get today's date in YYYY-MM-DD format for filtering
+      const today = new Date().toISOString().split('T')[0];
+      
       const [customers, pets, reservations, upcoming, revenue] = await Promise.all([
         customerService.getAllCustomers(),
         petService.getAllPets(1, 1),
         reservationService.getAllReservations(),
-        reservationService.getAllReservations(1, 5, 'startDate', 'asc', 'CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED'),
+        reservationService.getAllReservations(1, 5, 'startDate', 'asc', 'CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED', today),
         reservationService.getTodayRevenue()
       ]);
       
@@ -199,7 +202,7 @@ const loadData = async () => {
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3 }}>
           <Card elevation={2} sx={{ borderRadius: 2 }}>
             <CardHeader 
-              title="Today's Appointments" 
+              title={`Today's Appointments (${new Date().toLocaleDateString()})`}
               action={
                 <Button 
                   component={Link} 
