@@ -9,6 +9,7 @@ import { Box, Paper, Dialog, DialogTitle, DialogContent } from '@mui/material';
 import { reservationService } from '../../services/reservationService';
 import ReservationForm from '../reservations/ReservationForm';
 import { Reservation } from '../../services/reservationService';
+import { ServiceCategory } from '../../types/service';
 
 /**
  * Props for the Calendar component
@@ -19,6 +20,17 @@ interface CalendarProps {
    * @param reservation - The newly created or updated reservation
    */
   onEventUpdate?: (reservation: Reservation) => void;
+  
+  /**
+   * Optional service categories to filter reservations by
+   * If provided, only reservations with these service categories will be shown
+   */
+  serviceCategories?: string[];
+  
+  /**
+   * Optional title for the calendar
+   */
+  calendarTitle?: string;
 }
 
 /**
@@ -38,7 +50,7 @@ interface CalendarProps {
  * <Calendar onEventUpdate={(reservation) => console.log('Updated:', reservation)} />
  * ```
  */
-const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
+const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, calendarTitle }) => {
   const [events, setEvents] = useState<EventInput[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<{ start: Date; end: Date } | null>(null);
@@ -47,6 +59,7 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
   const loadReservations = useCallback(async () => {
     try {
       console.log('Calendar: Loading reservations...');
+      console.log('Calendar: Filtering by service categories:', serviceCategories);
       
       // Get all relevant reservations (PENDING, CONFIRMED or CHECKED_IN)
       // We don't filter by date to ensure we see all current reservations
@@ -60,7 +73,20 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
       
       console.log('Calendar: Got response:', response);
       if (response?.status === 'success' && Array.isArray(response?.data)) {
-        const calendarEvents = response.data.map(reservation => ({
+        // Filter reservations by service category if specified
+        let filteredReservations = response.data;
+        if (serviceCategories && serviceCategories.length > 0) {
+          filteredReservations = response.data.filter(reservation => {
+            // Check if the reservation's service category matches any of the specified categories
+            return reservation.service && 
+                   typeof reservation.service === 'object' &&
+                   'serviceCategory' in reservation.service &&
+                   serviceCategories.includes(reservation.service.serviceCategory as ServiceCategory);
+          });
+          console.log('Calendar: Filtered reservations by service category:', filteredReservations.length);
+        }
+        
+        const calendarEvents = filteredReservations.map(reservation => ({
           id: reservation.id,
           title: `${reservation.pet?.name || 'Pet'} - ${reservation.service?.name || 'Service'}`,
           start: reservation.startDate,
@@ -81,7 +107,7 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate }) => {
       console.error('Error loading reservations:', error);
       return [];
     }
-  }, []);
+  }, [serviceCategories]);
 
   useEffect(() => {
     loadReservations();

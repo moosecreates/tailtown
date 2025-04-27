@@ -19,10 +19,13 @@ import Reservations from './pages/reservations/Reservations';
 import ReservationDetails from './pages/reservations/ReservationDetails';
 import ReservationEdit from './pages/reservations/ReservationEdit';
 import CalendarPage from './pages/calendar/CalendarPage';
+import GroomingCalendarPage from './pages/calendar/GroomingCalendarPage';
+import TrainingCalendarPage from './pages/calendar/TrainingCalendarPage';
 import Services from './pages/services/Services';
 import ServiceDetails from './pages/services/ServiceDetails';
 import Resources from './pages/resources/Resources';
 import ResourceDetails from './pages/resources/ResourceDetails';
+import SuitesPage from './pages/suites/SuitesPage';
 import NotFound from './pages/NotFound';
 
 // Custom event for route changes
@@ -69,11 +72,14 @@ const AppRoutes = () => {
         <Route path="/reservations/:id" element={isAuthenticated ? <ReservationDetails /> : <Navigate to="/login" />} />
         <Route path="/reservations/:id/edit" element={isAuthenticated ? <ReservationEdit /> : <Navigate to="/login" />} />
         <Route path="/calendar" element={isAuthenticated ? <CalendarPage /> : <Navigate to="/login" />} />
+        <Route path="/calendar/grooming" element={isAuthenticated ? <GroomingCalendarPage /> : <Navigate to="/login" />} />
+        <Route path="/calendar/training" element={isAuthenticated ? <TrainingCalendarPage /> : <Navigate to="/login" />} />
         <Route path="/services" element={isAuthenticated ? <Services /> : <Navigate to="/login" />} />
         <Route path="/services/new" element={isAuthenticated ? <ServiceDetails /> : <Navigate to="/login" />} />
         <Route path="/services/:id" element={isAuthenticated ? <ServiceDetails /> : <Navigate to="/login" />} />
         <Route path="/resources" element={isAuthenticated ? <Resources /> : <Navigate to="/login" />} />
         <Route path="/resources/:id" element={isAuthenticated ? <ResourceDetails /> : <Navigate to="/login" />} />
+        <Route path="/suites" element={isAuthenticated ? <SuitesPage /> : <Navigate to="/login" />} />
       </Route>
 
       {/* 404 Route */}

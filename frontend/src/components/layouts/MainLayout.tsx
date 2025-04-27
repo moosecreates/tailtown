@@ -31,7 +31,13 @@ import {
   Logout as LogoutIcon,
   AccountCircle as AccountCircleIcon,
   LocalOffer as ServicesIcon,
-  Inventory as ResourcesIcon
+  Inventory as ResourcesIcon,
+  Hotel as SuitesIcon,
+  Spa as GroomingIcon,
+  FitnessCenter as TrainingIcon,
+  Home as DaycareIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -41,12 +47,14 @@ interface NavItem {
   path: string;
   label: string;
   icon: SvgIconComponent;
+  children?: NavItem[];
 }
 
 const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   // 1. All hooks must be called unconditionally at the top level
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
   const { user, logout, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -82,7 +90,9 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-
+  const handleSubMenuToggle = (label: string) => {
+    setOpenSubMenu(openSubMenu === label ? null : label);
+  };
 
   const navItems: NavItem[] = [
     { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
@@ -90,8 +100,18 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     { path: '/pets', label: 'Pets', icon: PetsIcon },
     { path: '/services', label: 'Services', icon: ServicesIcon },
     { path: '/resources', label: 'Resources', icon: ResourcesIcon },
+    { path: '/suites', label: 'Kennels', icon: SuitesIcon },
     { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
-    { path: '/calendar', label: 'Calendar', icon: CalendarIcon },
+    { 
+      path: '/calendar', 
+      label: 'Calendar', 
+      icon: CalendarIcon,
+      children: [
+        { path: '/calendar', label: 'Boarding & Daycare', icon: DaycareIcon },
+        { path: '/calendar/grooming', label: 'Grooming', icon: GroomingIcon },
+        { path: '/calendar/training', label: 'Training', icon: TrainingIcon },
+      ] 
+    },
   ];
 
   const drawer = (
@@ -109,32 +129,94 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
       <Divider />
       <List>
         {navItems.map((item) => (
-          <ListItem key={item.path} disablePadding>
-            <ListItemButton
-              component={Link}
-              to={item.path}
-              selected={location.pathname === item.path}
-              sx={{
-                '&.Mui-selected': {
-                  backgroundColor: 'primary.light',
-                  color: 'primary.contrastText',
-                  '&:hover': {
-                    backgroundColor: 'primary.main',
-                  },
-                  '& .MuiListItemIcon-root': {
-                    color: 'primary.contrastText',
-                  },
-                },
-              }}
-            >
-              <ListItemIcon sx={{ 
-                color: location.pathname === item.path ? 'primary.contrastText' : 'inherit' 
-              }}>
-                <item.icon />
-              </ListItemIcon>
-              <ListItemText primary={item.label} />
-            </ListItemButton>
-          </ListItem>
+          <React.Fragment key={item.path}>
+            {item.children ? (
+              <>
+                <ListItem disablePadding>
+                  <ListItemButton
+                    onClick={() => handleSubMenuToggle(item.label)}
+                    selected={location.pathname.startsWith(item.path)}
+                    sx={{
+                      '&.Mui-selected': {
+                        backgroundColor: 'primary.light',
+                        color: 'primary.contrastText',
+                        '&:hover': {
+                          backgroundColor: 'primary.main',
+                        },
+                        '& .MuiListItemIcon-root': {
+                          color: 'primary.contrastText',
+                        },
+                      },
+                    }}
+                  >
+                    <ListItemIcon>
+                      <item.icon />
+                    </ListItemIcon>
+                    <ListItemText primary={item.label} />
+                    {openSubMenu === item.label ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  </ListItemButton>
+                </ListItem>
+                {openSubMenu === item.label && (
+                  <List component="div" disablePadding>
+                    {item.children.map((child) => (
+                      <ListItem key={child.path} disablePadding>
+                        <ListItemButton
+                          component={Link}
+                          to={child.path}
+                          selected={location.pathname === child.path}
+                          onClick={handleDrawerToggle}
+                          sx={{
+                            pl: 4,
+                            '&.Mui-selected': {
+                              backgroundColor: 'primary.light',
+                              color: 'primary.contrastText',
+                              '&:hover': {
+                                backgroundColor: 'primary.main',
+                              },
+                              '& .MuiListItemIcon-root': {
+                                color: 'primary.contrastText',
+                              },
+                            },
+                          }}
+                        >
+                          <ListItemIcon>
+                            <child.icon />
+                          </ListItemIcon>
+                          <ListItemText primary={child.label} />
+                        </ListItemButton>
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
+              </>
+            ) : (
+              <ListItem disablePadding>
+                <ListItemButton
+                  component={Link}
+                  to={item.path}
+                  selected={location.pathname === item.path}
+                  onClick={handleDrawerToggle}
+                  sx={{
+                    '&.Mui-selected': {
+                      backgroundColor: 'primary.light',
+                      color: 'primary.contrastText',
+                      '&:hover': {
+                        backgroundColor: 'primary.main',
+                      },
+                      '& .MuiListItemIcon-root': {
+                        color: 'primary.contrastText',
+                      },
+                    },
+                  }}
+                >
+                  <ListItemIcon>
+                    <item.icon />
+                  </ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
+            )}
+          </React.Fragment>
         ))}
       </List>
       <Divider />
