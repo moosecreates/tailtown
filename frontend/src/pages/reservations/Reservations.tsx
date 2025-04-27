@@ -35,7 +35,14 @@ const Reservations = () => {
   const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); // Default to today's date
+  // Initialize with today's date in local timezone using YYYY-MM-DD format
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0'); // +1 because months are 0-indexed
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
 
   const loadReservations = useCallback(async () => {
     try {
@@ -192,8 +199,13 @@ const Reservations = () => {
                 value={selectedDate ? new Date(selectedDate) : null}
                 onChange={(newDate) => {
                   if (newDate) {
-                    // Format date as YYYY-MM-DD
-                    const formattedDate = newDate.toISOString().split('T')[0];
+                    // Format date as YYYY-MM-DD, preserving the local date
+                    // This ensures we don't get timezone conversion issues
+                    const year = newDate.getFullYear();
+                    const month = String(newDate.getMonth() + 1).padStart(2, '0'); // +1 because months are 0-indexed
+                    const day = String(newDate.getDate()).padStart(2, '0');
+                    const formattedDate = `${year}-${month}-${day}`;
+                    console.log('Setting selected date to:', formattedDate);
                     setSelectedDate(formattedDate);
                   }
                 }}
