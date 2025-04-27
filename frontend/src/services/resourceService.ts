@@ -15,8 +15,6 @@ export interface Resource {
   suiteNumber?: number;
   lastCleanedAt?: Date | string | null;
   maintenanceStatus?: string;
-  // Client-side determined status
-  status?: 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE';
   // JSON attributes for flexible, non-queryable properties
   attributes?: {
     suiteType?: string;

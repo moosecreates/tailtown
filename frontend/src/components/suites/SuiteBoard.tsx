@@ -24,6 +24,7 @@ import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import PetsIcon from '@mui/icons-material/Pets';
 import { resourceService, Resource } from '../../services';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
+import { determineSuiteStatus } from '../../utils/suiteUtils';
 
 // Suite types we store in the attributes
 enum SuiteType {
@@ -143,24 +144,8 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
             }
           }
           
-          // Determine the suite status based on maintenance status and reservations
-          let status = 'AVAILABLE'; // Default status
-          
-          // Check if suite is in maintenance
-          if (suite.attributes?.maintenanceStatus === 'MAINTENANCE') {
-            status = 'MAINTENANCE';
-          }
-          // Check if suite has active reservations
-          else if (suite.reservations && suite.reservations.length > 0) {
-            // Check for active reservations (CONFIRMED or CHECKED_IN)
-            const hasActiveReservation = suite.reservations.some(res => 
-              ['CONFIRMED', 'CHECKED_IN'].includes(res.status)
-            );
-            
-            if (hasActiveReservation) {
-              status = 'OCCUPIED';
-            }
-          }
+          // Use the utility function to determine the suite status
+          const status = determineSuiteStatus(suite);
           
           return {
             id: suite.id,
