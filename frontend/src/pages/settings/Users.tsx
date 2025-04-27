@@ -310,14 +310,14 @@ const Users: React.FC = () => {
       <Dialog 
         open={openDialog} 
         onClose={handleCloseDialog}
-        maxWidth="md"
+        maxWidth="sm"
         fullWidth
       >
         <DialogTitle>
           {editingUser ? 'Edit Employee' : 'Add New Employee'}
         </DialogTitle>
         <DialogContent dividers>
-          <Grid container spacing={2}>
+          <Grid container spacing={1}>
             <Grid item xs={12} md={6}>
               <TextField
                 name="firstName"
@@ -325,7 +325,7 @@ const Users: React.FC = () => {
                 value={formData.firstName}
                 onChange={handleInputChange}
                 fullWidth
-                margin="normal"
+                margin="dense"
                 required
               />
             </Grid>
@@ -336,7 +336,7 @@ const Users: React.FC = () => {
                 value={formData.lastName}
                 onChange={handleInputChange}
                 fullWidth
-                margin="normal"
+                margin="dense"
                 required
               />
             </Grid>
@@ -348,7 +348,7 @@ const Users: React.FC = () => {
                 value={formData.email}
                 onChange={handleInputChange}
                 fullWidth
-                margin="normal"
+                margin="dense"
                 required
               />
             </Grid>
@@ -360,7 +360,7 @@ const Users: React.FC = () => {
                 value={formData.password}
                 onChange={handleInputChange}
                 fullWidth
-                margin="normal"
+                margin="dense"
                 required={!editingUser}
               />
             </Grid>
@@ -372,12 +372,12 @@ const Users: React.FC = () => {
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 fullWidth
-                margin="normal"
+                margin="dense"
                 required={!editingUser}
               />
             </Grid>
             <Grid item xs={12} md={4}>
-              <FormControl fullWidth margin="normal">
+              <FormControl fullWidth margin="dense">
                 <InputLabel>Role</InputLabel>
                 <Select
                   name="role"
@@ -393,7 +393,7 @@ const Users: React.FC = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} md={4}>
-              <FormControl fullWidth margin="normal">
+              <FormControl fullWidth margin="dense">
                 <InputLabel>Department</InputLabel>
                 <Select
                   name="department"
@@ -409,7 +409,7 @@ const Users: React.FC = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} md={4}>
-              <FormControl fullWidth margin="normal">
+              <FormControl fullWidth margin="dense">
                 <InputLabel>Position</InputLabel>
                 <Select
                   name="position"
@@ -425,7 +425,7 @@ const Users: React.FC = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} md={6}>
-              <FormControl fullWidth margin="normal">
+              <FormControl fullWidth margin="dense">
                 <InputLabel>Status</InputLabel>
                 <Select
                   name="status"
@@ -447,7 +447,7 @@ const Users: React.FC = () => {
                 value={formData.hireDate}
                 onChange={handleInputChange}
                 fullWidth
-                margin="normal"
+                margin="dense"
                 InputLabelProps={{
                   shrink: true,
                 }}
