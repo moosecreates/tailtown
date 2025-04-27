@@ -8,8 +8,10 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Divider
+  Divider,
+  Button
 } from '@mui/material';
+import { Link } from 'react-router-dom';
 
 const Settings: React.FC = () => {
   return (
@@ -56,16 +58,15 @@ const Settings: React.FC = () => {
                     <Typography variant="body2" color="text.secondary">Administrator, Manager, Staff</Typography>
                   </Box>
                   <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
-                    <Typography 
-                      variant="body2" 
+                    <Button 
+                      component={Link} 
+                      to="/settings/users"
+                      variant="outlined" 
                       color="primary" 
-                      sx={{ 
-                        cursor: 'pointer',
-                        '&:hover': { textDecoration: 'underline' }
-                      }}
+                      size="small"
                     >
                       Manage Users →
-                    </Typography>
+                    </Button>
                   </Box>
                 </CardContent>
               </Card>
