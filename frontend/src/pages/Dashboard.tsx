@@ -301,7 +301,15 @@ const loadData = async () => {
                   to="/customers/new"
                   variant="outlined"
                   startIcon={<PersonAddIcon />}
-                  fullWidth
+                  sx={{
+                    maxWidth: { xs: '100%', sm: '80%', md: '60%' },
+                    justifyContent: 'flex-start',
+                    ml: 2,
+                    '& .MuiButton-startIcon': {
+                      minWidth: 24,
+                      marginRight: 2
+                    }
+                  }}
                 >
                   New Customer
                 </Button>
@@ -310,7 +318,15 @@ const loadData = async () => {
                   to="/pets/new"
                   variant="outlined"
                   startIcon={<PetsIcon />}
-                  fullWidth
+                  sx={{
+                    maxWidth: { xs: '100%', sm: '80%', md: '60%' },
+                    justifyContent: 'flex-start',
+                    ml: 2,
+                    '& .MuiButton-startIcon': {
+                      minWidth: 24,
+                      marginRight: 2
+                    }
+                  }}
                 >
                   New Pet
                 </Button>
@@ -319,7 +335,15 @@ const loadData = async () => {
                   to="/reservations/new"
                   variant="outlined"
                   startIcon={<EventNoteIcon />}
-                  fullWidth
+                  sx={{
+                    maxWidth: { xs: '100%', sm: '80%', md: '60%' },
+                    justifyContent: 'flex-start',
+                    ml: 2,
+                    '& .MuiButton-startIcon': {
+                      minWidth: 24,
+                      marginRight: 2
+                    }
+                  }}
                 >
                   New Reservation
                 </Button>
@@ -328,7 +352,15 @@ const loadData = async () => {
                   to="/calendar"
                   variant="outlined"
                   startIcon={<CalendarMonthIcon />}
-                  fullWidth
+                  sx={{
+                    maxWidth: { xs: '100%', sm: '80%', md: '60%' },
+                    justifyContent: 'flex-start',
+                    ml: 2,
+                    '& .MuiButton-startIcon': {
+                      minWidth: 24,
+                      marginRight: 2
+                    }
+                  }}
                 >
                   View Calendar
                 </Button>
