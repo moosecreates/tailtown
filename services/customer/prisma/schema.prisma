@@ -328,10 +328,21 @@ model Staff {
   lastName          String
   email             String        @unique
   phone             String?
-  role              String
+  address           String?
+  city              String?
+  state             String?
+  zipCode           String?
+  password          String        // Hashed password for authentication
+  department        String?       // Department the staff member belongs to
+  position          String?       // Position/job title
+  role              String        // Role for permissions (admin, manager, staff, etc.)
+  hireDate          DateTime?     // When the staff member was hired
   workSchedule      Json?         // JSON data for work schedule
   specialties       String[]      @default([])
   isActive          Boolean       @default(true)
+  lastLogin         DateTime?     // Last time the staff member logged in
+  resetToken        String?       // For password reset functionality
+  resetTokenExpiry  DateTime?     // Expiration of reset token
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   assignedReservations Reservation[]
