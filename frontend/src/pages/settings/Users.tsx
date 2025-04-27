@@ -41,6 +41,7 @@ const mockUsers = [
     firstName: 'John', 
     lastName: 'Doe', 
     email: 'john.doe@example.com', 
+    password: 'password123', // This would be hashed in a real application
     role: 'Administrator',
     department: 'Management',
     position: 'General Manager',
@@ -52,6 +53,7 @@ const mockUsers = [
     firstName: 'Jane', 
     lastName: 'Smith', 
     email: 'jane.smith@example.com', 
+    password: 'password123', // This would be hashed in a real application
     role: 'Manager',
     department: 'Front Desk',
     position: 'Front Desk Manager',
@@ -63,6 +65,7 @@ const mockUsers = [
     firstName: 'Michael', 
     lastName: 'Johnson', 
     email: 'michael.j@example.com', 
+    password: 'password123', // This would be hashed in a real application
     role: 'Staff',
     department: 'Grooming',
     position: 'Lead Groomer',
@@ -74,6 +77,7 @@ const mockUsers = [
     firstName: 'Sarah', 
     lastName: 'Williams', 
     email: 'sarah.w@example.com', 
+    password: 'password123', // This would be hashed in a real application
     role: 'Staff',
     department: 'Training',
     position: 'Dog Trainer',
@@ -85,6 +89,7 @@ const mockUsers = [
     firstName: 'Robert', 
     lastName: 'Brown', 
     email: 'robert.b@example.com', 
+    password: 'password123', // This would be hashed in a real application
     role: 'Staff',
     department: 'Kennel',
     position: 'Kennel Technician',
@@ -117,6 +122,8 @@ const Users: React.FC = () => {
     firstName: '',
     lastName: '',
     email: '',
+    password: '',
+    confirmPassword: '',
     role: '',
     department: '',
     position: '',
@@ -131,6 +138,8 @@ const Users: React.FC = () => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        password: user.password,
+        confirmPassword: user.password,
         role: user.role,
         department: user.department,
         position: user.position,
@@ -143,6 +152,8 @@ const Users: React.FC = () => {
         firstName: '',
         lastName: '',
         email: '',
+        password: '',
+        confirmPassword: '',
         role: '',
         department: '',
         position: '',
@@ -174,17 +185,26 @@ const Users: React.FC = () => {
   };
 
   const handleSubmit = () => {
+    // Validate passwords match for new users or when changing password
+    if (!editingUser && formData.password !== formData.confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+
+    // Remove confirmPassword from data before saving
+    const { confirmPassword, ...dataToSave } = formData;
+
     if (editingUser) {
       // Update existing user
       const updatedUsers = users.map(user => 
-        user.id === editingUser.id ? { ...user, ...formData } : user
+        user.id === editingUser.id ? { ...user, ...dataToSave } : user
       );
       setUsers(updatedUsers);
     } else {
       // Add new user
       const newUser = {
         id: (users.length + 1).toString(),
-        ...formData
+        ...dataToSave
       };
       setUsers([...users, newUser]);
     }
@@ -330,6 +350,30 @@ const Users: React.FC = () => {
                 fullWidth
                 margin="normal"
                 required
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="password"
+                label={editingUser ? 'Change Password (leave blank to keep current)' : 'Password'}
+                type="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                fullWidth
+                margin="normal"
+                required={!editingUser}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                name="confirmPassword"
+                label="Confirm Password"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                fullWidth
+                margin="normal"
+                required={!editingUser}
               />
             </Grid>
             <Grid item xs={12} md={4}>
