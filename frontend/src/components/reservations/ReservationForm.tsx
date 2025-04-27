@@ -352,7 +352,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
           <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-            <InputLabel>Customer</InputLabel>
             <Select
               value={selectedCustomer || ""}
               label="Customer"
@@ -370,7 +369,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           </FormControl>
 
           <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-            <InputLabel>Pet</InputLabel>
             <Select
               value={selectedPet || ""}
               label="Pet"
@@ -393,7 +391,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           </FormControl>
 
           <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-            <InputLabel>Service</InputLabel>
             <Select
               value={selectedService}
               label="Service"
@@ -448,7 +445,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             return (
               <>
                 <FormControl fullWidth required size="small" sx={{ mb: 1 }}>
-                  <InputLabel>Kennel Type</InputLabel>
                   <Select
                     value={selectedSuiteType || ""}
                     label="Kennel Type"
@@ -468,7 +464,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 {/* Suite override dropdown */}
                 {selectedSuiteType && (
                   <FormControl fullWidth size="small" sx={{ mb: 1 }} disabled={suiteLoading}>
-                    <InputLabel>Kennel/Suite Number</InputLabel>
                     <Select
                       value={selectedSuiteId || ""}
                       label="Kennel/Suite Number"
@@ -533,7 +528,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           {/* Status dropdown - only show for editing existing reservations */}
           {initialData && (
             <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-              <InputLabel>Status</InputLabel>
               <Select
                 value={selectedStatus || "CONFIRMED"}
                 label="Status"
