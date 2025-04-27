@@ -52,9 +52,10 @@ interface SuiteBoardProps {
   onSelectSuite?: (suiteId: string, suiteData?: any) => void;
   reloadTrigger?: number;
   selectedDate?: Date;
+  onDateChange?: (date: Date) => void;
 }
 
-const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, selectedDate }) => {
+const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, selectedDate, onDateChange }) => {
   // Use ref to track previous filter state to prevent unnecessary API calls
   const prevFilter = React.useRef<any>(null);
   const [suites, setSuites] = useState<Array<{
@@ -404,6 +405,10 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
               if (newDate) {
                 // Update the filter with the new date
                 setFilter({ ...filter, date: newDate });
+                // Notify parent component about date change
+                if (onDateChange) {
+                  onDateChange(newDate);
+                }
                 // loadSuites will be called by the filter useEffect
               }
             }}

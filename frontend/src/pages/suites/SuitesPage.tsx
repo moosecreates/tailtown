@@ -31,7 +31,8 @@ const SuitesPage: React.FC = () => {
   const [suiteDetails, setSuiteDetails] = useState<any>(null);
   const [isOccupied, setIsOccupied] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  // We'll get the date from the SuiteBoard component instead
+  const [filterDate, setFilterDate] = useState<Date>(new Date());
   const [stats, setStats] = useState({
     total: 0,
     occupied: 0,
@@ -53,7 +54,7 @@ const SuitesPage: React.FC = () => {
   // Function to manually refresh data
   const refreshData = () => {
     // Format date as YYYY-MM-DD for API using local timezone
-    const formattedDate = formatDateToYYYYMMDD(selectedDate);
+    const formattedDate = formatDateToYYYYMMDD(filterDate);
     resourceService.getSuiteStats(formattedDate)
       .then(response => {
         if (response?.status === 'success' && response?.data) {
@@ -73,9 +74,23 @@ const SuitesPage: React.FC = () => {
     }
   };
   
-  // Handle date change
-  const handleDateChange = (date: Date | null) => {
-    setSelectedDate(date || new Date());
+  // Handle filter date change from SuiteBoard
+  const handleFilterDateChange = (date: Date) => {
+    setFilterDate(date);
+    
+    // Format date as YYYY-MM-DD for API using local timezone
+    const formattedDate = formatDateToYYYYMMDD(date);
+    
+    // Refresh stats with the new date
+    resourceService.getSuiteStats(formattedDate)
+      .then(response => {
+        if (response?.status === 'success' && response?.data) {
+          setStats(response.data);
+        }
+      })
+      .catch(error => {
+        console.error('Error refreshing suite stats:', error);
+      });
     
     // If we have a selected suite, refresh its details with the new date
     if (selectedSuiteId) {
@@ -83,13 +98,13 @@ const SuitesPage: React.FC = () => {
     }
   };
 
-  // Fetch live stats from backend
+  // Fetch live stats from backend on initial load
   useEffect(() => {
     const fetchSuiteStats = async () => {
       try {
         setLoading(true);
         // Format date as YYYY-MM-DD for API using local timezone
-        const formattedDate = formatDateToYYYYMMDD(selectedDate);
+        const formattedDate = formatDateToYYYYMMDD(filterDate);
         const response = await resourceService.getSuiteStats(formattedDate);
         if (response?.status === 'success' && response?.data) {
           setStats(response.data);
@@ -109,7 +124,7 @@ const SuitesPage: React.FC = () => {
     };
 
     fetchSuiteStats();
-  }, [selectedDate]);
+  }, []);
 
   // Add an interval to refresh data every 30 seconds
   useEffect(() => {
@@ -120,7 +135,7 @@ const SuitesPage: React.FC = () => {
     }, 30000); // Refresh every 30 seconds
     
     return () => clearInterval(refreshInterval); // Clean up on unmount
-  }, [selectedDate]); // Re-fetch stats when selectedDate changes
+  }, [filterDate]); // Re-fetch stats when filterDate changes
 
   const handleSelectSuite = async (suiteId: string, status?: string) => {
     try {
@@ -128,7 +143,7 @@ const SuitesPage: React.FC = () => {
       setSelectedSuiteId(suiteId);
       
       // Format date as YYYY-MM-DD for API using local timezone
-      const formattedDate = formatDateToYYYYMMDD(selectedDate) || formatDateToYYYYMMDD(new Date());
+      const formattedDate = formatDateToYYYYMMDD(filterDate) || formatDateToYYYYMMDD(new Date());
       
       // Fetch the suite details from the API with the current date
       const response = await resourceService.getResource(suiteId, formattedDate);
@@ -192,35 +207,11 @@ const SuitesPage: React.FC = () => {
 
   return (
     <Container maxWidth="xl">
-      <Box sx={{ mt: 4, mb: 4 }}>
+      <Box sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4">Kennel Management</Typography>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="View Date"
-              value={selectedDate}
-              onChange={(newDate) => {
-                if (newDate) {
-                  // Format the date for logging using local timezone
-                  const formattedDate = formatDateToYYYYMMDD(newDate);
-                  setSelectedDate(newDate);
-                  
-                  // Refresh stats and trigger reload when date changes
-                  // Use setTimeout to ensure state is updated before refreshing
-                  setTimeout(() => {
-                    refreshData(); // Use refreshData instead of fetchStats
-                    setReloadTrigger((t) => t + 1);
-                  }, 0);
-                }
-              }}
-              slotProps={{ 
-                textField: { 
-                  size: "small",
-                  sx: { width: '180px' }
-                } 
-              }}
-            />
-          </LocalizationProvider>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Kennel Management
+          </Typography>
         </Box>
         {statsError && (
           <Box sx={{ mb: 2 }}>
@@ -274,7 +265,8 @@ const SuitesPage: React.FC = () => {
           <SuiteBoard 
             onSelectSuite={handleSelectSuite} 
             reloadTrigger={reloadTrigger}
-            selectedDate={selectedDate}
+            selectedDate={filterDate}
+            onDateChange={handleFilterDateChange}
           />
         </Paper>
       </Box>
