@@ -26,6 +26,7 @@ import ServiceDetails from './pages/services/ServiceDetails';
 import Resources from './pages/resources/Resources';
 import ResourceDetails from './pages/resources/ResourceDetails';
 import SuitesPage from './pages/suites/SuitesPage';
+import Settings from './pages/settings/Settings';
 import NotFound from './pages/NotFound';
 
 // Custom event for route changes
@@ -80,6 +81,7 @@ const AppRoutes = () => {
         <Route path="/resources" element={isAuthenticated ? <Resources /> : <Navigate to="/login" />} />
         <Route path="/resources/:id" element={isAuthenticated ? <ResourceDetails /> : <Navigate to="/login" />} />
         <Route path="/suites" element={isAuthenticated ? <SuitesPage /> : <Navigate to="/login" />} />
+        <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
       </Route>
 
       {/* 404 Route */}
