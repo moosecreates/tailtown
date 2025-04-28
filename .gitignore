@@ -34,3 +34,17 @@ yarn-error.log*
 .cache
 **/.cache
 node_modules/.cache/
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+*~
+
+# Uploaded content
+services/customer/uploads/
+uploads/
+**/uploads/
+
+# Generated files
+*.generated.*
