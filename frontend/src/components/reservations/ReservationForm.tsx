@@ -112,26 +112,35 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           setStartDate(new Date(initialData.startDate));
           setEndDate(new Date(initialData.endDate));
           
-          // Set suite type and ID if they exist in initialData
-          if (initialData.suiteType) {
-            console.log('Setting suite type from initial data:', initialData.suiteType);
-            setSelectedSuiteType(initialData.suiteType);
-          }
+          // Set suite type if it exists in initialData
           if (initialData.resourceId) {
             console.log('Setting resource ID from initial data:', initialData.resourceId);
-            setSelectedSuiteId(initialData.resourceId);
             
             // Fetch the resource details to display the kennel information
             try {
               const resourceResponse = await resourceService.getResource(initialData.resourceId);
               if (resourceResponse?.status === 'success' && resourceResponse?.data) {
                 console.log('Fetched resource details:', resourceResponse.data);
-                // Add this resource to available suites to ensure it's in the dropdown
-                setAvailableSuites([resourceResponse.data]);
+                
+                // Determine the suite type from the resource
+                const resourceType = resourceResponse.data.type || resourceResponse.data.attributes?.suiteType;
+                if (resourceType) {
+                  console.log('Setting suite type from resource:', resourceType);
+                  setSelectedSuiteType(resourceType);
+                } else if (initialData.suiteType) {
+                  console.log('Setting suite type from initial data:', initialData.suiteType);
+                  setSelectedSuiteType(initialData.suiteType);
+                }
+                
+                // We'll set the selectedSuiteId after the suites are loaded in the useEffect
+                // This prevents the "out-of-range value" warning
               }
             } catch (err) {
               console.error('Error fetching resource details:', err);
             }
+          } else if (initialData.suiteType) {
+            console.log('Setting suite type from initial data:', initialData.suiteType);
+            setSelectedSuiteType(initialData.suiteType);
           }
           
           // Set the status if it exists in the initialData
@@ -212,7 +221,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         setSuiteError('');
         
         // If we're editing an existing reservation, include its resource in the list
-        let includeResourceId = initialData?.resourceId || selectedSuiteId;
+        let includeResourceId = initialData?.resourceId;
         
         console.log('Loading available suites with type:', selectedSuiteType);
         console.log('Resource ID to include:', includeResourceId);
@@ -251,6 +260,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           
           console.log('Available suites:', suites);
           setAvailableSuites(suites);
+          
+          // Now that we have the suites loaded, set the selected suite ID if we're editing
+          if (includeResourceId && suites.some(s => s.id === includeResourceId)) {
+            setSelectedSuiteId(includeResourceId);
+          } else {
+            // Clear the selection if the resource is not available
+            setSelectedSuiteId('');
+          }
         } else {
           setAvailableSuites([]);
           setSuiteError('Failed to load available suites');
@@ -265,7 +282,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     };
     
     loadAvailableSuites();
-  }, [selectedSuiteType, initialData?.resourceId, selectedSuiteId]);
+  }, [selectedSuiteType, initialData]);
 
   /**
    * Handle form submission

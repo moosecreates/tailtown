@@ -22,6 +22,7 @@
    - Calendar integration with FullCalendar
    - Pet vaccination status tracking
    - Service duration-based reservation end time calculation
+   - Kennel calendar implementation
 
 3. **Recent Fixes**
    - Fixed suite status display between main kennel board and suite details modal
@@ -33,6 +34,17 @@
    - Updated theme color to #126f9f for better visual appeal
    - Fixed accessibility issues with aria-hidden attributes
    - Resolved scrolling problems in the PetDetails page
+
+## UI and UX
+
+- Material-UI components are used throughout the application
+- Primary theme color: #126f9f
+- Responsive design for both desktop and mobile views
+- Form validation for all user inputs
+- Loading states for asynchronous operations
+- Error handling with user-friendly messages
+- Specialized calendar views for different service types (boarding, daycare, grooming, training)
+- Grid-based kennel calendar for efficient boarding and daycare management
 
 ## Configuration Notes
 - Backend runs on port 3003
