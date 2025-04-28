@@ -126,16 +126,8 @@ const SuitesPage: React.FC = () => {
     fetchSuiteStats();
   }, []);
 
-  // Add an interval to refresh data every 30 seconds
-  useEffect(() => {
-    // Set up auto-refresh interval
-    const refreshInterval = setInterval(() => {
-      console.log('Auto-refreshing suite data and stats');
-      refreshData();
-    }, 30000); // Refresh every 30 seconds
-    
-    return () => clearInterval(refreshInterval); // Clean up on unmount
-  }, [filterDate]); // Re-fetch stats when filterDate changes
+  // We've removed the automatic refresh interval that was here previously
+  // Now we only refresh data when the user clicks the refresh button or changes the date
 
   const handleSelectSuite = async (suiteId: string, status?: string) => {
     try {
