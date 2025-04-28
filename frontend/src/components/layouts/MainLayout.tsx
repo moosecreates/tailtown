@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SvgIconComponent } from '@mui/icons-material';
 import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import logoImage from '../../assets/images/tail town logo.jpg';
 import { 
   AppBar, 
   Box, 
@@ -120,11 +121,16 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        py: 1
+        py: 2,
+        px: 1
       }}>
-        <Typography variant="h6" component="div" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-          Tailtown Pet Resort
-        </Typography>
+        <Box sx={{ width: '120px', height: '120px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <img 
+            src={logoImage} 
+            alt="Tailtown Pet Resort" 
+            style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.3)' }} 
+          />
+        </Box>
       </Toolbar>
       <Divider />
       <List>
