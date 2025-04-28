@@ -124,11 +124,11 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
         py: 2,
         px: 1
       }}>
-        <Box sx={{ width: '120px', height: '120px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Box sx={{ width: '140px', height: '140px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <img 
             src={logoImage} 
             alt="Tailtown Pet Resort" 
-            style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.3)' }} 
+            style={{ width: '100%', height: '100%', objectFit: 'contain', transform: 'scale(1.2)' }} 
           />
         </Box>
       </Toolbar>
