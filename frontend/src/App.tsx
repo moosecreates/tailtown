@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, BrowserRouter, useLocation } from 'react-router-dom';
 import { Box, CircularProgress, CssBaseline, ThemeProvider } from '@mui/material';
-import { createTheme } from '@mui/material/styles';
+import theme from './theme';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import AccessibilityFix from './components/AccessibilityFix';
 
 // Layouts
 import MainLayout from './components/layouts/MainLayout';
@@ -92,19 +93,13 @@ const AppRoutes = () => {
   );
 }
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#4c8bf5',
-    },
-  },
-});
 
 const App = () => {
   return (
     <BrowserRouter>
       <ThemeProvider theme={theme}>
         <CssBaseline />
+        <AccessibilityFix />
         <RouteChangeListener />
         <AuthProvider>
           <React.Suspense fallback={
