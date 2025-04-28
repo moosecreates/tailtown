@@ -30,10 +30,14 @@
    - Made reservation form more compact for better usability
    - Fixed reservation creation and update functionality
    - Added quick status update feature for reservations page
+   - Updated theme color to #126f9f for better visual appeal
+   - Fixed accessibility issues with aria-hidden attributes
+   - Resolved scrolling problems in the PetDetails page
 
 ## Configuration Notes
-- Backend runs on port 3003 (not 3002 as originally configured)
-- Frontend connects to backend via proxy configuration
+- Backend runs on port 3003
+- Frontend connects to backend via the API service (api.ts) which uses port 3003
+- The frontend .env file contains REACT_APP_API_URL=http://localhost:3002, but this is not currently used by the application
 - PostgreSQL database runs on port 5433 with credentials postgres:postgres
 - Database name: 'customer'
 
@@ -56,5 +60,5 @@
    ```
 
 ## Known Issues
-- Frontend environment configuration expects backend on port 3002, but it's running on 3003
+- There's a discrepancy between the frontend .env configuration (port 3002) and the actual backend port (3003), but this doesn't affect functionality as the application uses a hardcoded port in api.ts
 - Some TypeScript linting warnings remain to be addressed
