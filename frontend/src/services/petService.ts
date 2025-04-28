@@ -35,6 +35,10 @@ export interface Pet {
   createdAt?: string;
   updatedAt?: string;
   medicalRecords?: any[];
+  // Pet icons for quick visual reference
+  petIcons?: string[];
+  // Custom notes for generic flag icons
+  iconNotes?: { [iconId: string]: string };
   vaccinationStatus?: {
     [key: string]: {
       status: 'CURRENT' | 'EXPIRED' | 'PENDING';
