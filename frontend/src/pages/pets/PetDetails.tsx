@@ -83,7 +83,6 @@ const PetDetails = () => {
         if (!isNewPet) {
           const petData = await petService.getPetById(id!);
 
-
           // Format the birthdate from ISO to YYYY-MM-DD for the input field
           if (petData.birthdate) {
             petData.birthdate = new Date(petData.birthdate).toISOString().split('T')[0];
@@ -99,6 +98,20 @@ const PetDetails = () => {
     };
 
     loadData();
+
+    // Ensure proper scrolling behavior
+    const enableScrolling = () => {
+      document.body.style.overflow = 'auto';
+      document.body.style.height = 'auto';
+    };
+
+    // Enable scrolling when component mounts
+    enableScrolling();
+
+    // Re-enable scrolling when component updates
+    return () => {
+      enableScrolling();
+    };
   }, [id, isNewPet]);
 
   /**

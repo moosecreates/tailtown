@@ -4,6 +4,7 @@ import { Box, CircularProgress, CssBaseline, ThemeProvider } from '@mui/material
 import theme from './theme';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import AccessibilityFix from './components/AccessibilityFix';
+import ScrollFix from './components/ScrollFix';
 
 // Layouts
 import MainLayout from './components/layouts/MainLayout';
@@ -100,6 +101,7 @@ const App = () => {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <AccessibilityFix />
+        <ScrollFix />
         <RouteChangeListener />
         <AuthProvider>
           <React.Suspense fallback={
