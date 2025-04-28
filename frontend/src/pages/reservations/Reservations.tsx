@@ -36,26 +36,33 @@ const Reservations = () => {
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
   // Initialize with today's date in local timezone using YYYY-MM-DD format
-  const [selectedDate, setSelectedDate] = useState<string>(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0'); // +1 because months are 0-indexed
-    const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  // Store the date as a Date object to avoid timezone issues with the picker
+  const [selectedDate, setSelectedDate] = useState<Date>(() => {
+    // Initialize with today's date 
+    return new Date();
   });
+  
+  // Create a formatted string version for API calls
+  const getFormattedDateString = useCallback((date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }, []);
 
   const loadReservations = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      console.log('Loading reservations for date:', selectedDate);
+      const dateString = getFormattedDateString(selectedDate);
+      console.log('Loading reservations for date:', dateString);
       const response = await reservationService.getAllReservations(
         page,
         10, // limit
         'startDate', // sortBy
         'asc', // sortOrder
         undefined, // status - get all statuses
-        selectedDate // date filter - use today's date by default
+        getFormattedDateString(selectedDate) // date filter using formatted string
       );
       console.log('Reservations response:', response);
       if (response?.status === 'success' && Array.isArray(response?.data)) {
@@ -196,17 +203,11 @@ const Reservations = () => {
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker
                 label="Filter by Date"
-                value={selectedDate ? new Date(selectedDate) : null}
+                value={selectedDate}
                 onChange={(newDate) => {
                   if (newDate) {
-                    // Format date as YYYY-MM-DD, preserving the local date
-                    // This ensures we don't get timezone conversion issues
-                    const year = newDate.getFullYear();
-                    const month = String(newDate.getMonth() + 1).padStart(2, '0'); // +1 because months are 0-indexed
-                    const day = String(newDate.getDate()).padStart(2, '0');
-                    const formattedDate = `${year}-${month}-${day}`;
-                    console.log('Setting selected date to:', formattedDate);
-                    setSelectedDate(formattedDate);
+                    console.log('Setting selected date to:', newDate);
+                    setSelectedDate(newDate);
                   }
                 }}
                 slotProps={{ 
