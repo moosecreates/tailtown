@@ -1,11 +1,14 @@
 export enum ResourceType {
-  // Housing
-  DOG_KENNEL = 'DOG_KENNEL',
-  CAT_CONDO = 'CAT_CONDO',
-  LUXURY_SUITE = 'LUXURY_SUITE',
+  // Accommodations
+  KENNEL = 'KENNEL',
+  RUN = 'RUN',
+  SUITE = 'SUITE',
+  STANDARD_SUITE = 'STANDARD_SUITE',
+  STANDARD_PLUS_SUITE = 'STANDARD_PLUS_SUITE',
+  VIP_SUITE = 'VIP_SUITE',
   
-  // Play Areas
-  INDOOR_PLAY_YARD = 'INDOOR_PLAY_YARD',
+  // Activity areas
+  PLAY_AREA = 'PLAY_AREA',
   OUTDOOR_PLAY_YARD = 'OUTDOOR_PLAY_YARD',
   PRIVATE_PLAY_AREA = 'PRIVATE_PLAY_AREA',
   
@@ -49,7 +52,7 @@ export interface ResourceAvailability {
 export interface Resource {
   id: string;
   name: string;
-  type: ResourceType;
+  type: string | ResourceType; // Allow both string and enum types
   description?: string;
   capacity?: number;
   availability?: any; // Weekly schedule of availability
@@ -64,25 +67,46 @@ export interface Resource {
 }
 
 // Helper function to get human-readable resource type names
-export const getResourceTypeName = (type: ResourceType): string => {
-  return type.split('_').map(word => 
+export const getResourceTypeName = (type: string | ResourceType): string => {
+  if (!type) return 'Unknown';
+  
+  // Handle both string and enum types
+  const typeStr = typeof type === 'string' ? type : String(type);
+  
+  return typeStr.split('_').map((word: string) => 
     word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
   ).join(' ');
 };
 
 // Helper function to get resource type category
-export const getResourceTypeCategory = (type: ResourceType): string => {
-  if ([ResourceType.DOG_KENNEL, ResourceType.CAT_CONDO, ResourceType.LUXURY_SUITE].includes(type)) {
-    return 'Housing';
-  } else if ([ResourceType.INDOOR_PLAY_YARD, ResourceType.OUTDOOR_PLAY_YARD, ResourceType.PRIVATE_PLAY_AREA].includes(type)) {
-    return 'Play Areas';
-  } else if ([ResourceType.GROOMING_TABLE, ResourceType.BATHING_STATION, ResourceType.DRYING_STATION].includes(type)) {
-    return 'Grooming';
-  } else if ([ResourceType.TRAINING_ROOM, ResourceType.AGILITY_COURSE].includes(type)) {
-    return 'Training';
-  } else if ([ResourceType.GROOMER, ResourceType.TRAINER, ResourceType.ATTENDANT, ResourceType.BATHER].includes(type)) {
-    return 'Staff';
-  } else {
-    return 'Other';
+export const getResourceTypeCategory = (type: string | ResourceType): string => {
+  if (!type) return 'other';
+  
+  // Convert to string if it's not already
+  const typeStr = typeof type === 'string' ? type : String(type);
+  
+  // Housing types
+  if (['KENNEL', 'RUN', 'SUITE', 'STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'].includes(typeStr)) {
+    return 'housing';
+  } 
+  // Play area types
+  else if (['PLAY_AREA', 'OUTDOOR_PLAY_YARD', 'PRIVATE_PLAY_AREA'].includes(typeStr)) {
+    return 'play areas';
+  } 
+  // Grooming types
+  else if (['GROOMING_TABLE', 'BATHING_STATION', 'DRYING_STATION'].includes(typeStr)) {
+    return 'grooming';
+  } 
+  // Training types
+  else if (['TRAINING_ROOM', 'AGILITY_COURSE'].includes(typeStr)) {
+    return 'training';
+  } 
+  // Staff types
+  else if (['GROOMER', 'TRAINER', 'ATTENDANT', 'BATHER'].includes(typeStr)) {
+    return 'staff';
+  } 
+  // Default
+  else {
+    return 'other';
   }
 };

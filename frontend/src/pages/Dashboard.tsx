@@ -33,8 +33,12 @@ const Dashboard = () => {
 const loadData = async () => {
     setLoading(true);
     try {
-      // Get today's date in YYYY-MM-DD format for filtering
-      const today = new Date().toISOString().split('T')[0];
+      // Get today's date in YYYY-MM-DD format for filtering, preserving local timezone
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const formattedToday = `${year}-${month}-${day}`;
       
       // Define statuses to include (all except CANCELLED)
       const activeStatuses = 'PENDING,CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED,NO_SHOW';
@@ -42,8 +46,8 @@ const loadData = async () => {
       const [customers, pets, todayReservations, upcoming, revenue] = await Promise.all([
         customerService.getAllCustomers(),
         petService.getAllPets(1, 1),
-        reservationService.getAllReservations(1, 100, 'startDate', 'asc', activeStatuses, today),
-        reservationService.getAllReservations(1, 5, 'startDate', 'asc', 'CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED', today),
+        reservationService.getAllReservations(1, 100, 'startDate', 'asc', activeStatuses, formattedToday),
+        reservationService.getAllReservations(1, 5, 'startDate', 'asc', 'CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED', formattedToday),
         reservationService.getTodayRevenue()
       ]);
       

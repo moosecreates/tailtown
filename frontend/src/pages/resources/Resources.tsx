@@ -41,24 +41,52 @@ const Resources: React.FC = () => {
 
   const debouncedFilter = useMemo(
     () => debounce((term: string, type: string) => {
-      const filtered = resources.filter(resource => {
-        const matchesType = type === 'all' || getResourceTypeCategory(resource.type) === type;
-        const matchesSearch = resource.name.toLowerCase().includes(term.toLowerCase()) ||
-                            resource.description?.toLowerCase().includes(term.toLowerCase()) ||
-                            resource.location?.toLowerCase().includes(term.toLowerCase());
-        return matchesType && matchesSearch;
-      });
-      setFilteredResources(filtered);
+      console.log('Filtering resources:', { resources: resources.length, term, type });
+      try {
+        // First check if we have any resources
+        if (resources.length === 0) {
+          console.log('No resources to filter');
+          setFilteredResources([]);
+          return;
+        }
+
+        const filtered = resources.filter(resource => {
+          // Safely get the category
+          let category;
+          try {
+            category = getResourceTypeCategory(resource.type);
+          } catch (err) {
+            console.warn(`Error getting category for resource type ${resource.type}:`, err);
+            category = 'other'; // Default to other if we can't determine the category
+          }
+          
+          const matchesType = type === 'all' || category === type;
+          const matchesSearch = 
+            resource.name?.toLowerCase().includes(term.toLowerCase()) ||
+            (resource.description?.toLowerCase() || '').includes(term.toLowerCase()) ||
+            (resource.location?.toLowerCase() || '').includes(term.toLowerCase());
+          
+          return matchesType && matchesSearch;
+        });
+        
+        console.log('Filtered resources:', filtered.length);
+        setFilteredResources(filtered);
+      } catch (error) {
+        console.error('Error filtering resources:', error);
+        setFilteredResources([]);
+      }
     }, 300),
     [resources]
   );
 
   useEffect(() => {
+    console.log('Running filter with:', { searchTerm, filterType });
+    console.log('Current resources:', resources.length);
     debouncedFilter(searchTerm, filterType);
     return () => {
       debouncedFilter.cancel();
     };
-  }, [searchTerm, filterType, debouncedFilter]);
+  }, [searchTerm, filterType, debouncedFilter, resources.length]);
 
   useEffect(() => {
     loadResources();
@@ -66,13 +94,14 @@ const Resources: React.FC = () => {
 
   const loadResources = async () => {
     try {
+      console.log('Loading resources...');
       const response = await resourceManagement.getAllResources();
+      console.log('Resources response:', response);
+      
+      // Direct response from the service should already be the data array
       if (Array.isArray(response)) {
+        console.log('Setting resources from array:', response.length);
         setResources(response);
-      } else if (response?.data?.data && Array.isArray(response.data.data)) {
-        setResources(response.data.data);
-      } else if (response?.data && Array.isArray(response.data)) {
-        setResources(response.data);
       } else {
         console.error('Invalid resources response format:', response);
         setResources([]);
@@ -120,10 +149,11 @@ const Resources: React.FC = () => {
   const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
 
   useEffect(() => {
+    console.log('Resources changed, updating filtered resources:', resources.length);
     setFilteredResources(resources);
   }, [resources]);
 
-  const resourceCategories = ['all', 'Housing', 'Play Areas', 'Grooming', 'Training', 'Staff', 'Other'];
+  const resourceCategories = ['all', 'housing', 'play areas', 'grooming', 'training', 'staff', 'other'];
 
   return (
     <Container>
@@ -162,8 +192,8 @@ const Resources: React.FC = () => {
               size="small"
             >
               {resourceCategories.map((category) => (
-                <MenuItem key={category} value={category.toLowerCase()}>
-                  {category === 'all' ? 'All Types' : category}
+                <MenuItem key={category} value={category}>
+                  {category === 'all' ? 'All Types' : category.charAt(0).toUpperCase() + category.slice(1)}
                 </MenuItem>
               ))}
             </TextField>
@@ -188,7 +218,14 @@ const Resources: React.FC = () => {
                   <TableCell>{resource.name}</TableCell>
                   <TableCell>
                     <Chip 
-                      label={getResourceTypeName(resource.type)}
+                      label={(() => {
+                        try {
+                          return getResourceTypeName(resource.type);
+                        } catch (err) {
+                          console.warn(`Error getting type name for ${resource.type}:`, err);
+                          return String(resource.type).replace(/_/g, ' ');
+                        }
+                      })()}
                       color={resource.isActive ? 'primary' : 'default'}
                       variant="outlined"
                       size="small"

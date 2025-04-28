@@ -79,6 +79,7 @@ export const resourceService = {
     try {
       // Use the date provided or get today's date
       const formattedDate = date || formatDateToYYYYMMDD(new Date());
+      console.log(`Fetching resource ${id} for date: ${formattedDate}`);
       
       // Get the resource details with the date parameter to include reservations
       const resourceResponse: AxiosResponse = await api.get(`/api/resources/${id}`, {
@@ -93,13 +94,15 @@ export const resourceService = {
       }
       
       // Direct approach: Fetch all reservations for this specific resource on the given date
+      console.log(`Fetching reservations for resource ${id} with date ${formattedDate}`);
       const reservationsResponse: AxiosResponse = await api.get(`/api/reservations`, {
         params: {
           resourceId: id,
           date: formattedDate,
-          status: 'CONFIRMED,CHECKED_IN' // Only get active reservations
+          status: 'PENDING,CONFIRMED,CHECKED_IN' // Include pending reservations too
         }
       });
+      console.log('Reservations API response:', reservationsResponse.data);
       
       // If we have reservations, add them to the resource
       if (reservationsResponse.data?.status === 'success' && 
@@ -108,7 +111,11 @@ export const resourceService = {
         
         // Replace the reservations with the ones we just fetched
         resourceResponse.data.data.reservations = reservationsResponse.data.data;
-        console.log(`Found ${reservationsResponse.data.data.length} reservations for suite ${id}`);
+        console.log(`Found ${reservationsResponse.data.data.length} reservations for suite ${id} on date ${formattedDate}`);
+      } else {
+        // Ensure we have an empty array if no reservations were found
+        resourceResponse.data.data.reservations = [];
+        console.log(`No active reservations found for suite ${id} on date ${formattedDate}`);
       }
       
       return resourceResponse.data;

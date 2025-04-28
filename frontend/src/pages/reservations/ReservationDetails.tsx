@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Container, Box, Paper, Button, Chip, Divider, CircularProgress, Alert } from '@mui/material';
+import { Typography, Container, Box, Paper, Button, Chip, Divider, CircularProgress, Alert, Menu, MenuItem } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { reservationService, Reservation } from '../../services/reservationService';
 
@@ -9,6 +9,8 @@ const ReservationDetails = () => {
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
 
   const fetchReservation = async () => {
     try {
@@ -122,7 +124,7 @@ const ReservationDetails = () => {
   };
 
   // Helper function to get chip color based on status
-  const getStatusChipColor = (status: string): 'success' | 'warning' | 'info' | 'default' | 'error' => {
+  const getStatusChipColor = (status: string): 'success' | 'warning' | 'info' | 'default' | 'error' | 'secondary' => {
     switch (status) {
       case 'CONFIRMED':
         return 'success';
@@ -131,11 +133,50 @@ const ReservationDetails = () => {
       case 'CHECKED_IN':
         return 'info';
       case 'CHECKED_OUT':
-        return 'default';
+        return 'secondary';
+      case 'COMPLETED':
+        return 'success';
       case 'CANCELLED':
+        return 'error';
+      case 'NO_SHOW':
         return 'error';
       default:
         return 'default';
+    }
+  };
+  
+  // Available statuses for the dropdown
+  const availableStatuses: Array<'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'> = [
+    'PENDING',
+    'CONFIRMED',
+    'CHECKED_IN',
+    'CHECKED_OUT',
+    'COMPLETED',
+    'CANCELLED',
+    'NO_SHOW'
+  ];
+  
+  const handleStatusClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    setStatusMenuAnchorEl(event.currentTarget);
+  };
+
+  const handleStatusMenuClose = () => {
+    setStatusMenuAnchorEl(null);
+  };
+
+  const handleStatusChange = async (newStatus: 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW') => {
+    if (!id) return;
+    
+    try {
+      setStatusUpdateLoading(true);
+      await reservationService.updateReservation(id, { status: newStatus });
+      await fetchReservation(); // Reload the reservation data
+      handleStatusMenuClose();
+    } catch (err) {
+      console.error('Error updating reservation status:', err);
+      setError('Failed to update reservation status');
+    } finally {
+      setStatusUpdateLoading(false);
     }
   };
 
@@ -149,8 +190,10 @@ const ReservationDetails = () => {
           </Typography>
           <Chip 
             label={reservation.status} 
-            color={getStatusChipColor(reservation.status)}
-            size="medium"
+            color={getStatusChipColor(reservation.status as any)}
+            size="small"
+            sx={{ ml: 2, cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+            onClick={handleStatusClick}
           />
         </Box>
         
@@ -180,7 +223,16 @@ const ReservationDetails = () => {
               {reservation.resource && (
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle2">Assigned Resource</Typography>
-                  <Typography variant="body1">{reservation.resource.name} ({reservation.resource.type})</Typography>
+                  <Typography variant="body1">
+                    {(() => {
+                      const resource: any = reservation.resource;
+                      const suiteNum = resource.suiteNumber || (resource.attributes && resource.attributes.suiteNumber);
+                      if (suiteNum) {
+                        return <>Suite #{suiteNum} ({resource.type})</>;
+                      }
+                      return <>{resource.name} ({resource.type})</>;
+                    })()}
+                  </Typography>
                 </Box>
               )}
               
@@ -264,6 +316,46 @@ const ReservationDetails = () => {
           </Button>
         </Box>
       </Box>
+      
+      {/* Status Change Menu */}
+      <Menu
+        anchorEl={statusMenuAnchorEl}
+        open={Boolean(statusMenuAnchorEl)}
+        onClose={handleStatusMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+      >
+        {availableStatuses.map((status) => (
+          <MenuItem 
+            key={status} 
+            onClick={() => handleStatusChange(status)}
+            disabled={statusUpdateLoading || (reservation && reservation.status === status)}
+            sx={{
+              fontSize: '0.875rem',
+              py: 0.75,
+              minHeight: 'auto',
+              color: reservation && reservation.status === status ? 'text.disabled' : 'inherit'
+            }}
+          >
+            <Chip
+              size="small"
+              label={status}
+              color={getStatusChipColor(status as any)}
+              sx={{ 
+                height: 20, 
+                '& .MuiChip-label': { px: 1, fontSize: '0.7rem' },
+                minWidth: '80px'
+              }}
+            />
+          </MenuItem>
+        ))}
+      </Menu>
     </Container>
   );
 };

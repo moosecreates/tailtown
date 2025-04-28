@@ -45,16 +45,19 @@ export const reservationService = {
     limit = 10,
     sortBy?: string,
     sortOrder: 'asc' | 'desc' = 'asc',
-    status?: string
+    status?: string,
+    date?: string
   ): Promise<{ status: string; data: Reservation[]; totalPages: number; currentPage: number; results: number }> => {
     try {
+      console.log('reservationService: Getting all reservations with date filter:', date);
       const response: AxiosResponse = await api.get('/api/reservations', {
         params: { 
           page, 
           limit,
           sortBy,
           sortOrder,
-          status
+          status,
+          date
         }
       });
       return response.data;

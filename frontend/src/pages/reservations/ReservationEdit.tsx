@@ -31,7 +31,7 @@ export default function ReservationEdit() {
   const [formData, setFormData] = useState({
     startDate: new Date(),
     endDate: new Date(),
-    status: 'PENDING' as ReservationStatus,
+    status: 'CONFIRMED' as ReservationStatus,
     notes: '',
     staffNotes: '',
   });

@@ -336,8 +336,8 @@ export const uploadPetPhoto = async (
         }
       }
 
-      // Update pet with new photo URL
-      const photoUrl = `/api/uploads/pets/${path.basename(req.file.path)}`;
+      // Update pet with new photo URL - use a simpler path without the /api prefix
+      const photoUrl = `/uploads/pets/${path.basename(req.file.path)}`;
       // Photo upload successful
       const updatedPet = await prisma.pet.update({
         where: { id },

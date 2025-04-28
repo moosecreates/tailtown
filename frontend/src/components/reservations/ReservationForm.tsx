@@ -12,9 +12,11 @@ import {
   SelectChangeEvent,
   Alert,
 } from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import Grid from '@mui/material/Grid';
 import { Customer } from '../../types/customer';
 import { Pet } from '../../types/pet';
 import { Service } from '../../types/service';
@@ -500,30 +502,106 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             );
           })()}
 
-          <DateTimePicker
-            label="Start Date & Time"
-            value={startDate}
-            onChange={(newValue) => {
-              setStartDate(newValue);
-              
-              // Update end date based on service duration when start date changes
-              if (newValue && currentServiceDuration) {
-                const newEndDate = new Date(newValue.getTime());
-                // Add the service duration in minutes to the start date
-                newEndDate.setMinutes(newEndDate.getMinutes() + currentServiceDuration);
-                setEndDate(newEndDate);
-              }
-            }}
-            slotProps={{ textField: { fullWidth: true, size: "small", sx: { mb: 1 } } }}
-          />
+          <Typography variant="subtitle2" sx={{ mt: 1, mb: 0.5 }}>Start Date & Time</Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <DatePicker
+                label="Start Date"
+                value={startDate}
+                onChange={(newValue) => {
+                  if (!newValue) return;
+                  
+                  // Preserve the time from the existing startDate if it exists
+                  if (startDate) {
+                    const hours = startDate.getHours();
+                    const minutes = startDate.getMinutes();
+                    newValue.setHours(hours, minutes);
+                  } else {
+                    // Default to 9:00 AM if no previous time
+                    newValue.setHours(9, 0, 0, 0);
+                  }
+                  
+                  setStartDate(newValue);
+                  
+                  // Update end date based on service duration when start date changes
+                  if (currentServiceDuration) {
+                    const newEndDate = new Date(newValue.getTime());
+                    // Add the service duration in minutes to the start date
+                    newEndDate.setMinutes(newEndDate.getMinutes() + currentServiceDuration);
+                    setEndDate(newEndDate);
+                  }
+                }}
+                slotProps={{ textField: { fullWidth: true, size: "small", sx: { mb: 1 } } }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TimePicker
+                label="Start Time"
+                value={startDate}
+                onChange={(newValue) => {
+                  if (!newValue) return;
+                  
+                  // Create a new date with the current date but updated time
+                  const updatedDate = startDate ? new Date(startDate) : new Date();
+                  updatedDate.setHours(newValue.getHours(), newValue.getMinutes());
+                  
+                  setStartDate(updatedDate);
+                  
+                  // Update end date based on service duration when time changes
+                  if (currentServiceDuration) {
+                    const newEndDate = new Date(updatedDate.getTime());
+                    // Add the service duration in minutes
+                    newEndDate.setMinutes(newEndDate.getMinutes() + currentServiceDuration);
+                    setEndDate(newEndDate);
+                  }
+                }}
+                slotProps={{ textField: { fullWidth: true, size: "small", sx: { mb: 1 } } }}
+              />
+            </Grid>
+          </Grid>
 
-          <DateTimePicker
-            label="End Date & Time"
-            value={endDate}
-            onChange={(newValue) => setEndDate(newValue)}
-            slotProps={{ textField: { fullWidth: true, size: "small", sx: { mb: 1 } } }}
-            minDateTime={startDate || undefined}
-          />
+          <Typography variant="subtitle2" sx={{ mt: 1, mb: 0.5 }}>End Date & Time</Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <DatePicker
+                label="End Date"
+                value={endDate}
+                onChange={(newValue) => {
+                  if (!newValue) return;
+                  
+                  // Preserve the time from the existing endDate if it exists
+                  if (endDate) {
+                    const hours = endDate.getHours();
+                    const minutes = endDate.getMinutes();
+                    newValue.setHours(hours, minutes);
+                  } else {
+                    // Default to 5:00 PM if no previous time
+                    newValue.setHours(17, 0, 0, 0);
+                  }
+                  
+                  setEndDate(newValue);
+                }}
+                slotProps={{ textField: { fullWidth: true, size: "small", sx: { mb: 1 } } }}
+                minDate={startDate || undefined}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TimePicker
+                label="End Time"
+                value={endDate}
+                onChange={(newValue) => {
+                  if (!newValue) return;
+                  
+                  // Create a new date with the current date but updated time
+                  const updatedDate = endDate ? new Date(endDate) : new Date();
+                  updatedDate.setHours(newValue.getHours(), newValue.getMinutes());
+                  
+                  setEndDate(updatedDate);
+                }}
+                slotProps={{ textField: { fullWidth: true, size: "small", sx: { mb: 1 } } }}
+              />
+            </Grid>
+          </Grid>
           
           {/* Status dropdown - only show for editing existing reservations */}
           {initialData && (

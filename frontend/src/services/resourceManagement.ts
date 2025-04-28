@@ -6,11 +6,17 @@ export const getAllResources = async () => {
   try {
     console.log('Getting all resources...');
     const response = await api.get('/api/resources');
-    console.log('Response:', response);
-    if (response.data.status === 'success') {
-      return response.data.data || [];
+    console.log('Response status:', response.status);
+    console.log('Response data:', response.data);
+    
+    if (response.data && response.data.status === 'success') {
+      const resources = response.data.data || [];
+      console.log(`Found ${resources.length} resources`);
+      return resources;
     }
-    throw new Error('Failed to get resources');
+    
+    console.error('Unexpected response format:', response.data);
+    throw new Error('Failed to get resources: Invalid response format');
   } catch (error: any) {
     console.error('Error getting resources:', error.response?.data || error.message);
     throw error;

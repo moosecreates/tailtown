@@ -42,6 +42,7 @@ const PetDetails = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoTimestamp, setPhotoTimestamp] = useState<number>(Date.now());
 
   const [pet, setPet] = useState<Omit<Pet, 'id' | 'createdAt' | 'updatedAt' | 'medicalRecords'>>({
     name: '',
@@ -234,11 +235,26 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
             <Avatar
-              src={pet.profilePhoto ? `http://localhost:3002${pet.profilePhoto}` : undefined}
-              alt={pet.name}
+              src={pet.profilePhoto ? 
+                // Use a simple direct path to the image
+                `http://localhost:3003${pet.profilePhoto}?t=${photoTimestamp}` : 
+                undefined
+              }
+              alt={pet.name || 'Pet'}
               onError={(e) => {
                 console.error('Error loading image:', e);
-
+                // Reset image source on error and try a direct path without query parameters
+                const imgElement = e.target as HTMLImageElement;
+                const originalSrc = imgElement.src;
+                
+                // Only try the fallback once to avoid infinite loops
+                if (originalSrc.includes('?')) {
+                  const baseUrl = originalSrc.split('?')[0];
+                  imgElement.src = baseUrl;
+                } else {
+                  // If fallback failed too, clear the src
+                  imgElement.src = '';
+                }
               }}
               sx={{
                 width: 150,
@@ -273,7 +289,21 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
                     try {
                       setSaving(true);
                       const updatedPet = await petService.uploadPetPhoto(id, file);
-                      setPet(prev => ({ ...prev, profilePhoto: updatedPet.profilePhoto }));
+                      
+                      // Create a local cached URL to display immediately
+                      if (updatedPet.profilePhoto) {
+                        // Use a simple direct path to the image
+                        const imageUrl = `http://localhost:3003${updatedPet.profilePhoto}`;
+                        
+                        // Preload the image to ensure it's in browser cache
+                        const preloadImg = new Image();
+                        preloadImg.src = imageUrl;
+                        
+                        setPet(prev => ({ ...prev, profilePhoto: updatedPet.profilePhoto }));
+                      }
+                      
+                      // Update timestamp to force image refresh
+                      setPhotoTimestamp(Date.now());
                       setSnackbar({
                         open: true,
                         message: 'Photo uploaded successfully',
