@@ -33,7 +33,7 @@ import {
   LocalOffer as ServicesIcon,
   Inventory as ResourcesIcon,
   Hotel as SuitesIcon,
-  Spa as GroomingIcon,
+  ContentCut as GroomingIcon,
   FitnessCenter as TrainingIcon,
   Home as DaycareIcon,
   ExpandMore as ExpandMoreIcon,
