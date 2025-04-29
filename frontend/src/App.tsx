@@ -26,11 +26,15 @@ import TrainingCalendarPage from './pages/calendar/TrainingCalendarPage';
 import Services from './pages/services/Services';
 import ServiceDetails from './pages/services/ServiceDetails';
 import Resources from './pages/resources/Resources';
+// Import price rules components from settings directory
+import PriceRulesPage from './pages/settings/PriceRules';
+import PriceRuleDetailsPage from './pages/settings/PriceRuleDetailsPage';
 import ResourceDetails from './pages/resources/ResourceDetails';
 import SuitesPage from './pages/suites/SuitesPage';
 import Settings from './pages/settings/Settings';
 import Users from './pages/settings/Users';
 import NotFound from './pages/NotFound';
+import PriceRuleRedirect from './components/redirects/PriceRuleRedirect';
 
 // Custom event for route changes
 export const RouteChangeEvent = 'app:route-change';
@@ -84,8 +88,14 @@ const AppRoutes = () => {
         <Route path="/resources" element={isAuthenticated ? <Resources /> : <Navigate to="/login" />} />
         <Route path="/resources/:id" element={isAuthenticated ? <ResourceDetails /> : <Navigate to="/login" />} />
         <Route path="/suites" element={isAuthenticated ? <SuitesPage /> : <Navigate to="/login" />} />
+        {/* Redirects for old price rules URLs */}
+        <Route path="/price-rules" element={<Navigate to="/settings/price-rules" />} />
+        <Route path="/price-rules/:id" element={<PriceRuleRedirect />} />
         <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
         <Route path="/settings/users" element={isAuthenticated ? <Users /> : <Navigate to="/login" />} />
+        <Route path="/settings/price-rules" element={isAuthenticated ? <PriceRulesPage /> : <Navigate to="/login" />} />
+        <Route path="/settings/price-rules/new" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />
+        <Route path="/settings/price-rules/:id" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />
       </Route>
 
       {/* 404 Route */}

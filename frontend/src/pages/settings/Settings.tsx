@@ -26,7 +26,7 @@ const Settings: React.FC = () => {
         
         <Paper sx={{ p: 3, mt: 3 }}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
               <Card>
                 <CardHeader title="General Settings" />
                 <Divider />
@@ -41,7 +41,7 @@ const Settings: React.FC = () => {
               </Card>
             </Grid>
             
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={4}>
               <Card>
                 <CardHeader title="Users" />
                 <Divider />
@@ -53,10 +53,6 @@ const Settings: React.FC = () => {
                     <Typography variant="subtitle2">Active Employees</Typography>
                     <Typography variant="body2" color="text.secondary">5</Typography>
                   </Box>
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2">Roles</Typography>
-                    <Typography variant="body2" color="text.secondary">Administrator, Manager, Staff</Typography>
-                  </Box>
                   <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
                     <Button 
                       component={Link} 
@@ -66,6 +62,33 @@ const Settings: React.FC = () => {
                       size="small"
                     >
                       Manage Users →
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardHeader title="Price Rules" />
+                <Divider />
+                <CardContent>
+                  <Typography variant="body1" paragraph>
+                    Configure discount rules for services based on booking criteria.
+                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2">Rule Types</Typography>
+                    <Typography variant="body2" color="text.secondary">Day of Week, Multi-Day Stay, Multiple Pets</Typography>
+                  </Box>
+                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button 
+                      component={Link} 
+                      to="/settings/price-rules"
+                      variant="outlined" 
+                      color="primary" 
+                      size="small"
+                    >
+                      Manage Price Rules →
                     </Button>
                   </Box>
                 </CardContent>

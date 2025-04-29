@@ -236,14 +236,16 @@ model Service {
   duration        Int           // Duration in minutes
   price           Float
   color           String?       // For calendar display
-  serviceCategory ServiceCategory?
-  isActive        Boolean       @default(true)
+  serviceCategory ServiceCategory
+  capacityLimit   Int           @default(0)
   requiresStaff   Boolean       @default(false)
   notes           String?
+  isActive        Boolean       @default(true)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   reservations    Reservation[]
   availableAddOns AddOnService[]
+  priceRules      PriceRuleService[]
   
   @@map("services")
 }
@@ -512,4 +514,65 @@ enum ServiceCategory {
   GROOMING
   TRAINING
   OTHER
+}
+
+// Price Rules Models
+enum PriceRuleType {
+  DAY_OF_WEEK       // Discount on specific days of the week
+  MULTI_DAY         // Discount for multi-day stays
+  MULTI_PET         // Discount for multiple pets
+  SEASONAL          // Seasonal discount
+  PROMOTIONAL       // Limited-time promotion
+  CUSTOM            // Custom rule
+}
+
+enum DiscountType {
+  PERCENTAGE        // Percentage discount (e.g., 10% off)
+  FIXED_AMOUNT      // Fixed amount discount (e.g., $10 off)
+}
+
+model PriceRule {
+  id                String            @id @default(uuid())
+  name              String
+  description       String?
+  ruleType          PriceRuleType
+  discountType      DiscountType
+  discountValue     Float             // Percentage or fixed amount
+  minQuantity       Int?              // Minimum number of days/pets for the rule to apply
+  maxQuantity       Int?              // Maximum number of days/pets for the rule to apply
+  startDate         DateTime?         // Rule valid from this date
+  endDate           DateTime?         // Rule valid until this date
+  daysOfWeek        String?           // JSON array of days (0-6, Sunday-Saturday)
+  isActive          Boolean           @default(true)
+  priority          Int               @default(10) // Higher number = higher priority
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  // Relations
+  serviceCategories PriceRuleServiceCategory[]
+  services          PriceRuleService[]
+  
+  @@map("price_rules")
+  @@index([ruleType, isActive], name: "price_rules_type_active_idx")
+}
+
+model PriceRuleServiceCategory {
+  id                String          @id @default(uuid())
+  priceRuleId       String
+  priceRule         PriceRule       @relation(fields: [priceRuleId], references: [id], onDelete: Cascade)
+  serviceCategory   ServiceCategory
+  
+  @@unique([priceRuleId, serviceCategory])
+  @@map("price_rule_service_categories")
+}
+
+model PriceRuleService {
+  id                String          @id @default(uuid())
+  priceRuleId       String
+  priceRule         PriceRule       @relation(fields: [priceRuleId], references: [id], onDelete: Cascade)
+  serviceId         String
+  service           Service         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  
+  @@unique([priceRuleId, serviceId])
+  @@map("price_rule_services")
 }

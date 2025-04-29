@@ -103,6 +103,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     { path: '/resources', label: 'Resources', icon: ResourcesIcon },
     { path: '/suites', label: 'Kennels', icon: SuitesIcon },
     { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
+    // Price Rules moved to Settings
     { 
       path: '/calendar', 
       label: 'Calendar', 
