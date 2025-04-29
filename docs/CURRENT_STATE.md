@@ -29,6 +29,11 @@
    - Implemented proper status determination for kennels
    - Added status field to reservation edit modal
    - Made reservation form more compact for better usability
+   - Fixed duplicate field labels in reservation form
+   - Added proper ARIA attributes for accessibility in form components
+   - Fixed out-of-range value errors in select components
+   - Implemented auto-selection of pet when customer has only one pet
+   - Fixed issue with saving pets with icons by using localStorage
    - Fixed reservation creation and update functionality
    - Added quick status update feature for reservations page
    - Updated theme color to #126f9f for better visual appeal
