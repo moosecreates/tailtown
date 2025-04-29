@@ -235,39 +235,35 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
   // Function to handle form submission
   const handleFormSubmit = async (formData: any) => {
     try {
-      console.log('KennelCalendar: Starting form submission with data:', formData);
+      // First close the form to prevent any refreshing during API calls
+      setIsFormOpen(false);
+      
       let updatedReservation;
       
       if (selectedReservation) {
-        console.log('KennelCalendar: Updating existing reservation:', selectedReservation.id);
         updatedReservation = await reservationService.updateReservation(
           selectedReservation.id,
           formData
         );
       } else {
-        console.log('KennelCalendar: Creating new reservation');
         updatedReservation = await reservationService.createReservation(formData);
-        console.log('KennelCalendar: Created reservation:', updatedReservation);
       }
 
       if (updatedReservation) {
-        console.log('KennelCalendar: Successfully saved reservation:', updatedReservation);
-        
         // Reload reservations to refresh the calendar
         await loadReservations();
         
         if (onEventUpdate) {
           onEventUpdate(updatedReservation);
         }
-        
-        // Close the form
-        setIsFormOpen(false);
-        setSelectedReservation(null);
-        setSelectedKennel(null);
-        setSelectedDate(null);
       } else {
         console.warn('KennelCalendar: No reservation returned from server');
       }
+      
+      // Reset state after all operations are complete
+      setSelectedReservation(null);
+      setSelectedKennel(null);
+      setSelectedDate(null);
     } catch (error) {
       console.error('KennelCalendar: Error saving reservation:', error);
     }
