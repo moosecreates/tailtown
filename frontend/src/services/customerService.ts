@@ -5,8 +5,21 @@ import api from './api';
 export type { Customer };
 
 export const customerService = {
-  getAllCustomers: async (): Promise<PaginatedResponse<Customer>> => {
-    const response = await api.get('/api/customers');
+  getAllCustomers: async (page = 1, limit = 10): Promise<PaginatedResponse<Customer>> => {
+    const response = await api.get('/api/customers', {
+      params: { page, limit }
+    });
+    return response.data;
+  },
+  
+  searchCustomers: async (query: string, page = 1, limit = 10): Promise<PaginatedResponse<Customer>> => {
+    const response = await api.get('/api/customers', {
+      params: { 
+        search: query,
+        page,
+        limit
+      }
+    });
     return response.data;
   },
 

@@ -9,9 +9,12 @@ import {
   TextField,
   Typography,
   Paper,
-  SelectChangeEvent,
   Alert,
+  Autocomplete,
+  CircularProgress,
+  InputAdornment,
 } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -77,6 +80,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   const [pets, setPets] = useState<Pet[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [customerSearchInput, setCustomerSearchInput] = useState<string>('');
+  const [customerSearchResults, setCustomerSearchResults] = useState<Customer[]>([]);
+  const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false);
   const [selectedPet, setSelectedPet] = useState<string>('');
   const [selectedService, setSelectedService] = useState<string>('');
   const [selectedSuiteType, setSelectedSuiteType] = useState<string>('');
@@ -115,19 +121,15 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       try {
         setLoading(true);
         const [customersResponse, servicesResponse] = await Promise.all([
-          customerService.getAllCustomers(),
-          serviceManagement.getAllServices(),
+          customerService.getAllCustomers(1, 100), // Load more customers initially
+          serviceManagement.getAllServices()
         ]);
         
-        // Set customers and mark that options are available
-        const customersData = customersResponse.data || [];
-        setCustomers(customersData);
-        selectsWithOptions.current.customer = customersData.length > 0;
+        setCustomers(customersResponse.data || []);
+        selectsWithOptions.current.customer = (customersResponse.data || []).length > 0;
         
-        // Set services and mark that options are available
-        const servicesData = servicesResponse.data || [];
-        setServices(servicesData);
-        selectsWithOptions.current.service = servicesData.length > 0;
+        setServices(servicesResponse.data || []);
+        selectsWithOptions.current.service = (servicesResponse.data || []).length > 0;
         
         // Mark that suite type options are always available since they're hardcoded
         selectsWithOptions.current.suiteType = true;
@@ -140,14 +142,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           if (initialData.endDate) {
             setEndDate(new Date(initialData.endDate));
           }
-          
-          // Set the status if it exists in the initialData
+          // Set initial status if provided
           if (initialData.status) {
             setSelectedStatus(initialData.status);
           }
           
-          // Only set customer ID if it exists in the customers list
-          if (initialData.customerId && customersData.some(c => c.id === initialData.customerId)) {
+          // Set customer ID if it exists in the customers list
+          const customersList = customersResponse.data || [];
+          if (initialData.customerId && customersList.some((c: Customer) => c.id === initialData.customerId)) {
             setSelectedCustomer(initialData.customerId);
             
             // Load pets for the selected customer
@@ -168,9 +170,13 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           }
           
           // Only set service ID if it exists in the services list
-          if (initialData.serviceId && servicesData.some((s: Service) => s.id === initialData.serviceId)) {
+          const servicesList = servicesResponse.data || [];
+          if (initialData.serviceId && servicesList.some((s: Service) => s.id === initialData.serviceId)) {
             setSelectedService(initialData.serviceId);
           }
+          
+          // Mark that initial data has been loaded
+          initialDataLoaded.current = true;
           
           // Set resource ID or suite type
           if (initialData.resourceId) {
@@ -200,6 +206,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             setSelectedSuiteType(initialData.suiteType);
           }
         }
+        // End of initialData handling
       } catch (err) {
         setError('Failed to load initial data');
         console.error('Error loading initial data:', err);
@@ -214,28 +221,123 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   /**
    * Handle customer selection change
    * Loads the selected customer's pets and updates the form state
-   * @param event - The select change event
+   * @param customerId - The selected customer ID
    */
-  const handleCustomerChange = async (event: SelectChangeEvent<string>) => {
-    const customerId = event.target.value;
+  const handleCustomerChange = async (customerId: string) => {
     setSelectedCustomer(customerId);
     setSelectedPet(''); // Reset pet selection when customer changes
+    
+    // Immediately load pets for the selected customer
+    if (customerId) {
+      try {
+        const response = await petService.getPetsByCustomer(customerId);
+        
+        // Extract pets from the response, handling different response structures
+        let petsData: Pet[] = [];
+        
+        // Check if response.data is directly an array
+        if (Array.isArray(response.data)) {
+            petsData = response.data;
+        }
+        // Check if response.data is an object with a data property that's an array
+        else if (response.data && typeof response.data === 'object') {
+            // Use type assertion to let TypeScript know this is an object with a data property
+            const responseObj = response.data as Record<string, unknown>;
+            if ('data' in responseObj && Array.isArray(responseObj.data)) {
+                petsData = responseObj.data as Pet[];
+            }
+        }
+        
+        // Update the pets state with the fetched data
+        setPets(petsData);
+        
+        // Mark that pet options are available
+        selectsWithOptions.current.pet = petsData.length > 0;
+        
+        // Auto-select the pet if the customer has only one pet
+        if (petsData.length === 1) {
+          setSelectedPet(petsData[0].id);
+        }
+      } catch (err) {
+        console.error('Error loading pets:', err);
+        setPets([]);
+      }
+    } else {
+      setPets([]);
+    }
+  };
+  
+  /**
+   * Handle customer search input change
+   * Searches for customers matching the input text using the customerService API
+   * Only triggers search when at least 2 characters are entered
+   * @param searchText - The search text entered by the user
+   */
+  const handleCustomerSearch = async (searchText: string) => {
+    setCustomerSearchInput(searchText);
+    
+    if (!searchText || searchText.length < 2) {
+      setCustomerSearchResults([]);
+      return;
+    }
+    
+    try {
+      setCustomerSearchLoading(true);
+      const response = await customerService.searchCustomers(searchText);
+      if (response && response.data) {
+        setCustomerSearchResults(response.data || []);
+      } else {
+        setCustomerSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Error searching for customers:', error);
+      setCustomerSearchResults([]);
+    } finally {
+      setCustomerSearchLoading(false);
+    }
   };
 
   useEffect(() => {
-    const loadPets = async () => {
-      if (!selectedCustomer) {
-        setPets([]);
+    // Only handle the initial data case when the form first loads
+    // Otherwise, we'll rely on the handleCustomerChange function for normal pet loading
+    const loadInitialPets = async () => {
+      if (!selectedCustomer || !initialData?.petId) {
         return;
       }
       
       try {
-        const response = await petService.getPetsByCustomer(selectedCustomer);
-        const petsData = response.data || [];
-        setPets(petsData);
+        // Define the pet response type just like we did in handleCustomerChange
+        interface PetResponse {
+          status: string;
+          results: number;
+          totalPages: number;
+          currentPage: number;
+          data: Pet[];
+        }
         
-        // Mark that pet options are available
-        selectsWithOptions.current.pet = true;
+        const response = await petService.getPetsByCustomer(selectedCustomer);
+        
+        // Extract pets from the response, handling different response structures
+        let petsData: Pet[] = [];
+        
+        // Check if response.data is directly an array
+        if (Array.isArray(response.data)) {
+            petsData = response.data;
+        }
+        // Check if response.data is an object with a data property that's an array
+        else if (response.data && typeof response.data === 'object') {
+            // Use type assertion to let TypeScript know this is an object with a data property
+            const responseObj = response.data as Record<string, unknown>;
+            if ('data' in responseObj && Array.isArray(responseObj.data)) {
+                petsData = responseObj.data as Pet[];
+            }
+        }
+        
+        // Only update pets if not already set by handleCustomerChange
+        if (petsData.length > 0 && pets.length === 0) {
+          setPets(petsData);
+          selectsWithOptions.current.pet = true;
+        }
         
         // If we have initialData with a petId, check if it's valid for this customer
         if (initialData?.petId) {
@@ -243,24 +345,18 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           const petExists = petsData.some(pet => pet.id === initialData.petId);
           if (petExists) {
             setSelectedPet(initialData.petId);
-          } else {
-            // Reset selection if pet doesn't exist for this customer
-            setSelectedPet('');
           }
-        } else if (petsData.length === 1) {
-          // Auto-select the pet if the customer has only one pet
-          setSelectedPet(petsData[0].id);
         }
       } catch (err) {
-        console.error('Error loading pets:', err);
-        setPets([]);
-        // Reset pet selection if there's an error
-        setSelectedPet('');
+        console.error('Error loading initial pets:', err);
       }
     };
     
-    loadPets();
-  }, [selectedCustomer, initialData]);
+    // Only run this effect when initialDataLoaded changes
+    if (initialDataLoaded.current && initialData) {
+      loadInitialPets();
+    }
+  }, [initialDataLoaded.current, initialData, selectedCustomer, pets]);
 
   // Reset suiteType and suite override if service changes to a category that doesn't require it
   useEffect(() => {
@@ -429,31 +525,65 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       <Paper elevation={3} sx={{ p: 2 }}>
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
-          <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-            <InputLabel id="customer-label" shrink={true}>Customer</InputLabel>
-            <Select
-              labelId="customer-label"
-              id="customer-select"
-              value={selectsWithOptions.current.customer ? (selectedCustomer || "") : ""}
-              label="Customer"
-              onChange={handleCustomerChange}
-              required
-              displayEmpty
-              notched
-              // Add proper ARIA attributes to fix accessibility warning
-              inputProps={{
-                'aria-label': 'Select a customer',
-                'aria-hidden': 'false'
-              }}
-            >
-              <MenuItem value="" disabled>Select a customer</MenuItem>
-              {customers.map((customer) => (
-                <MenuItem key={customer.id} value={customer.id}>
-                  {customer.firstName} {customer.lastName}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          {/* Customer search autocomplete - shows search results when user types 2+ characters */}
+          <Autocomplete
+            id="customer-search"
+            options={customerSearchInput.length >= 2 ? customerSearchResults : customers}
+            getOptionLabel={(option: Customer) => {
+              // Ensure we handle null/undefined values gracefully
+              if (!option) return '';
+              return `${option.firstName} ${option.lastName}`;
+            }}
+            isOptionEqualToValue={(option: Customer, value: Customer) => {
+              // Handle null values safely
+              if (!option || !value) return false;
+              return option.id === value.id;
+            }}
+            loading={customerSearchLoading}
+            onInputChange={(event, newInputValue) => {
+              handleCustomerSearch(newInputValue);
+            }}
+            onChange={(event, newValue: Customer | null) => {
+              if (newValue) {
+                handleCustomerChange(newValue.id);
+              } else {
+                handleCustomerChange('');
+              }
+            }}
+            value={customers.find(c => c.id === selectedCustomer) || null}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Customer"
+                size="small"
+                required
+                placeholder="Search by name, email or phone"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <React.Fragment>
+                      {customerSearchLoading ? (
+                        <CircularProgress color="primary" size={20} />
+                      ) : null}
+                      {params.InputProps.endAdornment}
+                    </React.Fragment>
+                  ),
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon color="action" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            )}
+            noOptionsText="No customers found. Try a different search term."
+            loadingText="Searching for customers..."
+            size="small"
+            sx={{ mb: 1 }}
+          />
 
           <FormControl fullWidth size="small" sx={{ mb: 1 }}>
             <InputLabel id="pet-label" shrink={true}>Pet</InputLabel>
