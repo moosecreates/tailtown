@@ -138,6 +138,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             setSelectedService(initialData.serviceId);
           }
           
+          // Set dates if they exist in initialData
+          if (initialData.startDate) {
+            setStartDate(new Date(initialData.startDate));
+          }
+          if (initialData.endDate) {
+            setEndDate(new Date(initialData.endDate));
+          }
+          
           // Set resource ID or suite type
           if (initialData.resourceId) {
             setSelectedSuiteId(initialData.resourceId);
@@ -150,8 +158,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 
                 if (resourceType) {
                   setSelectedSuiteType(resourceType);
+                  // Mark that suite type options are available
+                  selectsWithOptions.current.suiteType = true;
                 } else if (initialData.suiteType) {
                   setSelectedSuiteType(initialData.suiteType);
+                  // Mark that suite type options are available
+                  selectsWithOptions.current.suiteType = true;
                 }
               }
             } catch (err) {
@@ -160,10 +172,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               // Fallback to suite type if resource fetch fails
               if (initialData.suiteType) {
                 setSelectedSuiteType(initialData.suiteType);
+                // Mark that suite type options are available
+                selectsWithOptions.current.suiteType = true;
               }
             }
           } else if (initialData.suiteType) {
             setSelectedSuiteType(initialData.suiteType);
+            // Mark that suite type options are available
+            selectsWithOptions.current.suiteType = true;
           }
           
           // Set the status if it exists in the initialData
