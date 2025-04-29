@@ -644,6 +644,13 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
       <Dialog 
         open={isFormOpen} 
         onClose={() => {
+          // First clear focus from any element inside the dialog
+          // This prevents the accessibility warning when the dialog closes
+          if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+          }
+          
+          // Then close the dialog and reset state
           setIsFormOpen(false);
           setSelectedReservation(null);
           setSelectedKennel(null);
@@ -654,30 +661,76 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
         PaperProps={{
           sx: { maxHeight: '80vh' }
         }}
+        // Prevent dialog from re-rendering its children unnecessarily
+        keepMounted
+        // Add proper focus handling for accessibility
+        disableRestoreFocus
       >
         <DialogTitle sx={{ py: 1, px: 2, fontSize: '1rem' }}>
           {selectedReservation ? 'Edit Reservation' : 'Create New Reservation'}
         </DialogTitle>
         <DialogContent sx={{ py: 1, px: 2 }}>
-          {selectedKennel && selectedDate ? (
-            <ReservationForm
-              onSubmit={handleFormSubmit}
-              initialData={selectedReservation ? {
-                ...selectedReservation,
-                // Ensure we pass the resource ID in the format expected by the form
-                resourceId: selectedKennel.id
-              } : undefined}
-              defaultDates={selectedDate || undefined}
-            />
-          ) : (
+          {!selectedKennel || !selectedDate ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress />
             </Box>
+          ) : (
+            <ReservationFormWrapper 
+              selectedKennel={selectedKennel}
+              selectedDate={selectedDate}
+              selectedReservation={selectedReservation}
+              onSubmit={handleFormSubmit}
+            />
           )}
         </DialogContent>
       </Dialog>
     </Box>
   );
 };
+
+// Wrapper component to prevent unnecessary re-renders of the reservation form
+// This is a separate component to avoid React hooks rules violations
+interface ReservationFormWrapperProps {
+  selectedKennel: Resource;
+  selectedDate: { start: Date; end: Date };
+  selectedReservation: Reservation | null;
+  onSubmit: (formData: any) => Promise<void>;
+}
+
+const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = React.memo(({ 
+  selectedKennel, 
+  selectedDate, 
+  selectedReservation, 
+  onSubmit 
+}) => {
+  // Uncomment for debugging if needed
+  // console.log('Rendering ReservationFormWrapper with stable props');
+  
+  // Create the initial data object for the form
+  const formInitialData = selectedReservation ? {
+    ...selectedReservation,
+    // Ensure we pass the resource ID in the format expected by the form
+    resourceId: selectedKennel.id
+  } : {
+    // For new reservations, pre-populate with the selected kennel
+    resourceId: selectedKennel.id,
+    // Also pass the suite number and type for auto-selection
+    // Use suiteType consistently instead of kennelType to avoid field duplication
+    suiteNumber: selectedKennel.suiteNumber || '',
+    suiteName: selectedKennel.name || '',
+    suiteType: selectedKennel.type || selectedKennel.attributes?.suiteType || 'STANDARD_SUITE',
+    // Include the start and end dates in the initialData
+    startDate: selectedDate.start,
+    endDate: selectedDate.end
+  };
+  
+  return (
+    <ReservationForm
+      onSubmit={onSubmit}
+      initialData={formInitialData}
+      defaultDates={selectedDate}
+    />
+  );
+});
 
 export default KennelCalendar;

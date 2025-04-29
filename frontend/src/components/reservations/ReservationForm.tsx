@@ -92,17 +92,42 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   const [suiteLoading, setSuiteLoading] = useState(false);
   const [suiteError, setSuiteError] = useState<string>('');
   const [selectedSuiteId, setSelectedSuiteId] = useState<string>('');
+  
+  // Use a ref to track if the form has been initialized
+  // This prevents multiple initializations that can cause select value errors
+  const initialDataLoaded = React.useRef(false);
+  
+  // Use a ref to track which select components have valid options loaded
+  // This prevents out-of-range value errors when options aren't loaded yet
+  const selectsWithOptions = React.useRef({
+    customer: false,
+    pet: false,
+    service: false,
+    suiteType: false,
+    suiteId: false
+  });
 
   useEffect(() => {
     const loadInitialData = async () => {
+      // Only load initial data once to prevent duplicate initializations
+      if (initialDataLoaded.current) return;
+      
       try {
         setLoading(true);
         const [customersResponse, servicesResponse] = await Promise.all([
           customerService.getAllCustomers(),
           serviceManagement.getAllServices(),
         ]);
-        setCustomers(customersResponse.data || []);
-        setServices(servicesResponse.data || []);
+        
+        // Set customers and mark that options are available
+        const customersData = customersResponse.data || [];
+        setCustomers(customersData);
+        selectsWithOptions.current.customer = true;
+        
+        // Set services and mark that options are available
+        const servicesData = servicesResponse.data || [];
+        setServices(servicesData);
+        selectsWithOptions.current.service = true;
 
         if (initialData) {
           console.log('Loading initial data for editing:', initialData);
@@ -111,6 +136,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           setSelectedService(initialData.serviceId);
           setStartDate(new Date(initialData.startDate));
           setEndDate(new Date(initialData.endDate));
+          
+          // Mark that we've loaded the initial data
+          initialDataLoaded.current = true;
           
           // Set suite type if it exists in initialData
           if (initialData.resourceId) {
@@ -187,15 +215,33 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         console.log('Getting pets for customer:', selectedCustomer);
         const response = await petService.getPetsByCustomer(selectedCustomer);
         console.log('Pet response:', response);
-        setPets(response.data || []);
+        const petsData = response.data || [];
+        setPets(petsData);
+        
+        // Mark that pet options are available
+        selectsWithOptions.current.pet = true;
+        
+        // If we have initialData with a petId, check if it's valid for this customer
+        if (initialData?.petId) {
+          // Check if the pet ID from initialData exists in the loaded pets
+          const petExists = petsData.some(pet => pet.id === initialData.petId);
+          if (petExists) {
+            setSelectedPet(initialData.petId);
+          } else {
+            console.log(`Pet ID ${initialData.petId} not found in available pets for this customer, resetting selection`);
+            setSelectedPet('');
+          }
+        }
       } catch (err) {
         console.error('Error loading pets:', err);
         setPets([]);
+        // Reset pet selection if there's an error
+        setSelectedPet('');
       }
     };
     
     loadPets();
-  }, [selectedCustomer]);
+  }, [selectedCustomer, initialData]);
 
   // Reset suiteType and suite override if service changes to a category that doesn't require it
   useEffect(() => {
@@ -261,11 +307,23 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           console.log('Available suites:', suites);
           setAvailableSuites(suites);
           
+          // Mark that suite options are available
+          selectsWithOptions.current.suiteType = true;
+          selectsWithOptions.current.suiteId = true;
+          
           // Now that we have the suites loaded, set the selected suite ID if we're editing
-          if (includeResourceId && suites.some(s => s.id === includeResourceId)) {
-            setSelectedSuiteId(includeResourceId);
+          if (includeResourceId) {
+            // Check if the resource ID is in the available suites
+            const resourceExists = suites.some(s => s.id === includeResourceId);
+            if (resourceExists) {
+              // Only set the ID if it exists in the available options
+              setSelectedSuiteId(includeResourceId);
+            } else {
+              console.log(`Resource ID ${includeResourceId} not found in available suites, using empty value`);
+              setSelectedSuiteId('');
+            }
           } else {
-            // Clear the selection if the resource is not available
+            // Clear the selection if no resource ID was provided
             setSelectedSuiteId('');
           }
         } else {
@@ -372,11 +430,16 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
           <FormControl fullWidth size="small" sx={{ mb: 1 }}>
             <Select
-              value={selectedCustomer || ""}
+              value={selectsWithOptions.current.customer ? (selectedCustomer || "") : ""}
               label="Customer"
               onChange={handleCustomerChange}
               required
               displayEmpty
+              // Add proper ARIA attributes to fix accessibility warning
+              inputProps={{
+                'aria-label': 'Select a customer',
+                'aria-hidden': 'false'
+              }}
             >
               <MenuItem value="" disabled>Select a customer</MenuItem>
               {customers.map((customer) => (
@@ -389,12 +452,20 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
 
           <FormControl fullWidth size="small" sx={{ mb: 1 }}>
             <Select
-              value={selectedPet || ""}
+              value={selectsWithOptions.current.pet ? (selectedPet || "") : ""}
               label="Pet"
-              onChange={(e) => setSelectedPet(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value || '';
+                setSelectedPet(value);
+              }}
               required
               disabled={!selectedCustomer}
               displayEmpty
+              // Add proper ARIA attributes to fix accessibility warning
+              inputProps={{
+                'aria-label': 'Select a pet',
+                'aria-hidden': 'false'
+              }}
             >
               <MenuItem value="" disabled>Select a pet</MenuItem>
               {pets.length > 0 ? (
@@ -411,8 +482,13 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
 
           <FormControl fullWidth size="small" sx={{ mb: 1 }}>
             <Select
-              value={selectedService}
+              value={selectsWithOptions.current.service ? (selectedService || "") : ""}
               label="Service"
+              // Add proper ARIA attributes to fix accessibility warning
+              inputProps={{
+                'aria-label': 'Select a service',
+                'aria-hidden': 'false'
+              }}
               onChange={(e) => {
                 const serviceId = e.target.value;
                 setSelectedService(serviceId);
@@ -465,8 +541,13 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               <>
                 <FormControl fullWidth required size="small" sx={{ mb: 1 }}>
                   <Select
-                    value={selectedSuiteType || ""}
+                    value={selectsWithOptions.current.suiteType ? (selectedSuiteType || "") : ""}
                     label="Kennel Type"
+                    // Add proper ARIA attributes to fix accessibility warning
+                    inputProps={{
+                      'aria-label': 'Select kennel type',
+                      'aria-hidden': 'false'
+                    }}
                     onChange={e => {
                       setSelectedSuiteType(e.target.value);
                       setSelectedSuiteId(''); // Reset suite selection on type change
@@ -484,9 +565,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 {selectedSuiteType && (
                   <FormControl fullWidth size="small" sx={{ mb: 1 }} disabled={suiteLoading}>
                     <Select
-                      value={selectedSuiteId || ""}
+                      value={selectsWithOptions.current.suiteId ? (selectedSuiteId || "") : ""}
                       label="Kennel/Suite Number"
-                      onChange={e => setSelectedSuiteId(e.target.value)}
+                      onChange={e => setSelectedSuiteId(e.target.value || '')}
+                      // Add proper ARIA attributes to fix accessibility warning
+                      inputProps={{
+                        'aria-label': 'Select kennel number',
+                        'aria-hidden': 'false'
+                      }}
                       renderValue={(selected) => {
                         if (!selected) return "Auto-assign (recommended)";
                         const suite = availableSuites.find(s => s.id === selected);
@@ -622,12 +708,21 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           
           {/* Status dropdown - only show for editing existing reservations */}
           {initialData && (
-            <FormControl fullWidth size="small" sx={{ mb: 1 }}>
+            <>
+              <FormControl fullWidth size="small" sx={{ mb: 1 }}>
+              <InputLabel id="status-select-label">Reservation Status</InputLabel>
               <Select
+                labelId="status-select-label"
+                id="status-select"
                 value={selectedStatus || "CONFIRMED"}
-                label="Status"
-                onChange={(e) => setSelectedStatus(e.target.value)}
+                label="Reservation Status"
+                onChange={(e) => setSelectedStatus(e.target.value || 'CONFIRMED')}
                 displayEmpty
+                // Add proper ARIA attributes to fix accessibility warning
+                inputProps={{
+                  'aria-label': 'Select reservation status',
+                  'aria-hidden': 'false'
+                }}
               >
                 <MenuItem value="PENDING">Pending</MenuItem>
                 <MenuItem value="CONFIRMED">Confirmed</MenuItem>
@@ -638,6 +733,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 <MenuItem value="NO_SHOW">No Show</MenuItem>
               </Select>
             </FormControl>
+            </>
           )}
 
           <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
