@@ -10,6 +10,12 @@ Welcome to the Tailtown Pet Resort Management System wiki! This wiki contains de
 - [Component Library](./Component-Library.md)
 - [Database Schema](./Database-Schema.md)
 
+## Feature Documentation
+
+- [Kennel Management](./features/KennelManagement.md)
+- [Kennel Calendar](./features/KennelCalendar.md)
+- [Reservations](./features/Reservations.md)
+
 ## Getting Started
 
 1. Read the [Architecture Overview](./Architecture.md) to understand the system design

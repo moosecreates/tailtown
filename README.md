@@ -16,6 +16,8 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - Multiple service types (daycare, boarding, grooming)
 - Color-coded reservation status
 - Drag-and-drop scheduling
+- Specialized kennel grid calendar for boarding and daycare
+- Compact view for efficient kennel management
 
 ### Service Management
 - Customizable service catalog
