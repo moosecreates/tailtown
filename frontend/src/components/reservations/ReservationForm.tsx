@@ -231,6 +231,10 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             console.log(`Pet ID ${initialData.petId} not found in available pets for this customer, resetting selection`);
             setSelectedPet('');
           }
+        } else if (petsData.length === 1) {
+          // Auto-select the pet if the customer has only one pet
+          console.log('Customer has only one pet, auto-selecting:', petsData[0].name);
+          setSelectedPet(petsData[0].id);
         }
       } catch (err) {
         console.error('Error loading pets:', err);
