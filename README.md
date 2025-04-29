@@ -47,6 +47,18 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - RESTful API architecture
 - JWT-based authentication
 
+## Development Guidelines
+
+### Form Standards
+To ensure consistency across the application, we've established guidelines for creating forms. These guidelines cover:
+- Material UI component usage
+- Label positioning and behavior
+- Accessibility requirements
+- Error handling
+- Form validation
+
+See [Form Guidelines](./docs/development/FormGuidelines.md) for detailed information.
+
 ## Project Structure
 
 ```

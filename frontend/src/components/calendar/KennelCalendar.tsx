@@ -693,16 +693,13 @@ interface ReservationFormWrapperProps {
   onSubmit: (formData: any) => Promise<void>;
 }
 
-const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = React.memo(({ 
+const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = ({ 
   selectedKennel, 
   selectedDate, 
   selectedReservation, 
   onSubmit 
 }) => {
-  // Uncomment for debugging if needed
-  // console.log('Rendering ReservationFormWrapper with stable props');
-  
-  // Create the initial data object for the form
+  // Create the initial data object for the form directly
   const formInitialData = selectedReservation ? {
     ...selectedReservation,
     // Ensure we pass the resource ID in the format expected by the form
@@ -727,6 +724,6 @@ const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = React.memo
       defaultDates={selectedDate}
     />
   );
-});
+};
 
 export default KennelCalendar;
