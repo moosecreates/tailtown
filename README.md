@@ -22,7 +22,8 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 ### Service Management
 - Customizable service catalog
 - Service duration and capacity settings
-- Pricing management
+- Pricing management with dynamic price rules
+- Flexible discount system (percentage or fixed amount)
 - Resource allocation
 
 ### Resource Management
@@ -30,6 +31,12 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - Maintenance scheduling
 - Occupancy tracking
 - Resource conflict prevention
+
+### Settings & Configuration
+- Centralized system settings
+- User management
+- Price rules configuration
+- System-wide preferences
 
 ## Technology Stack
 

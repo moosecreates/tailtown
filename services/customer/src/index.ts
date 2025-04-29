@@ -12,6 +12,7 @@ import { serviceRoutes } from './routes/service.routes';
 import { resourceRoutes } from './routes/resource.routes';
 import { suiteRoutes } from './routes/suite.routes';
 import { staffRoutes } from './routes/staff.routes';
+import priceRuleRoutes from './routes/priceRule.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 // Load environment variables
@@ -19,7 +20,7 @@ dotenv.config();
 
 // Initialize the Express application
 const app = express();
-const PORT = process.env.PORT || 3003; // Using port 3003 as specified in the README
+const PORT = process.env.PORT || 3002; // Using port 3002 as standard for backend
 
 // Increase HTTP header limits to prevent 431 errors
 app.set('etag', false); // Disable ETag generation to reduce header size
@@ -191,6 +192,7 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/suites', suiteRoutes);
 app.use('/api/staff', staffRoutes);
+app.use('/api/price-rules', priceRuleRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
