@@ -404,7 +404,7 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
   };
 
   return (
-    <Box sx={{ height: 'calc(100vh - 200px)', p: 2 }}>
+    <Box sx={{ height: 'calc(100vh - 170px)', p: 0 }}>
       <Paper elevation={3} sx={{ height: '100%', p: 2, display: 'flex', flexDirection: 'column' }}>
         {/* Calendar Header */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -470,7 +470,7 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
         </Box>
         
         {/* Calendar Content */}
-        <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+        <Box sx={{ flexGrow: 1 }}>
           {loading ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
               <CircularProgress />
@@ -483,8 +483,8 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
               </Button>
             </Box>
           ) : (
-            <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 300px)' }}>
-              <Table stickyHeader size="small">
+            <TableContainer component={Paper} sx={{ height: 'calc(100vh - 250px)', overflow: 'auto' }}>
+              <Table stickyHeader size="small" sx={{ '& .MuiTableCell-root': { py: 0.5 } }}>
                 <TableHead sx={{ bgcolor: 'background.paper' }}>
                   <TableRow>
                     <TableCell 
@@ -534,10 +534,11 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
                               color: 'white',
                               position: 'sticky',
                               left: 0,
-                              zIndex: 2
+                              zIndex: 2,
+                              py: 0.5
                             }}
                           >
-                            <Typography variant="subtitle1">
+                            <Typography variant="subtitle2">
                               {type === 'VIP_SUITE' ? 'VIP Suites' : 
                                type === 'STANDARD_PLUS_SUITE' ? 'Standard Plus Suites' : 
                                'Standard Suites'}
@@ -557,8 +558,8 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
                                 borderRight: '1px solid rgba(224, 224, 224, 1)'
                               }}
                             >
-                              <Typography variant="body2" fontWeight="medium">
-                                {kennel.suiteNumber ? `Suite ${kennel.suiteNumber}` : kennel.name}
+                              <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.75rem' }}>
+                                {kennel.suiteNumber ? `${kennel.suiteNumber}` : kennel.name}
                               </Typography>
                             </TableCell>
                             
@@ -583,8 +584,8 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
                                         ? `${getStatusColor(reservation.status)}44` // Slightly darker on hover
                                         : 'rgba(0, 0, 0, 0.08)',
                                     },
-                                    p: 1,
-                                    height: 60,
+                                    p: 0.5,
+                                    height: 45,
                                     borderLeft: index > 0 && isOccupied && isKennelOccupied(kennel, days[index - 1])?.id === reservation?.id
                                       ? `2px solid ${getStatusColor(reservation.status)}`
                                       : undefined,
@@ -595,23 +596,22 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
                                   }}
                                 >
                                   {isOccupied ? (
-                                    <Box>
-                                      <Chip 
-                                        label={reservation.status} 
-                                        size="small" 
-                                        sx={{ 
-                                          bgcolor: getStatusColor(reservation.status),
-                                          color: 'white',
-                                          fontSize: '0.6rem',
-                                          height: 20,
-                                          mb: 0.5
-                                        }} 
-                                      />
-                                      <Typography variant="caption" display="block" noWrap>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+                                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.25 }}>
+                                        <Chip 
+                                          label={reservation.status} 
+                                          size="small" 
+                                          sx={{ 
+                                            bgcolor: getStatusColor(reservation.status),
+                                            color: 'white',
+                                            fontSize: '0.6rem',
+                                            height: 16,
+                                            '& .MuiChip-label': { px: 0.5 }
+                                          }} 
+                                        />
+                                      </Box>
+                                      <Typography variant="caption" display="block" noWrap sx={{ fontSize: '0.7rem' }}>
                                         {reservation.pet?.name || 'Unknown Pet'}
-                                      </Typography>
-                                      <Typography variant="caption" display="block" color="textSecondary" noWrap>
-                                        {reservation.customer?.lastName || 'Unknown Owner'}
                                       </Typography>
                                     </Box>
                                   ) : (
@@ -622,7 +622,7 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
                                       justifyContent: 'center',
                                       color: 'text.secondary'
                                     }}>
-                                      <Typography variant="caption">Available</Typography>
+                                      <Typography variant="caption" sx={{ fontSize: '0.65rem' }}>•</Typography>
                                     </Box>
                                   )}
                                 </TableCell>

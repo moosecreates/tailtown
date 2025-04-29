@@ -9,9 +9,9 @@ const CalendarPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'calendar'>('grid');
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ mt: 4, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4">
+    <Container maxWidth="xl" sx={{ height: 'calc(100vh - 64px)', py: 2, display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h5">
           Boarding & Daycare Calendar
         </Typography>
         
@@ -34,14 +34,16 @@ const CalendarPage: React.FC = () => {
       </Box>
       
       {/* Show either the grid view or traditional calendar view based on the selected mode */}
-      {viewMode === 'grid' ? (
-        <KennelCalendar />
-      ) : (
-        <Calendar 
-          serviceCategories={[ServiceCategory.BOARDING, ServiceCategory.DAYCARE]} 
-          calendarTitle="Boarding & Daycare Calendar"
-        />
-      )}
+      <Box sx={{ flexGrow: 1 }}>
+        {viewMode === 'grid' ? (
+          <KennelCalendar />
+        ) : (
+          <Calendar 
+            serviceCategories={[ServiceCategory.BOARDING, ServiceCategory.DAYCARE]} 
+            calendarTitle="Boarding & Daycare Calendar"
+          />
+        )}
+      </Box>
     </Container>
   );
 };
