@@ -47,3 +47,11 @@ The dashboard shows reservations filtered by specific statuses:
 - Interactive event creation and editing
 - Multiple view options (month, week, day)
 - Real-time updates when status changes
+
+### Reservation Form
+- Accessible form with proper ARIA attributes
+- Smart field handling with validation
+- Auto-selection of pet when customer has only one pet
+- Dynamic suite/kennel selection based on availability
+- Proper form labels and field outlines for improved usability
+- Error handling for invalid selections

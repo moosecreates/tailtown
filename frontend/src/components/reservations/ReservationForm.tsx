@@ -130,44 +130,39 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         selectsWithOptions.current.service = true;
 
         if (initialData) {
-          console.log('Loading initial data for editing:', initialData);
+          // Set customer and pet
           setSelectedCustomer(initialData.customerId);
-          setSelectedPet(initialData.petId);
-          setSelectedService(initialData.serviceId);
-          setStartDate(new Date(initialData.startDate));
-          setEndDate(new Date(initialData.endDate));
           
-          // Mark that we've loaded the initial data
-          initialDataLoaded.current = true;
+          // Set service
+          if (initialData.serviceId) {
+            setSelectedService(initialData.serviceId);
+          }
           
-          // Set suite type if it exists in initialData
+          // Set resource ID or suite type
           if (initialData.resourceId) {
-            console.log('Setting resource ID from initial data:', initialData.resourceId);
+            setSelectedSuiteId(initialData.resourceId);
             
-            // Fetch the resource details to display the kennel information
+            // Fetch resource details to get the suite type
             try {
               const resourceResponse = await resourceService.getResource(initialData.resourceId);
-              if (resourceResponse?.status === 'success' && resourceResponse?.data) {
-                console.log('Fetched resource details:', resourceResponse.data);
+              if (resourceResponse.data) {
+                const resourceType = resourceResponse.data.type;
                 
-                // Determine the suite type from the resource
-                const resourceType = resourceResponse.data.type || resourceResponse.data.attributes?.suiteType;
                 if (resourceType) {
-                  console.log('Setting suite type from resource:', resourceType);
                   setSelectedSuiteType(resourceType);
                 } else if (initialData.suiteType) {
-                  console.log('Setting suite type from initial data:', initialData.suiteType);
                   setSelectedSuiteType(initialData.suiteType);
                 }
-                
-                // We'll set the selectedSuiteId after the suites are loaded in the useEffect
-                // This prevents the "out-of-range value" warning
               }
             } catch (err) {
               console.error('Error fetching resource details:', err);
+              
+              // Fallback to suite type if resource fetch fails
+              if (initialData.suiteType) {
+                setSelectedSuiteType(initialData.suiteType);
+              }
             }
           } else if (initialData.suiteType) {
-            console.log('Setting suite type from initial data:', initialData.suiteType);
             setSelectedSuiteType(initialData.suiteType);
           }
           
@@ -212,9 +207,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       }
       
       try {
-        console.log('Getting pets for customer:', selectedCustomer);
         const response = await petService.getPetsByCustomer(selectedCustomer);
-        console.log('Pet response:', response);
         const petsData = response.data || [];
         setPets(petsData);
         
@@ -228,12 +221,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           if (petExists) {
             setSelectedPet(initialData.petId);
           } else {
-            console.log(`Pet ID ${initialData.petId} not found in available pets for this customer, resetting selection`);
+            // Reset selection if pet doesn't exist for this customer
             setSelectedPet('');
           }
         } else if (petsData.length === 1) {
           // Auto-select the pet if the customer has only one pet
-          console.log('Customer has only one pet, auto-selecting:', petsData[0].name);
           setSelectedPet(petsData[0].id);
         }
       } catch (err) {
@@ -265,65 +257,58 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   useEffect(() => {
     const loadAvailableSuites = async () => {
       if (!selectedSuiteType) return;
-      
       try {
-        setSuiteLoading(true);
-        setSuiteError('');
-        
-        // If we're editing an existing reservation, include its resource in the list
-        let includeResourceId = initialData?.resourceId;
-        
-        console.log('Loading available suites with type:', selectedSuiteType);
-        console.log('Resource ID to include:', includeResourceId);
-        
-        const response = await resourceService.getSuites(
-          selectedSuiteType,
-          'AVAILABLE'
+        // Get all resources of the selected type
+        const response = await resourceService.getAllResources(
+          undefined, // page
+          undefined, // limit
+          undefined, // sortBy
+          undefined, // sortOrder
+          selectedSuiteType // type filter
         );
         
-        if (response?.status === 'success' && Array.isArray(response?.data)) {
-          let suites = [...response.data]; // Create a copy to avoid mutation issues
+        let suites: Resource[] = [];
+        
+        if (response?.status === 'success' && response?.data) {
+          suites = response.data;
           
-          // If we have a specific resourceId and it's not in the available suites,
-          // we need to fetch it separately and add it to the list
-          if (includeResourceId && !suites.find(s => s.id === includeResourceId)) {
-            try {
-              console.log('Fetching specific resource:', includeResourceId);
-              const resourceResponse = await resourceService.getResource(includeResourceId);
-              if (resourceResponse?.status === 'success' && resourceResponse?.data) {
-                // Add the resource to the available suites list
-                const resourceData = resourceResponse.data;
-                console.log('Found resource:', resourceData);
-                
-                // Make sure the resource is of the correct type
-                if (resourceData.type === selectedSuiteType || 
-                    resourceData.attributes?.suiteType === selectedSuiteType) {
-                  suites = [resourceData, ...suites];
-                } else {
-                  console.log('Resource type does not match selected suite type, not adding to list');
+          // If we're editing an existing reservation, make sure to include the current resource
+          // even if it's not available (e.g., it's currently booked)
+          if (initialData?.resourceId) {
+            const resourceExists = suites.some(suite => suite.id === initialData.resourceId);
+            
+            if (!resourceExists) {
+              try {
+                const resourceResponse = await resourceService.getResource(initialData.resourceId);
+                if (resourceResponse?.status === 'success' && resourceResponse?.data) {
+                  const resourceData = resourceResponse.data;
+                  
+                  // Only add it if it matches the selected suite type
+                  const resourceType = resourceData.type || resourceData.attributes?.suiteType;
+                  
+                  if (resourceType === selectedSuiteType) {
+                    suites.push(resourceData);
+                  }
                 }
+              } catch (err) {
+                console.error('Error fetching specific resource:', err);
               }
-            } catch (err) {
-              console.error('Error fetching specific resource:', err);
             }
           }
           
-          console.log('Available suites:', suites);
           setAvailableSuites(suites);
           
           // Mark that suite options are available
-          selectsWithOptions.current.suiteType = true;
           selectsWithOptions.current.suiteId = true;
           
-          // Now that we have the suites loaded, set the selected suite ID if we're editing
-          if (includeResourceId) {
-            // Check if the resource ID is in the available suites
-            const resourceExists = suites.some(s => s.id === includeResourceId);
-            if (resourceExists) {
-              // Only set the ID if it exists in the available options
-              setSelectedSuiteId(includeResourceId);
+          // If we have initialData with a resourceId, check if it's valid
+          if (initialData?.resourceId) {
+            // Check if the resource ID exists in the available suites
+            const suiteExists = suites.some(suite => suite.id === initialData.resourceId);
+            
+            if (suiteExists) {
+              setSelectedSuiteId(initialData.resourceId);
             } else {
-              console.log(`Resource ID ${includeResourceId} not found in available suites, using empty value`);
               setSelectedSuiteId('');
             }
           } else {
@@ -356,30 +341,22 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     setError('');
 
     // Validate all required fields
+    if (!selectedCustomer || !selectedPet || !selectedService || !startDate || !endDate) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
     // Find the selected service object
     const selectedServiceObj = services.find(s => s.id === selectedService);
     const requiresSuiteType = selectedServiceObj && 
       (selectedServiceObj.serviceCategory === 'DAYCARE' || 
        selectedServiceObj.serviceCategory === 'BOARDING');
 
-    if (!selectedCustomer || !selectedPet || !selectedService || !startDate || !endDate) {
-      setError('Please fill in all required fields');
-      console.error('Missing required fields:', {
-        customer: selectedCustomer,
-        pet: selectedPet,
-        service: selectedService,
-        startDate,
-        endDate
-      });
-      return;
-    }
-
     // For services requiring a suite type, ensure one is selected or use default
     let effectiveSuiteType = selectedSuiteType;
     if (requiresSuiteType && !selectedSuiteType) {
       // Set a default suite type if none is selected
       effectiveSuiteType = 'STANDARD_SUITE';
-      console.log('ReservationForm: Using default suite type:', effectiveSuiteType);
     }
 
     // Prepare form data
@@ -395,31 +372,23 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     
     // Handle resource selection based on suite type
     if (requiresSuiteType) {
-      console.log('ReservationForm: Adding suiteType to form data:', effectiveSuiteType);
-      
       // Always include the suiteType field for DAYCARE or BOARDING services
       formData.suiteType = effectiveSuiteType;
       
       // Only set resourceId if a specific suite is selected and it's not empty
       if (selectedSuiteId && selectedSuiteId.trim() !== '') {
         formData.resourceId = selectedSuiteId;
-        console.log('ReservationForm: Adding specific resourceId:', selectedSuiteId);
       } else {
         // Explicitly set resourceId to null for auto-assign
         formData.resourceId = null;
-        console.log('ReservationForm: Using auto-assign (resourceId: null)');
       }
     }
-    
-    console.log('ReservationForm: Final form data before submission:', JSON.stringify(formData, null, 2));
 
     try {
-      console.log('Submitting reservation data:', formData);
       await onSubmit(formData);
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'Failed to create reservation';
       setError(errorMessage);
-      console.error('Error creating reservation:', err.response?.data || err);
     }
   };
 
