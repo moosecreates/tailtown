@@ -87,6 +87,21 @@ const PetDetails = () => {
           if (petData.birthdate) {
             petData.birthdate = new Date(petData.birthdate).toISOString().split('T')[0];
           }
+          
+          // Try to load pet icons and icon notes from localStorage
+          try {
+            const storageKey = `pet_icons_${id}`;
+            const storedIconsData = localStorage.getItem(storageKey);
+            
+            if (storedIconsData) {
+              const parsedData = JSON.parse(storedIconsData);
+              petData.petIcons = parsedData.petIcons || [];
+              petData.iconNotes = parsedData.iconNotes || {};
+            }
+          } catch (err) {
+            console.warn('Failed to load pet icons from localStorage:', err);
+          }
+          
           setPet(petData);
         }
       } catch (err) {
@@ -190,14 +205,29 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
         allergies: pet.allergies,
         vetName: pet.vetName,
         vetPhone: pet.vetPhone,
-        // Include pet icons and icon notes
-        petIcons: pet.petIcons || [],
-        iconNotes: pet.iconNotes || {},
+        // Don't send pet icons and icon notes to the backend as they're not in the database schema
+        // Store them in localStorage instead
+        // petIcons: pet.petIcons || [],
+        // iconNotes: pet.iconNotes || {},
         vaccinationStatus: pet.vaccinationStatus || {},
         vaccineExpirations: pet.vaccineExpirations || {},
         customerId: pet.customerId,
         isActive: pet.isActive
       };
+
+      // Store pet icons and icon notes in localStorage
+      if (pet.petIcons?.length || Object.keys(pet.iconNotes || {}).length) {
+        try {
+          // Use a namespaced key to avoid conflicts
+          const storageKey = `pet_icons_${isNewPet ? 'new' : id}`;
+          localStorage.setItem(storageKey, JSON.stringify({
+            petIcons: pet.petIcons || [],
+            iconNotes: pet.iconNotes || {}
+          }));
+        } catch (err) {
+          console.warn('Failed to store pet icons in localStorage:', err);
+        }
+      }
 
       if (isNewPet) {
         await petService.createPet(cleanPetData as Omit<Pet, 'id'>);
