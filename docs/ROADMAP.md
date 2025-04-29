@@ -22,16 +22,23 @@ This roadmap outlines the planned features and improvements for the Tailtown app
 - 🔲 Staff scheduling and assignment
 - 🔲 Mobile-responsive design improvements
 - 🔲 Dark mode support
+- 🔲 Priority alerts for staff
+- 🔲 Permission levels and restrictions for users
 
 ## Phase 3: Business Operations
 - 🔲 Invoicing and payment processing
+- 🔲 Integration with merchant services
 - 🔲 Inventory management for pet supplies
 - 🔲 Reporting and analytics dashboard
+- 🔲 Comprehensive reporting features
+- 🔲 Configurable settings (e.g., tax rates)
+- 🔲 Customer accounts with balance and payment history
 - 🔲 Automated reminders for upcoming appointments
 - 🔲 Customer loyalty program
 - 🔲 Integration with accounting software
 - 🔲 Staff performance metrics
 - 🔲 Multi-location support
+- 🔲 Sales add-ons and upselling features
 
 ## Phase 4: Advanced Features
 - 🔲 Pet health monitoring and alerts
@@ -42,6 +49,17 @@ This roadmap outlines the planned features and improvements for the Tailtown app
 - 🔲 Automated marketing campaigns
 - 🔲 Advanced business intelligence tools
 - 🔲 API for third-party integrations
+- 🔲 Embeddable widgets for customer websites
+
+## Phase 5: Infrastructure and Scaling
+- 🔲 Migration to hosted servers
+- 🔲 Cloud infrastructure optimization
+- 🔲 Website integration components for customer online ordering
+- 🔲 Microservices architecture for scalability
+- 🔲 Global content delivery network (CDN)
+- 🔲 Automated deployment pipelines
+- 🔲 High-availability configuration
+- 🔲 Disaster recovery planning
 
 ## Technical Debt and Improvements
 Throughout all phases, we will address the following ongoing concerns:
