@@ -12,6 +12,7 @@ import { serviceRoutes } from './routes/service.routes';
 import { resourceRoutes } from './routes/resource.routes';
 import { suiteRoutes } from './routes/suite.routes';
 import { staffRoutes } from './routes/staff.routes';
+import { scheduleRoutes } from './routes/schedule.routes';
 import priceRuleRoutes from './routes/priceRule.routes';
 import { errorHandler } from './middleware/error.middleware';
 
@@ -193,6 +194,11 @@ app.use('/api/resources', resourceRoutes);
 app.use('/api/suites', suiteRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/price-rules', priceRuleRoutes);
+app.use('/api/schedules', scheduleRoutes);
+
+// Additional routes without /api prefix for staff (to match frontend API calls)
+app.use('/staff', staffRoutes);
+app.use('/schedules', scheduleRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

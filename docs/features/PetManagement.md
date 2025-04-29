@@ -47,6 +47,16 @@ Pet icons are visual indicators that appear on pet cards and profiles to quickly
 - PetList: Table displaying all pets with filtering options
 - PetCard: Compact display of pet information used in various views
 
+### API Endpoints
+
+#### Pet Management
+- `GET /api/pets` - Get all pets (with optional filtering)
+- `GET /api/pets/:id` - Get details for a specific pet
+- `POST /api/pets` - Create a new pet
+- `PUT /api/pets/:id` - Update an existing pet
+- `DELETE /api/pets/:id` - Delete a pet
+- `GET /api/customers/:customerId/pets` - Get all pets for a specific customer
+
 ### Image Handling
 - Pet profile photos are uploaded via the PetDetails form
 - Images are stored on the backend server in the `uploads/pets` directory

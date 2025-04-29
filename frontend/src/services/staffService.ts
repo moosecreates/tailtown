@@ -69,9 +69,47 @@ export enum TimeOffStatus {
   CANCELLED = 'CANCELLED'
 }
 
+export enum ScheduleStatus {
+  SCHEDULED = 'SCHEDULED',
+  CONFIRMED = 'CONFIRMED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  NO_SHOW = 'NO_SHOW'
+}
+
+export interface StaffSchedule {
+  id?: string;
+  staffId: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: ScheduleStatus;
+  notes?: string;
+  location?: string;
+  role?: string;
+  createdById?: string;
+  updatedById?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface StaffResponse {
   status: string;
   data: Staff | Staff[];
+  results?: number;
+  totalPages?: number;
+  currentPage?: number;
+}
+
+export interface StaffTimeOffResponse {
+  status: string;
+  data: StaffTimeOff | StaffTimeOff[];
+}
+
+export interface StaffScheduleResponse {
+  status: string;
+  data: StaffSchedule | StaffSchedule[];
   results?: number;
   totalPages?: number;
   currentPage?: number;
@@ -306,6 +344,90 @@ const staffService = {
       return [];
     } catch (error) {
       console.error('Error fetching available staff:', error);
+      throw error;
+    }
+  },
+
+  // Staff Schedule methods
+  getStaffSchedules: async (staffId: string, startDate?: string, endDate?: string): Promise<StaffSchedule[]> => {
+    try {
+      let url = `/api/schedules/staff/${staffId}`;
+      if (startDate && endDate) {
+        url += `?startDate=${startDate}&endDate=${endDate}`;
+      }
+      const response = await api.get(url);
+      if (response.data && response.data.status === 'success') {
+        return response.data.data || [];
+      }
+      return [];
+    } catch (error) {
+      console.error(`Error fetching schedules for staff ${staffId}:`, error);
+      throw error;
+    }
+  },
+
+  getAllSchedules: async (startDate?: string, endDate?: string): Promise<StaffSchedule[]> => {
+    try {
+      let url = '/api/schedules';
+      if (startDate && endDate) {
+        url += `?startDate=${startDate}&endDate=${endDate}`;
+      }
+      const response = await api.get(url);
+      if (response.data && response.data.status === 'success') {
+        return response.data.data || [];
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching all schedules:', error);
+      throw error;
+    }
+  },
+
+  createStaffSchedule: async (staffId: string, scheduleData: Partial<StaffSchedule>): Promise<StaffSchedule | null> => {
+    try {
+      const response = await api.post(`/api/schedules/staff/${staffId}`, scheduleData);
+      if (response.data && response.data.status === 'success') {
+        return response.data.data;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error creating schedule for staff ${staffId}:`, error);
+      throw error;
+    }
+  },
+
+  updateStaffSchedule: async (scheduleId: string, scheduleData: Partial<StaffSchedule>): Promise<StaffSchedule | null> => {
+    try {
+      const response = await api.put(`/api/schedules/${scheduleId}`, scheduleData);
+      if (response.data && response.data.status === 'success') {
+        return response.data.data;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error updating schedule with ID ${scheduleId}:`, error);
+      throw error;
+    }
+  },
+
+  deleteStaffSchedule: async (scheduleId: string): Promise<boolean> => {
+    try {
+      const response = await api.delete(`/api/schedules/${scheduleId}`);
+      return response.data && response.data.status === 'success';
+    } catch (error) {
+      console.error(`Error deleting schedule with ID ${scheduleId}:`, error);
+      throw error;
+    }
+  },
+  
+  bulkCreateSchedules: async (scheduleData: Partial<StaffSchedule>[]): Promise<StaffSchedule[]> => {
+    try {
+      const response = await api.post('/api/schedules/bulk', { schedules: scheduleData });
+      if (response.data && response.data.status === 'success') {
+        return response.data.data || [];
+      }
+      return [];
+    } catch (error) {
+      console.error('Error creating bulk schedules:', error);
       throw error;
     }
   }

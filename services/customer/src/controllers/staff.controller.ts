@@ -3,6 +3,14 @@ import { PrismaClient, Prisma } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 import bcrypt from 'bcrypt';
 
+// Extend the Express Request type to include user information
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    role?: string;
+  };
+}
+
 const prisma = new PrismaClient();
 
 // Get all staff members
@@ -938,6 +946,286 @@ export const getAvailableStaff = async (
       data: availableStaff
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+// Staff Schedule Management
+
+// Get all schedules for a specific staff member
+export const getStaffSchedules = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { staffId } = req.params;
+    const { startDate, endDate } = req.query;
+    
+    let whereClause: any = { staffId };
+    
+    if (startDate && endDate) {
+      // Convert string dates to DateTime objects
+      const startDateTime = new Date(startDate as string);
+      const endDateTime = new Date(endDate as string);
+      
+      // Set the time to the beginning and end of the day to include all schedules
+      startDateTime.setHours(0, 0, 0, 0);
+      endDateTime.setHours(23, 59, 59, 999);
+      
+      whereClause.date = {
+        gte: startDateTime,
+        lte: endDateTime
+      };
+    }
+    
+    const schedules = await prisma.staffSchedule.findMany({
+      where: whereClause,
+      orderBy: { date: 'asc' }
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      results: schedules.length,
+      data: schedules
+    });
+  } catch (error) {
+    console.error('Error fetching staff schedules:', error);
+    next(error);
+  }
+};
+
+// Simple test endpoint to diagnose routing issues
+export const testSchedulesEndpoint = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  res.status(200).json({
+    status: 'success',
+    message: 'Test endpoint working',
+    query: req.query,
+    params: req.params
+  });
+};
+
+// Get all schedules across all staff members
+export const getAllSchedules = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    console.log('getAllSchedules called with params:', req.params);
+    console.log('getAllSchedules called with query:', req.query);
+    
+    const { startDate, endDate } = req.query;
+    
+    let whereClause: any = {};
+    
+    if (startDate && endDate) {
+      // Convert string dates to DateTime objects
+      const startDateTime = new Date(startDate as string);
+      const endDateTime = new Date(endDate as string);
+      
+      // Set the time to the beginning and end of the day to include all schedules
+      startDateTime.setHours(0, 0, 0, 0);
+      endDateTime.setHours(23, 59, 59, 999);
+      
+      whereClause.date = {
+        gte: startDateTime,
+        lte: endDateTime
+      };
+    }
+    
+    const schedules = await prisma.staffSchedule.findMany({
+      where: whereClause,
+      include: {
+        staff: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            position: true,
+            department: true
+          }
+        }
+      },
+      orderBy: { date: 'asc' }
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      results: schedules.length,
+      data: schedules
+    });
+  } catch (error) {
+    console.error('Error fetching all schedules:', error);
+    next(error);
+  }
+};
+
+// Create a new schedule for a staff member
+export const createStaffSchedule = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { staffId } = req.params;
+    const { date, startTime, endTime, status, notes, location, role } = req.body;
+    
+    // Validate required fields
+    if (!date || !startTime || !endTime) {
+      return next(new AppError('Date, start time, and end time are required', 400));
+    }
+    
+    // Check if staff exists
+    const staff = await prisma.staff.findUnique({ where: { id: staffId } });
+    if (!staff) {
+      return next(new AppError('Staff not found', 404));
+    }
+    
+    // Create the schedule
+    const newSchedule = await prisma.staffSchedule.create({
+      data: {
+        staffId,
+        date: new Date(date),
+        startTime,
+        endTime,
+        status: status || 'SCHEDULED',
+        notes,
+        location,
+        role,
+        createdById: req.user?.id
+      }
+    });
+    
+    res.status(201).json({
+      status: 'success',
+      data: newSchedule
+    });
+  } catch (error) {
+    console.error('Error creating staff schedule:', error);
+    next(error);
+  }
+};
+
+// Update an existing staff schedule
+export const updateStaffSchedule = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { scheduleId } = req.params;
+    const { date, startTime, endTime, status, notes, location, role } = req.body;
+    
+    // Check if schedule exists
+    const schedule = await prisma.staffSchedule.findUnique({ where: { id: scheduleId } });
+    if (!schedule) {
+      return next(new AppError('Schedule not found', 404));
+    }
+    
+    // Update the schedule
+    const updatedSchedule = await prisma.staffSchedule.update({
+      where: { id: scheduleId },
+      data: {
+        date: date ? new Date(date) : undefined,
+        startTime,
+        endTime,
+        status,
+        notes,
+        location,
+        role,
+        updatedById: req.user?.id
+      }
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      data: updatedSchedule
+    });
+  } catch (error) {
+    console.error('Error updating staff schedule:', error);
+    next(error);
+  }
+};
+
+// Delete a staff schedule
+export const deleteStaffSchedule = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { scheduleId } = req.params;
+    
+    // Check if schedule exists
+    const schedule = await prisma.staffSchedule.findUnique({ where: { id: scheduleId } });
+    if (!schedule) {
+      return next(new AppError('Schedule not found', 404));
+    }
+    
+    // Delete the schedule
+    await prisma.staffSchedule.delete({ where: { id: scheduleId } });
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Schedule deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting staff schedule:', error);
+    next(error);
+  }
+};
+
+// Create multiple staff schedules in bulk
+export const bulkCreateSchedules = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { schedules } = req.body;
+    
+    if (!schedules || !Array.isArray(schedules) || schedules.length === 0) {
+      return next(new AppError('Valid schedules array is required', 400));
+    }
+    
+    // Process each schedule
+    const createdSchedules = await Promise.all(
+      schedules.map(async (schedule) => {
+        const { staffId, date, startTime, endTime, status, notes, location, role } = schedule;
+        
+        // Validate required fields
+        if (!staffId || !date || !startTime || !endTime) {
+          throw new Error('StaffId, date, start time, and end time are required for each schedule');
+        }
+        
+        return prisma.staffSchedule.create({
+          data: {
+            staffId,
+            date: new Date(date),
+            startTime,
+            endTime,
+            status: status || 'SCHEDULED',
+            notes,
+            location,
+            role,
+            createdById: req.user?.id
+          }
+        });
+      })
+    );
+    
+    res.status(201).json({
+      status: 'success',
+      results: createdSchedules.length,
+      data: createdSchedules
+    });
+  } catch (error) {
+    console.error('Error creating bulk schedules:', error);
     next(error);
   }
 };

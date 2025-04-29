@@ -19,7 +19,16 @@ import {
   updateStaffTimeOff,
   deleteStaffTimeOff,
   // Staff scheduling
-  getAvailableStaff
+  getAvailableStaff,
+  // Staff schedule endpoints
+  getStaffSchedules,
+  getAllSchedules,
+  createStaffSchedule,
+  updateStaffSchedule,
+  deleteStaffSchedule,
+  bulkCreateSchedules,
+  // Test endpoint
+  testSchedulesEndpoint
 } from '../controllers/staff.controller';
 
 const router = Router();
@@ -62,5 +71,20 @@ router.delete('/time-off/:id', deleteStaffTimeOff);
 
 // Staff Scheduling Routes
 router.get('/available', getAvailableStaff);
+
+// Test endpoint for debugging
+router.get('/test-schedules', testSchedulesEndpoint);
+
+// Staff Schedule Routes
+// Important: Order matters! More specific routes (with fixed paths) must come before
+// routes with path parameters (like :staffId) to ensure correct matching
+router.get('/schedules', getAllSchedules);
+router.post('/schedules/bulk', bulkCreateSchedules);
+router.put('/schedules/:scheduleId', updateStaffSchedule);
+router.delete('/schedules/:scheduleId', deleteStaffSchedule);
+
+// Staff member specific schedule routes
+router.get('/:staffId/schedules', getStaffSchedules);
+router.post('/:staffId/schedules', createStaffSchedule);
 
 export { router as staffRoutes };
