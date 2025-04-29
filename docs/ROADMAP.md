@@ -34,7 +34,11 @@ This roadmap outlines the planned features and improvements for the Tailtown app
 - 🔲 Configurable settings (e.g., tax rates)
 - 🔲 Customer accounts with balance and payment history
 - 🔲 Automated reminders for upcoming appointments
-- 🔲 Customer loyalty program
+- 🔲 Comprehensive loyalty rewards system
+  - Points accumulation based on services
+  - Tiered membership levels
+  - Reward redemption options
+  - Automated loyalty communications
 - 🔲 Integration with accounting software
 - 🔲 Staff performance metrics
 - 🔲 Multi-location support
