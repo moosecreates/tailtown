@@ -339,7 +339,7 @@ model Staff {
   position          String?       // Position/job title
   role              String        // Role for permissions (admin, manager, staff, etc.)
   hireDate          DateTime?     // When the staff member was hired
-  workSchedule      Json?         // JSON data for work schedule
+  workSchedule      Json?         // Legacy JSON data for work schedule
   specialties       String[]      @default([])
   isActive          Boolean       @default(true)
   lastLogin         DateTime?     // Last time the staff member logged in
@@ -348,8 +348,65 @@ model Staff {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   assignedReservations Reservation[]
+  availability      StaffAvailability[] // Structured availability records
+  timeOff           StaffTimeOff[]     // Time off requests and approvals
   
   @@map("staff")
+}
+
+model StaffAvailability {
+  id              String        @id @default(uuid())
+  staffId         String
+  staff           Staff         @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  dayOfWeek       Int           // 0-6 for Sunday-Saturday
+  startTime       String        // Format: HH:MM in 24-hour format
+  endTime         String        // Format: HH:MM in 24-hour format
+  isRecurring     Boolean       @default(true)
+  effectiveFrom   DateTime?     // When this availability starts being valid
+  effectiveUntil  DateTime?     // When this availability stops being valid
+  isAvailable     Boolean       @default(true) // If false, this is a recurring unavailability
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@map("staff_availability")
+  @@index([staffId, dayOfWeek], name: "staff_availability_staff_day_idx")
+  @@index([dayOfWeek, isAvailable], name: "staff_availability_day_status_idx")
+}
+
+model StaffTimeOff {
+  id              String          @id @default(uuid())
+  staffId         String
+  staff           Staff           @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  startDate       DateTime        // Start date and time of time off
+  endDate         DateTime        // End date and time of time off
+  type            TimeOffType     // Type of time off
+  status          TimeOffStatus   @default(PENDING)
+  reason          String?         // Reason for time off
+  notes           String?         // Additional notes
+  approvedById    String?         // ID of staff who approved/denied the request
+  approvedDate    DateTime?       // When the request was approved/denied
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@map("staff_time_off")
+  @@index([staffId, status], name: "staff_time_off_staff_status_idx")
+  @@index([startDate, endDate], name: "staff_time_off_date_range_idx")
+}
+
+enum TimeOffType {
+  VACATION
+  SICK
+  PERSONAL
+  BEREAVEMENT
+  JURY_DUTY
+  OTHER
+}
+
+enum TimeOffStatus {
+  PENDING
+  APPROVED
+  DENIED
+  CANCELLED
 }
 
 model Invoice {

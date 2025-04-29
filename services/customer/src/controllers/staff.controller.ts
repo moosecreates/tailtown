@@ -470,3 +470,365 @@ export const resetPassword = async (
     next(error);
   }
 };
+
+// Staff Availability Management
+
+// Get availability for a staff member
+export const getStaffAvailability = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { staffId } = req.params;
+    
+    const availability = await prisma.staffAvailability.findMany({
+      where: { staffId },
+      orderBy: [
+        { dayOfWeek: 'asc' },
+        { startTime: 'asc' }
+      ]
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      results: availability.length,
+      data: availability
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Create availability for a staff member
+export const createStaffAvailability = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { staffId } = req.params;
+    const availabilityData = req.body;
+    
+    // Validate required fields
+    if (!availabilityData.dayOfWeek || !availabilityData.startTime || !availabilityData.endTime) {
+      return next(new AppError('Day of week, start time, and end time are required', 400));
+    }
+    
+    // Create availability record
+    const newAvailability = await prisma.staffAvailability.create({
+      data: {
+        ...availabilityData,
+        staffId
+      }
+    });
+    
+    res.status(201).json({
+      status: 'success',
+      data: newAvailability
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update staff availability
+export const updateStaffAvailability = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const availabilityData = req.body;
+    
+    // Check if availability exists
+    const existingAvailability = await prisma.staffAvailability.findUnique({
+      where: { id }
+    });
+    
+    if (!existingAvailability) {
+      return next(new AppError('Availability record not found', 404));
+    }
+    
+    // Update availability
+    const updatedAvailability = await prisma.staffAvailability.update({
+      where: { id },
+      data: availabilityData
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      data: updatedAvailability
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete staff availability
+export const deleteStaffAvailability = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if availability exists
+    const existingAvailability = await prisma.staffAvailability.findUnique({
+      where: { id }
+    });
+    
+    if (!existingAvailability) {
+      return next(new AppError('Availability record not found', 404));
+    }
+    
+    // Delete availability
+    await prisma.staffAvailability.delete({
+      where: { id }
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Availability record deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Staff Time Off Management
+
+// Get time off for a staff member
+export const getStaffTimeOff = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { staffId } = req.params;
+    const status = req.query.status as string;
+    
+    // Build where condition
+    const where: any = { staffId };
+    if (status) {
+      where.status = status;
+    }
+    
+    const timeOff = await prisma.staffTimeOff.findMany({
+      where,
+      orderBy: { startDate: 'asc' }
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      results: timeOff.length,
+      data: timeOff
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Create time off for a staff member
+export const createStaffTimeOff = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { staffId } = req.params;
+    const timeOffData = req.body;
+    
+    // Validate required fields
+    if (!timeOffData.startDate || !timeOffData.endDate || !timeOffData.type) {
+      return next(new AppError('Start date, end date, and type are required', 400));
+    }
+    
+    // Create time off record
+    const newTimeOff = await prisma.staffTimeOff.create({
+      data: {
+        ...timeOffData,
+        staffId,
+        startDate: new Date(timeOffData.startDate),
+        endDate: new Date(timeOffData.endDate)
+      }
+    });
+    
+    res.status(201).json({
+      status: 'success',
+      data: newTimeOff
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update staff time off
+export const updateStaffTimeOff = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const timeOffData = req.body;
+    
+    // Check if time off exists
+    const existingTimeOff = await prisma.staffTimeOff.findUnique({
+      where: { id }
+    });
+    
+    if (!existingTimeOff) {
+      return next(new AppError('Time off record not found', 404));
+    }
+    
+    // Prepare data for update
+    const updateData: any = { ...timeOffData };
+    if (timeOffData.startDate) {
+      updateData.startDate = new Date(timeOffData.startDate);
+    }
+    if (timeOffData.endDate) {
+      updateData.endDate = new Date(timeOffData.endDate);
+    }
+    if (timeOffData.approvedDate) {
+      updateData.approvedDate = new Date(timeOffData.approvedDate);
+    }
+    
+    // Update time off
+    const updatedTimeOff = await prisma.staffTimeOff.update({
+      where: { id },
+      data: updateData
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      data: updatedTimeOff
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete staff time off
+export const deleteStaffTimeOff = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if time off exists
+    const existingTimeOff = await prisma.staffTimeOff.findUnique({
+      where: { id }
+    });
+    
+    if (!existingTimeOff) {
+      return next(new AppError('Time off record not found', 404));
+    }
+    
+    // Delete time off
+    await prisma.staffTimeOff.delete({
+      where: { id }
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Time off record deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get available staff for scheduling
+export const getAvailableStaff = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { date, startTime, endTime, specialties } = req.query;
+    
+    if (!date || !startTime || !endTime) {
+      return next(new AppError('Date, start time, and end time are required', 400));
+    }
+    
+    const searchDate = new Date(date as string);
+    const dayOfWeek = searchDate.getDay(); // 0-6 for Sunday-Saturday
+    
+    // Process specialties parameter
+    let specialtiesArray: string[] = [];
+    if (specialties) {
+      if (Array.isArray(specialties)) {
+        specialtiesArray = specialties.map(s => String(s));
+      } else {
+        specialtiesArray = [String(specialties)];
+      }
+    }
+
+    // Find staff who are available on this day and time
+    const availableStaff = await prisma.staff.findMany({
+      where: {
+        isActive: true,
+        // Include staff with matching specialties if provided
+        ...(specialtiesArray.length > 0 ? {
+          specialties: {
+            hasSome: specialtiesArray
+          }
+        } : {}),
+        // Include staff who have availability for this day and time
+        availability: {
+          some: {
+            dayOfWeek,
+            isAvailable: true,
+            startTime: {
+              lte: startTime as string
+            },
+            endTime: {
+              gte: endTime as string
+            },
+            // Use AND condition with nested OR conditions for date ranges
+            AND: [
+              {
+                OR: [
+                  { effectiveFrom: null },
+                  { effectiveFrom: { lte: searchDate } }
+                ]
+              },
+              {
+                OR: [
+                  { effectiveUntil: null },
+                  { effectiveUntil: { gte: searchDate } }
+                ]
+              }
+            ]
+          }
+        },
+        // Exclude staff who have time off on this day
+        NOT: {
+          timeOff: {
+            some: {
+              status: 'APPROVED',
+              startDate: { lte: searchDate },
+              endDate: { gte: searchDate }
+            }
+          }
+        }
+      },
+      include: {
+        availability: true
+      }
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      results: availableStaff.length,
+      data: availableStaff
+    });
+  } catch (error) {
+    next(error);
+  }
+};
