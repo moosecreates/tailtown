@@ -24,17 +24,22 @@ import {
   Grid,
   Chip,
   Divider,
-  SelectChangeEvent
+  SelectChangeEvent,
+  Tabs,
+  Tab
 } from '@mui/material';
 import { 
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  ArrowBack as ArrowBackIcon
+  ArrowBack as ArrowBackIcon,
+  Person as PersonIcon,
+  Schedule as ScheduleIcon
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import staffService, { Staff } from '../../services/staffService';
 import { CircularProgress, Alert, Snackbar } from '@mui/material';
+import StaffSchedulingTabs from '../../components/staff/StaffSchedulingTabs';
 
 // Available roles, departments, and positions
 const roles = ['Administrator', 'Manager', 'Staff'];
@@ -63,6 +68,7 @@ const Users: React.FC = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [editingUser, setEditingUser] = useState<Staff | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [dialogTabValue, setDialogTabValue] = useState(0);
   const [formData, setFormData] = useState<FormDataType>({
     firstName: '',
     lastName: '',
@@ -126,6 +132,11 @@ const Users: React.FC = () => {
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
+    setDialogTabValue(0); // Reset to first tab when closing
+  };
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setDialogTabValue(newValue);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -337,242 +348,293 @@ const Users: React.FC = () => {
       <Dialog 
         open={openDialog} 
         onClose={handleCloseDialog}
-        maxWidth="xs"
+        maxWidth={dialogTabValue === 0 ? "xs" : "md"}
         fullWidth
       >
         <DialogTitle sx={{ pb: 1 }}>
-          {editingUser ? 'Edit Employee' : 'Add New Employee'}
+          {editingUser ? `Edit Employee: ${editingUser.firstName} ${editingUser.lastName}` : 'Add New Employee'}
         </DialogTitle>
         <DialogContent sx={{ pt: 1 }}>
-          <Box sx={{ mb: 2 }}>
-            <Grid container spacing={1}>
-              <Grid item xs={6}>
+          {editingUser && (
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+              <Tabs 
+                value={dialogTabValue} 
+                onChange={handleTabChange} 
+                aria-label="staff dialog tabs"
+              >
+                <Tab 
+                  icon={<PersonIcon fontSize="small" />} 
+                  label="Basic Information" 
+                  id="staff-tab-0" 
+                  aria-controls="staff-tabpanel-0" 
+                  iconPosition="start"
+                />
+                <Tab 
+                  icon={<ScheduleIcon fontSize="small" />} 
+                  label="Scheduling" 
+                  id="staff-tab-1" 
+                  aria-controls="staff-tabpanel-1" 
+                  iconPosition="start"
+                />
+              </Tabs>
+            </Box>
+          )}
+          
+          {/* Basic Information Tab */}
+          <Box
+            role="tabpanel"
+            hidden={dialogTabValue !== 0}
+            id="staff-tabpanel-0"
+            aria-labelledby="staff-tab-0"
+          >
+            {dialogTabValue === 0 && (
+              <Box>
+                <Grid container spacing={1}>
+                  <Grid item xs={6}>
+                    <TextField
+                      name="firstName"
+                      label="First Name"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      name="lastName"
+                      label="Last Name"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                      required
+                    />
+                  </Grid>
+                </Grid>
+
                 <TextField
-                  name="firstName"
-                  label="First Name"
-                  value={formData.firstName}
+                  name="email"
+                  label="Email"
+                  type="email"
+                  value={formData.email}
                   onChange={handleInputChange}
                   fullWidth
                   size="small"
                   margin="dense"
                   required
                 />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  name="lastName"
-                  label="Last Name"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  fullWidth
-                  size="small"
-                  margin="dense"
-                  required
-                />
-              </Grid>
-            </Grid>
 
-            <TextField
-              name="email"
-              label="Email"
-              type="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              fullWidth
-              size="small"
-              margin="dense"
-              required
-            />
+                <Grid container spacing={1}>
+                  <Grid item xs={6}>
+                    <TextField
+                      name="phone"
+                      label="Phone Number"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      name="address"
+                      label="Address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                    />
+                  </Grid>
+                </Grid>
 
-            <Grid container spacing={1}>
-              <Grid item xs={6}>
-                <TextField
-                  name="phone"
-                  label="Phone Number"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  fullWidth
-                  size="small"
-                  margin="dense"
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  name="address"
-                  label="Address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  fullWidth
-                  size="small"
-                  margin="dense"
-                />
-              </Grid>
-            </Grid>
+                <Grid container spacing={1}>
+                  <Grid item xs={4}>
+                    <TextField
+                      name="city"
+                      label="City"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                    />
+                  </Grid>
+                  <Grid item xs={4}>
+                    <TextField
+                      name="state"
+                      label="State"
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                    />
+                  </Grid>
+                  <Grid item xs={4}>
+                    <TextField
+                      name="zipCode"
+                      label="Zip Code"
+                      value={formData.zipCode}
+                      onChange={handleInputChange}
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                    />
+                  </Grid>
+                </Grid>
 
-            <Grid container spacing={1}>
-              <Grid item xs={4}>
-                <TextField
-                  name="city"
-                  label="City"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  fullWidth
-                  size="small"
-                  margin="dense"
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <TextField
-                  name="state"
-                  label="State"
-                  value={formData.state}
-                  onChange={handleInputChange}
-                  fullWidth
-                  size="small"
-                  margin="dense"
-                />
-              </Grid>
-              <Grid item xs={4}>
-                <TextField
-                  name="zipCode"
-                  label="Zip Code"
-                  value={formData.zipCode}
-                  onChange={handleInputChange}
-                  fullWidth
-                  size="small"
-                  margin="dense"
-                />
-              </Grid>
-            </Grid>
+                <Divider sx={{ my: 1 }} />
+                <Typography variant="subtitle2" sx={{ mt: 1, mb: 0.5 }}>Security</Typography>
+                
+                <Grid container spacing={1}>
+                  <Grid item xs={6}>
+                    <TextField
+                      name="password"
+                      label={editingUser ? 'New Password' : 'Password'}
+                      type="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                      required={!editingUser}
+                      helperText={editingUser ? 'Leave blank to keep current' : ''}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      name="confirmPassword"
+                      label="Confirm Password"
+                      type="password"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                      required={!editingUser}
+                    />
+                  </Grid>
+                </Grid>
 
-            <Divider sx={{ my: 1 }} />
-            <Typography variant="subtitle2" sx={{ mt: 1, mb: 0.5 }}>Security</Typography>
-            
-            <Grid container spacing={1}>
-              <Grid item xs={6}>
-                <TextField
-                  name="password"
-                  label={editingUser ? 'New Password' : 'Password'}
-                  type="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  fullWidth
-                  size="small"
-                  margin="dense"
-                  required={!editingUser}
-                  helperText={editingUser ? 'Leave blank to keep current' : ''}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  name="confirmPassword"
-                  label="Confirm Password"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  fullWidth
-                  size="small"
-                  margin="dense"
-                  required={!editingUser}
-                />
-              </Grid>
-            </Grid>
+                <Divider sx={{ my: 1 }} />
+                <Typography variant="subtitle2" sx={{ mt: 1, mb: 0.5 }}>Job Information</Typography>
 
-            <Divider sx={{ my: 1 }} />
-            <Typography variant="subtitle2" sx={{ mt: 1, mb: 0.5 }}>Job Information</Typography>
-
-            <Grid container spacing={1}>
-              <Grid item xs={6}>
-                <FormControl fullWidth size="small" margin="dense">
-                  <InputLabel>Role</InputLabel>
-                  <Select
-                    name="role"
-                    value={formData.role}
-                    label="Role"
-                    onChange={handleSelectChange}
-                    required
-                  >
-                    {roles.map(role => (
-                      <MenuItem key={role} value={role}>{role}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={6}>
-                <FormControl fullWidth size="small" margin="dense">
-                  <InputLabel>Department</InputLabel>
-                  <Select
-                    name="department"
-                    value={formData.department}
-                    label="Department"
-                    onChange={handleSelectChange}
-                    required
-                  >
-                    {departments.map(dept => (
-                      <MenuItem key={dept} value={dept}>{dept}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12}>
-                <FormControl fullWidth size="small" margin="dense">
-                  <InputLabel>Position</InputLabel>
-                  <Select
-                    name="position"
-                    value={formData.position}
-                    label="Position"
-                    onChange={handleSelectChange}
-                    required
-                  >
-                    {positions.map(pos => (
-                      <MenuItem key={pos} value={pos}>{pos}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={6}>
-                <FormControl fullWidth size="small" margin="dense">
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    name="status"
-                    value={formData.status}
-                    label="Status"
-                    onChange={handleSelectChange}
-                    required
-                  >
-                    <MenuItem value="Active">Active</MenuItem>
-                    <MenuItem value="Inactive">Inactive</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  name="hireDate"
-                  label="Hire Date"
-                  type="date"
-                  value={formData.hireDate}
-                  onChange={handleInputChange}
-                  fullWidth
-                  size="small"
-                  margin="dense"
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                />
-              </Grid>
-            </Grid>
+                <Grid container spacing={1}>
+                  <Grid item xs={6}>
+                    <FormControl fullWidth size="small" margin="dense">
+                      <InputLabel>Role</InputLabel>
+                      <Select
+                        name="role"
+                        value={formData.role}
+                        label="Role"
+                        onChange={handleSelectChange}
+                        required
+                      >
+                        {roles.map(role => (
+                          <MenuItem key={role} value={role}>{role}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormControl fullWidth size="small" margin="dense">
+                      <InputLabel>Department</InputLabel>
+                      <Select
+                        name="department"
+                        value={formData.department}
+                        label="Department"
+                        onChange={handleSelectChange}
+                        required
+                      >
+                        {departments.map(dept => (
+                          <MenuItem key={dept} value={dept}>{dept}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <FormControl fullWidth size="small" margin="dense">
+                      <InputLabel>Position</InputLabel>
+                      <Select
+                        name="position"
+                        value={formData.position}
+                        label="Position"
+                        onChange={handleSelectChange}
+                        required
+                      >
+                        {positions.map(pos => (
+                          <MenuItem key={pos} value={pos}>{pos}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormControl fullWidth size="small" margin="dense">
+                      <InputLabel>Status</InputLabel>
+                      <Select
+                        name="status"
+                        value={formData.status}
+                        label="Status"
+                        onChange={handleSelectChange}
+                        required
+                      >
+                        <MenuItem value="Active">Active</MenuItem>
+                        <MenuItem value="Inactive">Inactive</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      name="hireDate"
+                      label="Hire Date"
+                      type="date"
+                      value={formData.hireDate}
+                      onChange={handleInputChange}
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                      InputLabelProps={{
+                        shrink: true,
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
           </Box>
+          
+          {/* Scheduling Tab */}
+          {editingUser && (
+            <Box
+              role="tabpanel"
+              hidden={dialogTabValue !== 1}
+              id="staff-tabpanel-1"
+              aria-labelledby="staff-tab-1"
+            >
+              {dialogTabValue === 1 && editingUser.id && (
+                <StaffSchedulingTabs staffId={editingUser.id} onSave={loadStaffMembers} />
+              )}
+            </Box>
+          )}
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={handleCloseDialog} size="small">Cancel</Button>
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained" 
-            color="primary"
-            size="small"
-          >
-            {editingUser ? 'Update' : 'Add'}
-          </Button>
+          <Button onClick={handleCloseDialog} size="small">Close</Button>
+          {dialogTabValue === 0 && (
+            <Button 
+              onClick={handleSubmit} 
+              variant="contained" 
+              color="primary"
+              size="small"
+            >
+              {editingUser ? 'Update' : 'Add'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Container>

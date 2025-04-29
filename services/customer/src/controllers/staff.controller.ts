@@ -511,16 +511,35 @@ export const createStaffAvailability = async (
     const availabilityData = req.body;
     
     // Validate required fields
-    if (!availabilityData.dayOfWeek || !availabilityData.startTime || !availabilityData.endTime) {
+    if (availabilityData.dayOfWeek === undefined || !availabilityData.startTime || !availabilityData.endTime) {
       return next(new AppError('Day of week, start time, and end time are required', 400));
     }
     
+    // Prepare data for creation
+    const createData: any = {
+      staffId,
+      dayOfWeek: Number(availabilityData.dayOfWeek),
+      startTime: availabilityData.startTime,
+      endTime: availabilityData.endTime,
+      isAvailable: availabilityData.isAvailable !== undefined ? Boolean(availabilityData.isAvailable) : true,
+      isRecurring: availabilityData.isRecurring !== undefined ? Boolean(availabilityData.isRecurring) : true
+      // Note: 'notes' field is not in the Prisma schema
+    };
+    
+    // Handle date fields if present
+    if (availabilityData.effectiveFrom) {
+      createData.effectiveFrom = new Date(availabilityData.effectiveFrom);
+    }
+    
+    if (availabilityData.effectiveUntil) {
+      createData.effectiveUntil = new Date(availabilityData.effectiveUntil);
+    }
+    
+    console.log('Creating staff availability with data:', createData);
+    
     // Create availability record
     const newAvailability = await prisma.staffAvailability.create({
-      data: {
-        ...availabilityData,
-        staffId
-      }
+      data: createData
     });
     
     res.status(201).json({
@@ -528,6 +547,7 @@ export const createStaffAvailability = async (
       data: newAvailability
     });
   } catch (error) {
+    console.error('Error creating staff availability:', error);
     next(error);
   }
 };
@@ -551,10 +571,48 @@ export const updateStaffAvailability = async (
       return next(new AppError('Availability record not found', 404));
     }
     
+    // Prepare data for update
+    const updateData: any = {};
+    
+    // Handle basic fields
+    if (availabilityData.dayOfWeek !== undefined) {
+      updateData.dayOfWeek = Number(availabilityData.dayOfWeek);
+    }
+    
+    if (availabilityData.startTime) {
+      updateData.startTime = availabilityData.startTime;
+    }
+    
+    if (availabilityData.endTime) {
+      updateData.endTime = availabilityData.endTime;
+    }
+    
+    if (availabilityData.isAvailable !== undefined) {
+      updateData.isAvailable = Boolean(availabilityData.isAvailable);
+    }
+    
+    if (availabilityData.isRecurring !== undefined) {
+      updateData.isRecurring = Boolean(availabilityData.isRecurring);
+    }
+    
+    // Note: 'notes' field is not in the Prisma schema
+    // Removed notes field handling
+    
+    // Handle date fields
+    if (availabilityData.effectiveFrom !== undefined) {
+      updateData.effectiveFrom = availabilityData.effectiveFrom ? new Date(availabilityData.effectiveFrom) : null;
+    }
+    
+    if (availabilityData.effectiveUntil !== undefined) {
+      updateData.effectiveUntil = availabilityData.effectiveUntil ? new Date(availabilityData.effectiveUntil) : null;
+    }
+    
+    console.log('Updating staff availability with data:', updateData);
+    
     // Update availability
     const updatedAvailability = await prisma.staffAvailability.update({
       where: { id },
-      data: availabilityData
+      data: updateData
     });
     
     res.status(200).json({
@@ -562,6 +620,7 @@ export const updateStaffAvailability = async (
       data: updatedAvailability
     });
   } catch (error) {
+    console.error('Error updating staff availability:', error);
     next(error);
   }
 };
@@ -646,14 +705,34 @@ export const createStaffTimeOff = async (
       return next(new AppError('Start date, end date, and type are required', 400));
     }
     
+    // Prepare data for creation
+    const createData: any = {
+      staffId,
+      startDate: new Date(timeOffData.startDate),
+      endDate: new Date(timeOffData.endDate),
+      type: timeOffData.type,
+      status: timeOffData.status || 'PENDING',
+      reason: timeOffData.reason || null
+    };
+    
+    // Handle optional fields
+    if (timeOffData.notes) {
+      createData.notes = timeOffData.notes;
+    }
+    
+    if (timeOffData.approvedById) {
+      createData.approvedById = timeOffData.approvedById;
+    }
+    
+    if (timeOffData.approvedDate) {
+      createData.approvedDate = new Date(timeOffData.approvedDate);
+    }
+    
+    console.log('Creating staff time off with data:', createData);
+    
     // Create time off record
     const newTimeOff = await prisma.staffTimeOff.create({
-      data: {
-        ...timeOffData,
-        staffId,
-        startDate: new Date(timeOffData.startDate),
-        endDate: new Date(timeOffData.endDate)
-      }
+      data: createData
     });
     
     res.status(201).json({
@@ -661,6 +740,7 @@ export const createStaffTimeOff = async (
       data: newTimeOff
     });
   } catch (error) {
+    console.error('Error creating staff time off:', error);
     next(error);
   }
 };
@@ -685,16 +765,44 @@ export const updateStaffTimeOff = async (
     }
     
     // Prepare data for update
-    const updateData: any = { ...timeOffData };
+    const updateData: any = {};
+    
+    // Handle basic fields
+    if (timeOffData.type !== undefined) {
+      updateData.type = timeOffData.type;
+    }
+    
+    if (timeOffData.status !== undefined) {
+      updateData.status = timeOffData.status;
+    }
+    
+    if (timeOffData.reason !== undefined) {
+      updateData.reason = timeOffData.reason;
+    }
+    
+    if (timeOffData.notes !== undefined) {
+      updateData.notes = timeOffData.notes;
+    }
+    
+    // Handle date fields
     if (timeOffData.startDate) {
       updateData.startDate = new Date(timeOffData.startDate);
     }
+    
     if (timeOffData.endDate) {
       updateData.endDate = new Date(timeOffData.endDate);
     }
-    if (timeOffData.approvedDate) {
-      updateData.approvedDate = new Date(timeOffData.approvedDate);
+    
+    // Handle approval fields
+    if (timeOffData.approvedById !== undefined) {
+      updateData.approvedById = timeOffData.approvedById;
     }
+    
+    if (timeOffData.approvedDate !== undefined) {
+      updateData.approvedDate = timeOffData.approvedDate ? new Date(timeOffData.approvedDate) : null;
+    }
+    
+    console.log('Updating staff time off with data:', updateData);
     
     // Update time off
     const updatedTimeOff = await prisma.staffTimeOff.update({
@@ -707,6 +815,7 @@ export const updateStaffTimeOff = async (
       data: updatedTimeOff
     });
   } catch (error) {
+    console.error('Error updating staff time off:', error);
     next(error);
   }
 };

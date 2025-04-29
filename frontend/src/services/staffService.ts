@@ -28,10 +28,11 @@ export interface StaffAvailability {
   dayOfWeek: number; // 0-6 for Sunday-Saturday
   startTime: string; // Format: HH:MM in 24-hour format
   endTime: string; // Format: HH:MM in 24-hour format
-  isRecurring: boolean;
-  effectiveFrom?: string; // ISO date string
-  effectiveUntil?: string; // ISO date string
+  isRecurring?: boolean;
+  effectiveFrom?: string | null; // ISO date string
+  effectiveUntil?: string | null; // ISO date string
   isAvailable: boolean; // If false, this is a recurring unavailability
+  // Removed notes field as it's not supported in the backend schema
   createdAt?: string;
   updatedAt?: string;
 }
@@ -43,10 +44,11 @@ export interface StaffTimeOff {
   endDate: string; // ISO date string
   type: TimeOffType;
   status: TimeOffStatus;
-  reason?: string;
-  notes?: string;
-  approvedById?: string;
-  approvedDate?: string;
+  reason?: string | null;
+  notes?: string | null;
+  approvedById?: string | null;
+  // Removed approvedBy as it's not in the Prisma schema
+  approvedDate?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -200,9 +202,12 @@ const staffService = {
     }
   },
 
-  createStaffAvailability: async (availability: StaffAvailability): Promise<StaffAvailability | null> => {
+  createStaffAvailability: async (staffId: string, availability: Partial<StaffAvailability>): Promise<StaffAvailability | null> => {
     try {
-      const response = await api.post(`/api/staff/${availability.staffId}/availability`, availability);
+      const response = await api.post(`/api/staff/${staffId}/availability`, {
+        ...availability,
+        staffId
+      });
       if (response.data && response.data.status === 'success') {
         return response.data.data;
       }
@@ -250,9 +255,14 @@ const staffService = {
     }
   },
 
-  createStaffTimeOff: async (timeOff: StaffTimeOff): Promise<StaffTimeOff | null> => {
+  createStaffTimeOff: async (staffId: string, timeOff: Partial<StaffTimeOff>): Promise<StaffTimeOff | null> => {
     try {
-      const response = await api.post(`/api/staff/${timeOff.staffId}/time-off`, timeOff);
+      const response = await api.post(`/api/staff/${staffId}/time-off`, {
+        ...timeOff,
+        staffId,
+        type: timeOff.type || TimeOffType.VACATION,
+        status: timeOff.status || TimeOffStatus.PENDING
+      });
       if (response.data && response.data.status === 'success') {
         return response.data.data;
       }

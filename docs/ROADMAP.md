@@ -19,7 +19,7 @@ This roadmap outlines the planned features and improvements for the Tailtown app
 - 🔲 Advanced filtering and search capabilities
 - 🔲 Customer portal for self-service booking
 - 🔲 Email notifications for reservation status changes
-- 🔲 Staff scheduling and assignment
+- ✅ Staff scheduling and availability management
 - 🔲 Mobile-responsive design improvements
 - 🔲 Dark mode support
 - 🔲 Priority alerts for staff

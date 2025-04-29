@@ -32,6 +32,12 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - Occupancy tracking
 - Resource conflict prevention
 
+### Staff Management
+- Staff profiles with contact information and roles
+- Regular availability scheduling
+- Time off request management
+- Staff assignment tracking
+
 ### Settings & Configuration
 - Centralized system settings
 - User management
