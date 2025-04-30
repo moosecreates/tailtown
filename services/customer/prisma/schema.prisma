@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "darwin-arm64"]
 }
 
@@ -12,118 +9,497 @@ datasource db {
 }
 
 model Customer {
-  id                String      @id @default(uuid())
-  email             String      @unique
-  firstName         String
-  lastName          String
-  phone             String?
-  alternatePhone    String?
-  address           String?
-  city              String?
-  state             String?
-  zipCode           String?
-  notes             String?
-  portalEnabled     Boolean     @default(true)
-  preferredContact  ContactMethod @default(EMAIL)
-  emergencyContact  String?
-  emergencyPhone    String?
-  vatTaxId          String?     // For business customers and tax purposes
-  referralSource    String?
-  tags              String[]    @default([])
-  isActive          Boolean     @default(true)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  pets              Pet[]
-  reservations      Reservation[]
-  payments          Payment[]
-  invoices          Invoice[]
-  documents         Document[]
-  notifications     NotificationPreference?
-  
+  id               String                  @id @default(uuid())
+  email            String                  @unique
+  firstName        String
+  lastName         String
+  phone            String?
+  alternatePhone   String?
+  address          String?
+  city             String?
+  state            String?
+  zipCode          String?
+  notes            String?
+  portalEnabled    Boolean                 @default(true)
+  preferredContact ContactMethod           @default(EMAIL)
+  emergencyContact String?
+  emergencyPhone   String?
+  vatTaxId         String?
+  referralSource   String?
+  tags             String[]                @default([])
+  isActive         Boolean                 @default(true)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  documents        Document[]
+  invoices         Invoice[]
+  notifications    NotificationPreference?
+  payments         Payment[]
+  pets             Pet[]
+  reservations     Reservation[]
+
+  @@index([firstName, lastName], map: "customers_name_search_idx")
+  @@index([email], map: "customers_email_search_idx")
+  @@index([phone], map: "customers_phone_search_idx")
   @@map("customers")
-  @@index([firstName, lastName], name: "customers_name_search_idx")
-  @@index([email], name: "customers_email_search_idx")
-  @@index([phone], name: "customers_phone_search_idx")
 }
 
 model Pet {
-  id                  String        @id @default(uuid())
-  name                String
-  type                PetType
-  breed               String?
-  color               String?
-  birthdate           DateTime?
-  weight              Float?
-  gender              Gender?
-  isNeutered          Boolean       @default(false)
-  microchipNumber     String?
-  rabiesTagNumber     String?
-  specialNeeds        String?
-  foodNotes           String?
-  medicationNotes     String?
-  behaviorNotes       String?
-  allergies           String?
-  idealPlayGroup      PlayGroupType?
-  vaccinationStatus   Json?
-  vaccineExpirations  Json?
-  vetName             String?
-  vetPhone            String?
-  profilePhoto        String?       // URL to profile photo
-  isActive            Boolean       @default(true)
-  lastCheckIn         DateTime?
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
-  customerId          String
-  owner               Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  reservations        Reservation[]
-  checkIns            CheckIn[]
-  medicalRecords      MedicalRecord[]
-  
+  id                 String          @id @default(uuid())
+  name               String
+  type               PetType
+  breed              String?
+  color              String?
+  birthdate          DateTime?
+  weight             Float?
+  gender             Gender?
+  isNeutered         Boolean         @default(false)
+  microchipNumber    String?
+  rabiesTagNumber    String?
+  specialNeeds       String?
+  foodNotes          String?
+  medicationNotes    String?
+  behaviorNotes      String?
+  allergies          String?
+  idealPlayGroup     PlayGroupType?
+  vaccinationStatus  Json?
+  vaccineExpirations Json?
+  vetName            String?
+  vetPhone           String?
+  profilePhoto       String?
+  isActive           Boolean         @default(true)
+  lastCheckIn        DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  customerId         String
+  checkIns           CheckIn[]
+  medicalRecords     MedicalRecord[]
+  owner              Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  reservations       Reservation[]
+
+  @@index([customerId], map: "pets_customer_id_idx")
+  @@index([isActive, type], map: "pets_active_type_idx")
+  @@index([lastCheckIn], map: "pets_last_checkin_idx")
   @@map("pets")
-  @@index([customerId], name: "pets_customer_id_idx")
-  @@index([isActive, type], name: "pets_active_type_idx")
-  @@index([lastCheckIn], name: "pets_last_checkin_idx")
 }
 
 model Reservation {
-  id                String            @id @default(uuid())
-  startDate         DateTime
-  endDate           DateTime
-  status            ReservationStatus @default(PENDING)
-  notes             String?
-  staffNotes        String?           // Private notes for staff only
-  checkInWindow     Int?              // Minutes before appointment when check-in is available
-  isRecurring       Boolean           @default(false)
-  recurringPattern  String?           // JSON pattern for recurring reservations
-  preChecked        Boolean           @default(false)
-  checkInDate       DateTime?
-  checkOutDate      DateTime?
-  earlyDropOff      Boolean           @default(false)
-  latePickup        Boolean           @default(false)
+  id                 String             @id @default(uuid())
+  startDate          DateTime
+  endDate            DateTime
+  status             ReservationStatus  @default(PENDING)
+  notes              String?
+  staffNotes         String?
+  checkInWindow      Int?
+  isRecurring        Boolean            @default(false)
+  recurringPattern   String?
+  preChecked         Boolean            @default(false)
+  checkInDate        DateTime?
+  checkOutDate       DateTime?
+  earlyDropOff       Boolean            @default(false)
+  latePickup         Boolean            @default(false)
   customPickupPerson String?
-  confirmedBy       String?           // Staff who confirmed reservation
-  cancelReason      String?
-  cancelDate        DateTime?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  customerId        String
-  customer          Customer          @relation(fields: [customerId], references: [id])
-  petId             String
-  pet               Pet               @relation(fields: [petId], references: [id])
-  serviceId         String
-  service           Service           @relation(fields: [serviceId], references: [id])
-  resourceId        String?
-  resource          Resource?         @relation(fields: [resourceId], references: [id])
-  staffAssignedId   String?
-  staffAssigned     Staff?            @relation(fields: [staffAssignedId], references: [id])
-  addOnServices     ReservationAddOn[]
-  invoice           Invoice?
-  checkIns          CheckIn[]
-  
+  confirmedBy        String?
+  cancelReason       String?
+  cancelDate         DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  customerId         String
+  petId              String
+  serviceId          String
+  resourceId         String?
+  staffAssignedId    String?
+  checkIns           CheckIn[]
+  invoice            Invoice?
+  addOnServices      ReservationAddOn[]
+  customer           Customer           @relation(fields: [customerId], references: [id])
+  pet                Pet                @relation(fields: [petId], references: [id])
+  resource           Resource?          @relation(fields: [resourceId], references: [id])
+  service            Service            @relation(fields: [serviceId], references: [id])
+  staffAssigned      Staff?             @relation(fields: [staffAssignedId], references: [id])
+
+  @@index([startDate, endDate], map: "reservations_date_range_idx")
+  @@index([status, startDate], map: "reservations_status_date_idx")
+  @@index([customerId, status], map: "reservations_customer_status_idx")
   @@map("reservations")
-  @@index([startDate, endDate], name: "reservations_date_range_idx")
-  @@index([status, startDate], name: "reservations_status_date_idx")
-  @@index([customerId, status], name: "reservations_customer_status_idx")
+}
+
+model Service {
+  id              String             @id @default(uuid())
+  name            String
+  description     String?
+  duration        Int
+  price           Float
+  color           String?
+  serviceCategory ServiceCategory
+  isActive        Boolean            @default(true)
+  requiresStaff   Boolean            @default(false)
+  notes           String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  capacityLimit   Int                @default(0)
+  availableAddOns AddOnService[]
+  priceRules      PriceRuleService[]
+  reservations    Reservation[]
+
+  @@map("services")
+}
+
+model AddOnService {
+  id                String             @id @default(uuid())
+  name              String
+  description       String?
+  price             Float
+  duration          Int?
+  serviceId         String
+  isActive          Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  service           Service            @relation(fields: [serviceId], references: [id])
+  reservationAddOns ReservationAddOn[]
+
+  @@map("addon_services")
+}
+
+model ReservationAddOn {
+  id            String       @id @default(uuid())
+  reservationId String
+  addOnId       String
+  price         Float
+  notes         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  addOn         AddOnService @relation(fields: [addOnId], references: [id])
+  reservation   Reservation  @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@map("reservation_addons")
+}
+
+model Resource {
+  id                  String                 @id @default(uuid())
+  name                String
+  type                ResourceType
+  description         String?
+  capacity            Int                    @default(1)
+  isActive            Boolean                @default(true)
+  notes               String?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  attributes          Json?
+  availability        String?
+  location            String?
+  maintenanceSchedule String?
+  lastCleanedAt       DateTime?
+  maintenanceStatus   String?
+  suiteNumber         Int?
+  reservations        Reservation[]
+  availabilitySlots   ResourceAvailability[]
+
+  @@map("resources")
+}
+
+model ResourceAvailability {
+  id         String             @id @default(uuid())
+  resourceId String
+  startTime  DateTime
+  endTime    DateTime
+  status     AvailabilityStatus
+  reason     String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  resource   Resource           @relation(fields: [resourceId], references: [id])
+
+  @@map("resource_availability")
+}
+
+model Staff {
+  id                   String              @id @default(uuid())
+  firstName            String
+  lastName             String
+  email                String              @unique
+  phone                String?
+  role                 String
+  workSchedule         Json?
+  specialties          String[]            @default([])
+  isActive             Boolean             @default(true)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  department           String?
+  hireDate             DateTime?
+  lastLogin            DateTime?
+  password             String
+  position             String?
+  resetToken           String?
+  resetTokenExpiry     DateTime?
+  address              String?
+  city                 String?
+  state                String?
+  zipCode              String?
+  assignedReservations Reservation[]
+  availability         StaffAvailability[]
+  schedules            StaffSchedule[]
+  timeOff              StaffTimeOff[]
+
+  @@map("staff")
+}
+
+model StaffAvailability {
+  id             String    @id @default(uuid())
+  staffId        String
+  dayOfWeek      Int
+  startTime      String
+  endTime        String
+  isRecurring    Boolean   @default(true)
+  effectiveFrom  DateTime?
+  effectiveUntil DateTime?
+  isAvailable    Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  staff          Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId, dayOfWeek], map: "staff_availability_staff_day_idx")
+  @@index([dayOfWeek, isAvailable], map: "staff_availability_day_status_idx")
+  @@map("staff_availability")
+}
+
+model StaffTimeOff {
+  id           String        @id @default(uuid())
+  staffId      String
+  startDate    DateTime
+  endDate      DateTime
+  type         TimeOffType
+  status       TimeOffStatus @default(PENDING)
+  reason       String?
+  notes        String?
+  approvedById String?
+  approvedDate DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  staff        Staff         @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId, status], map: "staff_time_off_staff_status_idx")
+  @@index([startDate, endDate], map: "staff_time_off_date_range_idx")
+  @@map("staff_time_off")
+}
+
+model StaffSchedule {
+  id          String         @id @default(uuid())
+  staffId     String
+  date        DateTime
+  startTime   String
+  endTime     String
+  status      ScheduleStatus @default(SCHEDULED)
+  notes       String?
+  location    String?
+  role        String?
+  createdById String?
+  updatedById String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  staff       Staff          @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([staffId, date], map: "staff_schedules_staff_date_idx")
+  @@index([date, status])
+  @@map("staff_schedules")
+}
+
+model Invoice {
+  id            String            @id @default(uuid())
+  invoiceNumber String            @unique
+  customerId    String
+  reservationId String?           @unique
+  issueDate     DateTime          @default(now())
+  dueDate       DateTime
+  status        InvoiceStatus     @default(DRAFT)
+  subtotal      Float
+  taxRate       Float             @default(0)
+  taxAmount     Float             @default(0)
+  discount      Float             @default(0)
+  total         Float
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  lineItems     InvoiceLineItem[]
+  customer      Customer          @relation(fields: [customerId], references: [id])
+  reservation   Reservation?      @relation(fields: [reservationId], references: [id])
+  payments      Payment[]
+
+  @@map("invoices")
+}
+
+model InvoiceLineItem {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  description String
+  quantity    Int      @default(1)
+  unitPrice   Float
+  amount      Float
+  taxable     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_line_items")
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  invoiceId       String
+  customerId      String
+  amount          Float
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  transactionId   String?
+  paymentDate     DateTime      @default(now())
+  gatewayResponse Json?
+  refundedAmount  Float         @default(0)
+  refundReason    String?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  invoice         Invoice       @relation(fields: [invoiceId], references: [id])
+
+  @@index([customerId, paymentDate], map: "payments_customer_date_idx")
+  @@index([status, paymentDate], map: "payments_status_date_idx")
+  @@map("payments")
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  customerId  String
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  tags        String[] @default([])
+  uploaded    DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  customer    Customer @relation(fields: [customerId], references: [id])
+
+  @@map("documents")
+}
+
+model NotificationPreference {
+  id                   String   @id @default(uuid())
+  customerId           String   @unique
+  emailNotifications   Boolean  @default(true)
+  smsNotifications     Boolean  @default(false)
+  pushNotifications    Boolean  @default(false)
+  marketingEmails      Boolean  @default(true)
+  appointmentReminders Boolean  @default(true)
+  checkinNotifications Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  customer             Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model CheckIn {
+  id                  String       @id @default(uuid())
+  petId               String
+  reservationId       String?
+  checkInTime         DateTime     @default(now())
+  checkOutTime        DateTime?
+  checkInNotes        String?
+  checkOutNotes       String?
+  checkInBy           String?
+  checkOutBy          String?
+  belongingsChecklist Json?
+  foodProvided        Boolean      @default(false)
+  medicationGiven     Boolean      @default(false)
+  medicationNotes     String?
+  behaviorDuringStay  String?
+  photosTaken         Boolean      @default(false)
+  photosShared        Boolean      @default(false)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  activities          Activity[]
+  pet                 Pet          @relation(fields: [petId], references: [id])
+  reservation         Reservation? @relation(fields: [reservationId], references: [id])
+
+  @@index([checkInTime], map: "check_ins_time_idx")
+  @@index([petId, checkInTime], map: "check_ins_pet_time_idx")
+  @@map("check_ins")
+}
+
+model Activity {
+  id           String   @id @default(uuid())
+  checkInId    String
+  activityType String
+  notes        String?
+  timestamp    DateTime @default(now())
+  recordedBy   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  checkIn      CheckIn  @relation(fields: [checkInId], references: [id], onDelete: Cascade)
+
+  @@map("activities")
+}
+
+model MedicalRecord {
+  id             String    @id @default(uuid())
+  petId          String
+  recordType     String
+  recordDate     DateTime
+  expirationDate DateTime?
+  description    String
+  veterinarian   String?
+  fileUrl        String?
+  verified       Boolean   @default(false)
+  verifiedBy     String?
+  verifiedDate   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  pet            Pet       @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@map("medical_records")
+}
+
+model PriceRule {
+  id                String                     @id @default(uuid())
+  name              String
+  description       String?
+  ruleType          PriceRuleType
+  discountType      DiscountType
+  discountValue     Float
+  minQuantity       Int?
+  maxQuantity       Int?
+  startDate         DateTime?
+  endDate           DateTime?
+  daysOfWeek        String?
+  isActive          Boolean                    @default(true)
+  priority          Int                        @default(10)
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  serviceCategories PriceRuleServiceCategory[]
+  services          PriceRuleService[]
+
+  @@index([ruleType, isActive], map: "price_rules_type_active_idx")
+  @@map("price_rules")
+}
+
+model PriceRuleServiceCategory {
+  id              String          @id @default(uuid())
+  priceRuleId     String
+  serviceCategory ServiceCategory
+  priceRule       PriceRule       @relation(fields: [priceRuleId], references: [id], onDelete: Cascade)
+
+  @@unique([priceRuleId, serviceCategory])
+  @@map("price_rule_service_categories")
+}
+
+model PriceRuleService {
+  id          String    @id @default(uuid())
+  priceRuleId String
+  serviceId   String
+  priceRule   PriceRule @relation(fields: [priceRuleId], references: [id], onDelete: Cascade)
+  service     Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([priceRuleId, serviceId])
+  @@map("price_rule_services")
 }
 
 enum PetType {
@@ -197,110 +573,25 @@ enum InvoiceStatus {
 }
 
 enum ResourceType {
-  // Accommodations
   KENNEL
   RUN
   SUITE
   STANDARD_SUITE
   STANDARD_PLUS_SUITE
   VIP_SUITE
-  
-  // Activity areas
   PLAY_AREA
   OUTDOOR_PLAY_YARD
   PRIVATE_PLAY_AREA
-  
-  // Grooming
   GROOMING_TABLE
   BATHING_STATION
   DRYING_STATION
-  
-  // Training
   TRAINING_ROOM
   AGILITY_COURSE
-  
-  // Staff
   GROOMER
   TRAINER
   ATTENDANT
   BATHER
-  
-  // Other
   OTHER
-}
-
-model Service {
-  id              String        @id @default(uuid())
-  name            String
-  description     String?
-  duration        Int           // Duration in minutes
-  price           Float
-  color           String?       // For calendar display
-  serviceCategory ServiceCategory
-  capacityLimit   Int           @default(0)
-  requiresStaff   Boolean       @default(false)
-  notes           String?
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  reservations    Reservation[]
-  availableAddOns AddOnService[]
-  priceRules      PriceRuleService[]
-  
-  @@map("services")
-}
-
-model AddOnService {
-  id               String            @id @default(uuid())
-  name             String
-  description      String?
-  price            Float
-  duration         Int?              // Additional duration in minutes
-  serviceId        String
-  service          Service           @relation(fields: [serviceId], references: [id])
-  isActive         Boolean           @default(true)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  reservationAddOns ReservationAddOn[]
-  
-  @@map("addon_services")
-}
-
-model ReservationAddOn {
-  id            String        @id @default(uuid())
-  reservationId String
-  reservation   Reservation   @relation(fields: [reservationId], references: [id], onDelete: Cascade)
-  addOnId       String
-  addOn         AddOnService  @relation(fields: [addOnId], references: [id])
-  price         Float         // Captured price at time of booking
-  notes         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  
-  @@map("reservation_addons")
-}
-
-model Resource {
-  id                String               @id @default(uuid())
-  name              String
-  type              ResourceType
-  description       String?
-  capacity          Int                 @default(1)
-  availability      String?
-  location          String?
-  maintenanceSchedule String?
-  suiteNumber       Int?
-  lastCleanedAt     DateTime?
-  maintenanceStatus String?
-  attributes        Json?               // Flexible attributes specific to resource type
-  notes             String?
-  isActive          Boolean             @default(true)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  reservations      Reservation[]
-  availabilitySlots ResourceAvailability[]
-  
-  @@map("resources")
 }
 
 enum AvailabilityStatus {
@@ -308,89 +599,6 @@ enum AvailabilityStatus {
   RESERVED
   MAINTENANCE
   OUT_OF_SERVICE
-}
-
-model ResourceAvailability {
-  id              String             @id @default(uuid())
-  resourceId      String
-  resource        Resource           @relation(fields: [resourceId], references: [id])
-  startTime       DateTime
-  endTime         DateTime
-  status          AvailabilityStatus
-  reason          String?            // e.g., "Maintenance", "Reserved", "Out of Service"
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  
-  @@map("resource_availability")
-}
-
-model Staff {
-  id                String        @id @default(uuid())
-  firstName         String
-  lastName          String
-  email             String        @unique
-  phone             String?
-  address           String?
-  city              String?
-  state             String?
-  zipCode           String?
-  password          String        // Hashed password for authentication
-  department        String?       // Department the staff member belongs to
-  position          String?       // Position/job title
-  role              String        // Role for permissions (admin, manager, staff, etc.)
-  hireDate          DateTime?     // When the staff member was hired
-  workSchedule      Json?         // Legacy JSON data for work schedule
-  specialties       String[]      @default([])
-  isActive          Boolean       @default(true)
-  lastLogin         DateTime?     // Last time the staff member logged in
-  resetToken        String?       // For password reset functionality
-  resetTokenExpiry  DateTime?     // Expiration of reset token
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  assignedReservations Reservation[]
-  availability      StaffAvailability[] // Structured availability records
-  timeOff           StaffTimeOff[]     // Time off requests and approvals
-  
-  @@map("staff")
-}
-
-model StaffAvailability {
-  id              String        @id @default(uuid())
-  staffId         String
-  staff           Staff         @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  dayOfWeek       Int           // 0-6 for Sunday-Saturday
-  startTime       String        // Format: HH:MM in 24-hour format
-  endTime         String        // Format: HH:MM in 24-hour format
-  isRecurring     Boolean       @default(true)
-  effectiveFrom   DateTime?     // When this availability starts being valid
-  effectiveUntil  DateTime?     // When this availability stops being valid
-  isAvailable     Boolean       @default(true) // If false, this is a recurring unavailability
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  @@map("staff_availability")
-  @@index([staffId, dayOfWeek], name: "staff_availability_staff_day_idx")
-  @@index([dayOfWeek, isAvailable], name: "staff_availability_day_status_idx")
-}
-
-model StaffTimeOff {
-  id              String          @id @default(uuid())
-  staffId         String
-  staff           Staff           @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  startDate       DateTime        // Start date and time of time off
-  endDate         DateTime        // End date and time of time off
-  type            TimeOffType     // Type of time off
-  status          TimeOffStatus   @default(PENDING)
-  reason          String?         // Reason for time off
-  notes           String?         // Additional notes
-  approvedById    String?         // ID of staff who approved/denied the request
-  approvedDate    DateTime?       // When the request was approved/denied
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  
-  @@map("staff_time_off")
-  @@index([staffId, status], name: "staff_time_off_staff_status_idx")
-  @@index([startDate, endDate], name: "staff_time_off_date_range_idx")
 }
 
 enum TimeOffType {
@@ -409,160 +617,13 @@ enum TimeOffStatus {
   CANCELLED
 }
 
-model Invoice {
-  id              String          @id @default(uuid())
-  invoiceNumber   String          @unique
-  customerId      String
-  customer        Customer        @relation(fields: [customerId], references: [id])
-  reservationId   String?         @unique
-  reservation     Reservation?    @relation(fields: [reservationId], references: [id])
-  issueDate       DateTime        @default(now())
-  dueDate         DateTime
-  status          InvoiceStatus   @default(DRAFT)
-  subtotal        Float
-  taxRate         Float           @default(0)
-  taxAmount       Float           @default(0)
-  discount        Float           @default(0)
-  total           Float
-  notes           String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  lineItems       InvoiceLineItem[]
-  payments        Payment[]
-  
-  @@map("invoices")
-}
-
-model InvoiceLineItem {
-  id              String    @id @default(uuid())
-  invoiceId       String
-  invoice         Invoice   @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  description     String
-  quantity        Int       @default(1)
-  unitPrice       Float
-  amount          Float
-  taxable         Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  @@map("invoice_line_items")
-}
-
-model Payment {
-  id                String          @id @default(uuid())
-  invoiceId         String
-  invoice           Invoice         @relation(fields: [invoiceId], references: [id])
-  customerId        String
-  customer          Customer        @relation(fields: [customerId], references: [id])
-  amount            Float
-  method            PaymentMethod
-  status            PaymentStatus   @default(PENDING)
-  transactionId     String?
-  paymentDate       DateTime        @default(now())
-  gatewayResponse   Json?
-  refundedAmount    Float           @default(0)
-  refundReason      String?
-  notes             String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  
-  @@map("payments")
-  @@index([customerId, paymentDate], name: "payments_customer_date_idx")
-  @@index([status, paymentDate], name: "payments_status_date_idx")
-}
-
-model Document {
-  id              String    @id @default(uuid())
-  customerId      String
-  customer        Customer  @relation(fields: [customerId], references: [id])
-  title           String
-  description     String?
-  fileUrl         String
-  fileType        String
-  fileSize        Int
-  tags            String[]  @default([])
-  uploaded        DateTime  @default(now())
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  @@map("documents")
-}
-
-model NotificationPreference {
-  id                  String    @id @default(uuid())
-  customerId          String    @unique
-  customer            Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  emailNotifications  Boolean   @default(true)
-  smsNotifications    Boolean   @default(false)
-  pushNotifications   Boolean   @default(false)
-  marketingEmails     Boolean   @default(true)
-  appointmentReminders Boolean   @default(true)
-  checkinNotifications Boolean   @default(true)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  
-  @@map("notification_preferences")
-}
-
-model CheckIn {
-  id                String    @id @default(uuid())
-  petId             String
-  pet               Pet       @relation(fields: [petId], references: [id])
-  reservationId     String?
-  reservation       Reservation? @relation(fields: [reservationId], references: [id])
-  checkInTime       DateTime  @default(now())
-  checkOutTime      DateTime?
-  checkInNotes      String?
-  checkOutNotes     String?
-  checkInBy         String?   // Staff who processed check-in
-  checkOutBy        String?   // Staff who processed check-out
-  belongingsChecklist Json?    // List of items brought with pet
-  foodProvided      Boolean   @default(false)
-  medicationGiven   Boolean   @default(false)
-  medicationNotes   String?
-  behaviorDuringStay String?
-  photosTaken       Boolean   @default(false)
-  photosShared      Boolean   @default(false)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  activities        Activity[]
-  
-  @@map("check_ins")
-  @@index([checkInTime], name: "check_ins_time_idx")
-  @@index([petId, checkInTime], name: "check_ins_pet_time_idx")
-}
-
-model Activity {
-  id              String    @id @default(uuid())
-  checkInId       String
-  checkIn         CheckIn   @relation(fields: [checkInId], references: [id], onDelete: Cascade)
-  activityType    String
-  notes           String?
-  timestamp       DateTime  @default(now())
-  recordedBy      String?   // Staff who recorded the activity
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  @@map("activities")
-}
-
-model MedicalRecord {
-  id              String    @id @default(uuid())
-  petId           String
-  pet             Pet       @relation(fields: [petId], references: [id], onDelete: Cascade)
-  recordType      String
-  recordDate      DateTime
-  expirationDate  DateTime?
-  description     String
-  veterinarian    String?
-  fileUrl         String?
-  verified        Boolean   @default(false)
-  verifiedBy      String?
-  verifiedDate    DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
-  @@map("medical_records")
+enum ScheduleStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
 }
 
 enum ServiceCategory {
@@ -573,63 +634,16 @@ enum ServiceCategory {
   OTHER
 }
 
-// Price Rules Models
 enum PriceRuleType {
-  DAY_OF_WEEK       // Discount on specific days of the week
-  MULTI_DAY         // Discount for multi-day stays
-  MULTI_PET         // Discount for multiple pets
-  SEASONAL          // Seasonal discount
-  PROMOTIONAL       // Limited-time promotion
-  CUSTOM            // Custom rule
+  DAY_OF_WEEK
+  MULTI_DAY
+  MULTI_PET
+  SEASONAL
+  PROMOTIONAL
+  CUSTOM
 }
 
 enum DiscountType {
-  PERCENTAGE        // Percentage discount (e.g., 10% off)
-  FIXED_AMOUNT      // Fixed amount discount (e.g., $10 off)
-}
-
-model PriceRule {
-  id                String            @id @default(uuid())
-  name              String
-  description       String?
-  ruleType          PriceRuleType
-  discountType      DiscountType
-  discountValue     Float             // Percentage or fixed amount
-  minQuantity       Int?              // Minimum number of days/pets for the rule to apply
-  maxQuantity       Int?              // Maximum number of days/pets for the rule to apply
-  startDate         DateTime?         // Rule valid from this date
-  endDate           DateTime?         // Rule valid until this date
-  daysOfWeek        String?           // JSON array of days (0-6, Sunday-Saturday)
-  isActive          Boolean           @default(true)
-  priority          Int               @default(10) // Higher number = higher priority
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-  
-  // Relations
-  serviceCategories PriceRuleServiceCategory[]
-  services          PriceRuleService[]
-  
-  @@map("price_rules")
-  @@index([ruleType, isActive], name: "price_rules_type_active_idx")
-}
-
-model PriceRuleServiceCategory {
-  id                String          @id @default(uuid())
-  priceRuleId       String
-  priceRule         PriceRule       @relation(fields: [priceRuleId], references: [id], onDelete: Cascade)
-  serviceCategory   ServiceCategory
-  
-  @@unique([priceRuleId, serviceCategory])
-  @@map("price_rule_service_categories")
-}
-
-model PriceRuleService {
-  id                String          @id @default(uuid())
-  priceRuleId       String
-  priceRule         PriceRule       @relation(fields: [priceRuleId], references: [id], onDelete: Cascade)
-  serviceId         String
-  service           Service         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  
-  @@unique([priceRuleId, serviceId])
-  @@map("price_rule_services")
+  PERCENTAGE
+  FIXED_AMOUNT
 }

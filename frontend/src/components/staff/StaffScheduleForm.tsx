@@ -28,6 +28,7 @@ interface StaffScheduleFormProps {
   onSave: (schedule: StaffSchedule) => void;
   isEditing: boolean;
   allStaff?: Staff[];
+  initialDate?: Date;
 }
 
 const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
@@ -37,11 +38,12 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
   schedule,
   onSave,
   isEditing,
-  allStaff
+  allStaff,
+  initialDate
 }) => {
   const [formData, setFormData] = useState<Partial<StaffSchedule>>({
     staffId: staffId || '',
-    date: new Date().toISOString().split('T')[0],
+    date: initialDate ? format(initialDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
     startTime: '09:00',
     endTime: '17:00',
     status: ScheduleStatus.SCHEDULED,

@@ -38,7 +38,8 @@ import {
   FitnessCenter as TrainingIcon,
   Home as DaycareIcon,
   ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
+  ExpandLess as ExpandLessIcon,
+  Schedule as ScheduleIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -103,6 +104,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     { path: '/resources', label: 'Resources', icon: ResourcesIcon },
     { path: '/suites', label: 'Kennels', icon: SuitesIcon },
     { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
+    { path: '/staff/scheduling', label: 'Staff Scheduling', icon: ScheduleIcon },
     // Price Rules moved to Settings
     { 
       path: '/calendar', 

@@ -35,6 +35,7 @@ import Settings from './pages/settings/Settings';
 import Users from './pages/settings/Users';
 import NotFound from './pages/NotFound';
 import PriceRuleRedirect from './components/redirects/PriceRuleRedirect';
+import Scheduling from './pages/staff/Scheduling';
 
 // Custom event for route changes
 export const RouteChangeEvent = 'app:route-change';
@@ -96,6 +97,7 @@ const AppRoutes = () => {
         <Route path="/settings/price-rules" element={isAuthenticated ? <PriceRulesPage /> : <Navigate to="/login" />} />
         <Route path="/settings/price-rules/new" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />
         <Route path="/settings/price-rules/:id" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />
+        <Route path="/staff/scheduling" element={isAuthenticated ? <Scheduling /> : <Navigate to="/login" />} />
       </Route>
 
       {/* 404 Route */}
