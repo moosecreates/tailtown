@@ -20,6 +20,7 @@ This roadmap outlines the planned features and improvements for the Tailtown app
 - 🔲 Customer portal for self-service booking
 - 🔲 Email notifications for reservation status changes
 - ✅ Staff scheduling and availability management
+- ✅ Standardized time format display (12-hour format with AM/PM)
 - 🔲 Mobile-responsive design improvements
 - 🔲 Dark mode support
 - 🔲 Priority alerts for staff
@@ -71,8 +72,8 @@ Throughout all phases, we will address the following ongoing concerns:
 - 🔲 Comprehensive test coverage (unit, integration, and end-to-end tests)
 - 🔲 Performance optimization for large datasets
 - 🔲 Security audits and improvements
-- 🔲 Code refactoring for maintainability
-- 🔲 Documentation updates
+- ✅ Code refactoring for maintainability and consistency
+- ✅ Documentation updates for implemented features
 - 🔲 Accessibility compliance (WCAG 2.1 AA)
 - 🔲 DevOps improvements (CI/CD, monitoring, logging)
 
