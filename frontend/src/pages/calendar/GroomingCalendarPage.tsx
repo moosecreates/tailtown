@@ -1,12 +1,13 @@
 import React from 'react';
 import { Container, Typography, Box } from '@mui/material';
-import Calendar from '../../components/calendar/Calendar';
+import SpecializedCalendar from '../../components/calendar/SpecializedCalendar';
 import { ServiceCategory } from '../../types/service';
 
 /**
  * Grooming Calendar Page Component
  * 
  * Displays a calendar view filtered to show only grooming service reservations.
+ * Uses the SpecializedCalendar component with fixed time formatting.
  */
 const GroomingCalendarPage: React.FC = () => {
   return (
@@ -16,7 +17,7 @@ const GroomingCalendarPage: React.FC = () => {
           Grooming Calendar
         </Typography>
       </Box>
-      <Calendar 
+      <SpecializedCalendar 
         serviceCategories={[ServiceCategory.GROOMING]} 
         calendarTitle="Grooming Calendar"
       />

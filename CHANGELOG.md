@@ -1,0 +1,26 @@
+# Changelog
+
+All notable changes to the Tailtown project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+- Documentation for calendar components in `docs/features/CalendarComponents.md`
+
+### Fixed
+- Fixed grooming and training calendar functionality by creating a specialized calendar component with proper time formatting
+- Resolved `context.cmdFormatter is not a function` error in FullCalendar by using object notation for time formatting instead of string literals
+
+## [0.1.0] - 2025-04-29
+
+### Added
+- Initial version of Tailtown pet care management system
+- Boarding and daycare calendar with grid view
+- Grooming and training calendar views
+- Reservation management system
+- Customer and pet profiles
+- Invoice generation and management
+- Order entry system
