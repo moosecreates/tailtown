@@ -5,6 +5,8 @@ export const resourceRoutes = express.Router();
 
 // Resource routes
 resourceRoutes.get('/', resourceController.getAllResources);
+// Specific routes must come before parameter routes
+resourceRoutes.get('/available', resourceController.getAvailableResourcesByDate);
 resourceRoutes.get('/:id', resourceController.getResource);
 resourceRoutes.post('/', resourceController.createResource);
 resourceRoutes.put('/:id', resourceController.updateResource);

@@ -12,7 +12,7 @@ export interface Reservation {
   status: 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
   notes?: string;
   staffNotes?: string;
-  createdAt: string;
+  createdAt?: string; // Optional when creating a new reservation, will be set by the backend
   customer?: {
     id: string;
     firstName: string;

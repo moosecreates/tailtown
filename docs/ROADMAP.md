@@ -27,13 +27,17 @@ This roadmap outlines the planned features and improvements for the Tailtown app
 - 🔲 Permission levels and restrictions for users
 
 ## Phase 3: Business Operations
-- 🔲 Invoicing and payment processing
+- ✅ Invoicing and payment processing
+  - Invoice generation for reservations
+  - Payment tracking and history
+  - Invoice details view with line items
+  - Tax calculations with configurable tax rate (7.44%)
 - 🔲 Integration with merchant services
 - 🔲 Inventory management for pet supplies
 - 🔲 Reporting and analytics dashboard
 - 🔲 Comprehensive reporting features
-- 🔲 Configurable settings (e.g., tax rates)
-- 🔲 Customer accounts with balance and payment history
+- ✅ Configurable settings (e.g., tax rates)
+- ✅ Customer accounts with balance and payment history
 - 🔲 Automated reminders for upcoming appointments
 - 🔲 Comprehensive loyalty rewards system
   - Points accumulation based on services

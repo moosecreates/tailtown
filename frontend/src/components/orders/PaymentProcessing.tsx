@@ -1,0 +1,370 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Paper,
+  TextField,
+  Button,
+  Grid,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  CircularProgress,
+  Alert,
+  Divider,
+  Checkbox,
+  FormControlLabel,
+  InputAdornment,
+} from '@mui/material';
+import { paymentService } from '../../services/paymentService';
+import { customerService } from '../../services/customerService';
+
+interface PaymentProcessingProps {
+  onContinue: (paymentData: any) => void;
+  amount: number;
+  invoiceId?: string; // Add invoiceId prop
+  initialPayment: {
+    method: string;
+    amount: number;
+    cardDetails?: {
+      cardNumber: string;
+      expiryDate: string;
+      cvv: string;
+      cardholderName: string;
+    };
+  };
+}
+
+const PaymentProcessing: React.FC<PaymentProcessingProps> = ({
+  onContinue,
+  amount,
+  invoiceId,
+  initialPayment,
+}) => {
+  // State for payment details
+  const [paymentMethod, setPaymentMethod] = useState<string>(initialPayment.method || 'CREDIT_CARD');
+  const [cardNumber, setCardNumber] = useState<string>('');
+  const [expiryDate, setExpiryDate] = useState<string>('');
+  const [cvv, setCvv] = useState<string>('');
+  const [nameOnCard, setNameOnCard] = useState<string>('');
+  const [paymentNotes, setPaymentNotes] = useState<string>('');
+  
+  // Store credit info
+  const [storeCredit, setStoreCredit] = useState<number>(0);
+  const [useStoreCredit, setUseStoreCredit] = useState<boolean>(false);
+  const [storeCreditToUse, setStoreCreditToUse] = useState<number>(0);
+  
+  // Loading and error states
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
+  
+  // Load customer store credit - getting it from context or parent component
+  // For now, we'll mock this with a static value since we don't have the customer ID
+  useEffect(() => {
+    // In a real implementation, this would load from the API
+    // For now, just set a mock value
+    setStoreCredit(0); // Set to 0 as we don't have real data available
+  }, []);
+  
+  // Handle store credit checkbox change
+  const handleStoreCreditChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = event.target.checked;
+    setUseStoreCredit(checked);
+    
+    if (checked) {
+      // Calculate how much store credit to use
+      const creditToUse = Math.min(storeCredit, amount);
+      setStoreCreditToUse(creditToUse);
+    } else {
+      setStoreCreditToUse(0);
+    }
+  };
+  
+  // Handle store credit amount change
+  const handleStoreCreditAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Math.min(
+      Math.max(0, parseFloat(event.target.value) || 0),
+      storeCredit,
+      amount
+    );
+    setStoreCreditToUse(value);
+  };
+  
+  // Calculate remaining amount to pay after applying store credit
+  const remainingAmount = Math.max(0, amount - storeCreditToUse);
+  
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+  
+  // Handle form submission and payment processing
+  const handleSubmitPayment = async () => {
+    // Validate inputs based on payment method
+    if (paymentMethod === 'CREDIT_CARD') {
+      if (!cardNumber || !expiryDate || !cvv || !nameOnCard) {
+        setError('Please fill in all credit card details');
+        return;
+      }
+      
+      // Simple validation for card number format
+      if (!/^\d{16}$/.test(cardNumber.replace(/\s/g, ''))) {
+        setError('Card number should be 16 digits');
+        return;
+      }
+      
+      // Simple validation for expiry date format (MM/YY)
+      if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+        setError('Expiry date should be in format MM/YY');
+        return;
+      }
+      
+      // Simple validation for CVV
+      if (!/^\d{3,4}$/.test(cvv)) {
+        setError('CVV should be 3 or 4 digits');
+        return;
+      }
+    }
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Create paymentData object
+      const paymentData: any = {
+        invoiceId, // Include the invoiceId in payment data
+        amount: remainingAmount,
+        method: paymentMethod,
+        status: 'PAID',
+        transactionId: `SIMULATED-${Date.now()}`,
+        notes: paymentNotes,
+      };
+      
+      // If using store credit, include it in the payment data
+      if (useStoreCredit && storeCreditToUse > 0) {
+        paymentData.storeCredit = storeCreditToUse;
+      }
+      
+      // For credit card payments, add card info
+      if (paymentMethod === 'CREDIT_CARD') {
+        // In a real implementation, this would be sent to a payment processor
+        // For simulation, we'll just include the last 4 digits in the notes
+        const last4 = cardNumber.replace(/\s/g, '').slice(-4);
+        paymentData.notes += ` | Card ending in ${last4}`;
+        paymentData.cardLastFour = last4;
+      }
+      
+      // In a real implementation, we would process the payment through the API
+      // For this demonstration, we'll simulate a successful response
+      
+      // Simulate API response delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setSuccess(true);
+      
+      // Pass payment data back to parent component
+      onContinue({
+        ...paymentData,
+        storeCredit: useStoreCredit ? storeCreditToUse : 0,
+        cardDetails: paymentMethod === 'CREDIT_CARD' ? {
+          cardNumber,
+          expiryDate,
+          cvv,
+          cardholderName: nameOnCard
+        } : undefined
+      });
+    } catch (err: any) {
+      console.error('Error processing payment:', err);
+      setError(err.response?.data?.message || 'Failed to process payment. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <Box>
+      <Typography variant="h6" gutterBottom>
+        Payment Processing
+      </Typography>
+      
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+      
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          Payment processed successfully!
+        </Alert>
+      )}
+      
+      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Typography variant="subtitle1" gutterBottom>
+              Invoice Total: {formatCurrency(amount)}
+            </Typography>
+          </Grid>
+          
+          {storeCredit > 0 && (
+            <>
+              <Grid item xs={12}>
+                <Divider />
+                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="subtitle2">
+                    Available Store Credit: {formatCurrency(storeCredit)}
+                  </Typography>
+                  <Box sx={{ ml: 2 }}>
+                    <FormControl sx={{ width: 200 }}>
+                      <TextField
+                        label="Apply Store Credit"
+                        type="number"
+                        value={useStoreCredit ? storeCreditToUse : 0}
+                        onChange={handleStoreCreditAmountChange}
+                        InputProps={{
+                          startAdornment: '$',
+                          inputProps: {
+                            min: 0,
+                            max: Math.min(storeCredit, amount),
+                            step: 0.01,
+                          },
+                        }}
+                        disabled={!useStoreCredit}
+                        size="small"
+                      />
+                    </FormControl>
+                  </Box>
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12}>
+                <Divider />
+                <Typography variant="h6" sx={{ mt: 2 }}>
+                  Remaining to Pay: {formatCurrency(remainingAmount)}
+                </Typography>
+              </Grid>
+            </>
+          )}
+          
+          <Grid item xs={12}>
+            <FormControl fullWidth size="small">
+              <InputLabel id="payment-method-label">Payment Method</InputLabel>
+              <Select
+                labelId="payment-method-label"
+                id="payment-method"
+                value={paymentMethod}
+                label="Payment Method"
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              >
+                <MenuItem value="CREDIT_CARD">Credit Card</MenuItem>
+                <MenuItem value="CASH">Cash</MenuItem>
+                <MenuItem value="CHECK">Check</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          
+          {paymentMethod === 'CREDIT_CARD' && (
+            <>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Card Number"
+                  value={cardNumber}
+                  onChange={(e) => setCardNumber(e.target.value)}
+                  placeholder="1234 5678 9012 3456"
+                  inputProps={{ maxLength: 19 }}
+                  size="small"
+                />
+              </Grid>
+              
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Expiry Date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  placeholder="MM/YY"
+                  inputProps={{ maxLength: 5 }}
+                  size="small"
+                />
+              </Grid>
+              
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="CVV"
+                  value={cvv}
+                  onChange={(e) => setCvv(e.target.value)}
+                  placeholder="123"
+                  inputProps={{ maxLength: 4 }}
+                  size="small"
+                />
+              </Grid>
+              
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Name on Card"
+                  value={nameOnCard}
+                  onChange={(e) => setNameOnCard(e.target.value)}
+                  size="small"
+                />
+              </Grid>
+            </>
+          )}
+          
+          {(paymentMethod === 'CASH' || paymentMethod === 'CHECK') && (
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Payment Amount"
+                type="number"
+                value={remainingAmount}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                  inputProps: {
+                    min: 0,
+                    step: 0.01,
+                  },
+                }}
+                size="small"
+                disabled={true}
+              />
+            </Grid>
+          )}
+          
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              multiline
+              rows={2}
+              label="Payment Notes"
+              value={paymentNotes}
+              onChange={(e) => setPaymentNotes(e.target.value)}
+              size="small"
+            />
+          </Grid>
+        </Grid>
+      </Paper>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSubmitPayment}
+          disabled={loading || success}
+        >
+          {loading ? <CircularProgress size={24} /> : 'Process Payment'}
+        </Button>
+      </Box>
+    </Box>
+  );
+};
+
+export default PaymentProcessing;

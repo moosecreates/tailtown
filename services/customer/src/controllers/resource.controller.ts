@@ -338,3 +338,99 @@ export const deleteAvailabilitySlot = async (
     next(error);
   }
 };
+
+// Get available resources by date range
+export const getAvailableResourcesByDate = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { startDate, endDate, serviceId } = req.query;
+    
+    if (!startDate || !endDate) {
+      return next(new AppError('Start date and end date are required', 400));
+    }
+    
+    // Parse dates
+    const parsedStartDate = new Date(startDate as string);
+    const parsedEndDate = new Date(endDate as string);
+    
+    // Validate dates
+    if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
+      return next(new AppError('Invalid date format. Please use YYYY-MM-DD format', 400));
+    }
+    
+    // Base query to get resources
+    let resources = await prisma.resource.findMany({
+      where: {
+        // If serviceId provided, filter resources that can be used for that service
+        ...(serviceId ? {
+          // You would need to implement this relationship in your schema
+          // This is just an example assuming a link between resources and services
+          OR: [
+            { type: 'STANDARD_SUITE' },
+            { type: 'STANDARD_PLUS_SUITE' },
+            { type: 'VIP_SUITE' }
+          ]
+        } : {}),
+        isActive: true
+      },
+      include: {
+        // Include reservations that overlap with the date range
+        reservations: {
+          where: {
+            OR: [
+              {
+                // Reservations that start during the requested period
+                startDate: {
+                  gte: parsedStartDate,
+                  lte: parsedEndDate
+                }
+              },
+              {
+                // Reservations that end during the requested period
+                endDate: {
+                  gte: parsedStartDate,
+                  lte: parsedEndDate
+                }
+              },
+              {
+                // Reservations that span the entire requested period
+                AND: [
+                  {
+                    startDate: {
+                      lte: parsedStartDate
+                    }
+                  },
+                  {
+                    endDate: {
+                      gte: parsedEndDate
+                    }
+                  }
+                ]
+              }
+            ],
+            // Only consider active reservations
+            status: {
+              in: ['PENDING', 'CONFIRMED', 'CHECKED_IN']
+            }
+          }
+        }
+      }
+    });
+    
+    // Filter out resources that have reservations during the requested time
+    const availableResources = resources.filter(resource => resource.reservations.length === 0 && 
+      // Also filter out resources in maintenance if applicable
+      resource.maintenanceStatus !== 'IN_MAINTENANCE');
+    
+    res.status(200).json({
+      status: 'success',
+      data: availableResources
+    });
+  } catch (error) {
+    console.error('Error getting available resources:', error);
+    next(error);
+  }
+};

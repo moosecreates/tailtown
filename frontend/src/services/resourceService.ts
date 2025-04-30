@@ -217,5 +217,26 @@ export const resourceService = {
       console.error('Error in initializeSuites:', error);
       throw error;
     }
+  },
+
+  // Get available resources by date range
+  getAvailableResourcesByDate: async (
+    startDate: string,
+    endDate: string,
+    serviceId?: string
+  ): Promise<{ status: string; data: Resource[] }> => {
+    try {
+      const response: AxiosResponse = await api.get('/api/resources/available', {
+        params: {
+          startDate,
+          endDate,
+          serviceId
+        }
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in getAvailableResourcesByDate:', error);
+      throw error;
+    }
   }
 };

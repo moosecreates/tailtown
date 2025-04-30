@@ -19,6 +19,15 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - Specialized kennel grid calendar for boarding and daycare
 - Compact view for efficient kennel management
 
+### Invoicing and Payments
+- Automatic invoice generation for reservations
+- Detailed invoice view with line items
+- Service and add-on itemization
+- Configurable tax rate (7.44%)
+- Payment tracking and history
+- Customer account balance management
+- Invoice status tracking (draft, sent, paid, etc.)
+
 ### Service Management
 - Customizable service catalog
 - Service duration and capacity settings

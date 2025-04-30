@@ -24,6 +24,7 @@ import {
   MenuItem,
   Grid
 } from '@mui/material';
+import InvoiceDetailsDialog from '../invoices/InvoiceDetailsDialog';
 import { 
   AccountBalance as AccountBalanceIcon,
   Receipt as ReceiptIcon,
@@ -84,10 +85,12 @@ const AccountHistory: React.FC<AccountHistoryProps> = ({ customerId, onInvoiceCr
   const [payments, setPayments] = useState<Payment[]>([]);
   const [accountBalance, setAccountBalance] = useState<AccountBalance | null>(null);
   
-  // Modal states
-  const [openNewPaymentModal, setOpenNewPaymentModal] = useState(false);
-  const [openStoreCreditModal, setOpenStoreCreditModal] = useState(false);
-  const [openApplyCreditModal, setOpenApplyCreditModal] = useState(false);
+  // State for modal forms
+  const [openNewPaymentModal, setOpenNewPaymentModal] = useState<boolean>(false);
+  const [openStoreCreditModal, setOpenStoreCreditModal] = useState<boolean>(false);
+  const [openApplyCreditModal, setOpenApplyCreditModal] = useState<boolean>(false);
+  const [openInvoiceDetailsDialog, setOpenInvoiceDetailsDialog] = useState<boolean>(false);
+  const [selectedInvoiceDetails, setSelectedInvoiceDetails] = useState<Invoice | null>(null);
   
   // Form states
   const [selectedInvoice, setSelectedInvoice] = useState<string>('');
@@ -421,7 +424,15 @@ const AccountHistory: React.FC<AccountHistoryProps> = ({ customerId, onInvoiceCr
                   const balance = invoice.total - paid;
                   
                   return (
-                    <TableRow key={invoice.id} hover>
+                    <TableRow 
+                      key={invoice.id} 
+                      hover 
+                      onClick={() => {
+                        setSelectedInvoiceDetails(invoice);
+                        setOpenInvoiceDetailsDialog(true);
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <TableCell>{invoice.invoiceNumber}</TableCell>
                       <TableCell>{format(new Date(invoice.issueDate || new Date()), 'MM/dd/yyyy')}</TableCell>
                       <TableCell>{format(new Date(invoice.dueDate), 'MM/dd/yyyy')}</TableCell>
@@ -755,6 +766,13 @@ const AccountHistory: React.FC<AccountHistoryProps> = ({ customerId, onInvoiceCr
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Invoice Details Dialog */}
+      <InvoiceDetailsDialog
+        open={openInvoiceDetailsDialog}
+        onClose={() => setOpenInvoiceDetailsDialog(false)}
+        invoice={selectedInvoiceDetails}
+      />
     </Box>
   );
 };
