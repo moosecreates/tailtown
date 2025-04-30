@@ -346,7 +346,7 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
           timeZone="local"
           locale="en-US"
           
-          // 12-hour time format settings using simple string format
+          // 12-hour time format settings (h:mm a format)
           eventTimeFormat="h:mm a"
           slotLabelFormat="h:mm a"
           
@@ -359,18 +359,10 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
           
           views={{
             timeGrid: {
-              nowIndicator: true,
-              // 12-hour time format for timeGrid view
-              slotLabelFormat: "h:mm a"
+              nowIndicator: true
             },
-            timeGridDay: {
-              // 12-hour time format for day view
-              slotLabelFormat: "h:mm a"
-            },
-            timeGridWeek: {
-              // 12-hour time format for week view
-              slotLabelFormat: "h:mm a"
-            }
+            timeGridDay: {},
+            timeGridWeek: {}
           }}
           
           dayHeaderFormat={{

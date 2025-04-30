@@ -111,17 +111,34 @@ const Scheduling: React.FC = () => {
     setBulkScheduleData(prev => ({ ...prev, selectedStaff: event.target.value as unknown as string[] }));
   };
 
-  // Parse time string (HH:MM) to Date object
+  /**
+   * Parse time string (HH:MM) to Date object for TimePicker
+   * @param timeString Time string in 24-hour format (HH:mm)
+   * @returns Date object representing the time
+   */
   const parseTimeString = (timeString: string): Date => {
-    return parse(timeString, 'HH:mm', new Date());
+    try {
+      return parse(timeString, 'HH:mm', new Date());
+    } catch (error) {
+      console.error('Error parsing time string:', error);
+      return new Date(); // Return current time as fallback
+    }
   };
   
-  // Handle time picker changes
+  /**
+   * Handle time picker changes and store in 24-hour format
+   * @param field Field name in the form data (startTime or endTime)
+   * @param time Selected time as Date object
+   */
   const handleTimeChange = (field: string, time: Date | null): void => {
     if (time) {
-      // Format time to 24-hour format for storage
-      const formattedTime = format(time, 'HH:mm');
-      setBulkScheduleData(prev => ({ ...prev, [field]: formattedTime }));
+      try {
+        // Format time to 24-hour format for storage
+        const formattedTime = format(time, 'HH:mm');
+        setBulkScheduleData(prev => ({ ...prev, [field]: formattedTime }));
+      } catch (error) {
+        console.error('Error formatting time:', error);
+      }
     }
   };
 

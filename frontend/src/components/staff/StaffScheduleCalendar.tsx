@@ -182,29 +182,37 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
     );
   };
 
-  // Format the schedule time range for display
-  const formatScheduleTime = (schedule: StaffSchedule) => {
-    // Convert 24-hour time to 12-hour format with AM/PM
-    const formatTo12Hour = (timeStr: string): string => {
-      if (!timeStr) return '';
-      
-      try {
-        // Parse the time (assuming format like "14:00")
-        const [hourStr, minuteStr] = timeStr.split(':');
-        const hour = parseInt(hourStr, 10);
-        
-        if (isNaN(hour)) return timeStr;
-        
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const hour12 = hour % 12 || 12; // Convert 0 to 12
-        
-        return `${hour12}:${minuteStr} ${ampm}`;
-      } catch (e) {
-        console.error('Error converting time:', e);
-        return timeStr;
-      }
-    };
+  /**
+   * Convert 24-hour time string to 12-hour format with AM/PM
+   * @param timeStr Time string in 24-hour format (HH:MM)
+   * @returns Formatted time string in 12-hour format with AM/PM
+   */
+  const formatTo12Hour = (timeStr: string): string => {
+    if (!timeStr) return '';
     
+    try {
+      // Parse the time (assuming format like "14:00")
+      const [hourStr, minuteStr] = timeStr.split(':');
+      const hour = parseInt(hourStr, 10);
+      
+      if (isNaN(hour)) return timeStr;
+      
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12; // Convert 0 to 12
+      
+      return `${hour12}:${minuteStr} ${ampm}`;
+    } catch (e) {
+      console.error('Error converting time:', e);
+      return timeStr;
+    }
+  };
+  
+  /**
+   * Format the schedule time range for display in 12-hour format
+   * @param schedule Staff schedule object
+   * @returns Formatted time range string
+   */
+  const formatScheduleTime = (schedule: StaffSchedule) => {
     const startTime12h = formatTo12Hour(schedule.startTime);
     const endTime12h = formatTo12Hour(schedule.endTime);
     
