@@ -5,6 +5,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { EventInput, DateSelectArg, EventClickArg } from '@fullcalendar/core';
+
 import { Box, Paper, Dialog, DialogTitle, DialogContent } from '@mui/material';
 import { reservationService } from '../../services/reservationService';
 import ReservationForm from '../reservations/ReservationForm';
@@ -96,15 +97,18 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
             reservation
           }
         }));
-        console.log('Calendar: Setting events:', calendarEvents);
+        
+        console.log('Calendar: Created calendar events:', calendarEvents.length);
         setEvents(calendarEvents);
-        return calendarEvents; // Return the events for immediate use
+        return calendarEvents;
       } else {
-        console.warn('Calendar: Invalid response format:', response);
+        console.warn('Calendar: Invalid response format or no reservations found');
+        setEvents([]);
         return [];
       }
     } catch (error) {
-      console.error('Error loading reservations:', error);
+      console.error('Calendar: Error loading reservations:', error);
+      setEvents([]);
       return [];
     }
   }, [serviceCategories]);
@@ -113,100 +117,160 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
     loadReservations();
   }, [loadReservations]);
 
-  /**
-   * Get the color for a reservation status
-   * @param status - The reservation status
-   * @returns The color code for the status
-   */
+  // Effect to convert time display to 12-hour format
+  useEffect(() => {
+    // Function to convert 24h time to 12h time
+    const convertTo12Hour = (timeStr: string): string => {
+      if (!timeStr) return '';
+      
+      // Check if already in 12-hour format
+      if (timeStr.includes('am') || timeStr.includes('pm')) {
+        return timeStr;
+      }
+      
+      try {
+        // Parse the time (assuming format like "14:00")
+        const [hourStr, minuteStr] = timeStr.split(':');
+        const hour = parseInt(hourStr, 10);
+        
+        if (isNaN(hour)) return timeStr;
+        
+        const ampm = hour >= 12 ? 'pm' : 'am';
+        const hour12 = hour % 12 || 12; // Convert 0 to 12
+        
+        return `${hour12}:${minuteStr} ${ampm}`;
+      } catch (e) {
+        console.error('Error converting time:', e);
+        return timeStr;
+      }
+    };
+    
+    // Function to update all time elements in the calendar
+    const updateTimeDisplay = () => {
+      // Update time slot labels
+      const timeSlotLabels = document.querySelectorAll('.fc-timegrid-slot-label-cushion');
+      timeSlotLabels.forEach((el) => {
+        const timeText = el.textContent;
+        if (timeText) {
+          el.textContent = convertTo12Hour(timeText.trim());
+        }
+      });
+      
+      // Update event times
+      const eventTimes = document.querySelectorAll('.fc-event-time');
+      eventTimes.forEach((el) => {
+        const timeText = el.textContent;
+        if (timeText) {
+          // Handle ranges like "14:00 - 15:00"
+          if (timeText.includes('-')) {
+            const [start, end] = timeText.split('-').map(t => t.trim());
+            el.textContent = `${convertTo12Hour(start)} - ${convertTo12Hour(end)}`;
+          } else {
+            el.textContent = convertTo12Hour(timeText.trim());
+          }
+        }
+      });
+    };
+    
+    // Run once after initial render
+    updateTimeDisplay();
+    
+    // Set up a mutation observer to watch for changes in the calendar
+    const observer = new MutationObserver((mutations) => {
+      updateTimeDisplay();
+    });
+    
+    // Start observing the calendar container
+    const calendarEl = document.querySelector('.fc');
+    if (calendarEl) {
+      observer.observe(calendarEl, { 
+        childList: true, 
+        subtree: true,
+        characterData: true
+      });
+    }
+    
+    // Clean up
+    return () => {
+      observer.disconnect();
+    };
+  }, [events]); // Re-run when events change
+
+  // Get the color for a reservation status
   const getStatusColor = (status: string): string => {
     switch (status) {
-      case 'CONFIRMED':
-        return '#4caf50';
       case 'PENDING':
-        return '#ff9800';
+        return '#FFA726'; // Orange
+      case 'CONFIRMED':
+        return '#4CAF50'; // Green
       case 'CHECKED_IN':
-        return '#2196f3';
+        return '#2196F3'; // Blue
       case 'CHECKED_OUT':
-        return '#9e9e9e';
+        return '#9C27B0'; // Purple
+      case 'COMPLETED':
+        return '#3F51B5'; // Indigo
       case 'CANCELLED':
-        return '#f44336';
+        return '#F44336'; // Red
+      case 'NO_SHOW':
+        return '#795548'; // Brown
       default:
-        return '#9e9e9e';
+        return '#4c8bf5'; // Default blue
     }
   };
 
-  /**
-   * Handle date selection in the calendar
-   * Opens the reservation form with the selected date range
-   * @param selectInfo - Information about the selected date range
-   */
+  // Handle date selection in the calendar
   const handleDateSelect = (selectInfo: DateSelectArg) => {
-    // Create a default end time that's 1 hour after the start time
-    // This will be overridden by the service duration when a service is selected
-    const defaultEnd = new Date(selectInfo.end.getTime());
-    if (selectInfo.view.type !== 'dayGridMonth') {
-      // For week and day views, we have exact times
-      // For month view, we get full days, so we'll add 1 hour as default
-      if (selectInfo.start.getTime() === selectInfo.end.getTime()) {
-        defaultEnd.setHours(defaultEnd.getHours() + 1);
-      }
+    console.log('Calendar: Date selected:', selectInfo);
+    
+    // Create a default end time (1 hour after start)
+    const startDate = new Date(selectInfo.start);
+    const endDate = new Date(selectInfo.end);
+    
+    // If this is a time slot selection (not all-day), use the exact times
+    if (!selectInfo.allDay) {
+      setSelectedDate({
+        start: startDate,
+        end: endDate
+      });
+    } else {
+      // For all-day or month view selections, set default times (9am to 10am)
+      startDate.setHours(9, 0, 0);
+      endDate.setHours(10, 0, 0);
+      setSelectedDate({
+        start: startDate,
+        end: endDate
+      });
     }
     
-    setSelectedDate({
-      start: selectInfo.start,
-      end: defaultEnd
-    });
+    setSelectedEvent(null);
     setIsFormOpen(true);
   };
 
-  /**
-   * Handle clicking on an existing event
-   * Opens the reservation form with the event's data
-   * @param clickInfo - Information about the clicked event
-   */
+  // Handle clicking on an existing event
   const handleEventClick = (clickInfo: EventClickArg) => {
-    const reservation = clickInfo.event.extendedProps.reservation;
+    console.log('Calendar: Event clicked:', clickInfo);
     
-    // Wait a moment before opening the form to ensure all data is loaded
-    setTimeout(() => {
-      // Create a clean copy with only the necessary fields from the original reservation
-      // We need to follow the exact Reservation interface
-      const formattedReservation: Reservation = {
-        id: reservation.id || '',
-        customerId: reservation.customerId || (reservation.customer?.id || ''),
-        petId: reservation.petId || (reservation.pet?.id || ''),
-        serviceId: reservation.serviceId || (reservation.service?.id || ''),
-        startDate: reservation.startDate || '',
-        endDate: reservation.endDate || '',
-        status: (reservation.status as any) || 'PENDING',
-        notes: reservation.notes || '',
-        createdAt: reservation.createdAt || new Date().toISOString(),
-        // Include these optional fields if they exist
-        customer: reservation.customer,
-        pet: reservation.pet,
-        service: reservation.service,
-        resource: reservation.resource,
-        staffNotes: reservation.staffNotes || ''
-      };
+    // Get the reservation from the event's extendedProps
+    const reservation = clickInfo.event.extendedProps?.reservation;
+    
+    if (reservation) {
+      console.log('Calendar: Found reservation in event:', reservation);
       
-      // Add any custom properties needed by the form but not in the interface
-      const formData = {
-        ...formattedReservation,
-        // Make sure we pass the resource ID and suite type for proper kennel display
-        resourceId: reservation.resourceId || reservation.resource?.id || '',
-        suiteType: reservation.suiteType || reservation.resource?.type || reservation.resource?.attributes?.suiteType || ''
-      };
-      
-      console.log('Calendar: Formatted reservation for form:', formData);
-      setSelectedEvent(formData as any);
-      setIsFormOpen(true);
-    }, 100);
+      // Make sure we have complete reservation data
+      if (reservation.id) {
+        console.log('Calendar: Setting selected event with ID:', reservation.id);
+        setSelectedEvent(reservation);
+        setSelectedDate(null);
+        setIsFormOpen(true);
+      } else {
+        console.warn('Calendar: Clicked event has no reservation ID');
+      }
+    } else {
+      console.warn('Calendar: Clicked event has no reservation data');
+    }
   };
 
-  /**
-   * Handle form submission for creating or updating a reservation
-   * @param formData - The form data for the reservation
-   */
+  // Handle form submission for creating or updating a reservation
   const handleFormSubmit = async (formData: any) => {
     try {
       console.log('Calendar: Starting form submission with data:', formData);
@@ -279,22 +343,36 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
           slotMaxTime="20:00:00"
           eventColor="#4c8bf5"
           eventTextColor="#ffffff"
-          slotLabelFormat={{
-            hour: 'numeric',
-            minute: '2-digit',
-            meridiem: 'short'
-          }}
+          timeZone="local"
+          locale="en-US"
+          
+          // 12-hour time format settings using simple string format
+          eventTimeFormat="h:mm a"
+          slotLabelFormat="h:mm a"
+          
           buttonText={{
             today: 'Today',
             month: 'Month',
             week: 'Week',
             day: 'Day'
           }}
+          
           views={{
             timeGrid: {
-              nowIndicator: true
+              nowIndicator: true,
+              // 12-hour time format for timeGrid view
+              slotLabelFormat: "h:mm a"
+            },
+            timeGridDay: {
+              // 12-hour time format for day view
+              slotLabelFormat: "h:mm a"
+            },
+            timeGridWeek: {
+              // 12-hour time format for week view
+              slotLabelFormat: "h:mm a"
             }
           }}
+          
           dayHeaderFormat={{
             weekday: 'short',
             month: 'numeric',

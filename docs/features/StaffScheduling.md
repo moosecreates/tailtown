@@ -85,7 +85,7 @@ The Employee Scheduling system provides a dedicated interface for creating and m
 #### Bulk Schedule Creation
 - Select multiple staff members at once
 - Set a date range for the schedules
-- Specify common start and end times
+- Specify common start and end times using 12-hour format (AM/PM) time pickers
 - Create multiple schedule entries with a single action
 - Great for setting up recurring shifts or standard schedules
 
@@ -112,7 +112,7 @@ Each schedule entry follows a status workflow:
 - `StaffAvailabilityForm`: Manages the creation, editing, and deletion of availability records
 - `StaffTimeOffForm`: Manages the creation, editing, and deletion of time off requests
 - `StaffScheduleForm`: Manages the creation and editing of staff schedule entries
-- `StaffScheduleCalendar`: Displays staff schedules in a calendar view
+- `StaffScheduleCalendar`: Displays staff schedules in a calendar view with 12-hour time format (AM/PM)
 
 ### API Endpoints
 
@@ -171,6 +171,8 @@ Schedule-related endpoints are registered under the `/api/schedules` prefix in t
 - The schedule endpoints use a separate route file (`schedule.routes.ts`) to avoid middleware conflicts with staff routes
 - Date handling in the backend converts string dates to DateTime objects for Prisma compatibility
 - The frontend uses the `/api/schedules` prefix for all schedule-related API calls
+- Time display consistently uses 12-hour format (AM/PM) throughout the UI while storing times in 24-hour format (HH:MM) in the database
+- TimePicker components are used for all time inputs to ensure consistent user experience
 
 ## Best Practices
 1. **Regular Updates**: Keep staff availability up to date to ensure accurate scheduling

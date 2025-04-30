@@ -15,9 +15,10 @@ import {
   TextField,
   Alert
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers';
+import { parse } from 'date-fns';
 import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { SelectChangeEvent } from '@mui/material';
@@ -108,6 +109,20 @@ const Scheduling: React.FC = () => {
 
   const handleBulkStaffSelection = (event: SelectChangeEvent<string[]>) => {
     setBulkScheduleData(prev => ({ ...prev, selectedStaff: event.target.value as unknown as string[] }));
+  };
+
+  // Parse time string (HH:MM) to Date object
+  const parseTimeString = (timeString: string): Date => {
+    return parse(timeString, 'HH:mm', new Date());
+  };
+  
+  // Handle time picker changes
+  const handleTimeChange = (field: string, time: Date | null): void => {
+    if (time) {
+      // Format time to 24-hour format for storage
+      const formattedTime = format(time, 'HH:mm');
+      setBulkScheduleData(prev => ({ ...prev, [field]: formattedTime }));
+    }
   };
 
   const handleCreateBulkSchedules = async () => {
@@ -282,22 +297,30 @@ const Scheduling: React.FC = () => {
                   </Grid>
                   
                   <Grid item xs={12} md={3}>
-                    <TextField
-                      fullWidth
-                      label="Start Time (HH:MM)"
-                      value={bulkScheduleData.startTime}
-                      onChange={(e) => handleBulkScheduleChange('startTime', e.target.value)}
-                      placeholder="09:00"
+                    <TimePicker
+                      label="Start Time"
+                      value={parseTimeString(bulkScheduleData.startTime)}
+                      onChange={(time) => handleTimeChange('startTime', time)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          placeholder: '9:00 AM'
+                        }
+                      }}
                     />
                   </Grid>
                   
                   <Grid item xs={12} md={3}>
-                    <TextField
-                      fullWidth
-                      label="End Time (HH:MM)"
-                      value={bulkScheduleData.endTime}
-                      onChange={(e) => handleBulkScheduleChange('endTime', e.target.value)}
-                      placeholder="17:00"
+                    <TimePicker
+                      label="End Time"
+                      value={parseTimeString(bulkScheduleData.endTime)}
+                      onChange={(time) => handleTimeChange('endTime', time)}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          placeholder: '5:00 PM'
+                        }
+                      }}
                     />
                   </Grid>
                   
