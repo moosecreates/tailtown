@@ -123,10 +123,23 @@ const CustomerDetails: React.FC = () => {
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    const activeElement = document.activeElement;
+    const activeElementId = activeElement ? activeElement.id : null;
+    
     setCustomer(prev => ({
       ...prev,
       [name]: value
     }));
+    
+    // Use setTimeout to ensure focus is restored after the state update and re-render
+    setTimeout(() => {
+      if (activeElementId) {
+        const elementToFocus = document.getElementById(activeElementId);
+        if (elementToFocus) {
+          (elementToFocus as HTMLElement).focus();
+        }
+      }
+    }, 0);
   };
   
   // Handle customer save
@@ -137,13 +150,25 @@ const CustomerDetails: React.FC = () => {
       setLoading(true);
       
       if (isNewCustomer) {
-        await customerService.createCustomer(customer);
+        // Create the customer
+        const newCustomer = await customerService.createCustomer(customer);
         setSnackbar({
           open: true,
           message: 'Customer created successfully',
           severity: 'success'
         });
-        navigate('/customers');
+        
+        // Check for redirect parameter in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectPath = urlParams.get('redirect');
+        
+        if (redirectPath) {
+          // If there's a redirect parameter, navigate there
+          navigate(redirectPath);
+        } else {
+          // Otherwise, go back to customers list
+          navigate('/customers');
+        }
       } else {
         await customerService.updateCustomer(id || '', customer);
         setSnackbar({
@@ -189,6 +214,7 @@ const CustomerDetails: React.FC = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
+            id="customer-firstName"
             label="First Name"
             name="firstName"
             value={customer.firstName}
@@ -200,6 +226,7 @@ const CustomerDetails: React.FC = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
+            id="customer-lastName"
             label="Last Name"
             name="lastName"
             value={customer.lastName}
@@ -211,6 +238,7 @@ const CustomerDetails: React.FC = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
+            id="customer-email"
             label="Email"
             name="email"
             type="email"
@@ -223,6 +251,7 @@ const CustomerDetails: React.FC = () => {
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
+            id="customer-phone"
             label="Phone"
             name="phone"
             value={customer.phone}
@@ -234,6 +263,7 @@ const CustomerDetails: React.FC = () => {
         <Grid item xs={12}>
           <TextField
             fullWidth
+            id="customer-address"
             label="Address"
             name="address"
             value={customer.address}
@@ -244,6 +274,7 @@ const CustomerDetails: React.FC = () => {
         <Grid item xs={12} md={4}>
           <TextField
             fullWidth
+            id="customer-city"
             label="City"
             name="city"
             value={customer.city}
@@ -254,6 +285,7 @@ const CustomerDetails: React.FC = () => {
         <Grid item xs={12} md={4}>
           <TextField
             fullWidth
+            id="customer-state"
             label="State"
             name="state"
             value={customer.state}
@@ -264,6 +296,7 @@ const CustomerDetails: React.FC = () => {
         <Grid item xs={12} md={4}>
           <TextField
             fullWidth
+            id="customer-zipCode"
             label="Zip Code"
             name="zipCode"
             value={customer.zipCode}

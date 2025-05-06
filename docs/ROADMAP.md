@@ -47,7 +47,7 @@ This roadmap outlines the planned features and improvements for the Tailtown app
 - 🔲 Integration with accounting software
 - 🔲 Staff performance metrics
 - 🔲 Multi-location support
-- 🔲 Sales add-ons and upselling features
+- ✅ Sales add-ons and upselling features
 
 ## Phase 4: Advanced Features
 - 🔲 Pet health monitoring and alerts
@@ -110,4 +110,28 @@ Features will be prioritized based on:
 4. Dependencies
 5. Resource availability
 
-This roadmap is a living document and will be updated as business needs evolve and as we gather more user feedback.
+ Batch operations for reservations (e.g., check-in multiple pets at once)
+- 🔲 Customer portal for self-service booking / - 🔲 Embeddable widgets for customer websites
+- 🔲 Email  and text notifications for reservation status changes
+- 🔲 Mobile-responsive design improvements
+**🔲 Priority alerts for staff
+- 🔲 Permission levels and restrictions for users- 🔲 Integration with merchant services
+- 🔲 Inventory management for pet supplies
+- 🔲 Reporting and analytics dashboard
+- 🔲 Comprehensive reporting features- 🔲 Automated reminders for upcoming appointments
+- 🔲 Comprehensive loyalty rewards system
+  - Points accumulation based on services
+  - Tiered membership levels
+  - Reward redemption options
+  - Automated loyalty communications
+
+  bugs:
+  ✅ New Customer under New Order doesn't accept text (Fixed May 6, 2025)
+Cash amount paid after discount can have strange partial penny issues
+New orders are displaying all kennels and not taking availability into account
+Total price under reservation details is not reflecting the add ons and discounts.
+Staff scheduling should be reduced to rounded hours and only display minutes when needed
+Staff schedule should have a way to show a starting assignment location
+Saving in staff scheduling creates a duplicate shift rather than updating
+Add-on sales are not happening on the boarding and day care calendar when making a reservation
+Add feeding schedule to kennel cards with weekly dates automatically added

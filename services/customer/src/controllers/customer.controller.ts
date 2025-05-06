@@ -142,28 +142,50 @@ export const createCustomer = async (
 ) => {
   try {
     const customerData = req.body;
+    console.log('Creating customer with data:', customerData);
     
     // Create customer with transaction to ensure all related records are created
     const newCustomer = await prisma.$transaction(async (prismaClient: any) => {
+      // Extract only the fields that belong to the Customer model
+      const {
+        emergencyContacts,
+        pets, // Extract pets to handle separately
+        ...customerFields
+      } = customerData;
+      
+      // Remove any fields that might cause Prisma validation errors
+      const sanitizedCustomerData = { ...customerFields };
+      
+      // Remove empty arrays that might cause Prisma validation errors
+      if (sanitizedCustomerData.pets && Array.isArray(sanitizedCustomerData.pets) && sanitizedCustomerData.pets.length === 0) {
+        delete sanitizedCustomerData.pets;
+      }
+      
+      // Create the customer with default notification preferences
       const customer = await prismaClient.customer.create({
         data: {
-          ...customerData,
+          ...sanitizedCustomerData,
+          // Set default preferred contact method if not provided
+          preferredContact: sanitizedCustomerData.preferredContact || ContactMethod.EMAIL,
+          // Create default notification preferences
           notifications: {
             create: {
               emailNotifications: true,
-              smsNotifications: customerData.preferredContact === ContactMethod.SMS || 
-                              customerData.preferredContact === ContactMethod.BOTH,
+              smsNotifications: false, // Default to false, can be updated later
               appointmentReminders: true,
               checkinNotifications: true
             }
           }
+        },
+        include: {
+          notifications: true
         }
       });
       
       // Create emergency contacts if provided
-      if (customerData.emergencyContacts && customerData.emergencyContacts.length > 0) {
+      if (emergencyContacts && emergencyContacts.length > 0) {
         await Promise.all(
-          customerData.emergencyContacts.map((contact: any) => 
+          emergencyContacts.map((contact: any) => 
             prismaClient.emergencyContact.create({
               data: {
                 ...contact,
@@ -177,11 +199,13 @@ export const createCustomer = async (
       return customer;
     });
     
+    console.log('Customer created successfully:', newCustomer.id);
     res.status(201).json({
       status: 'success',
       data: newCustomer,
     });
   } catch (error) {
+    console.error('Error creating customer:', error);
     next(error);
   }
 };
