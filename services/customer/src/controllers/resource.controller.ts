@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../config/prisma';
+import { PrismaClient, ResourceType, ContactMethod } from '@prisma/client';
 import AppError from '../utils/appError';
+
+const prisma = new PrismaClient();
 
 // Validate resource type
 const validateResourceType = (type: string): string => {
@@ -361,20 +363,60 @@ export const getAvailableResourcesByDate = async (
       return next(new AppError('Invalid date format. Please use YYYY-MM-DD format', 400));
     }
     
+    console.log(`Getting available resources for dates: ${parsedStartDate.toISOString()} to ${parsedEndDate.toISOString()}`);
+    console.log(`Service ID: ${serviceId || 'Not provided'}`);
+    
+    // First, check if we need to filter by service type
+    let requiredResourceTypes: ResourceType[] = [];
+    
+    if (serviceId) {
+      // Get the service to determine what resource types are needed
+      const service = await prisma.service.findUnique({
+        where: { id: serviceId as string }
+      });
+      
+      if (!service) {
+        return next(new AppError('Service not found', 404));
+      }
+      
+      console.log(`Service category: ${service.serviceCategory}`);
+      
+      // Determine required resource types based on service category
+      if (service.serviceCategory === 'BOARDING' || service.serviceCategory === 'DAYCARE') {
+        // For boarding and daycare, we need kennel suites
+        requiredResourceTypes = ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'];
+      } else if (service.serviceCategory === 'GROOMING') {
+        // For grooming, we need grooming stations
+        requiredResourceTypes = ['GROOMING_TABLE', 'BATHING_STATION', 'DRYING_STATION'];
+      } else if (service.serviceCategory === 'TRAINING') {
+        // For training, we need training areas
+        requiredResourceTypes = ['TRAINING_ROOM', 'AGILITY_COURSE'];
+      } else {
+        // Default to all resource types if category is unknown
+        requiredResourceTypes = [
+          'STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE',
+          'GROOMING_TABLE', 'BATHING_STATION', 'DRYING_STATION',
+          'TRAINING_ROOM', 'AGILITY_COURSE'
+        ];
+      }
+      
+      console.log(`Required resource types: ${requiredResourceTypes.join(', ')}`);
+    }
+    
     // Base query to get resources
-    let resources = await prisma.resource.findMany({
+    const resources = await prisma.resource.findMany({
       where: {
-        // If serviceId provided, filter resources that can be used for that service
-        ...(serviceId ? {
-          // You would need to implement this relationship in your schema
-          // This is just an example assuming a link between resources and services
-          OR: [
-            { type: 'STANDARD_SUITE' },
-            { type: 'STANDARD_PLUS_SUITE' },
-            { type: 'VIP_SUITE' }
-          ]
+        // Filter by resource type if we have determined required types
+        ...(requiredResourceTypes.length > 0 ? {
+          type: {
+            in: requiredResourceTypes
+          }
         } : {}),
-        isActive: true
+        isActive: true,
+        // Exclude resources in maintenance
+        maintenanceStatus: {
+          not: 'IN_MAINTENANCE'
+        }
       },
       include: {
         // Include reservations that overlap with the date range
@@ -385,13 +427,13 @@ export const getAvailableResourcesByDate = async (
                 // Reservations that start during the requested period
                 startDate: {
                   gte: parsedStartDate,
-                  lte: parsedEndDate
+                  lt: parsedEndDate
                 }
               },
               {
                 // Reservations that end during the requested period
                 endDate: {
-                  gte: parsedStartDate,
+                  gt: parsedStartDate,
                   lte: parsedEndDate
                 }
               },
@@ -420,10 +462,15 @@ export const getAvailableResourcesByDate = async (
       }
     });
     
+    console.log(`Found ${resources.length} total resources of required types`);
+    
     // Filter out resources that have reservations during the requested time
-    const availableResources = resources.filter(resource => resource.reservations.length === 0 && 
-      // Also filter out resources in maintenance if applicable
-      resource.maintenanceStatus !== 'IN_MAINTENANCE');
+    const availableResources = resources.filter((resource: any) => {
+      // Check if the resource has any reservations in the specified time period
+      return resource.reservations.length === 0;
+    });
+    
+    console.log(`Found ${availableResources.length} available resources after filtering out reserved ones`);
     
     res.status(200).json({
       status: 'success',

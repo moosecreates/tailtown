@@ -128,7 +128,7 @@ Features will be prioritized based on:
   bugs:
   ✅ New Customer under New Order doesn't accept text (Fixed May 6, 2025)
 Cash amount paid after discount can have strange partial penny issues
-New orders are displaying all kennels and not taking availability into account
+✅ New orders are displaying all kennels and not taking availability into account (Fixed May 6, 2025)
 Total price under reservation details is not reflecting the add ons and discounts.
 Staff scheduling should be reduced to rounded hours and only display minutes when needed
 Staff schedule should have a way to show a starting assignment location
