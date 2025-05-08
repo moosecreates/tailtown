@@ -196,17 +196,36 @@ const InvoiceReview: React.FC<InvoiceReviewProps> = ({
                 </Typography>
               </Box>
               
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', maxWidth: 300 }}>
-                <Typography variant="subtitle2">Discount:</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', maxWidth: 300, mb: 1 }}>
+                <Typography variant="subtitle2" color={discount > 0 ? "error" : "text.primary"} fontWeight={discount > 0 ? "bold" : "normal"}>
+                  Discount:
+                </Typography>
                 <TextField
                   size="small"
                   type="number"
-                  InputProps={{ startAdornment: '$' }}
+                  InputProps={{ 
+                    startAdornment: '$',
+                    sx: { color: discount > 0 ? "error.main" : "inherit" }
+                  }}
                   value={discount}
                   onChange={handleDiscountChange}
-                  sx={{ width: 100, ml: 'auto' }}
+                  sx={{ 
+                    width: 100, 
+                    ml: 'auto',
+                    '& .MuiOutlinedInput-root': {
+                      borderColor: discount > 0 ? "error.main" : "inherit",
+                    }
+                  }}
                 />
               </Box>
+              
+              {discount > 0 && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', maxWidth: 300, mb: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    Discounted subtotal: {formatCurrency(subtotal - discount)}
+                  </Typography>
+                </Box>
+              )}
               
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', maxWidth: 300, mt: 1 }}>
                 <Typography variant="h6">Total:</Typography>

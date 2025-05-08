@@ -47,29 +47,30 @@ interface InvoiceDetailsDialogProps {
 }
 
 const InvoiceDetailsDialog: React.FC<InvoiceDetailsDialogProps> = ({ open, onClose, invoice }) => {
-  if (!invoice) return null;
-  
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   
   // Fetch reservation details when the invoice is opened
   useEffect(() => {
+    // Reset state when invoice changes
+    setReservation(null);
+    setError(null);
+    
     if (invoice && invoice.reservationId && open) {
       const fetchReservation = async () => {
         try {
           setLoading(true);
-          setError(null);
           console.log('Fetching reservation details for ID:', invoice.reservationId);
-          // Only fetch if reservationId is defined
-          if (invoice.reservationId) {
-            const reservationData = await reservationService.getReservationById(invoice.reservationId);
-            console.log('Reservation data:', reservationData);
-            console.log('Reservation data (stringified):', JSON.stringify(reservationData, null, 2));
-            console.log('Service info:', reservationData.service);
-            console.log('Service ID:', reservationData.serviceId);
-            setReservation(reservationData);
-          }
+          // We already checked that reservationId exists in the if condition above,
+          // but we need to reassure TypeScript that it's not undefined
+          const reservationId = invoice.reservationId as string;
+          const reservationData = await reservationService.getReservationById(reservationId);
+          console.log('Reservation data:', reservationData);
+          console.log('Reservation data (stringified):', JSON.stringify(reservationData, null, 2));
+          console.log('Service info:', reservationData.service);
+          console.log('Service ID:', reservationData.serviceId);
+          setReservation(reservationData);
         } catch (err: any) {
           console.error('Error fetching reservation:', err);
           setError('Failed to load reservation details');
@@ -79,8 +80,13 @@ const InvoiceDetailsDialog: React.FC<InvoiceDetailsDialogProps> = ({ open, onClo
       };
       
       fetchReservation();
+    } else {
+      setLoading(false);
     }
-  }, [invoice, invoice?.reservationId, open]);
+  }, [invoice, open]);
+  
+  // Early return after hooks are called
+  if (!invoice) return null;
   
   // Debug data
   console.log('Invoice data:', invoice);
@@ -181,15 +187,21 @@ const InvoiceDetailsDialog: React.FC<InvoiceDetailsDialogProps> = ({ open, onClo
       </TableRow>
     );
     
-    // Discount row (if applicable)
-    if (invoice.discount && invoice.discount > 0) {
-      rows.push(
-        <TableRow key="discount">
-          <TableCell colSpan={3} align="right">Discount</TableCell>
-          <TableCell align="right">-{formatCurrency(invoice.discount)}</TableCell>
-        </TableRow>
-      );
-    }
+    // Discount row (always show, but conditionally format)
+    rows.push(
+      <TableRow key="discount">
+        <TableCell colSpan={3} align="right">
+          <Typography variant="subtitle2" color={invoice.discount && invoice.discount > 0 ? "error" : "text.secondary"}>
+            Discount
+          </Typography>
+        </TableCell>
+        <TableCell align="right">
+          <Typography color={invoice.discount && invoice.discount > 0 ? "error" : "text.secondary"}>
+            {invoice.discount && invoice.discount > 0 ? `-${formatCurrency(invoice.discount)}` : formatCurrency(0)}
+          </Typography>
+        </TableCell>
+      </TableRow>
+    );
     
     // Tax row
     rows.push(

@@ -23,6 +23,7 @@ import { Pet } from '../../services/petService';
 import { reservationService } from '../../services/reservationService';
 import { invoiceService } from '../../services/invoiceService';
 import { paymentService } from '../../services/paymentService';
+import priceRuleService from '../../services/priceRuleService';
 import { useNavigate } from 'react-router-dom';
 
 // Define the steps for the ordering process
@@ -180,30 +181,76 @@ const OrderEntry: React.FC = () => {
   };
 
   // Handle reservation creation
-  const handleReservationUpdate = (reservationData: any) => {
-    // Calculate initial invoice amounts based on the service price
-    const servicePrice = reservationData.price || 0;
-    const subtotal = servicePrice;
-    const taxRate = 0.0744; // 7.44% tax rate
-    const taxAmount = subtotal * taxRate;
-    const total = subtotal + taxAmount;
-    
-    setOrderData({
-      ...orderData,
-      reservation: reservationData,
-      invoice: {
-        ...orderData.invoice,
-        subtotal: subtotal,
-        taxRate: taxRate,
-        taxAmount: taxAmount,
-        total: total,
-      },
-      payment: {
-        ...orderData.payment,
-        amount: (reservationData.price || 0) * (1 + orderData.invoice.taxRate),
-      },
-    });
-    handleNext();
+  const handleReservationUpdate = async (reservationData: any) => {
+    try {
+      setLoading(true);
+      
+      // Calculate initial invoice amounts based on the service price
+      const servicePrice = reservationData.price || 0;
+      let subtotal = servicePrice;
+      const taxRate = 0.0744; // 7.44% tax rate
+      let discount = 0;
+      
+      // Check for applicable price rules if we have dates and service ID
+      if (reservationData.serviceId && reservationData.startDate && reservationData.endDate) {
+        try {
+          // Format the request for the price rule service
+          const priceRequest = {
+            serviceId: reservationData.serviceId,
+            startDate: new Date(reservationData.startDate).toISOString(),
+            endDate: new Date(reservationData.endDate).toISOString(),
+            petCount: 1 // Default to 1 pet
+          };
+          
+          console.log('Checking for price rules with:', priceRequest);
+          const priceResponse = await priceRuleService.calculatePrice(priceRequest);
+          
+          if (priceResponse && priceResponse.data) {
+            console.log('Price rule calculation response:', priceResponse.data);
+            
+            // If there are applied rules, calculate the discount
+            if (priceResponse.data.appliedRules && priceResponse.data.appliedRules.length > 0) {
+              // Use the final price from the price rule calculation
+              const originalPrice = priceResponse.data.basePrice;
+              const discountedPrice = priceResponse.data.finalPrice;
+              discount = originalPrice - discountedPrice;
+              
+              console.log(`Applied price rules resulted in a discount of ${discount}`);
+            }
+          }
+        } catch (err) {
+          console.error('Error calculating price rules:', err);
+          // Continue without price rules if there's an error
+        }
+      }
+      
+      const taxAmount = (subtotal - discount) * taxRate;
+      const total = subtotal - discount + taxAmount;
+      
+      setOrderData({
+        ...orderData,
+        reservation: reservationData,
+        invoice: {
+          ...orderData.invoice,
+          subtotal: subtotal,
+          taxRate: taxRate,
+          taxAmount: taxAmount,
+          discount: discount,
+          total: total,
+        },
+        payment: {
+          ...orderData.payment,
+          amount: total,
+        },
+      });
+      
+      handleNext();
+    } catch (error) {
+      console.error('Error in handleReservationUpdate:', error);
+      setError('Failed to process reservation details');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Handle add-on selection
