@@ -40,7 +40,8 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
   Schedule as ScheduleIcon,
-  ShoppingCart as OrdersIcon
+  ShoppingCart as OrdersIcon,
+  Print as PrintIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -103,7 +104,15 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     { path: '/pets', label: 'Pets', icon: PetsIcon },
     { path: '/services', label: 'Services', icon: ServicesIcon },
     { path: '/resources', label: 'Resources', icon: ResourcesIcon },
-    { path: '/suites', label: 'Kennels', icon: SuitesIcon },
+    { 
+      path: '/suites', 
+      label: 'Kennels', 
+      icon: SuitesIcon,
+      children: [
+        { path: '/suites', label: 'Kennel Board', icon: SuitesIcon },
+        { path: '/kennels/print-cards', label: 'Print Kennel Cards', icon: PrintIcon },
+      ] 
+    },
     { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
     { path: '/orders/new', label: 'New Order', icon: OrdersIcon },
     { path: '/staff/scheduling', label: 'Staff Scheduling', icon: ScheduleIcon },

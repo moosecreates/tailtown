@@ -217,9 +217,10 @@ const OrderEntry: React.FC = () => {
     
     const subtotal = servicePrice + addOnTotal;
     const taxAmount = subtotal * orderData.invoice.taxRate;
-    const total = subtotal + taxAmount;
+    const total = subtotal + taxAmount - (orderData.invoice.discount || 0);
     
     console.log('Calculated subtotal:', subtotal);
+    console.log('Add-ons included:', addOns);
     console.log('Calculated total:', total);
     
     setOrderData({
@@ -299,11 +300,23 @@ const OrderEntry: React.FC = () => {
       setCreatedReservationId(reservation.id);
       
       // Step 2: Create the invoice
+      // Calculate the base service price (total subtotal minus add-ons)
+      const addOnTotal = orderData.addOns.reduce((sum, addon) => sum + (addon.price * addon.quantity), 0);
+      const baseServicePrice = orderData.invoice.subtotal - addOnTotal;
+      
+      // Log values for debugging
+      console.log('Creating invoice with data:');
+      console.log('Base service price:', baseServicePrice);
+      console.log('Add-on total:', addOnTotal);
+      console.log('Subtotal:', orderData.invoice.subtotal);
+      console.log('Tax amount:', orderData.invoice.taxAmount);
+      console.log('Total:', orderData.invoice.total);
+      
       const invoiceData = {
         customerId: orderData.customer.id,
         reservationId: reservation.id,
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Due in 7 days
-        status: 'DRAFT' as 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED' | 'REFUNDED', // Add required status field
+        status: 'DRAFT' as 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED' | 'REFUNDED',
         subtotal: orderData.invoice.subtotal,
         taxRate: orderData.invoice.taxRate,
         taxAmount: orderData.invoice.taxAmount,
@@ -315,8 +328,8 @@ const OrderEntry: React.FC = () => {
           {
             description: "Reservation Service",
             quantity: 1,
-            unitPrice: orderData.invoice.subtotal - orderData.addOns.reduce((sum, addon) => sum + (addon.price * addon.quantity), 0),
-            amount: orderData.invoice.subtotal - orderData.addOns.reduce((sum, addon) => sum + (addon.price * addon.quantity), 0),
+            unitPrice: baseServicePrice,
+            amount: baseServicePrice,
             taxable: true
           },
           // Add each add-on as a line item

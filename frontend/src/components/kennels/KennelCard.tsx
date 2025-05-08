@@ -1,0 +1,242 @@
+import React from 'react';
+import { 
+  Box, 
+  Card, 
+  CardContent, 
+  Typography, 
+  Divider, 
+  Paper,
+  Grid,
+  styled
+} from '@mui/material';
+import PrintablePetIcons from './PrintablePetIcons';
+import { format } from 'date-fns';
+
+// Styled components for the kennel card
+const PrintableCard = styled(Card)(({ theme }) => ({
+  width: '8.5in', // Full letter size width
+  height: '11in', // Full letter size height
+  padding: theme.spacing(3),
+  margin: '0 auto',
+  border: '2px solid #000',
+  boxShadow: 'none',
+  pageBreakInside: 'avoid',
+  pageBreakAfter: 'always',
+  breakAfter: 'page',
+  breakInside: 'avoid',
+  '@media print': {
+    boxShadow: 'none',
+    border: '2px solid #000',
+    margin: 0,
+    padding: theme.spacing(3),
+    height: '11in',
+    width: '8.5in',
+    position: 'relative',
+    pageBreakAfter: 'always',
+    pageBreakBefore: 'avoid',
+    breakAfter: 'page',
+    breakInside: 'avoid',
+    overflow: 'visible'
+  }
+}));
+
+const CardHeader = styled(Box)(({ theme }) => ({
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
+  padding: theme.spacing(1.5),
+  borderRadius: theme.shape.borderRadius,
+  marginBottom: theme.spacing(1.5),
+  textAlign: 'center',
+}));
+
+const SectionTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: 'bold',
+  marginBottom: theme.spacing(0.5),
+  color: theme.palette.primary.main,
+}));
+
+const AlertBox = styled(Paper)(({ theme }) => ({
+  backgroundColor: theme.palette.error.light,
+  color: theme.palette.error.contrastText,
+  padding: theme.spacing(1),
+  marginTop: theme.spacing(1),
+  borderRadius: theme.shape.borderRadius,
+}));
+
+const NotesBox = styled(Paper)(({ theme }) => ({
+  backgroundColor: theme.palette.grey[100],
+  padding: theme.spacing(1),
+  marginTop: theme.spacing(1),
+  borderRadius: theme.shape.borderRadius,
+  minHeight: '60px',
+}));
+
+interface KennelCardProps {
+  kennelNumber: number;
+  suiteType: string;
+  petName: string;
+  petBreed?: string;
+  petWeight?: number;
+  petIconIds: string[];
+  petType?: 'DOG' | 'CAT' | 'OTHER';
+  customNotes?: { [iconId: string]: string };
+  petNotes?: string;
+  ownerName: string;
+  ownerPhone?: string;
+  startDate: Date;
+  endDate: Date;
+  alerts?: string[];
+}
+
+/**
+ * Printable kennel card component to be hung on each kennel
+ * Displays pet information, icons, alerts, and reservation details
+ */
+const KennelCard: React.FC<KennelCardProps> = ({
+  kennelNumber,
+  suiteType,
+  petName,
+  petBreed,
+  petWeight,
+  petIconIds,
+  petType = 'DOG',
+  customNotes = {},
+  petNotes,
+  ownerName,
+  ownerPhone,
+  startDate,
+  endDate,
+  alerts = [],
+}) => {
+  // Format suite type for display
+  const formattedSuiteType = suiteType
+    .replace('_', ' ')
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+  // Format dates for display
+  const formattedStartDate = format(startDate, 'MMM d, yyyy');
+  const formattedStartTime = format(startDate, 'h:mm a');
+  const formattedEndDate = format(endDate, 'MMM d, yyyy');
+  const formattedEndTime = format(endDate, 'h:mm a');
+  
+  // Always use today's date for the printed date
+  const today = new Date();
+
+  return (
+    <PrintableCard>
+      <CardHeader>
+        <Typography variant="h2" component="h1" sx={{ fontSize: '2.5rem', mb: 1 }}>
+          {petName}
+        </Typography>
+        <Typography variant="h4" component="h2">
+          Kennel #{kennelNumber} - {formattedSuiteType}
+        </Typography>
+      </CardHeader>
+
+      <CardContent sx={{ p: 0 }}>
+        <Grid container spacing={4} sx={{ mt: 2 }}>
+          {/* Left column */}
+          <Grid item xs={7}>
+            <SectionTitle variant="h5" sx={{ fontSize: '1.5rem', mb: 2 }}>Pet Information</SectionTitle>
+            <Box sx={{ pl: 2, mb: 4 }}>
+              {petBreed && (
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  <strong>Breed:</strong> {petBreed}
+                </Typography>
+              )}
+              {petWeight && (
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  <strong>Weight:</strong> {petWeight} lbs
+                </Typography>
+              )}
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                <strong>Owner:</strong> {ownerName}
+              </Typography>
+              {ownerPhone && (
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  <strong>Phone:</strong> {ownerPhone}
+                </Typography>
+              )}
+            </Box>
+
+            <Box sx={{ mt: 4, mb: 4 }}>
+              <SectionTitle variant="h5" sx={{ fontSize: '1.5rem', mb: 2 }}>Stay Information</SectionTitle>
+              <Box sx={{ pl: 2 }}>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  <strong>Check-In:</strong> {formattedStartDate} at {formattedStartTime}
+                </Typography>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  <strong>Check-Out:</strong> {formattedEndDate} at {formattedEndTime}
+                </Typography>
+              </Box>
+            </Box>
+
+            {petNotes && (
+              <Box sx={{ mt: 4 }}>
+                <SectionTitle variant="h5" sx={{ fontSize: '1.5rem', mb: 2 }}>Notes</SectionTitle>
+                <NotesBox sx={{ p: 2, minHeight: '120px' }}>
+                  <Typography variant="h6">{petNotes}</Typography>
+                </NotesBox>
+              </Box>
+            )}
+          </Grid>
+
+          {/* Right column */}
+          <Grid item xs={5}>
+            <SectionTitle variant="h5" sx={{ fontSize: '1.5rem', mb: 2 }}>Pet Characteristics</SectionTitle>
+            <Box 
+              sx={{ 
+                border: '1px solid #e0e0e0', 
+                p: 2, 
+                borderRadius: 1, 
+                backgroundColor: '#f9f9f9', 
+                mb: 4,
+                '@media print': {
+                  backgroundColor: '#f9f9f9 !important',
+                  printColorAdjust: 'exact',
+                  WebkitPrintColorAdjust: 'exact'
+                }
+              }}
+              className="pet-icons-wrapper"
+            >
+              <PrintablePetIcons 
+                iconIds={petIconIds} 
+                petType={petType}
+                size="large" 
+                showLabels={true} 
+                customNotes={customNotes}
+              />
+            </Box>
+
+            {alerts.length > 0 && (
+              <Box sx={{ mt: 4 }}>
+                <SectionTitle variant="h5" sx={{ fontSize: '1.5rem', mb: 2 }}>Alerts</SectionTitle>
+                {alerts.map((alert, index) => (
+                  <AlertBox key={index} sx={{ p: 2, mb: 2 }}>
+                    <Typography variant="h6">{alert}</Typography>
+                  </AlertBox>
+                ))}
+              </Box>
+            )}
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ my: 4 }} />
+        
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+          <Typography variant="body1" sx={{ fontStyle: 'italic' }}>
+            Printed: {format(today, 'MMM d, yyyy h:mm a')}
+          </Typography>
+          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            Tailtown Pet Care
+          </Typography>
+        </Box>
+      </CardContent>
+    </PrintableCard>
+  );
+};
+
+export default KennelCard;

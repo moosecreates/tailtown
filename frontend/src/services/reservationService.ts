@@ -13,6 +13,7 @@ export interface Reservation {
   notes?: string;
   staffNotes?: string;
   createdAt?: string; // Optional when creating a new reservation, will be set by the backend
+  discount?: number; // Discount amount applied to the reservation
   customer?: {
     id: string;
     firstName: string;
@@ -37,6 +38,19 @@ export interface Reservation {
     name: string;
     type: string;
   };
+  addOnServices?: Array<{
+    id: string;
+    reservationId: string;
+    addOnId: string;
+    price: number;
+    notes?: string;
+    addOn?: {
+      id: string;
+      name: string;
+      description?: string;
+      price: number;
+    };
+  }>;
 }
 
 export const reservationService = {

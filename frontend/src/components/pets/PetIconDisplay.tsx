@@ -18,7 +18,11 @@ const PetIconDisplay: React.FC<PetIconDisplayProps> = ({
   showLabels = false,
   customNotes = {}
 }) => {
+  // Log the icon IDs for debugging
+  console.log('PetIconDisplay received iconIds:', iconIds);
+  
   if (!iconIds || iconIds.length === 0) {
+    console.log('No icon IDs provided, returning null');
     return null;
   }
 
@@ -41,11 +45,17 @@ const PetIconDisplay: React.FC<PetIconDisplayProps> = ({
   const { fontSize, spacing } = sizeMap[size];
 
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: spacing }}>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: spacing }} className="pet-icons-container">
       {iconIds.map(iconId => {
+        console.log('Looking up icon by ID:', iconId);
         const icon = getIconById(iconId);
         
-        if (!icon) return null;
+        if (!icon) {
+          console.log('Icon not found for ID:', iconId);
+          return null;
+        }
+        
+        console.log('Found icon:', icon);
         
         const customNote = customNotes[iconId];
         const tooltipTitle = (
@@ -77,8 +87,9 @@ const PetIconDisplay: React.FC<PetIconDisplayProps> = ({
                 padding: '2px 4px',
                 backgroundColor: 'background.paper'
               }}
+              className="pet-icon-box"
             >
-              <span style={{ fontSize }}>{icon.icon}</span>
+              <span style={{ fontSize }} className="pet-icon-emoji">{icon.icon}</span>
               {showLabels && (
                 <Typography variant="caption" sx={{ ml: 0.5 }}>
                   {icon.label}

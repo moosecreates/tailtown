@@ -120,7 +120,20 @@ const ReservationDetails = () => {
   // Calculate total price
   const calculateTotal = () => {
     const basePrice = service?.price || 0;
-    return basePrice;
+    
+    // Calculate add-ons total
+    const addOnsTotal = reservation.addOnServices?.reduce((total: number, addOn: { price?: number }) => {
+      return total + (addOn.price || 0);
+    }, 0) || 0;
+    
+    // Apply any discounts if present
+    const discount = reservation.discount || 0;
+    
+    // Calculate the total
+    const subtotal = basePrice + addOnsTotal;
+    const total = subtotal - discount;
+    
+    return total;
   };
 
   // Helper function to get chip color based on status
@@ -236,11 +249,40 @@ const ReservationDetails = () => {
                 </Box>
               )}
               
-              {/* Add-ons feature to be implemented */}
-              
               <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Total Price</Typography>
-                <Typography variant="body1" fontWeight="bold">${calculateTotal()}</Typography>
+                <Typography variant="subtitle2">Pricing Details</Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="body2">Base Service:</Typography>
+                    <Typography variant="body2">${service?.price?.toFixed(2) || '0.00'}</Typography>
+                  </Box>
+                  
+                  {/* Display add-ons if any */}
+                  {reservation.addOnServices && reservation.addOnServices.length > 0 && (
+                    <>
+                      {reservation.addOnServices.map((addOn, index: number) => (
+                        <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography variant="body2">{addOn.addOn?.name || 'Add-on'}:</Typography>
+                          <Typography variant="body2">${addOn.price?.toFixed(2) || '0.00'}</Typography>
+                        </Box>
+                      ))}
+                    </>
+                  )}
+                  
+                  {/* Display discount if any */}
+                  {reservation.discount && reservation.discount > 0 && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2">Discount:</Typography>
+                      <Typography variant="body2" color="error">-${reservation.discount.toFixed(2)}</Typography>
+                    </Box>
+                  )}
+                  
+                  {/* Display total */}
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, pt: 1, borderTop: '1px solid #eee' }}>
+                    <Typography variant="body1" fontWeight="bold">Total:</Typography>
+                    <Typography variant="body1" fontWeight="bold">${calculateTotal().toFixed(2)}</Typography>
+                  </Box>
+                </Box>
               </Box>
             </Box>
             

@@ -37,6 +37,7 @@ import NotFound from './pages/NotFound';
 import PriceRuleRedirect from './components/redirects/PriceRuleRedirect';
 import Scheduling from './pages/staff/Scheduling';
 import OrderEntry from './pages/orders/OrderEntry';
+import PrintKennelCards from './pages/kennels/PrintKennelCards';
 
 // Custom event for route changes
 export const RouteChangeEvent = 'app:route-change';
@@ -90,6 +91,7 @@ const AppRoutes = () => {
         <Route path="/resources" element={isAuthenticated ? <Resources /> : <Navigate to="/login" />} />
         <Route path="/resources/:id" element={isAuthenticated ? <ResourceDetails /> : <Navigate to="/login" />} />
         <Route path="/suites" element={isAuthenticated ? <SuitesPage /> : <Navigate to="/login" />} />
+        <Route path="/kennels/print-cards" element={isAuthenticated ? <PrintKennelCards /> : <Navigate to="/login" />} />
         {/* Redirects for old price rules URLs */}
         <Route path="/price-rules" element={<Navigate to="/settings/price-rules" />} />
         <Route path="/price-rules/:id" element={<PriceRuleRedirect />} />

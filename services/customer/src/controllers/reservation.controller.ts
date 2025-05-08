@@ -140,6 +140,11 @@ export const getReservationById = async (
         pet: true,
         service: true,
         resource: true,
+        addOnServices: {
+          include: {
+            addOn: true
+          }
+        }
       },
     });
     
