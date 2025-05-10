@@ -93,7 +93,8 @@ const PaymentProcessing: React.FC<PaymentProcessingProps> = ({
   };
   
   // Calculate remaining amount to pay after applying store credit
-  const remainingAmount = Math.max(0, amount - storeCreditToUse);
+  // Round to nearest penny to avoid floating point issues
+  const remainingAmount = Math.max(0, Math.round((amount - storeCreditToUse) * 100) / 100);
   
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -138,7 +139,7 @@ const PaymentProcessing: React.FC<PaymentProcessingProps> = ({
       // Create paymentData object
       const paymentData: any = {
         invoiceId, // Include the invoiceId in payment data
-        amount: remainingAmount,
+        amount: Math.round(remainingAmount * 100) / 100, // Ensure amount is rounded to nearest penny
         method: paymentMethod,
         status: 'PAID',
         transactionId: `SIMULATED-${Date.now()}`,

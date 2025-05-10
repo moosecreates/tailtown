@@ -782,35 +782,128 @@ export const getTodayRevenue = async (
 ) => {
   try {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+
     const reservations = await prisma.reservation.findMany({
       where: {
         startDate: {
-          gte: today,
-          lt: tomorrow
+          gte: startOfDay,
+          lte: endOfDay,
         },
         status: {
-          notIn: ['PENDING', 'CANCELLED']
-        }
+          in: ['CONFIRMED', 'CHECKED_IN', 'COMPLETED'],
+        },
       },
+      include: {
+        service: true,
+      },
+    });
+
+    const revenue = reservations.reduce((acc, reservation) => {
+      return acc + (reservation.service?.price || 0);
+    }, 0);
+
+    res.status(200).json({
+      status: 'success',
+      revenue,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Add add-on services to a reservation
+export const addAddOnsToReservation = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    const { addOns } = req.body;
+    
+    console.log('Backend: Adding add-ons to reservation:', id);
+    console.log('Backend: Add-ons data:', addOns);
+    
+    // Validate input
+    if (!Array.isArray(addOns) || addOns.length === 0) {
+      return next(new AppError('Add-ons must be a non-empty array', 400));
+    }
+    
+    // Check if the reservation exists
+    const reservation = await prisma.reservation.findUnique({
+      where: { id },
       include: {
         service: true
       }
     });
     
-    const revenue = reservations.reduce((total, reservation) => {
-      return total + (reservation.service?.price || 0);
-    }, 0);
+    if (!reservation) {
+      return next(new AppError('Reservation not found', 404));
+    }
+    
+    // Process each add-on
+    const addOnResults = [];
+    
+    for (const addOn of addOns) {
+      const { serviceId, quantity } = addOn;
+      
+      if (!serviceId || !quantity || quantity < 1) {
+        return next(new AppError('Each add-on must have a serviceId and a positive quantity', 400));
+      }
+      
+      // Check if the service exists
+      const service = await prisma.service.findUnique({
+        where: { id: serviceId }
+      });
+      
+      if (!service) {
+        return next(new AppError(`Service with ID ${serviceId} not found`, 404));
+      }
+      
+      // Create reservation add-on entries
+      for (let i = 0; i < quantity; i++) {
+        const reservationAddOn = await prisma.reservationAddOn.create({
+          data: {
+            reservationId: id,
+            addOnId: serviceId,
+            price: service.price,
+            notes: `Added as add-on to reservation`
+          },
+          include: {
+            addOn: true
+          }
+        });
+        
+        addOnResults.push(reservationAddOn);
+      }
+    }
+    
+    // Return the updated reservation with add-ons
+    const updatedReservation = await prisma.reservation.findUnique({
+      where: { id },
+      include: {
+        customer: true,
+        pet: true,
+        service: true,
+        resource: true,
+        addOnServices: {
+          include: {
+            addOn: true
+          }
+        }
+      }
+    });
     
     res.status(200).json({
       status: 'success',
-      revenue
+      message: 'Add-on services successfully added to the reservation',
+      data: updatedReservation,
+      addOns: addOnResults
     });
   } catch (error) {
+    console.error('Error adding add-ons to reservation:', error);
     next(error);
   }
 };

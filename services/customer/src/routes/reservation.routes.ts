@@ -9,7 +9,8 @@ import {
   getReservationsByPet,
   getReservationsByDateRange,
   getReservationsByStatus,
-  getTodayRevenue
+  getTodayRevenue,
+  addAddOnsToReservation
 } from '../controllers/reservation.controller';
 
 const router = Router();
@@ -40,6 +41,9 @@ router.post('/', createReservation);
 
 // PUT update a reservation
 router.put('/:id', updateReservation);
+
+// POST add add-ons to a reservation
+router.post('/:id/add-ons', addAddOnsToReservation);
 
 // DELETE a reservation
 router.delete('/:id', deleteReservation);

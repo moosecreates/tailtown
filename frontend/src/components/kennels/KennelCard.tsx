@@ -7,10 +7,16 @@ import {
   Divider, 
   Paper,
   Grid,
-  styled
+  styled,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from '@mui/material';
 import PrintablePetIcons from './PrintablePetIcons';
-import { format } from 'date-fns';
+import { format, addDays, startOfWeek } from 'date-fns';
 
 // Styled components for the kennel card
 const PrintableCard = styled(Card)(({ theme }) => ({
@@ -71,6 +77,57 @@ const NotesBox = styled(Paper)(({ theme }) => ({
   minHeight: '60px',
 }));
 
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  border: '2px solid #000',
+  padding: theme.spacing(1.5),
+  fontSize: '0.9rem',
+  height: '30px',
+  '@media print': {
+    border: '2px solid #000 !important',
+    padding: theme.spacing(1),
+    fontSize: '0.85rem',
+    height: '30px',
+    printColorAdjust: 'exact',
+    WebkitPrintColorAdjust: 'exact'
+  }
+}));
+
+const StyledTableHeaderCell = styled(TableCell)(({ theme }) => ({
+  border: '2px solid #000',
+  padding: theme.spacing(1),
+  backgroundColor: theme.palette.primary.main,
+  color: theme.palette.primary.contrastText,
+  fontWeight: 'bold',
+  textAlign: 'center',
+  fontSize: '1rem',
+  '@media print': {
+    border: '2px solid #000 !important',
+    backgroundColor: `${theme.palette.primary.main} !important`,
+    color: `${theme.palette.primary.contrastText} !important`,
+    padding: theme.spacing(0.5),
+    fontSize: '0.9rem',
+    printColorAdjust: 'exact',
+    WebkitPrintColorAdjust: 'exact'
+  }
+}));
+
+const StyledTableRowHeaderCell = styled(TableCell)(({ theme }) => ({
+  border: '2px solid #000',
+  padding: theme.spacing(1),
+  backgroundColor: theme.palette.grey[300],
+  fontWeight: 'bold',
+  width: '120px',
+  fontSize: '1rem',
+  '@media print': {
+    border: '2px solid #000 !important',
+    backgroundColor: `${theme.palette.grey[300]} !important`,
+    padding: theme.spacing(0.5),
+    fontSize: '0.9rem',
+    printColorAdjust: 'exact',
+    WebkitPrintColorAdjust: 'exact'
+  }
+}));
+
 interface KennelCardProps {
   kennelNumber: number;
   suiteType: string;
@@ -124,6 +181,17 @@ const KennelCard: React.FC<KennelCardProps> = ({
   
   // Always use today's date for the printed date
   const today = new Date();
+  
+  // Generate week days for the schedule table starting from check-in date
+  const weekStart = startOfWeek(startDate, { weekStartsOn: 0 }); // 0 = Sunday
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const day = addDays(weekStart, i);
+    return {
+      date: day,
+      dayName: format(day, 'EEE'), // Short day name (Mon, Tue, etc.)
+      dayNumber: format(day, 'd'), // Day of month
+    };
+  });
 
   return (
     <PrintableCard>
@@ -225,6 +293,78 @@ const KennelCard: React.FC<KennelCardProps> = ({
         </Grid>
 
         <Divider sx={{ my: 4 }} />
+        
+        {/* Weekly Schedule Table */}
+        <Box sx={{ mt: 4, mb: 4 }}>
+          <SectionTitle variant="h5" sx={{ fontSize: '1.5rem', mb: 2, color: 'primary.dark' }}>WEEKLY SCHEDULE</SectionTitle>
+          <TableContainer component={Paper} variant="outlined" sx={{ 
+            border: '3px solid #000', 
+            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+            '@media print': {
+              border: '3px solid #000 !important',
+              boxShadow: 'none'
+            }
+          }}>
+            <Table size="small" aria-label="weekly schedule table" sx={{ tableLayout: 'fixed' }}>
+              <TableHead>
+                <TableRow>
+                  <StyledTableHeaderCell>Care Type</StyledTableHeaderCell>
+                  {weekDays.map((day) => (
+                    <StyledTableHeaderCell key={day.dayName}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                        {day.dayName}
+                      </Typography>
+                      <Typography variant="body2">
+                        {day.dayNumber}
+                      </Typography>
+                    </StyledTableHeaderCell>
+                  ))}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {/* AM Row */}
+                <TableRow>
+                  <StyledTableRowHeaderCell>AM</StyledTableRowHeaderCell>
+                  {weekDays.map((day) => (
+                    <StyledTableCell key={`am-${day.dayName}`}></StyledTableCell>
+                  ))}
+                </TableRow>
+                
+                {/* Lunch/IC Row */}
+                <TableRow>
+                  <StyledTableRowHeaderCell>Lunch/IC</StyledTableRowHeaderCell>
+                  {weekDays.map((day) => (
+                    <StyledTableCell key={`lunch-${day.dayName}`}></StyledTableCell>
+                  ))}
+                </TableRow>
+                
+                {/* PM Row */}
+                <TableRow>
+                  <StyledTableRowHeaderCell>PM</StyledTableRowHeaderCell>
+                  {weekDays.map((day) => (
+                    <StyledTableCell key={`pm-${day.dayName}`}></StyledTableCell>
+                  ))}
+                </TableRow>
+                
+                {/* Treats Row */}
+                <TableRow>
+                  <StyledTableRowHeaderCell>Treats</StyledTableRowHeaderCell>
+                  {weekDays.map((day) => (
+                    <StyledTableCell key={`treats-${day.dayName}`}></StyledTableCell>
+                  ))}
+                </TableRow>
+                
+                {/* Picky Notes Row */}
+                <TableRow>
+                  <StyledTableRowHeaderCell>Picky Notes</StyledTableRowHeaderCell>
+                  {weekDays.map((day) => (
+                    <StyledTableCell key={`notes-${day.dayName}`}></StyledTableCell>
+                  ))}
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
         
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
           <Typography variant="body1" sx={{ fontStyle: 'italic' }}>

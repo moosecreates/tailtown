@@ -155,5 +155,18 @@ export const reservationService = {
       console.error('Error in getTodayRevenue:', error);
       throw error;
     }
+  },
+
+  // Add add-on services to a reservation
+  addAddOnsToReservation: async (reservationId: string, addOns: Array<{ serviceId: string; quantity: number }>): Promise<any> => {
+    try {
+      console.log('Adding add-ons to reservation:', { reservationId, addOns });
+      const response: AxiosResponse = await api.post(`/api/reservations/${reservationId}/add-ons`, { addOns });
+      console.log('Add-ons response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in addAddOnsToReservation:', error);
+      throw error;
+    }
   }
 };

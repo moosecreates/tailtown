@@ -107,8 +107,9 @@ export const createPayment = async (req: Request, res: Response, next: NextFunct
     }, 0);
 
     // Check if payment amount exceeds remaining balance
-    const remainingBalance = invoice.total - paidAmount;
-    const paymentAmount = parseFloat(amount as any);
+    // Round to the nearest penny to avoid floating point issues
+    const remainingBalance = Math.round((invoice.total - paidAmount) * 100) / 100;
+    const paymentAmount = Math.round(parseFloat(amount as any) * 100) / 100;
     
     if (paymentAmount > remainingBalance) {
       return next(new AppError(`Payment amount exceeds remaining balance of ${remainingBalance}`, 400));
@@ -119,7 +120,7 @@ export const createPayment = async (req: Request, res: Response, next: NextFunct
       data: {
         invoiceId,
         customerId,
-        amount: paymentAmount,
+        amount: paymentAmount, // Already rounded above
         method,
         status: 'PAID', // Assuming payment is successful immediately 
         transactionId,
@@ -188,7 +189,7 @@ export const recordStoreCredit = async (req: Request, res: Response, next: NextF
       data: {
         invoiceId: invoice.id,
         customerId,
-        amount: parseFloat(amount as any),
+        amount: Math.round(parseFloat(amount as any) * 100) / 100, // Round to the nearest penny
         method: 'STORE_CREDIT',
         status: 'PAID',
         notes: reason || 'Store credit',

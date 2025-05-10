@@ -6,11 +6,12 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { EventInput, DateSelectArg, EventClickArg } from '@fullcalendar/core';
 
-import { Box, Paper, Dialog, DialogTitle, DialogContent } from '@mui/material';
+import { Box, Paper, Dialog, DialogTitle, DialogContent, Snackbar, Alert } from '@mui/material';
 import { reservationService } from '../../services/reservationService';
 import ReservationForm from '../reservations/ReservationForm';
 import { Reservation } from '../../services/reservationService';
 import { ServiceCategory } from '../../types/service';
+import AddOnSelectionDialog from '../reservations/AddOnSelectionDialog';
 
 /**
  * Props for the Calendar component
@@ -56,6 +57,12 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<{ start: Date; end: Date } | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Reservation | null>(null);
+  
+  // State for add-on selection dialog
+  const [isAddOnDialogOpen, setIsAddOnDialogOpen] = useState(false);
+  const [currentReservationId, setCurrentReservationId] = useState<string>('');
+  const [currentServiceId, setCurrentServiceId] = useState<string>('');
+  const [notification, setNotification] = useState<{message: string; severity: 'success' | 'error' | 'info' | 'warning'} | null>(null);
 
   const loadReservations = useCallback(async () => {
     try {
@@ -273,44 +280,74 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
   // Handle form submission for creating or updating a reservation
   const handleFormSubmit = async (formData: any) => {
     try {
-      console.log('Calendar: Starting form submission with data:', formData);
-      console.log('Calendar: Current events:', events);
-      let updatedReservation;
+      console.log('Calendar: Submitting form data:', formData);
       
+      let updatedReservation: Reservation;
+      let updatedEvents = [...events];
+      
+      // Check if we're editing an existing reservation
       if (selectedEvent) {
+        // Update existing reservation
         console.log('Calendar: Updating existing reservation:', selectedEvent.id);
-        updatedReservation = await reservationService.updateReservation(
-          selectedEvent.id,
-          formData
-        );
+        updatedReservation = await reservationService.updateReservation(selectedEvent.id, formData);
+        console.log('Calendar: Updated reservation:', updatedReservation);
+        
+        // Find and update the event in the events array
+        const eventIndex = updatedEvents.findIndex(event => event.id === selectedEvent.id);
+        if (eventIndex !== -1) {
+          updatedEvents[eventIndex] = {
+            ...updatedEvents[eventIndex],
+            title: `${updatedReservation.pet?.name || 'Pet'} - ${updatedReservation.service?.name || 'Service'}`,
+            start: updatedReservation.startDate,
+            end: updatedReservation.endDate,
+            backgroundColor: getStatusColor(updatedReservation.status),
+            extendedProps: {
+              reservation: updatedReservation
+            }
+          };
+        }
       } else {
+        // Create new reservation
         console.log('Calendar: Creating new reservation');
         updatedReservation = await reservationService.createReservation(formData);
         console.log('Calendar: Created reservation:', updatedReservation);
+        
+        // Add the new event to the events array
+        updatedEvents.push({
+          id: updatedReservation.id,
+          title: `${updatedReservation.pet?.name || 'Pet'} - ${updatedReservation.service?.name || 'Service'}`,
+          start: updatedReservation.startDate,
+          end: updatedReservation.endDate,
+          backgroundColor: getStatusColor(updatedReservation.status),
+          extendedProps: {
+            reservation: updatedReservation
+          }
+        });
       }
-
-      if (updatedReservation) {
-        console.log('Calendar: Successfully saved reservation:', updatedReservation);
-        console.log('Calendar: Reloading reservations after successful save');
-        
-        // Load reservations and get the updated events immediately
-        const updatedEvents = await loadReservations();
-        console.log('Calendar: Events after reload:', updatedEvents);
-        
-        // Force a refresh of the calendar by creating a new reference
-        setEvents([...updatedEvents]);
-        
-        if (onEventUpdate) {
-          onEventUpdate(updatedReservation);
-        }
-        
-        // Close the form
-        setIsFormOpen(false);
-        setSelectedEvent(null);
-        setSelectedDate(null);
-      } else {
-        console.warn('Calendar: No reservation returned from server');
-        // Do NOT close the dialog if reservation failed
+      
+      // Update the events state
+      setEvents([...updatedEvents]);
+      
+      if (onEventUpdate) {
+        onEventUpdate(updatedReservation);
+      }
+      
+      // Close the form
+      setIsFormOpen(false);
+      setSelectedEvent(null);
+      setSelectedDate(null);
+      
+      // Check if this is a boarding or daycare service that might have add-ons
+      // Access the service category from the reservation's service object
+      // Use type assertion to access serviceCategory property
+      const service = updatedReservation.service as any;
+      const serviceCategory = service?.serviceCategory || '';
+      
+      if (serviceCategory === 'BOARDING' || serviceCategory === 'DAYCARE') {
+        // Open the add-on selection dialog
+        setCurrentReservationId(updatedReservation.id);
+        setCurrentServiceId(updatedReservation.serviceId);
+        setIsAddOnDialogOpen(true);
       }
     } catch (error) {
       console.error('Calendar: Error saving reservation:', error);
@@ -402,6 +439,46 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Add-On Selection Dialog */}
+      <AddOnSelectionDialog
+        open={isAddOnDialogOpen}
+        onClose={() => setIsAddOnDialogOpen(false)}
+        reservationId={currentReservationId}
+        serviceId={currentServiceId}
+        onAddOnsAdded={(success) => {
+          setIsAddOnDialogOpen(false);
+          if (success) {
+            setNotification({
+              message: 'Add-on services successfully added to the reservation',
+              severity: 'success'
+            });
+            // Reload reservations to get updated data
+            loadReservations();
+          } else {
+            setNotification({
+              message: 'Failed to add services to the reservation',
+              severity: 'error'
+            });
+          }
+        }}
+      />
+
+      {/* Notification Snackbar */}
+      <Snackbar 
+        open={!!notification} 
+        autoHideDuration={5000} 
+        onClose={() => setNotification(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setNotification(null)} 
+          severity={notification ? notification.severity : 'info'}
+          sx={{ width: '100%' }}
+        >
+          {notification ? notification.message : ''}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
