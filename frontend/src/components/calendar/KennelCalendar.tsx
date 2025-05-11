@@ -702,19 +702,20 @@ const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = ({
   // Create the initial data object for the form directly
   const formInitialData = selectedReservation ? {
     ...selectedReservation,
-    // Ensure we pass the resource ID in the format expected by the form
-    resourceId: selectedKennel.id
+    // For existing reservations, don't override the resourceId
+    // This prevents issues with invalid resourceIds
   } : {
     // For new reservations, pre-populate with the selected kennel
-    resourceId: selectedKennel.id,
-    // Also pass the suite number and type for auto-selection
-    // Use suiteType consistently instead of kennelType to avoid field duplication
+    // Don't include resourceId directly to avoid out-of-range value errors
+    // Instead, pass the suite information separately
     suiteNumber: selectedKennel.suiteNumber || '',
     suiteName: selectedKennel.name || '',
     suiteType: selectedKennel.type || selectedKennel.attributes?.suiteType || 'STANDARD_SUITE',
     // Include the start and end dates in the initialData
     startDate: selectedDate.start,
-    endDate: selectedDate.end
+    endDate: selectedDate.end,
+    // Add the kennel ID as a separate property that won't be used directly by the Select component
+    kennelId: selectedKennel.id
   };
   
   return (

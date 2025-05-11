@@ -52,6 +52,11 @@ interface ReservationFormProps {
     /** End date and time */
     end: Date;
   };
+  
+  /**
+   * Whether to show add-on services in the form
+   */
+  showAddOns?: boolean;
 }
 
 /**
@@ -179,10 +184,15 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           initialDataLoaded.current = true;
           
           // Set resource ID or suite type
-          if (initialData.resourceId) {
+          if (initialData.resourceId || initialData.kennelId) {
+            // Use resourceId or kennelId (from calendar)
+            const effectiveResourceId = initialData.resourceId || initialData.kennelId;
+            
             // Fetch resource details to get the suite type
             try {
-              const resourceResponse = await resourceService.getResource(initialData.resourceId);
+              const resourceResponse = await resourceService.getResource(effectiveResourceId);
+              console.log('Resource details fetched:', resourceResponse);
+              
               if (resourceResponse.data) {
                 const resourceType = resourceResponse.data.type;
                 
@@ -192,7 +202,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                   setSelectedSuiteType(initialData.suiteType);
                 }
                 
-                // We'll set the suite ID after we load available suites
+                // Store the resource ID for later use in form submission
+                setSelectedSuiteId(effectiveResourceId);
               }
             } catch (err) {
               console.error('Error fetching resource details:', err);
@@ -372,10 +383,15 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     }
   }, [selectedService, services]);
 
+  // State to track if dropdown should be rendered 
+  const [dropdownReady, setDropdownReady] = useState(false);
+  
   // Fetch available suites when suite type changes
   useEffect(() => {
     const loadAvailableSuites = async () => {
       if (!selectedSuiteType) return;
+      
+      setDropdownReady(false); // Reset dropdown ready state
       try {
         setSuiteLoading(true);
         // Get all resources of the selected type
@@ -394,19 +410,27 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           
           // If we're editing an existing reservation, make sure to include the current resource
           // even if it's not available (e.g., it's currently booked)
-          if (initialData?.resourceId) {
-            const resourceExists = suites.some(suite => suite.id === initialData.resourceId);
+          const effectiveResourceId = initialData?.resourceId || initialData?.kennelId;
+          
+          if (effectiveResourceId) {
+            const resourceExists = suites.some(suite => suite.id === effectiveResourceId);
+            console.log('Does resource exist in suites?', resourceExists, 'Resource ID:', effectiveResourceId);
             
             if (!resourceExists) {
               try {
-                const resourceResponse = await resourceService.getResource(initialData.resourceId);
+                console.log('Fetching specific resource with ID:', effectiveResourceId);
+                const resourceResponse = await resourceService.getResource(effectiveResourceId);
+                console.log('Resource response:', resourceResponse);
+                
                 if (resourceResponse?.status === 'success' && resourceResponse?.data) {
                   const resourceData = resourceResponse.data;
                   
                   // Only add it if it matches the selected suite type
                   const resourceType = resourceData.type || resourceData.attributes?.suiteType;
+                  console.log('Resource type from API:', resourceType, 'Selected type:', selectedSuiteType);
                   
                   if (resourceType === selectedSuiteType) {
+                    console.log('Adding resource to suites list:', resourceData);
                     suites.push(resourceData);
                   }
                 }
@@ -416,37 +440,53 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             }
           }
           
+          // First update available suites
           setAvailableSuites(suites);
           
           // Mark that suite options are available if we have suites
           selectsWithOptions.current.suiteId = suites.length > 0;
           
-          // If we have initialData with a resourceId, check if it's valid
-          if (initialData?.resourceId) {
+          // If we have initialData with a resourceId or kennelId, check if it's valid
+          const resourceToCheck = initialData?.resourceId || initialData?.kennelId;
+          
+          if (resourceToCheck) {
+            console.log('Checking if resource/kennel exists in suites:', resourceToCheck);
             // Check if the resource ID exists in the available suites
-            const suiteExists = suites.some(suite => suite.id === initialData.resourceId);
+            const suiteExists = suites.some(suite => suite.id === resourceToCheck);
             
             if (suiteExists) {
+              console.log('Resource/kennel found in suites, setting selected suite ID:', resourceToCheck);
               // Only set the suite ID if it exists in the available suites
-              setSelectedSuiteId(initialData.resourceId);
+              setSelectedSuiteId(resourceToCheck);
+              
+              // Only set dropdown ready after both suites and selection are set
+              setTimeout(() => {
+                setDropdownReady(true);
+                console.log('Dropdown ready flag set');
+              }, 100);
             } else {
+              console.log('Resource/kennel not found in available suites, clearing selection');
               // If the resource doesn't exist, clear the selection
               setSelectedSuiteId('');
+              setDropdownReady(true);
             }
           } else {
             // Clear the selection if no resource ID was provided
             setSelectedSuiteId('');
+            setDropdownReady(true);
           }
         } else {
           setAvailableSuites([]);
           setSuiteError('Failed to load available suites');
           selectsWithOptions.current.suiteId = false;
+          setDropdownReady(true);
         }
       } catch (error) {
         console.error('Error loading available suites:', error);
         setAvailableSuites([]);
         setSuiteError('Error loading available suites');
         selectsWithOptions.current.suiteId = false;
+        setDropdownReady(true);
       } finally {
         setSuiteLoading(false);
       }
@@ -502,9 +542,17 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       // Only set resourceId if a specific suite is selected and it's not empty
       if (selectedSuiteId && selectedSuiteId.trim() !== '') {
         formData.resourceId = selectedSuiteId;
+        // Log for debugging
+        console.log('Sending reservation with resourceId:', selectedSuiteId);
       } else {
         // Explicitly set resourceId to null for auto-assign
         formData.resourceId = null;
+      }
+      
+      // If we have initialData with a kennelId but are not using it as resourceId,
+      // include it as a separate field for backward compatibility
+      if (initialData?.kennelId && initialData.kennelId !== selectedSuiteId) {
+        console.log('Including kennelId for backward compatibility:', initialData.kennelId);
       }
     }
 
@@ -537,6 +585,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             isOptionEqualToValue={(option: Customer, value: Customer) => {
               // Handle null values safely
               if (!option || !value) return false;
+              
+              // If value has an empty ID but has other properties, try matching by email as a fallback
+              if (!value.id && value.email && option.email) {
+                return option.email === value.email;
+              }
+              
               return option.id === value.id;
             }}
             loading={customerSearchLoading}
@@ -550,7 +604,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 handleCustomerChange('');
               }
             }}
-            value={customers.find(c => c.id === selectedCustomer) || null}
+            value={selectedCustomer ? customers.find(c => c.id === selectedCustomer) || null : null}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -590,7 +644,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             <Select
               labelId="pet-label"
               id="pet-select"
-              value={selectsWithOptions.current.pet ? (selectedPet || "") : ""}
+              value={selectsWithOptions.current.pet && pets.some(p => p.id === selectedPet) ? selectedPet : ""}
               label="Pet"
               onChange={(e) => {
                 const value = e.target.value || '';
@@ -624,7 +678,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             <Select
               labelId="service-label"
               id="service-select"
-              value={selectsWithOptions.current.service ? (selectedService || "") : ""}
+              value={selectsWithOptions.current.service && services.some(s => s.id === selectedService) ? selectedService : ""}
               label="Service"
               // Add proper ARIA attributes to fix accessibility warning
               inputProps={{
@@ -687,7 +741,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                   <Select
                     labelId="kennel-type-label"
                     id="kennel-type-select"
-                    value={selectsWithOptions.current.suiteType ? (selectedSuiteType || "") : ""}
+                    value={selectedSuiteType && ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'].includes(selectedSuiteType) ? selectedSuiteType : ""}
                     label="Kennel Type"
                     // Add proper ARIA attributes to fix accessibility warning
                     inputProps={{
@@ -708,48 +762,72 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                     <MenuItem value="STANDARD_SUITE">Standard Suite</MenuItem>
                   </Select>
                 </FormControl>
-                {/* Suite override dropdown */}
-                {selectedSuiteType && (
-                  <FormControl fullWidth size="small" sx={{ mb: 1 }} disabled={suiteLoading}>
-                    <InputLabel id="kennel-number-label" shrink={true}>Kennel/Suite Number</InputLabel>
-                    <Select
-                      labelId="kennel-number-label"
-                      id="kennel-number-select"
-                      value={selectsWithOptions.current.suiteId ? (selectedSuiteId || "") : ""}
-                      label="Kennel/Suite Number"
-                      onChange={e => setSelectedSuiteId(e.target.value || '')}
-                      // Add proper ARIA attributes to fix accessibility warning
-                      inputProps={{
-                        'aria-label': 'Select kennel number',
-                        'aria-hidden': 'false'
-                      }}
-                      notched
-                      renderValue={(selected) => {
-                        if (!selected) return "Auto-assign (recommended)";
-                        const suite = availableSuites.find(s => s.id === selected);
-                        if (suite) {
-                          const suiteNumber = suite.attributes?.suiteNumber;
-                          const suiteName = suite.name || 'Suite';
-                          return suiteNumber ? `#${suiteNumber} - ${suiteName}` : suiteName;
-                        }
-                        return `Suite ID: ${selected.substring(0, 8)}...`;
-                      }}
-                    >
-                      <MenuItem value="">Auto-assign (recommended)</MenuItem>
-                      {suiteLoading ? (
-                        <MenuItem disabled>Loading...</MenuItem>
-                      ) : suiteError ? (
-                        <MenuItem disabled>{suiteError}</MenuItem>
-                      ) : availableSuites.length > 0 ? (
-                        availableSuites.map(suite => (
-                          <MenuItem key={suite.id} value={suite.id}>
-                            {suite.name || `Suite #${suite.attributes?.suiteNumber || suite.id}`}
+                
+                {/* Kennel/Suite Number Selection */}
+                {requiresSuiteType && selectedSuiteType && (
+                  <FormControl fullWidth required margin="normal">
+                    <InputLabel id="kennel-number-label">Kennel/Suite Number</InputLabel>
+                    {suiteLoading ? (
+                      <Select
+                        labelId="kennel-number-label"
+                        id="kennel-number-select"
+                        value=""
+                        label="Kennel/Suite Number"
+                        disabled
+                      >
+                        <MenuItem disabled>Loading suites...</MenuItem>
+                      </Select>
+                    ) : !dropdownReady ? (
+                      <Select
+                        labelId="kennel-number-label"
+                        id="kennel-number-select"
+                        value=""
+                        label="Kennel/Suite Number"
+                        disabled
+                      >
+                        <MenuItem disabled>Preparing options...</MenuItem>
+                      </Select>
+                    ) : (
+                      <Select
+                        labelId="kennel-number-label"
+                        id="kennel-number-select"
+                        value={selectedSuiteId || ""}
+                        label="Kennel/Suite Number"
+                        onChange={e => setSelectedSuiteId(e.target.value || '')}
+                        inputProps={{
+                          'aria-label': 'Select kennel number',
+                          'aria-hidden': 'false'
+                        }}
+                        renderValue={(selected) => {
+                          if (!selected) return "Auto-assign (recommended)";
+                          const suite = availableSuites.find(s => s.id === selected);
+                          if (suite) {
+                            const suiteNumber = suite.attributes?.suiteNumber;
+                            const suiteName = suite.name || 'Suite';
+                            return suiteNumber ? `#${suiteNumber} - ${suiteName}` : suiteName;
+                          }
+                          return `Suite ID: ${selected.substring(0, 8)}...`;
+                        }}
+                      >
+                        <MenuItem value="">Auto-assign (recommended)</MenuItem>
+                        {suiteError ? (
+                          <MenuItem disabled>{suiteError}</MenuItem>
+                        ) : availableSuites.length > 0 ? (
+                          availableSuites.map(suite => (
+                            <MenuItem key={suite.id} id={`suite-option-${suite.id}`} value={suite.id}>
+                              {suite.name || `Suite #${suite.attributes?.suiteNumber || suite.id.substring(0, 8)}`}
+                            </MenuItem>
+                          ))
+                        ) : (
+                          <MenuItem disabled>No suites available</MenuItem>
+                        )}
+                        {selectedSuiteId && !availableSuites.some(suite => suite.id === selectedSuiteId) && (
+                          <MenuItem id={`suite-option-${selectedSuiteId}`} value={selectedSuiteId}>
+                            Suite ID: {selectedSuiteId.substring(0, 8)}...
                           </MenuItem>
-                        ))
-                      ) : (
-                        <MenuItem disabled>No available suites</MenuItem>
-                      )}
-                    </Select>
+                        )}
+                      </Select>
+                    )}
                   </FormControl>
                 )}
               </>
