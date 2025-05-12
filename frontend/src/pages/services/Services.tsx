@@ -27,6 +27,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+
 import { serviceManagement } from '../../services/serviceManagement';
 import { Service, ServiceCategory } from '../../types/service';
 
@@ -93,20 +94,50 @@ const Services: React.FC = () => {
     if (!serviceToDelete) return;
 
     try {
-      await serviceManagement.deleteService(serviceToDelete.id);
+      // First try to delete the service
+      try {
+        const result = await serviceManagement.deleteService(serviceToDelete.id);
+        
+        // Check if it was a soft delete (returns a message) or hard delete (returns nothing)
+        const message = result?.message || 'Service deleted successfully';
+        
+        setSnackbar({
+          open: true,
+          message,
+          severity: 'success'
+        });
+        loadServices();
+      } catch (deleteErr: any) {
+        // If deletion fails due to active reservations, automatically deactivate instead
+        if (deleteErr.message && (deleteErr.message.includes('active reservations') || deleteErr.message.includes('deactivate'))) {
+          console.log('Service could not be deleted, automatically deactivating instead');
+          
+          // Automatically deactivate the service
+          const deactivateResult = await serviceManagement.deactivateService(serviceToDelete.id);
+          
+          setSnackbar({
+            open: true,
+            message: 'Service has been deactivated instead of deleted because it has reservations',
+            severity: 'success'
+          });
+          loadServices();
+        } else {
+          // For other errors, just show the error message
+          throw deleteErr;
+        }
+      }
+    } catch (err: any) {
+      // Show the specific error message for any other errors
+      const errorMessage = err.message || 'Failed to delete service';
+      
       setSnackbar({
         open: true,
-        message: 'Service deleted successfully',
-        severity: 'success'
-      });
-      loadServices();
-    } catch (err) {
-      setSnackbar({
-        open: true,
-        message: 'Failed to delete service',
+        message: errorMessage,
         severity: 'error'
       });
     }
+    
+    // Always close the delete dialog and clear the service reference
     setDeleteDialogOpen(false);
     setServiceToDelete(null);
   };
@@ -115,6 +146,8 @@ const Services: React.FC = () => {
     setDeleteDialogOpen(false);
     setServiceToDelete(null);
   };
+
+  // Deactivation is now handled through the service details page
 
   const handleSnackbarClose = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -219,6 +252,7 @@ const Services: React.FC = () => {
                       size="small"
                       onClick={() => handleEditService(service.id)}
                       aria-label="edit"
+                      title="Edit service"
                     >
                       <EditIcon />
                     </IconButton>
@@ -226,6 +260,7 @@ const Services: React.FC = () => {
                       size="small"
                       onClick={() => handleDeleteClick(service)}
                       aria-label="delete"
+                      title="Delete service"
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -243,14 +278,15 @@ const Services: React.FC = () => {
             <Typography>
               Are you sure you want to delete {serviceToDelete?.name}? This action cannot be undone.
             </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleDeleteCancel}>Cancel</Button>
-          <Button onClick={handleDeleteConfirm} color="error">
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel}>Cancel</Button>
+            <Button onClick={handleDeleteConfirm} color="error">
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+
       </Box>
 
       {/* Snackbar for notifications */}

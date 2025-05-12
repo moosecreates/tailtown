@@ -135,4 +135,6 @@ Cash amount paid after discount can have strange partial penny issues
 ✅ Staff schedule now shows starting assignment location (Fixed May 12, 2025)
 ✅ Fixed duplicate shift creation when updating staff schedules (Fixed May 12, 2025)
 ✅ Add-on sales are now working on all reservation types (Fixed May 11, 2025)
+✅ Fixed service deletion issues with active reservations (Fixed May 12, 2025)
+✅ Improved service management UI by simplifying deactivation workflow (Fixed May 12, 2025)
 Add feeding schedule to kennel cards with weekly dates automatically added

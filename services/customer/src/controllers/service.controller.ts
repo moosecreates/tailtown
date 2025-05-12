@@ -37,25 +37,52 @@ export const getAllServices = async (
       where,
       skip,
       take: limit,
+      orderBy: {
+        name: 'asc'
+      },
       include: {
         availableAddOns: true,
+        reservations: {
+          select: {
+            id: true,
+            status: true
+          },
+          where: {
+            status: {
+              notIn: ['CANCELLED', 'COMPLETED']
+            }
+          },
+          take: 1 // We only need to know if there are any active reservations
+        },
         _count: {
           select: {
             reservations: true
           }
         }
-      },
-      orderBy: { name: 'asc' }
+      }
     });
+    
+    // Add a softDeleted flag to services that have been deactivated due to having reservations
+    const servicesWithMetadata = services.map(service => {
+      // If the service is inactive and has reservations, mark it as soft deleted
+      const isSoftDeleted = !service.isActive && service._count.reservations > 0;
+      
+      // Filter out services that have been soft deleted
+      if (isSoftDeleted) {
+        return null; // We'll filter these out below
+      }
+      
+      return service;
+    }).filter(Boolean); // Remove null entries (soft deleted services)
     
     const total = await prisma.service.count({ where });
     
     res.status(200).json({
       status: 'success',
-      results: services.length,
+      results: servicesWithMetadata.length,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
-      data: services
+      data: servicesWithMetadata
     });
   } catch (error) {
     next(error);
@@ -70,9 +97,16 @@ export const getServiceById = async (
 ) => {
   try {
     const { id } = req.params;
+    const includeDeleted = req.query.includeDeleted === 'true';
     
-    const service = await prisma.service.findUnique({
-      where: { id },
+    // Build the where condition
+    const where: any = { id };
+    if (!includeDeleted) {
+      where.isActive = true;
+    }
+    
+    const service = await prisma.service.findFirst({
+      where,
       include: {
         availableAddOns: true,
         _count: {
@@ -84,7 +118,7 @@ export const getServiceById = async (
     });
     
     if (!service) {
-      return next(new AppError('Service not found', 404));
+      return next(new AppError('Service not found or inactive', 404));
     }
     
     res.status(200).json({
@@ -179,55 +213,25 @@ export const updateService = async (
       return next(new AppError('Service not found', 404));
     }
     
-    // Update service with transaction to handle add-ons
-    const updatedService = await prisma.$transaction(async (prismaClient: any) => {
-      // Update the main service
-      const service = await prismaClient.service.update({
-        where: { id },
-        data: {
-          name: mainServiceData.name,
-          description: mainServiceData.description,
-          duration: mainServiceData.duration,
-          price: mainServiceData.price,
-          color: mainServiceData.color,
-          serviceCategory: mainServiceData.serviceCategory,
-          isActive: mainServiceData.isActive,
-          capacityLimit: mainServiceData.capacityLimit,
-          requiresStaff: mainServiceData.requiresStaff,
-          notes: mainServiceData.notes
-        }
-      });
-      
-      // Always delete existing add-ons first
-      await prismaClient.addOnService.deleteMany({
-        where: { serviceId: id }
-      });
-      
-      // Create new add-ons if provided
-      if (availableAddOns && availableAddOns.length > 0) {
-        await Promise.all(
-          availableAddOns.map((addOn: any) => 
-            prismaClient.addOnService.create({
-              data: {
-                name: addOn.name,
-                description: addOn.description,
-                price: addOn.price,
-                duration: addOn.duration,
-                serviceId: id,
-                isActive: true
-              }
-            })
-          )
-        );
+    // Update only the main service data without touching add-ons
+    // This avoids foreign key constraint issues with add-ons used in reservations
+    const updatedService = await prisma.service.update({
+      where: { id },
+      data: {
+        name: mainServiceData.name,
+        description: mainServiceData.description,
+        duration: mainServiceData.duration,
+        price: mainServiceData.price,
+        color: mainServiceData.color,
+        serviceCategory: mainServiceData.serviceCategory,
+        isActive: mainServiceData.isActive,
+        capacityLimit: mainServiceData.capacityLimit,
+        requiresStaff: mainServiceData.requiresStaff,
+        notes: mainServiceData.notes
+      },
+      include: {
+        availableAddOns: true
       }
-      
-      // Return the service with add-ons included
-      return prismaClient.service.findUnique({
-        where: { id },
-        include: {
-          availableAddOns: true
-        }
-      });
     });
     
     res.status(200).json({
@@ -247,6 +251,7 @@ export const deleteService = async (
 ) => {
   try {
     const { id } = req.params;
+    const forceDelete = req.query.force === 'true';
     
     // Check if service exists
     const serviceExists = await prisma.service.findUnique({
@@ -259,7 +264,7 @@ export const deleteService = async (
     }
     
     // Check for existing reservations using this service
-    const reservationsUsingService = await prisma.reservation.count({
+    const activeReservationsCount = await prisma.reservation.count({
       where: { 
         serviceId: id,
         status: {
@@ -268,19 +273,67 @@ export const deleteService = async (
       }
     });
     
-    if (reservationsUsingService > 0) {
-      return next(new AppError('Cannot delete service with active reservations', 400));
+    // If there are active reservations and force is not true, perform a soft delete instead
+    if (activeReservationsCount > 0 && !forceDelete) {
+      console.log(`Service ${id} has active reservations, performing soft delete instead`);
+      
+      // Soft delete - mark as inactive but keep the record
+      await prisma.service.update({
+        where: { id },
+        data: { isActive: false }
+      });
+      
+      // Also mark all add-ons as inactive
+      await prisma.addOnService.updateMany({
+        where: { serviceId: id },
+        data: { isActive: false }
+      });
+      
+      return res.status(200).json({
+        status: 'success',
+        message: 'Service has been deactivated (soft deleted) because it has active reservations'
+      });
     }
     
-    // Service can be deleted
-    await prisma.$transaction([
-      // First delete any add-on services
-      prisma.addOnService.deleteMany({ where: { serviceId: id } }),
-      // Then delete the service
-      prisma.service.delete({ where: { id } })
-    ]);
+    // Check if there are any historical reservations
+    const historicalReservationsCount = await prisma.reservation.count({
+      where: {
+        serviceId: id,
+        status: {
+          notIn: ['PENDING', 'CONFIRMED', 'CHECKED_IN']
+        }
+      }
+    });
     
-    res.status(204).send();
+    // If there are historical reservations, perform a soft delete instead
+    if (historicalReservationsCount > 0) {
+      // Soft delete - mark as inactive but keep the record
+      await prisma.service.update({
+        where: { id },
+        data: { isActive: false }
+      });
+      
+      // Also mark all add-ons as inactive
+      await prisma.addOnService.updateMany({
+        where: { serviceId: id },
+        data: { isActive: false }
+      });
+      
+      res.status(200).json({
+        status: 'success',
+        message: 'Service has been deactivated (soft deleted)'
+      });
+    } else {
+      // No historical reservations, perform hard delete
+      await prisma.$transaction([
+        // First delete any add-on services
+        prisma.addOnService.deleteMany({ where: { serviceId: id } }),
+        // Then delete the service
+        prisma.service.delete({ where: { id } })
+      ]);
+      
+      res.status(204).send();
+    }
   } catch (error) {
     next(error);
   }

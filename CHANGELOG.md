@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed grooming and training calendar functionality by creating a specialized calendar component with proper time formatting
 - Resolved `context.cmdFormatter is not a function` error in FullCalendar by using object notation for time formatting instead of string literals
+- Improved service deletion handling to automatically deactivate services with active reservations
+- Fixed UI issues when attempting to delete services with historical data
+- Simplified service management UI by removing redundant deactivation controls
 
 ## [0.1.0] - 2025-04-29
 

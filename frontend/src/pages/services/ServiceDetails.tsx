@@ -65,7 +65,7 @@ const ServiceDetails: React.FC = () => {
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
-    severity: 'success' as 'success' | 'error'
+    severity: 'success' as 'success' | 'error' | 'warning'
   });
 
   useEffect(() => {
@@ -76,15 +76,35 @@ const ServiceDetails: React.FC = () => {
 
   const loadService = async () => {
     try {
-      const response = await serviceManagement.getServiceById(id!);
+      // Try to load the service with includeDeleted=true to handle deleted services
+      const response = await serviceManagement.getServiceById(id!, true);
       setService(response.data);
+      
+      // If the service is inactive, show a warning
+      if (response.data && !response.data.isActive) {
+        setSnackbar({
+          open: true,
+          message: 'This service has been deactivated and is not available for booking',
+          severity: 'warning'
+        });
+      }
+      
       setLoading(false);
-    } catch (err) {
+    } catch (err: any) {
+      // If service not found, navigate back to services list
+      const errorMessage = err.message || 'Failed to load service';
+      
       setSnackbar({
         open: true,
-        message: 'Failed to load service',
+        message: errorMessage,
         severity: 'error'
       });
+      
+      // Redirect back to services list after a short delay
+      setTimeout(() => {
+        navigate('/services');
+      }, 2000);
+      
       setLoading(false);
     }
   };
@@ -149,32 +169,43 @@ const ServiceDetails: React.FC = () => {
     try {
       setSaving(true);
       console.log('Saving service:', service);
+      
+      // Always ensure isActive is set to true when saving
+      const serviceToSave = {
+        ...service,
+        isActive: service.isActive !== undefined ? service.isActive : true
+      };
+      
       if (isNewService) {
-        await serviceManagement.createService(service as Service);
+        await serviceManagement.createService(serviceToSave as Service);
       } else {
         await serviceManagement.updateService(id!, {
-          name: service.name,
-          description: service.description,
-          duration: service.duration,
-          price: service.price,
-          color: service.color,
-          serviceCategory: service.serviceCategory,
-          isActive: service.isActive,
-          requiresStaff: service.requiresStaff,
-          notes: service.notes,
-          availableAddOns: service.availableAddOns
+          name: serviceToSave.name,
+          description: serviceToSave.description,
+          duration: serviceToSave.duration,
+          price: serviceToSave.price,
+          color: serviceToSave.color,
+          serviceCategory: serviceToSave.serviceCategory,
+          isActive: serviceToSave.isActive,
+          requiresStaff: serviceToSave.requiresStaff,
+          notes: serviceToSave.notes,
+          availableAddOns: serviceToSave.availableAddOns
         });
       }
+      
       setSnackbar({
         open: true,
         message: `Service ${isNewService ? 'created' : 'updated'} successfully`,
         severity: 'success'
       });
       navigate('/services');
-    } catch (err) {
+    } catch (err: any) {
+      // Show the specific error message if available
+      const errorMessage = err.message || `Failed to ${isNewService ? 'create' : 'update'} service`;
+      
       setSnackbar({
         open: true,
-        message: `Failed to ${isNewService ? 'create' : 'update'} service`,
+        message: errorMessage,
         severity: 'error'
       });
       setSaving(false);

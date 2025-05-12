@@ -9,9 +9,19 @@ export const serviceManagement = {
   },
 
   // Get a single service by ID
-  getServiceById: async (id: string) => {
-    const response = await api.get(`/api/services/${id}`);
-    return response.data;
+  getServiceById: async (id: string, includeDeleted: boolean = false) => {
+    try {
+      const response = await api.get(`/api/services/${id}`, {
+        params: { includeDeleted }
+      });
+      return response.data;
+    } catch (error: any) {
+      // If the service is not found or inactive, handle gracefully
+      if (error.response && error.response.status === 404) {
+        throw new Error('Service not found or has been deleted');
+      }
+      throw error;
+    }
   },
 
   // Create a new service
@@ -22,42 +32,89 @@ export const serviceManagement = {
 
   // Update a service
   updateService: async (id: string, serviceData: Partial<Service>) => {
-    // Ensure we only send the fields that the backend expects
-    const {
-      name,
-      description,
-      duration,
-      price,
-      serviceCategory,
-      isActive,
-      requiresStaff,
-      notes,
-      availableAddOns
-    } = serviceData;
+    try {
+      // Ensure we only send the fields that the backend expects
+      const {
+        name,
+        description,
+        duration,
+        price,
+        serviceCategory,
+        isActive,
+        requiresStaff,
+        notes,
+        availableAddOns
+      } = serviceData;
 
-    const response = await api.put(`/api/services/${id}`, {
-      name,
-      description,
-      duration,
-      price,
-      serviceCategory,
-      isActive,
-      requiresStaff,
-      notes,
-      availableAddOns: availableAddOns?.map(addOn => ({
-        name: addOn.name,
-        description: addOn.description,
-        price: addOn.price,
-        duration: addOn.duration
-      }))
-    });
-    return response.data;
+      // Make sure isActive is always included and set to true if updating a deactivated service
+      const updatedData = {
+        name,
+        description,
+        duration,
+        price,
+        serviceCategory,
+        isActive: isActive !== undefined ? isActive : true,
+        requiresStaff,
+        notes,
+        availableAddOns: availableAddOns?.map(addOn => ({
+          name: addOn.name,
+          description: addOn.description,
+          price: addOn.price,
+          duration: addOn.duration
+        }))
+      };
+
+      console.log('Updating service with data:', updatedData);
+      
+      const response = await api.put(`/api/services/${id}`, updatedData);
+      return response.data;
+    } catch (error: any) {
+      // Handle specific error cases
+      let errorMessage = 'Failed to update service';
+      
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
   },
 
   // Delete a service
-  deleteService: async (id: string) => {
-    const response = await api.delete(`/api/services/${id}`);
-    return response.data;
+  deleteService: async (id: string, force: boolean = false) => {
+    try {
+      const response = await api.delete(`/api/services/${id}`, {
+        params: { force }
+      });
+      return response.data;
+    } catch (error: any) {
+      // If there's a 400 error about reservations, it means we need to deactivate instead
+      // But we should handle this gracefully for the user
+      if (error.response && error.response.status === 400) {
+        // Try to deactivate the service instead
+        console.log('Service could not be deleted, attempting to deactivate instead');
+        const deactivateResponse = await api.patch(`/api/services/${id}/deactivate`);
+        
+        // Return a modified response that indicates what happened
+        return {
+          ...deactivateResponse.data,
+          message: 'Service has been deactivated instead of deleted because it has reservations'
+        };
+      }
+      
+      // Handle other error cases
+      let errorMessage = 'Failed to delete service';
+      
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
   },
 
   // Deactivate a service (soft delete)
