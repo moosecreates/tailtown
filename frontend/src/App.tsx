@@ -39,8 +39,7 @@ import Scheduling from './pages/staff/Scheduling';
 import OrderEntry from './pages/orders/OrderEntry';
 import PrintKennelCards from './pages/kennels/PrintKennelCards';
 
-// Test components
-import AddOnsTest from './components/test/AddOnsTest';
+// Custom event and utility components
 
 // Custom event for route changes
 export const RouteChangeEvent = 'app:route-change';
@@ -106,8 +105,7 @@ const AppRoutes = () => {
         <Route path="/staff/scheduling" element={isAuthenticated ? <Scheduling /> : <Navigate to="/login" />} />
         <Route path="/orders/new" element={isAuthenticated ? <OrderEntry /> : <Navigate to="/login" />} />
         
-        {/* Test Routes - accessible without authentication */}
-        <Route path="/test/add-ons" element={<AddOnsTest />} />
+        {/* Add any test routes here if needed */}
       </Route>
 
       {/* 404 Route */}
