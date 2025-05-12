@@ -35,8 +35,10 @@ This roadmap outlines the planned features and improvements for the Tailtown app
   - Tax calculations with configurable tax rate (7.44%)
 - 🔲 Integration with merchant services
 - 🔲 Inventory management for pet supplies
-- 🔲 Reporting and analytics dashboard
-- 🔲 Comprehensive reporting features
+- ✅ Reporting and analytics dashboard (Implemented May 12, 2025)
+- ✅ Service and add-on revenue reporting (Implemented May 12, 2025)
+- ✅ Customer value tracking and reporting (Implemented May 12, 2025)
+- 🔲 Additional comprehensive reporting features
 - ✅ Configurable settings (e.g., tax rates)
 - ✅ Customer accounts with balance and payment history
 - 🔲 Automated reminders for upcoming appointments
@@ -118,8 +120,10 @@ Features will be prioritized based on:
 **🔲 Priority alerts for staff
 - 🔲 Permission levels and restrictions for users- 🔲 Integration with merchant services
 - 🔲 Inventory management for pet supplies
-- 🔲 Reporting and analytics dashboard
-- 🔲 Comprehensive reporting features- 🔲 Automated reminders for upcoming appointments
+- ✅ Reporting and analytics dashboard (Implemented May 12, 2025)
+- ✅ Service and add-on revenue reporting (Implemented May 12, 2025)
+- ✅ Customer value tracking and reporting (Implemented May 12, 2025)
+- 🔲 Additional comprehensive reporting features- 🔲 Automated reminders for upcoming appointments
 - 🔲 Comprehensive loyalty rewards system
   - Points accumulation based on services
   - Tiered membership levels

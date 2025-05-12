@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Documentation for calendar components in `docs/features/CalendarComponents.md`
+- Analytics dashboard with service revenue breakdown and filtering options
+- Customer value reporting with transaction history and service type breakdown
+- Backend API endpoints for analytics data retrieval
+- Time period filtering for all analytics reports (daily, monthly, yearly, custom date range)
 
 ### Fixed
 - Fixed grooming and training calendar functionality by creating a specialized calendar component with proper time formatting
