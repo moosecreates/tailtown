@@ -4,9 +4,7 @@ import {
   People as PeopleIcon, 
   Pets as PetsIcon, 
   EventNote as EventNoteIcon, 
-  AttachMoney as MoneyIcon,
-  PersonAdd as PersonAddIcon,
-  CalendarMonth as CalendarMonthIcon
+  AttachMoney as MoneyIcon
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { customerService } from '../services/customerService';
@@ -47,7 +45,7 @@ const loadData = async () => {
         customerService.getAllCustomers(),
         petService.getAllPets(1, 1),
         reservationService.getAllReservations(1, 100, 'startDate', 'asc', activeStatuses, formattedToday),
-        reservationService.getAllReservations(1, 5, 'startDate', 'asc', 'CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED', formattedToday),
+        reservationService.getAllReservations(1, 10, 'startDate', 'asc', 'CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED', formattedToday),
         reservationService.getTodayRevenue()
       ]);
       
@@ -206,24 +204,23 @@ const loadData = async () => {
             </Box>
           ))}
         </Box>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3 }}>
-          <Card elevation={2} sx={{ borderRadius: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr' }, gap: 3 }}>
+          <Card elevation={2} sx={{ borderRadius: 2, height: '100%', flexGrow: 1 }}>
             <CardHeader 
-              title={`Today's Appointments (${new Date().toLocaleDateString()})`}
+              title="Today's Appointments" 
               action={
                 <Button 
                   component={Link} 
-                  to="/reservations"
-                  variant="contained" 
+                  to="/calendar"
                   size="small"
-                  startIcon={<EventNoteIcon />}
+                  variant="outlined"
                 >
                   View All
                 </Button>
               }
             />
-            <CardContent>
-              <Box sx={{ overflowX: 'auto' }}>
+            <CardContent sx={{ height: 'calc(100% - 72px)', display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ overflowX: 'auto', overflowY: 'auto', flexGrow: 1 }}>
                 {loading ? (
                   <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
                     <CircularProgress />
@@ -245,7 +242,11 @@ const loadData = async () => {
                         p: 1,
                         fontWeight: 'bold',
                         borderBottom: 1,
-                        borderColor: 'divider'
+                        borderColor: 'divider',
+                        position: 'sticky',
+                        top: 0,
+                        backgroundColor: 'background.paper',
+                        zIndex: 1
                       }}
                     >
                       <Typography variant="subtitle2" align="left">Customer</Typography>
@@ -293,84 +294,6 @@ const loadData = async () => {
                     ))}
                   </Box>
                 )}
-              </Box>
-            </CardContent>
-          </Card>
-          <Card elevation={2} sx={{ borderRadius: 2 }}>
-            <CardHeader 
-              title="Quick Actions" 
-              sx={{ pb: 0 }}
-            />
-            <CardContent>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', md: '1fr' }, gap: 2 }}>
-                <Button
-                  component={Link}
-                  to="/customers/new"
-                  variant="outlined"
-                  startIcon={<PersonAddIcon />}
-                  sx={{
-                    maxWidth: { xs: '100%', sm: '80%', md: '60%' },
-                    justifyContent: 'flex-start',
-                    ml: 2,
-                    '& .MuiButton-startIcon': {
-                      minWidth: 24,
-                      marginRight: 2
-                    }
-                  }}
-                >
-                  New Customer
-                </Button>
-                <Button
-                  component={Link}
-                  to="/pets/new"
-                  variant="outlined"
-                  startIcon={<PetsIcon />}
-                  sx={{
-                    maxWidth: { xs: '100%', sm: '80%', md: '60%' },
-                    justifyContent: 'flex-start',
-                    ml: 2,
-                    '& .MuiButton-startIcon': {
-                      minWidth: 24,
-                      marginRight: 2
-                    }
-                  }}
-                >
-                  New Pet
-                </Button>
-                <Button
-                  component={Link}
-                  to="/reservations/new"
-                  variant="outlined"
-                  startIcon={<EventNoteIcon />}
-                  sx={{
-                    maxWidth: { xs: '100%', sm: '80%', md: '60%' },
-                    justifyContent: 'flex-start',
-                    ml: 2,
-                    '& .MuiButton-startIcon': {
-                      minWidth: 24,
-                      marginRight: 2
-                    }
-                  }}
-                >
-                  New Reservation
-                </Button>
-                <Button
-                  component={Link}
-                  to="/calendar"
-                  variant="outlined"
-                  startIcon={<CalendarMonthIcon />}
-                  sx={{
-                    maxWidth: { xs: '100%', sm: '80%', md: '60%' },
-                    justifyContent: 'flex-start',
-                    ml: 2,
-                    '& .MuiButton-startIcon': {
-                      minWidth: 24,
-                      marginRight: 2
-                    }
-                  }}
-                >
-                  View Calendar
-                </Button>
               </Box>
             </CardContent>
           </Card>
