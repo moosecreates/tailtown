@@ -51,6 +51,7 @@ export interface Resource {
 }
 
 export const resourceService = {
+  
   getAllResources: async (
     page?: number,
     limit?: number,

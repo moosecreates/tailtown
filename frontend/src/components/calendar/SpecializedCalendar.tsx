@@ -123,6 +123,27 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
   useEffect(() => {
     loadReservations();
   }, [loadReservations, serviceCategories]);
+  
+  // Add an event listener to close the form dialog when add-ons are added
+  useEffect(() => {
+    const handleReservationComplete = (event: Event) => {
+      console.log('SpecializedCalendar: Received reservationComplete event');
+      // Close the form dialog
+      setIsFormOpen(false);
+      setSelectedEvent(null);
+      setSelectedDate(null);
+      // Reload reservations to refresh the calendar
+      loadReservations();
+    };
+    
+    // Add the event listener
+    document.addEventListener('reservationComplete', handleReservationComplete);
+    
+    // Clean up the event listener when the component unmounts
+    return () => {
+      document.removeEventListener('reservationComplete', handleReservationComplete);
+    };
+  }, [loadReservations]);
 
   // Get the color for a reservation status
   const getStatusColor = (status: string): string => {
@@ -170,18 +191,34 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
 
   // Handle form submission for creating or updating a reservation
   const handleFormSubmit = async (formData: any) => {
+    console.log('SpecializedCalendar: handleFormSubmit called with data:', formData);
     try {
-      let updatedReservation: Reservation | null = null;
+      let updatedReservation;
       
       if (selectedEvent) {
-        console.log('SpecializedCalendar: Updating existing reservation:', selectedEvent.id);
+        console.log('SpecializedCalendar: Updating existing reservation', selectedEvent.id);
         updatedReservation = await reservationService.updateReservation(
           selectedEvent.id,
           formData
         );
       } else {
         console.log('SpecializedCalendar: Creating new reservation');
-        updatedReservation = await reservationService.createReservation(formData);
+        const response = await reservationService.createReservation(formData);
+        console.log('SpecializedCalendar: Raw API response:', response);
+        
+        // Store the response in the updatedReservation variable
+        updatedReservation = response;
+        
+        // Check if we need to navigate the response object to get to the actual reservation data
+        // This is done to handle different API response formats
+        if (typeof response === 'object' && response !== null) {
+          // If the response has a data property and a success status, use the data property
+          if ('data' in response && 'status' in response && response.status as string === 'success') {
+            console.log('SpecializedCalendar: Found nested data structure in response');
+            updatedReservation = response.data as any; // Use 'any' to avoid TypeScript errors
+          }
+        }
+        
         console.log('SpecializedCalendar: Created reservation:', updatedReservation);
       }
 
@@ -196,14 +233,36 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
         // Force a refresh of the calendar by creating a new reference
         setEvents([...updatedEvents]);
         
-        if (onEventUpdate) {
-          onEventUpdate(updatedReservation);
+        if (onEventUpdate && typeof updatedReservation === 'object' && updatedReservation !== null) {
+          // Cast to Reservation type before passing to onEventUpdate
+          onEventUpdate(updatedReservation as Reservation);
         }
         
-        // Close the form
-        setIsFormOpen(false);
-        setSelectedEvent(null);
-        setSelectedDate(null);
+        // Extract the reservation ID (handling different response formats)
+        let reservationId = '';
+        if (typeof updatedReservation === 'object' && updatedReservation !== null) {
+          if ('id' in updatedReservation) {
+            reservationId = updatedReservation.id as string;
+          } else if ('_id' in updatedReservation) {
+            reservationId = updatedReservation._id as string;
+          }
+        }
+        
+        // For existing reservations, close the form immediately
+        if (selectedEvent) {
+          // Close the form for updates
+          setIsFormOpen(false);
+          setSelectedEvent(null);
+          setSelectedDate(null);
+        } else {
+          // For new reservations, keep the form open for add-ons
+          // The ReservationForm component will handle closing the dialog after add-ons are processed
+          console.log('SpecializedCalendar: Keeping form open for add-ons dialog');
+        }
+        
+        // Return the reservation ID so it can be used for add-ons
+        console.log('SpecializedCalendar: Returning reservation ID for add-ons:', reservationId);
+        return { reservationId };
       } else {
         console.warn('SpecializedCalendar: No reservation returned from server');
         // Do NOT close the dialog if reservation failed
@@ -211,6 +270,7 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
     } catch (error) {
       console.error('SpecializedCalendar: Error saving reservation:', error);
       // Do NOT close the dialog on error; let the form show the error
+      throw error; // Re-throw the error so the ReservationForm can handle it
     }
   };
 
@@ -299,6 +359,7 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
               onSubmit={handleFormSubmit}
               initialData={selectedEvent || undefined}
               defaultDates={selectedDate || undefined}
+              showAddOns={true}
             />
           ) : (
             <div>Loading reservation form...</div>

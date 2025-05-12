@@ -22,7 +22,8 @@ import {
   CircularProgress,
   Tooltip,
   Grid,
-  Divider
+  Divider,
+  Alert
 } from '@mui/material';
 import { 
   ChevronLeft as ChevronLeftIcon, 
@@ -203,6 +204,28 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
   useEffect(() => {
     loadReservations();
   }, [loadReservations]);
+  
+  // Add an event listener to close the form dialog when add-ons are added
+  useEffect(() => {
+    const handleReservationComplete = (event: Event) => {
+      console.log('KennelCalendar: Received reservationComplete event');
+      // Close the form dialog
+      setIsFormOpen(false);
+      setSelectedReservation(null);
+      setSelectedKennel(null);
+      setSelectedDate(null);
+      // Reload reservations to refresh the calendar
+      loadReservations();
+    };
+    
+    // Add the event listener
+    document.addEventListener('reservationComplete', handleReservationComplete);
+    
+    // Clean up the event listener when the component unmounts
+    return () => {
+      document.removeEventListener('reservationComplete', handleReservationComplete);
+    };
+  }, [loadReservations]);
 
   // Function to handle clicking on a cell
   const handleCellClick = (kennel: Resource, date: Date, existingReservation?: Reservation) => {
@@ -232,40 +255,163 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
     setIsFormOpen(true);
   };
 
+  // State for error messages
+  const [formError, setFormError] = useState<string | null>(null);
+
   // Function to handle form submission
   const handleFormSubmit = async (formData: any) => {
+    console.log('KennelCalendar: handleFormSubmit called with data:', formData);
+    setFormError(null); // Clear any previous errors
+    
     try {
-      // First close the form to prevent any refreshing during API calls
-      setIsFormOpen(false);
+      // Set loading state to true at the beginning of the operation
+      setLoading(true);
+      
+      // Don't close the form immediately - the ReservationForm will handle showing the add-ons dialog
+      // and we'll let the user close the dialog when they're done
       
       let updatedReservation;
       
       if (selectedReservation) {
+        console.log('KennelCalendar: Updating existing reservation', selectedReservation.id);
         updatedReservation = await reservationService.updateReservation(
           selectedReservation.id,
           formData
         );
-      } else {
-        updatedReservation = await reservationService.createReservation(formData);
-      }
-
-      if (updatedReservation) {
+        
+        // For updates, we can close the form immediately since we don't need to show add-ons
         // Reload reservations to refresh the calendar
         await loadReservations();
         
-        if (onEventUpdate) {
-          onEventUpdate(updatedReservation);
+        if (onEventUpdate && typeof updatedReservation === 'object' && updatedReservation !== null) {
+          // Cast to Reservation type before passing to onEventUpdate
+          onEventUpdate(updatedReservation as Reservation);
         }
+        
+        // Close the form dialog for updates
+        setIsFormOpen(false);
+        setSelectedReservation(null);
+        setSelectedKennel(null);
+        setSelectedDate(null);
+      } else {
+        console.log('KennelCalendar: Creating new reservation');
+        try {
+          const response = await reservationService.createReservation(formData);
+          console.log('KennelCalendar: Raw API response:', response);
+          
+          // Store the response in the updatedReservation variable
+          updatedReservation = response;
+          
+          // Check if we need to navigate the response object to get to the actual reservation data
+          // This is done to handle different API response formats
+          if (typeof response === 'object' && response !== null) {
+            // If the response has a data property and a success status, use the data property
+            if ('data' in response && 'status' in response && response.status as string === 'success') {
+              console.log('KennelCalendar: Found nested data structure in response');
+              updatedReservation = response.data as any; // Use 'any' to avoid TypeScript errors
+            }
+          }
+        } catch (createError: any) {
+          // Handle specific error for duplicate reservation
+          if (createError.response && createError.response.status === 400) {
+            console.error('KennelCalendar: Error creating reservation - 400 Bad Request');
+            // Set a more specific error message for double booking
+            setFormError('This kennel is already booked for the selected time period. Please choose a different kennel or time.');
+            // Ensure loading state is reset
+            setLoading(false);
+            return undefined;
+          }
+          // Re-throw the error to be caught by the outer catch block
+          throw createError;
+        }
+        
+        // Reload reservations to refresh the calendar
+        await loadReservations();
+        
+        if (onEventUpdate && typeof updatedReservation === 'object' && updatedReservation !== null) {
+          // Cast to Reservation type before passing to onEventUpdate
+          onEventUpdate(updatedReservation as Reservation);
+        }
+        
+        // For new reservations, we DON'T close the form dialog immediately
+        // because we want to show the add-ons dialog first
+        // The ReservationForm component will handle closing the dialog after add-ons are processed
+        // This is key to ensuring the add-ons dialog appears after reservation creation
+        console.log('KennelCalendar: Keeping form open for add-ons dialog');
+      }
+
+      console.log('KennelCalendar: Processed API response:', updatedReservation);
+
+      if (updatedReservation) {
+        // Extract the reservation ID (handling different response formats)
+        let reservationId = '';
+        if (typeof updatedReservation === 'object' && updatedReservation !== null) {
+          if ('id' in updatedReservation) {
+            reservationId = updatedReservation.id as string;
+          } else if ('_id' in updatedReservation) {
+            reservationId = updatedReservation._id as string;
+          }
+        }
+        
+        // Return the reservation ID so it can be used for add-ons
+        console.log('KennelCalendar: Returning reservation ID for add-ons:', reservationId);
+        return { reservationId };
       } else {
         console.warn('KennelCalendar: No reservation returned from server');
+        
+        // If no reservation was created, don't close the form but show an error
+        // Use a more specific error message for double-booking scenarios
+        setFormError('This kennel is already booked for the selected time period.');
+        return undefined;
+      }
+    } catch (error: any) {
+      console.error('KennelCalendar: Error creating/updating reservation:', error);
+      
+      // Extract error message from the response if available
+      let errorMessage = 'An error occurred while saving the reservation.';
+      
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('KennelCalendar: Error response data:', error.response.data);
+        console.error('KennelCalendar: Error response status:', error.response.status);
+        
+        if (error.response.status === 400) {
+          // Handle specific error cases
+          if (error.response.data && error.response.data.message) {
+            errorMessage = error.response.data.message;
+          } else {
+            // Common 400 error for kennel reservations
+            errorMessage = 'This kennel is already booked for the selected time period.';
+          }
+        } else if (error.response.status === 404) {
+          errorMessage = 'Resource not found. Please refresh and try again.';
+        } else if (error.response.status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        errorMessage = 'No response from server. Please check your connection.';
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        errorMessage = error.message || 'Unknown error occurred.';
       }
       
-      // Reset state after all operations are complete
-      setSelectedReservation(null);
-      setSelectedKennel(null);
-      setSelectedDate(null);
-    } catch (error) {
-      console.error('KennelCalendar: Error saving reservation:', error);
+      // Set the error message to display in the form
+      setFormError(errorMessage);
+      console.log('KennelCalendar: Setting form error:', errorMessage);
+      
+      // Force a re-render to ensure the error message is displayed
+      setTimeout(() => {
+        // This will trigger a re-render
+        setLoading(false);
+      }, 0);
+      
+      // Don't close the form so the user can see the error
+      return undefined;
+    } finally {
+      // Ensure loading state is reset even if there's an error
+      setLoading(false);
     }
   };
 
@@ -666,6 +812,21 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
           {selectedReservation ? 'Edit Reservation' : 'Create New Reservation'}
         </DialogTitle>
         <DialogContent sx={{ py: 1, px: 2 }}>
+          {formError && (
+            <Alert 
+              severity="error" 
+              sx={{ 
+                mb: 2, 
+                fontWeight: 'medium',
+                '& .MuiAlert-icon': {
+                  color: 'error.main'
+                }
+              }}
+              variant="filled"
+            >
+              {formError}
+            </Alert>
+          )}
           {!selectedKennel || !selectedDate ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
               <CircularProgress />
@@ -676,6 +837,7 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
               selectedDate={selectedDate}
               selectedReservation={selectedReservation}
               onSubmit={handleFormSubmit}
+              error={formError}
             />
           )}
         </DialogContent>
@@ -690,14 +852,16 @@ interface ReservationFormWrapperProps {
   selectedKennel: Resource;
   selectedDate: { start: Date; end: Date };
   selectedReservation: Reservation | null;
-  onSubmit: (formData: any) => Promise<void>;
+  onSubmit: (formData: any) => Promise<{reservationId?: string} | void>;
+  error?: string | null;
 }
 
 const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = ({ 
   selectedKennel, 
   selectedDate, 
   selectedReservation, 
-  onSubmit 
+  onSubmit,
+  error
 }) => {
   // Create the initial data object for the form directly
   const formInitialData = selectedReservation ? {
@@ -723,6 +887,7 @@ const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = ({
       onSubmit={onSubmit}
       initialData={formInitialData}
       defaultDates={selectedDate}
+      showAddOns={true}
     />
   );
 };

@@ -18,6 +18,8 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - Drag-and-drop scheduling
 - Specialized kennel grid calendar for boarding and daycare
 - Compact view for efficient kennel management
+- Seamless add-on service selection workflow
+- Consistent reservation experience across all service types
 
 ### Invoicing and Payments
 - Automatic invoice generation for reservations

@@ -27,6 +27,7 @@ import { customerService } from '../../services/customerService';
 import { petService } from '../../services/petService';
 import { serviceManagement } from '../../services/serviceManagement';
 import { resourceService, Resource } from '../../services/resourceService';
+import AddOnSelectionDialog from './AddOnSelectionDialog';
 
 /**
  * Props for the ReservationForm component
@@ -35,8 +36,9 @@ interface ReservationFormProps {
   /**
    * Callback function called when the form is submitted
    * @param formData - The form data for the reservation
+   * @returns A promise with the created/updated reservation result
    */
-  onSubmit: (formData: any) => Promise<void>;
+  onSubmit: (formData: any) => Promise<{reservationId?: string} | void>;
 
   /**
    * Optional initial data for editing an existing reservation
@@ -80,7 +82,7 @@ interface ReservationFormProps {
  * />
  * ```
  */
-const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData, defaultDates }) => {
+const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData, defaultDates, showAddOns = false }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -386,6 +388,20 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   // State to track if dropdown should be rendered 
   const [dropdownReady, setDropdownReady] = useState(false);
   
+  // State for add-ons dialog
+  const [addOnsDialogOpen, setAddOnsDialogOpen] = useState(false);
+  const [newReservationId, setNewReservationId] = useState<string>('');
+  const [selectedServiceId, setSelectedServiceId] = useState<string>('');
+  
+  // Monitor add-ons dialog state changes
+  useEffect(() => {
+    if (addOnsDialogOpen && newReservationId) {
+      console.log('AddOns dialog is now open for reservation:', newReservationId);
+      console.log('AddOns dialog service ID:', selectedServiceId);
+      // No longer forcing refresh - this was causing an infinite loop
+    }
+  }, [addOnsDialogOpen, newReservationId, selectedServiceId]);
+  
   // Fetch available suites when suite type changes
   useEffect(() => {
     const loadAvailableSuites = async () => {
@@ -503,70 +519,153 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
+    setLoading(true); // Set loading state while we process the form
 
     // Validate all required fields
     if (!selectedCustomer || !selectedPet || !selectedService || !startDate || !endDate) {
       setError('Please fill in all required fields');
+      setLoading(false);
       return;
     }
 
-    // Find the selected service object
-    const selectedServiceObj = services.find(s => s.id === selectedService);
-    const requiresSuiteType = selectedServiceObj && 
-      (selectedServiceObj.serviceCategory === 'DAYCARE' || 
-       selectedServiceObj.serviceCategory === 'BOARDING');
-
-    // For services requiring a suite type, ensure one is selected or use default
-    let effectiveSuiteType = selectedSuiteType;
-    if (requiresSuiteType && !selectedSuiteType) {
-      // Set a default suite type if none is selected
-      effectiveSuiteType = 'STANDARD_SUITE';
+    // Store service ID for later use with add-ons
+    if (selectedService) {
+      setSelectedServiceId(selectedService);
+      console.log('ReservationForm: Stored service ID for add-ons:', selectedService);
     }
-
-    // Prepare form data
-    const formData: any = {
-      customerId: selectedCustomer,
-      petId: selectedPet,
-      serviceId: selectedService,
-      startDate: startDate ? startDate.toISOString() : null,
-      endDate: endDate ? endDate.toISOString() : null,
-      status: selectedStatus,
-      notes: '', // Add empty notes as it's expected by the backend
-    };
     
-    // Handle resource selection based on suite type
-    if (requiresSuiteType) {
-      // Always include the suiteType field for DAYCARE or BOARDING services
-      formData.suiteType = effectiveSuiteType;
-      
-      // Only set resourceId if a specific suite is selected and it's not empty
-      if (selectedSuiteId && selectedSuiteId.trim() !== '') {
-        formData.resourceId = selectedSuiteId;
-        // Log for debugging
-        console.log('Sending reservation with resourceId:', selectedSuiteId);
-      } else {
-        // Explicitly set resourceId to null for auto-assign
-        formData.resourceId = null;
-      }
-      
-      // If we have initialData with a kennelId but are not using it as resourceId,
-      // include it as a separate field for backward compatibility
-      if (initialData?.kennelId && initialData.kennelId !== selectedSuiteId) {
-        console.log('Including kennelId for backward compatibility:', initialData.kennelId);
-      }
-    }
-
     try {
-      await onSubmit(formData);
-    } catch (err: any) {
-      const errorMessage = err.response?.data?.message || 'Failed to create reservation';
-      setError(errorMessage);
+      // Create the form data object
+      const formData: any = {
+        customerId: selectedCustomer,
+        petId: selectedPet,
+        serviceId: selectedService,
+        startDate: startDate ? startDate.toISOString() : null,
+        endDate: endDate ? endDate.toISOString() : null,
+        status: selectedStatus,
+        notes: '', // Add empty notes as it's expected by the backend
+      };
+      
+      // Handle resource selection based on suite type
+      const selectedServiceObj = services.find(s => s.id === selectedService);
+      const requiresSuiteType = selectedServiceObj && 
+        (selectedServiceObj.serviceCategory === 'DAYCARE' || 
+         selectedServiceObj.serviceCategory === 'BOARDING');
+      
+      let effectiveSuiteType = selectedSuiteType;
+      if (requiresSuiteType && !selectedSuiteType) {
+        // Set a default suite type if none is selected
+        effectiveSuiteType = 'STANDARD_SUITE';
+      }
+      
+      if (requiresSuiteType) {
+        // Always include the suiteType field for DAYCARE or BOARDING services
+        formData.suiteType = effectiveSuiteType;
+        
+        // Only set resourceId if a specific suite is selected and it's not empty
+        if (selectedSuiteId && selectedSuiteId.trim() !== '') {
+          formData.resourceId = selectedSuiteId;
+          // Log for debugging
+          console.log('Sending reservation with resourceId:', selectedSuiteId);
+        } else {
+          // Explicitly set resourceId to null for auto-assign
+          formData.resourceId = null;
+        }
+        
+        // If we have initialData with a kennelId but are not using it as resourceId,
+        // include it as a separate field for backward compatibility
+        if (initialData?.kennelId && initialData.kennelId !== selectedSuiteId) {
+          console.log('Including kennelId for backward compatibility:', initialData.kennelId);
+        }
+      }
+
+      // Call the parent component's onSubmit function with our form data
+      console.log('ReservationForm: Submitting form data to parent', formData);
+      console.log('ReservationForm: showAddOns =', showAddOns);
+      
+      const result = await onSubmit(formData);
+      console.log('ReservationForm: Result from onSubmit:', result);
+      
+      // If the result is undefined, it means there was an error in the parent component
+      // The parent component will display the error, so we don't need to reset the form
+      if (result === undefined) {
+        console.log('ReservationForm: Form submission failed - error handled by parent');
+        setLoading(false);
+        return;
+      }
+      
+      // Show add-ons dialog for any service that might have add-ons
+      if (result?.reservationId) {
+        console.log('Reservation created successfully, showing add-ons dialog');
+        console.log('ReservationForm: Reservation ID for add-ons:', result.reservationId);
+        
+        // Set reservation ID for add-ons dialog
+        setNewReservationId(result.reservationId);
+        
+        // Make sure we set the selectedServiceId for the add-ons dialog
+        if (selectedService) {
+          console.log('Setting selected service ID for add-ons dialog:', selectedService);
+          setSelectedServiceId(selectedService);
+          
+          // Open the add-ons dialog immediately
+          console.log('Opening add-ons dialog');
+          setAddOnsDialogOpen(true);
+          
+          // Don't reset the form yet - we'll do it after add-ons are handled
+          return;
+        } else {
+          console.warn('No selected service ID for add-ons dialog');
+          handleReset();
+        }
+      } else {
+        console.log('Not showing add-ons dialog - no reservation ID returned');
+        handleReset();
+      }
+    } catch (error: any) {
+      console.error('Error in form submission:', error);
+      setError(error.message || 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   if (loading) {
     return <Typography>Loading...</Typography>;
   }
+
+  // Reset the form to its initial state
+  const handleReset = () => {
+    // Only reset if we're not editing an existing reservation
+    if (!initialData) {
+      // Keep the customer selected but reset other fields
+      setSelectedPet('');
+      setSelectedService('');
+      setSelectedSuiteType('');
+      setSelectedSuiteId('');
+      setStartDate(defaultDates?.start || null);
+      setEndDate(defaultDates?.end || null);
+    }
+    // Reset form state
+    setError('');
+    console.log('Form reset after successful submission');
+  };
+
+  // Handler for when add-ons are added
+  const handleAddOnsAdded = (success: boolean) => {
+    console.log('Add-ons added successfully:', success);
+    setAddOnsDialogOpen(false);
+    
+    if (success) {
+      // Reset the form
+      handleReset();
+      
+      // Signal to the parent component that the form is complete
+      // The parent component (KennelCalendar) will handle closing the dialog
+      // We'll use a custom event to signal that the reservation process is complete
+      const event = new CustomEvent('reservationComplete', { detail: { success: true } });
+      document.dispatchEvent(event);
+    }
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -972,6 +1071,20 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           </Box>
         </Box>
       </Paper>
+      
+      {/* Add-Ons Dialog - only shown after successful reservation creation when showAddOns is true */}
+      <AddOnSelectionDialog
+        open={addOnsDialogOpen && !!newReservationId && !!selectedService}
+        onClose={() => {
+          console.log('Closing add-ons dialog');
+          setAddOnsDialogOpen(false);
+          // Reset the form after closing the dialog
+          handleReset();
+        }}
+        reservationId={newReservationId}
+        serviceId={selectedService}
+        onAddOnsAdded={handleAddOnsAdded}
+      />
     </LocalizationProvider>
   );
 };

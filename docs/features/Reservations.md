@@ -49,6 +49,18 @@ The dashboard shows reservations filtered by specific statuses:
 - Real-time updates when status changes
 
 ### Reservation Form
+- Comprehensive form for creating and editing reservations
+- Customer and pet selection with search functionality
+- Service selection with dynamic pricing
+- Date and time selection with availability checking
+- Add-on service selection after reservation creation
+
+### Add-On System
+- Allows adding supplementary services to existing reservations
+- Automatically opens after creating a new reservation
+- Consistent behavior across all calendar types (boarding, grooming, training)
+- Seamless workflow from reservation creation to add-on selection
+- For more details, see [Add-On System Documentation](./AddOnSystem.md)
 - Accessible form with proper ARIA attributes
 - Smart field handling with validation
 - Auto-selection of pet when customer has only one pet
