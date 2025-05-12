@@ -8,6 +8,7 @@ import { EventInput, DateSelectArg, EventClickArg } from '@fullcalendar/core';
 
 import { Box, Paper, Dialog, DialogTitle, DialogContent, Snackbar, Alert } from '@mui/material';
 import { reservationService } from '../../services/reservationService';
+import { serviceManagement } from '../../services/serviceManagement';
 import ReservationForm from '../reservations/ReservationForm';
 import { Reservation } from '../../services/reservationService';
 import { ServiceCategory } from '../../types/service';
@@ -62,6 +63,14 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
   const [isAddOnDialogOpen, setIsAddOnDialogOpen] = useState(false);
   const [currentReservationId, setCurrentReservationId] = useState<string>('');
   const [currentServiceId, setCurrentServiceId] = useState<string>('');
+  
+  // Debug function to manually open add-on dialog
+  const debugOpenAddOnDialog = (reservationId: string, serviceId: string) => {
+    console.log('Calendar: Manually opening add-on dialog with:', { reservationId, serviceId });
+    setCurrentReservationId(reservationId);
+    setCurrentServiceId(serviceId);
+    setIsAddOnDialogOpen(true);
+  };
   const [notification, setNotification] = useState<{message: string; severity: 'success' | 'error' | 'info' | 'warning'} | null>(null);
 
   const loadReservations = useCallback(async () => {
@@ -84,13 +93,48 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
         // Filter reservations by service category if specified
         let filteredReservations = response.data;
         if (serviceCategories && serviceCategories.length > 0) {
+          // First, log all reservations to see what we're working with
+          console.log('Calendar: All reservations:', response.data);
+          
+          // If we have reservations, log the first one's service details to debug
+          if (response.data.length > 0) {
+            console.log('Calendar: First reservation service details:', {
+              service: response.data[0].service,
+              serviceId: response.data[0].serviceId
+            });
+          }
+          
+          // Filter reservations by service category
           filteredReservations = response.data.filter(reservation => {
-            // Check if the reservation's service category matches any of the specified categories
-            return reservation.service && 
-                   typeof reservation.service === 'object' &&
-                   'serviceCategory' in reservation.service &&
-                   serviceCategories.includes(reservation.service.serviceCategory as ServiceCategory);
+            // If we don't have service categories to filter by, include all reservations
+            if (!serviceCategories || serviceCategories.length === 0) {
+              return true;
+            }
+            
+            // If the reservation has a service object with serviceCategory property
+            if (reservation.service && 
+                typeof reservation.service === 'object') {
+              
+              // Check if serviceCategory exists directly on the service object
+              if ('serviceCategory' in reservation.service) {
+                return serviceCategories.includes(reservation.service.serviceCategory as ServiceCategory);
+              }
+              
+              // For boarding and daycare, we might need to check the service name
+              const serviceName = reservation.service.name?.toUpperCase();
+              if (serviceName) {
+                // Check if the service name contains any of our categories
+                return serviceCategories.some(category => {
+                  const categoryStr = String(category).toUpperCase();
+                  return serviceName.includes(categoryStr);
+                });
+              }
+            }
+            
+            // If we can't determine the service category, exclude the reservation
+            return false;
           });
+          
           console.log('Calendar: Filtered reservations by service category:', filteredReservations.length);
         }
         
@@ -337,18 +381,23 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
       setSelectedEvent(null);
       setSelectedDate(null);
       
-      // Check if this is a boarding or daycare service that might have add-ons
-      // Access the service category from the reservation's service object
-      // Use type assertion to access serviceCategory property
-      const service = updatedReservation.service as any;
-      const serviceCategory = service?.serviceCategory || '';
+      // Get the service to determine if we should show add-ons
+      // We'll need to check the service type to determine if add-ons are applicable
+      // For now, we'll show add-ons for all services to ensure they're available
+      console.log('Calendar: Service for reservation:', updatedReservation.service);
       
-      if (serviceCategory === 'BOARDING' || serviceCategory === 'DAYCARE') {
-        // Open the add-on selection dialog
+      // Open the add-on dialog for all services to ensure add-ons are available
+      console.log('Calendar: Opening add-on dialog for reservation:', {
+        reservationId: updatedReservation.id,
+        serviceId: updatedReservation.serviceId
+      });
+      
+      // Set a small timeout to ensure the dialog opens after the form closes
+      setTimeout(() => {
         setCurrentReservationId(updatedReservation.id);
         setCurrentServiceId(updatedReservation.serviceId);
         setIsAddOnDialogOpen(true);
-      }
+      }, 300);
     } catch (error) {
       console.error('Calendar: Error saving reservation:', error);
       // Do NOT close the dialog on error; let the form show the error
@@ -433,6 +482,7 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
               onSubmit={handleFormSubmit}
               initialData={selectedEvent || undefined}
               defaultDates={selectedDate || undefined}
+              showAddOns={true} /* Enable add-on selection in the form */
             />
           ) : (
             <div>Loading reservation form...</div>
@@ -440,7 +490,7 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
         </DialogContent>
       </Dialog>
 
-      {/* Add-On Selection Dialog */}
+      {/* Add-On Selection Dialog - keeping for backward compatibility */}
       <AddOnSelectionDialog
         open={isAddOnDialogOpen}
         onClose={() => setIsAddOnDialogOpen(false)}
