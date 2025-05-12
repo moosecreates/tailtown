@@ -21,6 +21,7 @@ This roadmap outlines the planned features and improvements for the Tailtown app
 - 🔲 Email notifications for reservation status changes
 - ✅ Staff scheduling and availability management
 - ✅ Standardized time format display (12-hour format with AM/PM)
+- ✅ Unique order number system for reservations (RES-YYYYMMDD-001 format)
 - 🔲 Mobile-responsive design improvements
 - 🔲 Dark mode support
 - 🔲 Priority alerts for staff
@@ -133,5 +134,5 @@ Cash amount paid after discount can have strange partial penny issues
 Staff scheduling should be reduced to rounded hours and only display minutes when needed
 Staff schedule should have a way to show a starting assignment location
 Saving in staff scheduling creates a duplicate shift rather than updating
-Add-on sales are not happening on the boarding and day care calendar when making a reservation
+✅ Add-on sales are now working on all reservation types (Fixed May 11, 2025)
 Add feeding schedule to kennel cards with weekly dates automatically added

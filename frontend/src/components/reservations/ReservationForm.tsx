@@ -678,6 +678,19 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       <Paper elevation={3} sx={{ p: 2 }}>
         <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {error && <Alert severity="error" sx={{ mb: 1 }}>{error}</Alert>}
+          
+          {/* Display order number when editing an existing reservation */}
+          {initialData && initialData.orderNumber && (
+            <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="subtitle1">Order Number:</Typography>
+              <Typography 
+                variant="body1" 
+                sx={{ fontWeight: 'bold', color: 'primary.main' }}
+              >
+                {initialData.orderNumber}
+              </Typography>
+            </Box>
+          )}
           {/* Customer search autocomplete - shows search results when user types 2+ characters */}
           <Autocomplete
             id="customer-search"

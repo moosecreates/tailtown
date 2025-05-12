@@ -20,6 +20,8 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - Compact view for efficient kennel management
 - Seamless add-on service selection workflow
 - Consistent reservation experience across all service types
+- Unique order number system for easy reference (format: RES-YYYYMMDD-001)
+- Comprehensive add-on services management
 
 ### Invoicing and Payments
 - Automatic invoice generation for reservations

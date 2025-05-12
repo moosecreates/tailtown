@@ -84,6 +84,7 @@ model Pet {
 
 model Reservation {
   id                 String             @id @default(uuid())
+  orderNumber        String?            @unique
   startDate          DateTime
   endDate            DateTime
   status             ReservationStatus  @default(PENDING)

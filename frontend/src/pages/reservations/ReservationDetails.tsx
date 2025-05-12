@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Container, Box, Paper, Button, Chip, Divider, CircularProgress, Alert, Menu, MenuItem } from '@mui/material';
+import { Typography, Container, Box, Paper, Button, Chip, Divider, CircularProgress, Alert, Menu, MenuItem, Link } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { reservationService, Reservation } from '../../services/reservationService';
 
@@ -116,14 +116,22 @@ const ReservationDetails = () => {
       minute: '2-digit'
     });
   };
+  
+  // Helper function to format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
 
   // Calculate total price
   const calculateTotal = () => {
     const basePrice = service?.price || 0;
     
     // Calculate add-ons total
-    const addOnsTotal = reservation.addOnServices?.reduce((total: number, addOn: { price?: number }) => {
-      return total + (addOn.price || 0);
+    const addOnsTotal = reservation.addOnServices?.reduce((total: number, addOn: { price?: number; quantity?: number }) => {
+      return total + (addOn.price || 0) * (addOn.quantity || 1);
     }, 0) || 0;
     
     // Apply any discounts if present
@@ -216,6 +224,13 @@ const ReservationDetails = () => {
               <Typography variant="h6" gutterBottom>Reservation Information</Typography>
               
               <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2">Order Number</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                  {reservation.orderNumber || 'Not assigned'}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ mb: 2 }}>
                 <Typography variant="subtitle2">Check-In</Typography>
                 <Typography variant="body2">{formatDate(startDate)}</Typography>
               </Box>
@@ -225,12 +240,80 @@ const ReservationDetails = () => {
                 <Typography variant="body1">{formatDate(endDate)}</Typography>
               </Box>
               
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Service</Typography>
-                <Typography variant="body1">{service?.name || 'N/A'}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {service?.description || 'No description available'}
-                </Typography>
+              <Box>
+                <Typography variant="h6" gutterBottom>Service & Pricing</Typography>
+                
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2">Service</Typography>
+                  <Typography variant="body1">{service?.name || 'N/A'}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {formatCurrency(service?.price || 0)}
+                  </Typography>
+                </Box>
+                
+                {/* Add-on Services Section */}
+                {reservation.addOnServices && reservation.addOnServices.length > 0 && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2">Add-on Services</Typography>
+                    <Box sx={{ pl: 2, mt: 1, border: '1px solid #eee', borderRadius: 1, p: 1 }}>
+                      {reservation.addOnServices.map((addOn, index) => (
+                        <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                          <Typography variant="body2">
+                            {addOn.name || addOn.addOn?.name || 'Unnamed Add-on'}
+                            {addOn.quantity && addOn.quantity > 1 ? ` (x${addOn.quantity})` : ''}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {formatCurrency((addOn.price || 0) * (addOn.quantity || 1))}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                )}
+                
+                {/* Pricing Summary */}
+                <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed #ccc' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                    <Typography variant="body2">Base Service:</Typography>
+                    <Typography variant="body2">{formatCurrency(service?.price || 0)}</Typography>
+                  </Box>
+                  
+                  {reservation.addOnServices && reservation.addOnServices.length > 0 && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                      <Typography variant="body2">Add-ons:</Typography>
+                      <Typography variant="body2">
+                        {formatCurrency(reservation.addOnServices.reduce((total, addOn) => {
+                          return total + (addOn.price || 0) * (addOn.quantity || 1);
+                        }, 0))}
+                      </Typography>
+                    </Box>
+                  )}
+                  
+                  {reservation.discount && reservation.discount > 0 && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                      <Typography variant="body2">Discount:</Typography>
+                      <Typography variant="body2" color="error.main">-{formatCurrency(reservation.discount)}</Typography>
+                    </Box>
+                  )}
+                  
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, pt: 1, borderTop: '1px solid #eee' }}>
+                    <Typography variant="subtitle2">Total:</Typography>
+                    <Typography variant="subtitle2" fontWeight="bold">{formatCurrency(calculateTotal())}</Typography>
+                  </Box>
+                </Box>
+                
+                <Box sx={{ mb: 2, mt: 3 }}>
+                  <Typography variant="subtitle2">Invoice Number</Typography>
+                  {reservation.invoice ? (
+                    <Typography variant="body1">
+                      <Link href={`/invoices/${reservation.invoice.id}`} sx={{ textDecoration: 'none' }}>
+                        #{reservation.invoice.invoiceNumber}
+                      </Link>
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">No invoice generated</Typography>
+                  )}
+                </Box>
               </Box>
               
               {reservation.resource && (
@@ -262,7 +345,10 @@ const ReservationDetails = () => {
                     <>
                       {reservation.addOnServices.map((addOn, index: number) => (
                         <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant="body2">{addOn.addOn?.name || 'Add-on'}:</Typography>
+                          <Typography variant="body2">
+                            {addOn.addOn?.name || addOn.name || 'Add-on'}
+                            {addOn.quantity && addOn.quantity > 1 ? ` (x${addOn.quantity})` : ''}:
+                          </Typography>
                           <Typography variant="body2">${addOn.price?.toFixed(2) || '0.00'}</Typography>
                         </Box>
                       ))}
@@ -282,6 +368,19 @@ const ReservationDetails = () => {
                     <Typography variant="body1" fontWeight="bold">Total:</Typography>
                     <Typography variant="body1" fontWeight="bold">${calculateTotal().toFixed(2)}</Typography>
                   </Box>
+                </Box>
+                
+                <Box sx={{ mb: 2, mt: 3 }}>
+                  <Typography variant="subtitle2">Invoice Number</Typography>
+                  {reservation.invoice ? (
+                    <Typography variant="body1">
+                      <Link href={`/invoices/${reservation.invoice.id}`} sx={{ textDecoration: 'none' }}>
+                        #{reservation.invoice.invoiceNumber}
+                      </Link>
+                    </Typography>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">No invoice generated</Typography>
+                  )}
                 </Box>
               </Box>
             </Box>

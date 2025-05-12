@@ -4,6 +4,7 @@ import { PaginatedResponse } from '../types/common';
 
 export interface Reservation {
   id: string;
+  orderNumber?: string;
   customerId: string;
   petId: string;
   serviceId: string;
@@ -14,6 +15,12 @@ export interface Reservation {
   staffNotes?: string;
   createdAt?: string; // Optional when creating a new reservation, will be set by the backend
   discount?: number; // Discount amount applied to the reservation
+  invoice?: {
+    id: string;
+    invoiceNumber: string;
+    status: string;
+    total: number;
+  }; // Associated invoice
   customer?: {
     id: string;
     firstName: string;
@@ -43,6 +50,8 @@ export interface Reservation {
     reservationId: string;
     addOnId: string;
     price: number;
+    quantity?: number;
+    name?: string;
     notes?: string;
     addOn?: {
       id: string;

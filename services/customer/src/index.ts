@@ -16,6 +16,7 @@ import { scheduleRoutes } from './routes/schedule.routes';
 import priceRuleRoutes from './routes/priceRule.routes';
 import invoiceRoutes from './routes/invoice.routes';
 import paymentRoutes from './routes/payment.routes';
+import addonRoutes from './routes/addon.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 // Load environment variables
@@ -199,6 +200,7 @@ app.use('/api/price-rules', priceRuleRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/addons', addonRoutes);
 
 // Additional routes without /api prefix for staff (to match frontend API calls)
 app.use('/staff', staffRoutes);

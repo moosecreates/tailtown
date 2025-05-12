@@ -23,7 +23,8 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { serviceManagement } from '../../services/serviceManagement';
-import { reservationService } from '../../services/reservationService';
+import { reservationService, Reservation } from '../../services/reservationService';
+import addonService, { AddOnService } from '../../services/addonService';
 
 interface AddOnSelectionDialogProps {
   open: boolean;
@@ -35,6 +36,7 @@ interface AddOnSelectionDialogProps {
 
 interface AddOn {
   serviceId: string;
+  addOnId: string;
   name: string;
   description?: string;
   quantity: number;
@@ -77,92 +79,57 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
   
   const loadAddOns = async () => {
     if (!serviceId || !open) {
-      console.log('AddOnSelectionDialog: Not loading add-ons - dialog not open or no serviceId');
       return;
     }
-    
-    console.log('AddOnSelectionDialog: Loading add-ons for service ID:', serviceId);
     
     try {
       setLoading(true);
       setError(null);
       setSelectedAddOns([]); // Reset selected add-ons when loading new ones
       
-      // For now, use hardcoded add-ons based on service ID
-      // In a real implementation, you would fetch from the API
-      let hardcodedAddOns = [];
+      console.log('AddOnSelectionDialog: Loading add-ons for service ID:', serviceId);
       
-      // Check if this is a grooming service (assuming nail trim has this ID)
-      if (serviceId === '15a3885b-f62d-436a-8cbb-2155557c46b1') {
-        // Grooming add-ons
-        hardcodedAddOns = [
-          {
-            id: '8a51bb58-a600-439f-8642-1dd3d3a62b61',
-            name: 'Hair Blow Out',
-            description: 'Professional blow drying and styling',
-            price: 15,
-            selected: false
-          },
-          {
-            id: '93e5da0b-6103-4abf-b266-2b775717c781',
-            name: 'Nail Polish',
-            description: 'Colorful nail polish application',
-            price: 5,
-            selected: false
-          }
-        ];
+      // First try to find add-ons specifically for this service
+      const addOns = await addonService.getAllAddOns(serviceId);
+      
+      console.log('AddOnSelectionDialog: Loaded add-ons:', addOns);
+      
+      if (addOns.length === 0) {
+        console.log('AddOnSelectionDialog: No add-ons found for this service, showing all available add-ons');
+        // If no add-ons found for this specific service, get all add-ons
+        const allAddOns = await addonService.getAllAddOns();
+        setAvailableAddOns(allAddOns);
       } else {
-        // Daycare add-ons
-        hardcodedAddOns = [
-          {
-            id: 'c4e7f8d9-a1b2-3c4d-5e6f-7g8h9i0j1k2l',
-            name: 'Extra Playtime',
-            description: 'Additional 30 minutes of supervised play',
-            price: 10,
-            selected: false
-          },
-          {
-            id: 'd5f6g7h8-i9j0-k1l2-m3n4-o5p6q7r8s9t0',
-            name: 'Special Treat',
-            description: 'Premium dog treat during the day',
-            price: 3,
-            selected: false
-          }
-        ];
+        setAvailableAddOns(addOns);
       }
-      
-      console.log('AddOnSelectionDialog: Setting add-ons:', hardcodedAddOns);
-      setAvailableAddOns(hardcodedAddOns);
-      
-    } catch (error: any) {
-      console.error('Error loading add-ons:', error);
-      setError('Failed to load available add-on services. Please try again.');
+    } catch (err: any) {
+      console.error('AddOnSelectionDialog: Error loading add-ons:', err);
+      setError('Failed to load add-on services. Please try again.');
     } finally {
       setLoading(false);
     }
   };
   
   // Handle adding an add-on service
-  const handleAddService = (addon: any) => {
-    // Check if the add-on is already in the selected list
-    const existingIndex = selectedAddOns.findIndex(item => item.serviceId === addon.id);
+  const handleAddService = (addon: AddOnService) => {
+    // Check if the add-on is already selected
+    const existingIndex = selectedAddOns.findIndex(item => item.addOnId === addon.id);
     
     if (existingIndex >= 0) {
-      // If it exists, just increment the quantity
+      // If already selected, increase the quantity
       const updatedAddOns = [...selectedAddOns];
       updatedAddOns[existingIndex].quantity += 1;
       setSelectedAddOns(updatedAddOns);
     } else {
-      // Otherwise, add it to the list with quantity 1
-      const newAddOn: AddOn = {
-        serviceId: addon.id,
+      // Otherwise, add it to the selected add-ons with quantity 1
+      setSelectedAddOns([...selectedAddOns, {
+        serviceId: addon.serviceId, // This is the service this add-on belongs to
+        addOnId: addon.id, // This is the actual add-on ID
         name: addon.name,
         description: addon.description,
-        quantity: 1,
-        price: addon.price
-      };
-      
-      setSelectedAddOns([...selectedAddOns, newAddOn]);
+        price: addon.price,
+        quantity: 1
+      }]);
     }
   };
   
@@ -187,7 +154,6 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
    * Otherwise, save the add-ons and show a success message
    */
   const handleSaveAddOns = async () => {
-    // If no add-ons are selected, just close the dialog without saving
     if (selectedAddOns.length === 0) {
       onClose();
       return;
@@ -199,37 +165,31 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
       setError(null);
       
       // Prepare add-on data for API submission
+      // The backend expects an array of objects with serviceId and quantity
+      // But we're sending the addOnId as the serviceId because that's what the backend controller expects
       const addOnData = selectedAddOns.map(addon => ({
-        name: addon.name,
-        price: addon.price,
-        quantity: addon.quantity,
-        total: addon.price * addon.quantity
+        serviceId: addon.addOnId, // Send the add-on ID as the serviceId parameter
+        quantity: addon.quantity
       }));
       
-      // TODO: Replace this with actual API call when backend is ready
-      // For now, we'll simulate a successful API response
-      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('AddOnSelectionDialog: Sending add-on data to backend:', addOnData);
+      
+      // Save add-ons to the reservation using the reservation service
+      await reservationService.addAddOnsToReservation(reservationId, addOnData);
       
       // Show success message to the user
       setSuccess('Add-on services have been added to the reservation.');
       
-      // Notify parent component that add-ons were successfully added
-      // This will trigger the form to close via the custom event system
+      // Notify parent component that add-ons were added successfully
       onAddOnsAdded(true);
       
-      // Close dialog after a short delay
-      // First clear focus from any element inside the dialog
-      // to prevent accessibility warnings
+      // Close the dialog after a short delay to show the success message
       setTimeout(() => {
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
         onClose();
       }, 1500);
-      
-    } catch (error: any) {
-      console.error('Error saving add-ons:', error);
-      setError('Failed to add services to the reservation. Please try again.');
+    } catch (err: any) {
+      console.error('AddOnSelectionDialog: Error saving add-ons:', err);
+      setError(err.response?.data?.message || 'Failed to add services to the reservation. Please try again.');
       onAddOnsAdded(false);
     } finally {
       setSaving(false);
@@ -323,8 +283,8 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {availableAddOns.map((addon, index) => (
-                    <TableRow key={index}>
+                  {availableAddOns.map((addon) => (
+                    <TableRow key={addon.id}>
                       <TableCell>{addon.name}</TableCell>
                       <TableCell>{addon.description}</TableCell>
                       <TableCell align="right">{formatCurrency(addon.price)}</TableCell>

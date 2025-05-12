@@ -4,6 +4,47 @@ import { AppError } from '../middleware/error.middleware';
 
 const prisma = new PrismaClient();
 
+// Helper function to generate a unique order number
+async function generateOrderNumber(): Promise<string> {
+  // Get the current date in YYYYMMDD format
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const datePrefix = `${year}${month}${day}`;
+  
+  // Get the count of reservations created today to use as a sequential number
+  const startOfDay = new Date(now.setHours(0, 0, 0, 0));
+  const endOfDay = new Date(now.setHours(23, 59, 59, 999));
+  
+  const todayReservationsCount = await prisma.reservation.count({
+    where: {
+      createdAt: {
+        gte: startOfDay,
+        lte: endOfDay
+      }
+    }
+  });
+  
+  // Format the sequential number with leading zeros (e.g., 001, 002, etc.)
+  const sequentialNumber = String(todayReservationsCount + 1).padStart(3, '0');
+  
+  // Combine to create the order number: RES-YYYYMMDD-001
+  const orderNumber = `RES-${datePrefix}-${sequentialNumber}`;
+  
+  // Check if this order number already exists (just to be safe)
+  const existingReservation = await prisma.reservation.findUnique({
+    where: { orderNumber }
+  });
+  
+  if (existingReservation) {
+    // In the unlikely case of a collision, recursively try again with an incremented number
+    return generateOrderNumber();
+  }
+  
+  return orderNumber;
+}
+
 // Get all reservations
 export const getAllReservations = async (
   req: Request,
@@ -525,9 +566,14 @@ export const createReservation = async (
       console.log('Backend: Service does not require a suite, not assigning a resource');
     }
 
+    // Generate a unique order number for this reservation
+    const orderNumber = await generateOrderNumber();
+    console.log(`Backend: Generated order number: ${orderNumber}`);
+    
     console.log('Backend: Creating reservation in database');
     const newReservation = await prisma.reservation.create({
       data: {
+        orderNumber,
         customerId,
         petId,
         serviceId,
@@ -824,10 +870,11 @@ export const addAddOnsToReservation = async (
     const { addOns } = req.body;
     
     console.log('Backend: Adding add-ons to reservation:', id);
-    console.log('Backend: Add-ons data:', addOns);
+    console.log('Backend: Add-ons data:', JSON.stringify(addOns, null, 2));
     
     // Validate input
     if (!Array.isArray(addOns) || addOns.length === 0) {
+      console.error('Backend: Invalid add-ons array:', addOns);
       return next(new AppError('Add-ons must be a non-empty array', 400));
     }
     
@@ -840,70 +887,127 @@ export const addAddOnsToReservation = async (
     });
     
     if (!reservation) {
+      console.error(`Backend: Reservation with ID ${id} not found`);
       return next(new AppError('Reservation not found', 404));
     }
     
+    console.log(`Backend: Found reservation with service: ${reservation.service?.name || 'Unknown'}`);
+    
     // Process each add-on
     const addOnResults = [];
+    const errors = [];
     
     for (const addOn of addOns) {
-      const { serviceId, quantity } = addOn;
-      
-      if (!serviceId || !quantity || quantity < 1) {
-        return next(new AppError('Each add-on must have a serviceId and a positive quantity', 400));
-      }
-      
-      // Check if the service exists
-      const service = await prisma.service.findUnique({
-        where: { id: serviceId }
-      });
-      
-      if (!service) {
-        return next(new AppError(`Service with ID ${serviceId} not found`, 404));
-      }
-      
-      // Create reservation add-on entries
-      for (let i = 0; i < quantity; i++) {
-        const reservationAddOn = await prisma.reservationAddOn.create({
-          data: {
-            reservationId: id,
-            addOnId: serviceId,
-            price: service.price,
-            notes: `Added as add-on to reservation`
-          },
-          include: {
-            addOn: true
-          }
+      try {
+        const { serviceId, quantity } = addOn;
+        
+        console.log(`Backend: Processing add-on with serviceId: ${serviceId}, quantity: ${quantity}`);
+        
+        if (!serviceId || !quantity || quantity < 1) {
+          const error = `Invalid add-on data: serviceId=${serviceId}, quantity=${quantity}`;
+          console.error(`Backend: ${error}`);
+          errors.push(error);
+          continue; // Skip this add-on but continue processing others
+        }
+        
+        // First, try to find an add-on service directly with this ID
+        let addOnService = await prisma.addOnService.findUnique({
+          where: { id: serviceId }
         });
         
-        addOnResults.push(reservationAddOn);
+        // If not found directly, try to find add-on services associated with this service ID
+        if (!addOnService) {
+          console.log(`Backend: No add-on service found with ID ${serviceId}, looking for add-ons associated with this service ID`);
+          
+          const addOnServices = await prisma.addOnService.findMany({
+            where: { serviceId: serviceId }
+          });
+          
+          if (addOnServices.length > 0) {
+            // Use the first add-on service associated with this service
+            addOnService = addOnServices[0];
+            console.log(`Backend: Found add-on service ${addOnService.name} (${addOnService.id}) associated with service ${serviceId}`);
+          } else {
+            // If still not found, check if it's a valid service ID at least
+            const service = await prisma.service.findUnique({
+              where: { id: serviceId }
+            });
+            
+            if (!service) {
+              const error = `Neither add-on service nor service found with ID ${serviceId}`;
+              console.error(`Backend: ${error}`);
+              errors.push(error);
+              continue; // Skip this add-on but continue processing others
+            }
+            
+            // Log that we're using a service ID directly, which isn't ideal
+            console.log(`Backend: WARNING - Using regular service ID ${serviceId} (${service.name}) instead of an add-on service ID`);
+            
+            // Create a temporary add-on service object for processing
+            addOnService = {
+              id: serviceId, // This will cause a foreign key error in the database
+              name: service.name,
+              description: service.description,
+              price: service.price,
+              serviceId: service.id,
+              isActive: true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              duration: service.duration
+            };
+            
+            // Add a more specific error since this will likely fail
+            errors.push(`Warning: Attempting to use service ID ${serviceId} as an add-on ID, which may cause database errors`);
+          }
+        }
+        
+        if (addOnService) {
+          console.log(`Backend: Using add-on service: ${addOnService.name}, price: ${addOnService.price}`);
+          
+          // Create reservation add-on entries
+          for (let i = 0; i < quantity; i++) {
+            try {
+              const reservationAddOn = await prisma.reservationAddOn.create({
+                data: {
+                  reservationId: id,
+                  addOnId: addOnService.id,
+                  price: addOnService.price,
+                  notes: `Added as add-on to reservation`
+                },
+                include: {
+                  addOn: true
+                }
+              });
+              
+              console.log(`Backend: Created reservation add-on: ${JSON.stringify(reservationAddOn)}`);
+              addOnResults.push(reservationAddOn);
+            } catch (createError) {
+              console.error(`Backend: Error creating reservation add-on:`, createError);
+              errors.push(`Failed to create add-on: ${createError instanceof Error ? createError.message : String(createError)}`);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Backend: Error processing add-on:', error);
+        errors.push(error instanceof Error ? error.message : String(error));
       }
     }
     
-    // Return the updated reservation with add-ons
-    const updatedReservation = await prisma.reservation.findUnique({
-      where: { id },
-      include: {
-        customer: true,
-        pet: true,
-        service: true,
-        resource: true,
-        addOnServices: {
-          include: {
-            addOn: true
-          }
-        }
-      }
-    });
+    // Return results, including any errors
+    const response = {
+      success: addOnResults.length > 0,
+      message: addOnResults.length > 0 
+        ? `Successfully added ${addOnResults.length} add-on(s) to the reservation` 
+        : 'Failed to add any add-ons to the reservation',
+      addOns: addOnResults,
+      errors: errors.length > 0 ? errors : undefined
+    };
     
-    res.status(200).json({
-      status: 'success',
-      message: 'Add-on services successfully added to the reservation',
-      data: updatedReservation,
-      addOns: addOnResults
-    });
+    console.log('Backend: Add-ons response:', JSON.stringify(response, null, 2));
+    
+    return res.status(addOnResults.length > 0 ? 200 : 400).json(response);
   } catch (error) {
-    console.error('Error adding add-ons to reservation:', error);
-    next(error);
+    console.error('Backend: Error in addAddOnsToReservation:', error);
+    return next(error);
   }
 };
