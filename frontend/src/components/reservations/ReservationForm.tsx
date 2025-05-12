@@ -650,19 +650,25 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     console.log('Form reset after successful submission');
   };
 
-  // Handler for when add-ons are added
+  /**
+   * Handler for when add-ons are added to a reservation
+   * Closes the dialog and signals completion to parent components
+   * @param success - Whether the add-ons were successfully added
+   */
   const handleAddOnsAdded = (success: boolean) => {
-    console.log('Add-ons added successfully:', success);
+    // Close the add-ons dialog regardless of success/failure
     setAddOnsDialogOpen(false);
     
     if (success) {
-      // Reset the form
+      // Reset the form to clear all fields
       handleReset();
       
-      // Signal to the parent component that the form is complete
-      // The parent component (KennelCalendar) will handle closing the dialog
-      // We'll use a custom event to signal that the reservation process is complete
-      const event = new CustomEvent('reservationComplete', { detail: { success: true } });
+      // Signal to the parent component that the reservation process is complete
+      // This event will be caught by both KennelCalendar and SpecializedCalendar
+      // to close the form dialog and refresh the calendar
+      const event = new CustomEvent('reservationComplete', { 
+        detail: { success: true } 
+      });
       document.dispatchEvent(event);
     }
   };

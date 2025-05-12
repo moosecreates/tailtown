@@ -181,42 +181,40 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
     setSelectedAddOns(updatedAddOns);
   };
   
-  // Handle saving add-ons to the reservation
+  /**
+   * Handle saving add-ons to the reservation
+   * If there are no add-ons selected, simply close the dialog
+   * Otherwise, save the add-ons and show a success message
+   */
   const handleSaveAddOns = async () => {
+    // If no add-ons are selected, just close the dialog without saving
     if (selectedAddOns.length === 0) {
       onClose();
       return;
     }
     
     try {
+      // Start saving process and clear any previous errors
       setSaving(true);
       setError(null);
       
-      console.log('AddOnSelectionDialog: Saving add-ons to reservation:', reservationId);
-      console.log('AddOnSelectionDialog: Add-ons to save:', selectedAddOns);
+      // Prepare add-on data for API submission
+      const addOnData = selectedAddOns.map(addon => ({
+        name: addon.name,
+        price: addon.price,
+        quantity: addon.quantity,
+        total: addon.price * addon.quantity
+      }));
       
-      // Since we're using hardcoded add-ons, we'll simulate a successful API call
-      // In a real implementation, we would use the actual API endpoint
-      // but for now we'll just show success
-      
-      // Simulate API delay
+      // TODO: Replace this with actual API call when backend is ready
+      // For now, we'll simulate a successful API response
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Log what would have been sent to the API
-      console.log('AddOnSelectionDialog: Would have sent to API:', {
-        reservationId,
-        addOns: selectedAddOns.map(addon => ({
-          name: addon.name,
-          price: addon.price,
-          quantity: addon.quantity,
-          total: addon.price * addon.quantity
-        }))
-      });
-      
-      // Show success message
+      // Show success message to the user
       setSuccess('Add-on services have been added to the reservation.');
       
-      // Notify parent component
+      // Notify parent component that add-ons were successfully added
+      // This will trigger the form to close via the custom event system
       onAddOnsAdded(true);
       
       // Close dialog after a short delay
@@ -247,18 +245,21 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
     }).format(amount);
   };
   
-  // Improved close handler that properly manages focus
+  /**
+   * Improved close handler that properly manages focus to prevent accessibility warnings
+   * This ensures focus is not trapped in the dialog when it closes
+   */
   const handleClose = () => {
     // First, move focus to the document body to ensure it's not trapped in the dialog
     document.body.focus();
     
-    // Then, clear focus from any element inside the dialog
-    // to prevent accessibility warnings
+    // Clear focus from any element inside the dialog to prevent accessibility warnings
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
     
     // Use a small timeout to ensure focus management happens before dialog closes
+    // This prevents React warnings about state updates during unmounting
     setTimeout(() => {
       onClose();
     }, 0);

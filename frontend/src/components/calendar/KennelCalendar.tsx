@@ -205,23 +205,27 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
     loadReservations();
   }, [loadReservations]);
   
-  // Add an event listener to close the form dialog when add-ons are added
+  /**
+   * Event listener to handle reservation completion
+   * This is triggered when add-ons are added to a reservation
+   * It closes the form dialog and refreshes the calendar
+   */
   useEffect(() => {
     const handleReservationComplete = (event: Event) => {
-      console.log('KennelCalendar: Received reservationComplete event');
-      // Close the form dialog
+      // Close the form dialog and reset all selection state
       setIsFormOpen(false);
       setSelectedReservation(null);
       setSelectedKennel(null);
       setSelectedDate(null);
-      // Reload reservations to refresh the calendar
+      
+      // Reload reservations to refresh the calendar with the updated data
       loadReservations();
     };
     
-    // Add the event listener
+    // Add the event listener for the custom event
     document.addEventListener('reservationComplete', handleReservationComplete);
     
-    // Clean up the event listener when the component unmounts
+    // Clean up the event listener when the component unmounts to prevent memory leaks
     return () => {
       document.removeEventListener('reservationComplete', handleReservationComplete);
     };
