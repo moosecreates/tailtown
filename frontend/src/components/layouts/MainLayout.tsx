@@ -41,7 +41,10 @@ import {
   ExpandLess as ExpandLessIcon,
   Schedule as ScheduleIcon,
   ShoppingCart as OrdersIcon,
-  Print as PrintIcon
+  Print as PrintIcon,
+  InsertChart as AnalyticsIcon,
+  CreditCard as PaymentIcon,
+  AssessmentOutlined as ReportIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -125,6 +128,15 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
         { path: '/calendar', label: 'Boarding & Daycare', icon: DaycareIcon },
         { path: '/calendar/grooming', label: 'Grooming', icon: GroomingIcon },
         { path: '/calendar/training', label: 'Training', icon: TrainingIcon },
+      ] 
+    },
+    { 
+      path: '/analytics', 
+      label: 'Analytics', 
+      icon: AnalyticsIcon,
+      children: [
+        { path: '/analytics', label: 'Sales Dashboard', icon: ReportIcon },
+        { path: '/analytics/customers', label: 'Customer Value', icon: PaymentIcon },
       ] 
     },
   ];

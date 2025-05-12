@@ -15,6 +15,8 @@ import Login from './pages/auth/Login';
 import Dashboard from './pages/Dashboard';
 import Customers from './pages/customers/Customers';
 import CustomerDetails from './pages/customers/CustomerDetails';
+import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard';
+import CustomerValueReport from './pages/analytics/CustomerValueReport';
 import Pets from './pages/pets/Pets';
 import PetDetails from './pages/pets/PetDetails';
 import Reservations from './pages/reservations/Reservations';
@@ -104,6 +106,8 @@ const AppRoutes = () => {
         <Route path="/settings/price-rules/:id" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />
         <Route path="/staff/scheduling" element={isAuthenticated ? <Scheduling /> : <Navigate to="/login" />} />
         <Route path="/orders/new" element={isAuthenticated ? <OrderEntry /> : <Navigate to="/login" />} />
+        <Route path="/analytics" element={isAuthenticated ? <AnalyticsDashboard /> : <Navigate to="/login" />} />
+        <Route path="/analytics/customers" element={isAuthenticated ? <CustomerValueReport /> : <Navigate to="/login" />} />
         
         {/* Add any test routes here if needed */}
       </Route>
