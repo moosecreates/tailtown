@@ -131,8 +131,8 @@ Features will be prioritized based on:
 Cash amount paid after discount can have strange partial penny issues
 ✅ New orders are displaying all kennels and not taking availability into account (Fixed May 6, 2025)
 ✅ Total price under reservation details is not reflecting the add ons and discounts. (Fixed May 6, 2025)
-Staff scheduling should be reduced to rounded hours and only display minutes when needed
-Staff schedule should have a way to show a starting assignment location
-Saving in staff scheduling creates a duplicate shift rather than updating
+✅ Staff scheduling now uses compact time format (minutes only shown when needed) (Fixed May 12, 2025)
+✅ Staff schedule now shows starting assignment location (Fixed May 12, 2025)
+✅ Fixed duplicate shift creation when updating staff schedules (Fixed May 12, 2025)
 ✅ Add-on sales are now working on all reservation types (Fixed May 11, 2025)
 Add feeding schedule to kennel cards with weekly dates automatically added

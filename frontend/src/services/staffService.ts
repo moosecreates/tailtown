@@ -87,6 +87,7 @@ export interface StaffSchedule {
   status: ScheduleStatus;
   notes?: string;
   location?: string;
+  startingLocation?: string; // Added starting location field
   role?: string;
   createdById?: string;
   updatedById?: string;

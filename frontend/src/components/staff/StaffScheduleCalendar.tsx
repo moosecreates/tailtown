@@ -159,19 +159,47 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
   const getScheduleColor = (status: ScheduleStatus) => {
     switch (status) {
       case ScheduleStatus.SCHEDULED:
-        return theme.palette.info.light;
+        return {
+          light: theme.palette.info.light,
+          main: theme.palette.info.main,
+          dark: theme.palette.info.dark
+        };
       case ScheduleStatus.CONFIRMED:
-        return theme.palette.success.light;
+        return {
+          light: theme.palette.success.light,
+          main: theme.palette.success.main,
+          dark: theme.palette.success.dark
+        };
       case ScheduleStatus.IN_PROGRESS:
-        return theme.palette.warning.light;
+        return {
+          light: theme.palette.warning.light,
+          main: theme.palette.warning.main,
+          dark: theme.palette.warning.dark
+        };
       case ScheduleStatus.COMPLETED:
-        return theme.palette.success.main;
+        return {
+          light: theme.palette.success.light,
+          main: theme.palette.success.main,
+          dark: theme.palette.success.dark
+        };
       case ScheduleStatus.CANCELLED:
-        return theme.palette.error.light;
+        return {
+          light: theme.palette.error.light,
+          main: theme.palette.error.main,
+          dark: theme.palette.error.dark
+        };
       case ScheduleStatus.NO_SHOW:
-        return theme.palette.error.main;
+        return {
+          light: theme.palette.error.light,
+          main: theme.palette.error.main,
+          dark: theme.palette.error.dark
+        };
       default:
-        return theme.palette.grey[300];
+        return {
+          light: theme.palette.grey[200],
+          main: theme.palette.grey[400],
+          dark: theme.palette.grey[600]
+        };
     }
   };
   
@@ -183,49 +211,50 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
   };
 
   /**
-   * Convert 24-hour time string to 12-hour format with AM/PM
+   * Convert 24-hour time string to 12-hour format with AM/PM, hiding minutes when they're zero
    * @param timeStr Time string in 24-hour format (HH:MM)
    * @returns Formatted time string in 12-hour format with AM/PM
    */
   const formatTo12Hour = (timeStr: string): string => {
-    if (!timeStr) return '';
-    
     try {
-      // Parse the time (assuming format like "14:00")
-      const [hourStr, minuteStr] = timeStr.split(':');
-      const hour = parseInt(hourStr, 10);
+      const [hours, minutes] = timeStr.split(':');
+      const hour = parseInt(hours, 10);
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12; // Convert 0 to 12 for 12 AM
       
-      if (isNaN(hour)) return timeStr;
-      
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      const hour12 = hour % 12 || 12; // Convert 0 to 12
-      
-      return `${hour12}:${minuteStr} ${ampm}`;
-    } catch (e) {
-      console.error('Error converting time:', e);
-      return timeStr;
+      // Format: "1:30 PM" or just "1 PM" if minutes are 00
+      return minutes === '00' ? 
+        `${displayHour} ${period}` : 
+        `${displayHour}:${minutes} ${period}`;
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return timeStr; // Return original string if there's an error
     }
   };
-  
+
   /**
    * Format the schedule time range for display in 12-hour format
    * @param schedule Staff schedule object
    * @returns Formatted time range string
    */
   const formatScheduleTime = (schedule: StaffSchedule) => {
-    const startTime12h = formatTo12Hour(schedule.startTime);
-    const endTime12h = formatTo12Hour(schedule.endTime);
+    if (!schedule.startTime || !schedule.endTime) return '';
     
-    return `${startTime12h} - ${endTime12h}`;
+    const start = formatTo12Hour(schedule.startTime);
+    const end = formatTo12Hour(schedule.endTime);
+    
+    return `${start} - ${end}`;
   };
 
   // Render the schedule cell content
   const renderScheduleCell = (staffMember: Staff, day: Date) => {
-    // Make sure staffMember.id is a string before passing it to getSchedulesForStaffAndDay
-    const staffId = staffMember.id || '';
-    const daySchedules = getSchedulesForStaffAndDay(staffId, day);
+    const schedulesForDay = getSchedulesForStaffAndDay(staffMember.id || '', day);
     
-    if (daySchedules.length === 0) {
+    if (loading) {
+      return <CircularProgress size={20} />;
+    }
+    
+    if (schedulesForDay.length === 0) {
       return (
         <Box 
           sx={{ 
@@ -239,7 +268,7 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
               bgcolor: 'rgba(0, 0, 0, 0.04)'
             }
           }}
-          onClick={() => handleAddSchedule(staffId, day)}
+          onClick={() => handleAddSchedule(staffMember.id, day)}
         >
           <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.65rem' }}>•</Typography>
         </Box>
@@ -248,47 +277,75 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
     
     return (
       <Box sx={{ p: 0.5 }}>
-        {daySchedules.map(schedule => (
-          <Box 
-            key={schedule.id}
-            sx={{
-              p: 0.5,
-              mb: 0.5,
-              borderRadius: 1,
-              bgcolor: `${getScheduleColor(schedule.status as ScheduleStatus)}80`,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              fontSize: '0.75rem'
-            }}
-          >
-            <Typography variant="caption" sx={{ fontWeight: 'medium' }}>
-              {formatScheduleTime(schedule)}
-            </Typography>
-            <Box>
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditSchedule(schedule);
-                }}
-                sx={{ padding: 0.25, ml: 0.5 }}
-              >
-                <EditIcon fontSize="small" sx={{ fontSize: '0.75rem' }} />
-              </IconButton>
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteSchedule(schedule.id!);
-                }}
-                sx={{ padding: 0.25 }}
-              >
-                <DeleteIcon fontSize="small" sx={{ fontSize: '0.75rem' }} />
-              </IconButton>
+        {schedulesForDay.map((schedule) => {
+          const scheduleColor = getScheduleColor(schedule.status);
+          
+          return (
+            <Box 
+              key={schedule.id} 
+              sx={{
+                mb: 0.5,
+                display: 'flex',
+                flexDirection: 'column',
+                p: 0.5,
+                borderRadius: 1,
+                bgcolor: scheduleColor.light,
+                border: `1px solid ${scheduleColor.main}`,
+                '&:last-child': { mb: 0 }
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                <Typography variant="caption" sx={{ fontWeight: 'medium', color: scheduleColor.dark }}>
+                  {formatScheduleTime(schedule)}
+                </Typography>
+                <Box>
+                  <Tooltip title="Edit Schedule">
+                    <IconButton 
+                      size="small" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditSchedule(schedule);
+                      }}
+                      sx={{ p: 0.25, mr: 0.5 }}
+                    >
+                      <EditIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete Schedule">
+                    <IconButton 
+                      size="small" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteSchedule(schedule.id || '');
+                      }}
+                      sx={{ p: 0.25 }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+              
+              {schedule.startingLocation && (
+                <Typography variant="caption" sx={{ display: 'block', fontWeight: 'bold' }}>
+                  🏁 Start: {schedule.startingLocation}
+                </Typography>
+              )}
+              
+              {schedule.location && (
+                <Typography variant="caption" sx={{ display: 'block' }}>
+                  📍 {schedule.location}
+                </Typography>
+              )}
+              
+              {schedule.role && (
+                <Typography variant="caption" sx={{ display: 'block' }}>
+                  👤 {schedule.role}
+                </Typography>
+              )}
             </Box>
-          </Box>
-        ))}
+          );
+        })}
       </Box>
     );
   };

@@ -283,20 +283,21 @@ model StaffTimeOff {
 }
 
 model StaffSchedule {
-  id          String         @id @default(uuid())
-  staffId     String
-  date        DateTime
-  startTime   String
-  endTime     String
-  status      ScheduleStatus @default(SCHEDULED)
-  notes       String?
-  location    String?
-  role        String?
-  createdById String?
-  updatedById String?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  staff       Staff          @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  id               String         @id @default(uuid())
+  staffId          String
+  date             DateTime
+  startTime        String
+  endTime          String
+  status           ScheduleStatus @default(SCHEDULED)
+  notes            String?
+  location         String?
+  startingLocation String?
+  role             String?
+  createdById      String?
+  updatedById      String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  staff            Staff          @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
   @@index([staffId, date], map: "staff_schedules_staff_date_idx")
   @@index([date, status])

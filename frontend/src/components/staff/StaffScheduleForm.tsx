@@ -42,6 +42,7 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
   initialDate
 }) => {
   const [formData, setFormData] = useState<Partial<StaffSchedule>>({
+    id: schedule?.id || undefined, // Keep the ID for updates to prevent duplicates
     staffId: staffId || '',
     date: initialDate ? format(initialDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
     startTime: '09:00',
@@ -49,6 +50,7 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
     status: ScheduleStatus.SCHEDULED,
     notes: '',
     location: '',
+    startingLocation: '', // Add starting location field
     role: ''
   });
   
@@ -58,6 +60,7 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
     if (schedule) {
       setFormData({
         ...schedule,
+        startingLocation: schedule.startingLocation || '', // Initialize starting location
         date: schedule.date ? schedule.date.toString().split('T')[0] : new Date().toISOString().split('T')[0]
       });
     } else if (staffId) {
@@ -242,6 +245,18 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
                 value={formData.location || ''}
                 onChange={handleInputChange}
                 placeholder="Department or work area"
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                label="Starting Location"
+                name="startingLocation"
+                value={formData.startingLocation || ''}
+                onChange={handleInputChange}
+                placeholder="Initial assignment location"
+                helperText="Where staff should report at the beginning of shift"
               />
             </Grid>
             
