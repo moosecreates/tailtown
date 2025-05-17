@@ -9,6 +9,22 @@ The Tailtown Pet Resort Management System uses a left sidebar navigation menu fo
 - **Path**: `/dashboard`
 - **Description**: Overview of daily operations, including today's reservations, recent activity, and key metrics
 
+### Calendar Items (Direct Access)
+- **Boarding Calendar**
+  - **Path**: `/calendar`
+  - **Description**: Calendar view for boarding and daycare reservations
+  - **Icon**: DaycareIcon
+
+- **Grooming Calendar**
+  - **Path**: `/calendar/grooming`
+  - **Description**: Calendar view for grooming appointments
+  - **Icon**: GroomingIcon
+
+- **Training Calendar**
+  - **Path**: `/calendar/training`
+  - **Description**: Calendar view for training sessions
+  - **Icon**: TrainingIcon
+
 ### Customers
 - **Path**: `/customers`
 - **Description**: Customer management, search, and profile access
@@ -35,13 +51,7 @@ The Tailtown Pet Resort Management System uses a left sidebar navigation menu fo
   - Reservation Details: `/reservations/:id`
   - Edit Reservation: `/reservations/:id/edit`
 
-### Calendar
-- **Path**: `/calendar`
-- **Description**: Calendar views for all service types
-- **Submenu**:
-  - Boarding & Daycare: `/calendar`
-  - Grooming: `/calendar/grooming`
-  - Training: `/calendar/training`
+
 
 ### Admin/Settings
 - **Path**: `/settings`

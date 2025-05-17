@@ -11,7 +11,8 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - Document storage for forms and agreements
 
 ### Reservation System
-- Interactive calendar interface
+- Interactive calendar interface with direct access to each service type
+- One-click navigation to Boarding, Grooming, and Training calendars 
 - Real-time availability checking
 - Multiple service types (daycare, boarding, grooming)
 - Color-coded reservation status
