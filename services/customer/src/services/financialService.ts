@@ -551,11 +551,22 @@ export async function getDailyRevenue(dateRange: DateRange): Promise<{date: stri
 
 /**
  * Gets revenue breakdown by customer
+ * 
+ * This function now tracks customers from three sources:
+ * 1. Customers with formal invoices
+ * 2. Customers with direct payments
+ * 3. Customers with reservations that haven't been invoiced yet
+ * 
+ * This ensures the customer count in analytics matches what's visible on the calendar.
  */
 export async function getCustomerRevenue(dateRange: DateRange): Promise<CustomerRevenue[]> {
+  // Get invoices for invoice-based customers
   const invoices = await getInvoicesInRange(dateRange);
   
-  // Group invoices by customer
+  // Get reservations without invoices to capture all customers with bookings
+  const reservationsWithoutInvoices = await getReservationsWithoutInvoices(dateRange);
+  
+  // Group customers across all revenue sources
   const customerMap = new Map<string, {
     id: string;
     name: string;
@@ -563,6 +574,7 @@ export async function getCustomerRevenue(dateRange: DateRange): Promise<Customer
     invoices: typeof invoices;
   }>();
   
+  // Process customers from invoices
   for (const invoice of invoices) {
     if (invoice.customer) {
       const customerId = invoice.customer.id;
@@ -579,6 +591,23 @@ export async function getCustomerRevenue(dateRange: DateRange): Promise<Customer
       const customerData = customerMap.get(customerId)!;
       customerData.invoices.push(invoice);
       customerMap.set(customerId, customerData);
+    }
+  }
+  
+  // Process customers from reservations without invoices
+  for (const reservation of reservationsWithoutInvoices) {
+    if (reservation.customer) {
+      const customerId = reservation.customer.id;
+      
+      // Only add if not already included from invoices
+      if (!customerMap.has(customerId)) {
+        customerMap.set(customerId, {
+          id: customerId,
+          name: `${reservation.customer.firstName} ${reservation.customer.lastName}`,
+          email: reservation.customer.email || '',
+          invoices: []
+        });
+      }
     }
   }
   
