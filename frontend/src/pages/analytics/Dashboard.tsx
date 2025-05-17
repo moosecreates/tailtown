@@ -390,14 +390,14 @@ const Dashboard = () => {
             <CardContent>
               <Box sx={{ height: 380, display: 'flex', justifyContent: 'center' }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart margin={{ top: 0, right: 30, left: 30, bottom: 0 }}>
+                  <PieChart margin={{ top: 0, right: 30, left: 30, bottom: 5 }}>
                     <Pie
                       data={serviceData?.services || []}
                       cx="50%"
-                      cy="50%"
+                      cy="45%"
                       labelLine={true}
                       label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                      outerRadius={90}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="count"
                       nameKey="name"
@@ -407,6 +407,12 @@ const Dashboard = () => {
                       ))}
                     </Pie>
                     <Tooltip formatter={(value: number) => [`${value} bookings`, 'Count']} />
+                    <Legend
+                      layout="horizontal"
+                      verticalAlign="bottom"
+                      align="center"
+                      wrapperStyle={{ paddingTop: '15px' }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </Box>
