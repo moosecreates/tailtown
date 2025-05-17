@@ -204,6 +204,8 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
         // Payment and transaction data
         invoiceCount: financialSummary.invoiceCount,
         paidInvoiceCount: financialSummary.paidInvoiceCount,
+        partiallyPaidInvoiceCount: financialSummary.partiallyPaidInvoiceCount || 0,
+        partiallyPaidAmount: financialSummary.partiallyPaidAmount || 0,
         directPaymentsTotal: financialSummary.directPaymentsTotal,
         directPaymentsCount: financialSummary.directPaymentsCount,
         reservationValueTotal: financialSummary.reservationValueTotal,

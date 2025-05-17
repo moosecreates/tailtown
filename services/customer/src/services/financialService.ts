@@ -12,8 +12,8 @@ import { DateRange } from '../types/common';
 const prisma = new PrismaClient();
 
 // Standardized filter constants
-const VALID_INVOICE_STATUSES = ['SENT', 'PAID', 'OVERDUE'] as InvoiceStatus[];
-const INVALID_INVOICE_STATUSES = ['DRAFT', 'CANCELLED', 'REFUNDED'] as InvoiceStatus[];
+export const VALID_INVOICE_STATUSES = ['PAID', 'PARTIALLY_PAID', 'SENT', 'OVERDUE'] as InvoiceStatus[];
+export const INVALID_INVOICE_STATUSES = ['DRAFT', 'CANCELLED', 'REFUNDED'] as InvoiceStatus[];
 const VALID_RESERVATION_STATUSES = ['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'COMPLETED'] as ReservationStatus[];
 const INVALID_RESERVATION_STATUSES = ['CANCELLED', 'NO_SHOW', 'PENDING'] as ReservationStatus[];
 const VALID_PAYMENT_STATUSES = ['PAID'] as PaymentStatus[];
@@ -26,6 +26,9 @@ export interface FinancialSummary {
   invoiceCount: number;
   paidInvoiceCount: number;
   outstandingInvoiceCount: number;
+  // Partial payment tracking fields
+  partiallyPaidInvoiceCount: number;
+  partiallyPaidAmount: number;
   avgInvoiceValue: number;
   taxCollected: number;
   // Additional fields for direct payments and reservations
@@ -213,10 +216,36 @@ export async function getFinancialSummary(dateRange: DateRange): Promise<Financi
   
   // Get total amount by summing line item totals
   const totalInvoiceRevenue = invoices.reduce((sum: number, invoice: any) => sum + invoice.total, 0);
+  
+  // Handle fully paid invoices
   const paidInvoices = invoices.filter(inv => inv.status === 'PAID');
   const paidInvoiceRevenue = paidInvoices.reduce((sum: number, inv: any) => sum + inv.total, 0);
-  const outstandingInvoices = invoices.filter(inv => inv.status !== 'PAID');
-  const outstandingInvoiceRevenue = outstandingInvoices.reduce((sum: number, inv: any) => sum + inv.total, 0);
+  
+  // Handle partially paid invoices (deposits)
+  const partiallyPaidInvoices = invoices.filter(inv => inv.status === 'PARTIALLY_PAID');
+  
+  // Calculate the paid amount from payments for partially paid invoices
+  let partiallyPaidAmount = 0;
+  let outstandingPartialAmount = 0;
+  
+  if (partiallyPaidInvoices.length > 0) {
+    for (const invoice of partiallyPaidInvoices) {
+      const invoiceTotal = invoice.total || 0;
+      const paidAmount = invoice.payments?.reduce((sum: number, payment: any) => sum + payment.amount, 0) || 0;
+      partiallyPaidAmount += paidAmount;
+      outstandingPartialAmount += (invoiceTotal - paidAmount);
+    }
+  }
+  
+  // Handle other outstanding invoices (not paid at all)
+  const unpaidInvoices = invoices.filter(inv => inv.status !== 'PAID' && inv.status !== 'PARTIALLY_PAID');
+  const unpaidInvoiceRevenue = unpaidInvoices.reduce((sum: number, inv: any) => sum + inv.total, 0);
+  
+  // Total outstanding is from both unpaid invoices and remaining balance on partially paid invoices
+  const outstandingInvoiceRevenue = unpaidInvoiceRevenue + outstandingPartialAmount;
+  
+  // All invoices that aren't fully paid
+  const outstandingInvoices = [...unpaidInvoices, ...partiallyPaidInvoices];
   
   // Get direct payments (cash payments without invoices)
   const directPaymentsData = await getDirectPaymentsInRange(dateRange);
@@ -253,6 +282,9 @@ export async function getFinancialSummary(dateRange: DateRange): Promise<Financi
     invoiceCount: invoices.length,
     paidInvoiceCount: paidInvoices.length,
     outstandingInvoiceCount: outstandingInvoices.length,
+    // Add partial payment tracking
+    partiallyPaidInvoiceCount: partiallyPaidInvoices.length,
+    partiallyPaidAmount: partiallyPaidAmount,
     avgInvoiceValue: invoices.length > 0 ? totalInvoiceRevenue / invoices.length : 0,
     taxCollected: 0, // Not implemented
     // Additional metrics for comprehensive reporting

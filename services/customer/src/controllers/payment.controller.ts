@@ -1,5 +1,5 @@
+import { PrismaClient, InvoiceStatus } from '@prisma/client';
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 
 const prisma = new PrismaClient();
@@ -128,11 +128,21 @@ export const createPayment = async (req: Request, res: Response, next: NextFunct
       },
     });
 
-    // Update invoice status if fully paid
-    if (paidAmount + paymentAmount >= invoice.total) {
+    // Calculate the new total paid amount
+    const newTotalPaid = paidAmount + paymentAmount;
+    
+    // Update invoice status based on payment amount
+    if (newTotalPaid >= invoice.total) {
+      // Fully paid
       await prisma.invoice.update({
         where: { id: invoiceId },
         data: { status: 'PAID' },
+      });
+    } else if (newTotalPaid > 0) {
+      // Partially paid (deposit or partial payment)
+      await prisma.invoice.update({
+        where: { id: invoiceId },
+        data: { status: 'PARTIALLY_PAID' as InvoiceStatus },
       });
     }
 
@@ -291,11 +301,21 @@ export const applyStoreCredit = async (req: Request, res: Response, next: NextFu
         return sum;
       }, 0);
 
-      // Update invoice status if fully paid
-      if (totalPaid >= invoice.total) {
+      // Calculate the new total paid amount
+      const newTotalPaid = totalPaid + creditAmount;
+      
+      // Update invoice status based on payment amount
+      if (newTotalPaid >= invoice.total) {
+        // Fully paid
         await prisma.invoice.update({
           where: { id: invoiceId },
-          data: { status: 'PAID' },
+          data: { status: 'PAID' as InvoiceStatus },
+        });
+      } else if (newTotalPaid > 0) {
+        // Partially paid (deposit or partial payment via store credit)
+        await prisma.invoice.update({
+          where: { id: invoiceId },
+          data: { status: 'PARTIALLY_PAID' as InvoiceStatus },
         });
       }
     }
