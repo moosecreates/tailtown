@@ -19,24 +19,13 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PaymentIcon from '@mui/icons-material/Payment';
 import { useShoppingCart, CartItem } from '../../contexts/ShoppingCartContext';
-import { formatCurrency } from '../../utils/formatters';
+// Use our centralized financial service instead of formatCurrency from utils
+import { financialService, FinancialCartItem, FinancialCalculation } from '../../services';
 import OrderSummary from '../../components/cart/OrderSummary';
 import PaymentStep from './steps/PaymentStep';
 
-interface AddOn {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
-
-interface CartItemWithAddOns extends CartItem {
-  addOns?: AddOn[];
-  serviceName?: string;
-  petName?: string;
-  startDate?: Date;
-  endDate?: Date;
-}
+// Using standardized FinancialAddOn and FinancialCartItem interfaces from our service
+// This ensures consistent data structure across the application
 
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
@@ -47,10 +36,11 @@ const CheckoutPage: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash'); // Default to cash instead of creditCard
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [savePaymentInfo, setSavePaymentInfo] = useState(false);
-  const [localCartItems, setLocalCartItems] = useState<CartItemWithAddOns[]>([]);
+  const [localCartItems, setLocalCartItems] = useState<FinancialCartItem[]>([]);
+  const [financialCalculation, setFinancialCalculation] = useState<FinancialCalculation | null>(null);
   
-  // Convert context cart items to CartItemWithAddOns type
-  const extendedCartItems = cartItems as unknown as CartItemWithAddOns[];
+  // Convert context cart items to FinancialCartItem type
+  const extendedCartItems = cartItems as unknown as FinancialCartItem[];
   
   /**
    * Cart Loading from localStorage
@@ -70,7 +60,7 @@ const CheckoutPage: React.FC = () => {
     try {
       const savedCart = localStorage.getItem('tailtownCart');
       if (savedCart) {
-        const parsedCart = JSON.parse(savedCart) as CartItemWithAddOns[];
+        const parsedCart = JSON.parse(savedCart) as FinancialCartItem[];
         console.log('CheckoutPage: Found items in localStorage:', parsedCart);
         
         // Directly use the localStorage cart items for rendering
@@ -113,25 +103,25 @@ const CheckoutPage: React.FC = () => {
     }
   }, []);  // Only run once on component mount
   
-  // Calculate subtotal using localCartItems instead of context items
-  const subtotal = localCartItems.reduce((total: number, item: CartItemWithAddOns) => {
-    const itemPrice = item.price || 0;
-    const addOnsTotal = item.addOns?.reduce((addOnTotal, addOn) => addOnTotal + (addOn.price * addOn.quantity), 0) || 0;
-    return total + itemPrice + addOnsTotal;
-  }, 0);
-  
-  // Calculate tax (using 7.44% tax rate as per standard)
-  const taxRate = 0.0744;
-  const tax = subtotal * taxRate;
-  
-  // Calculate total
-  const total = subtotal + tax;
-  
-  // Set initial payment amount when total changes
+  // Use financial service to calculate totals
   useEffect(() => {
-    // Round to 2 decimal places to ensure consistent cents display
-    setPaymentAmount(parseFloat(total.toFixed(2)));
-  }, [total]);
+    if (localCartItems.length > 0) {
+      // Get calculation from financial service
+      const calculation = financialService.calculateTotals(localCartItems);
+      setFinancialCalculation(calculation);
+      
+      // Set initial payment amount based on total from calculation
+      // Round to 2 decimal places to ensure consistent cents display
+      setPaymentAmount(financialService.roundCurrency(calculation.total));
+      
+      console.log('CheckoutPage: Financial calculation updated', calculation);
+    }
+  }, [localCartItems]); // Recalculate when cart items change
+  
+  // Extract financial values from calculation for easier access
+  const subtotal = financialCalculation?.subtotal || 0;
+  const tax = financialCalculation?.tax || 0;
+  const total = financialCalculation?.total || 0;
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,8 +268,11 @@ const CheckoutPage: React.FC = () => {
             </Typography>
             <Divider sx={{ mb: 2 }} />
             
-            {/* Use the new OrderSummary component */}
-            <OrderSummary cartItems={localCartItems} tax={tax} />
+            {/* Use the new OrderSummary component with centralized financial calculation */}
+            <OrderSummary 
+              cartItems={localCartItems} 
+              calculation={financialCalculation || undefined} 
+            />
           </Paper>
         </Grid>
         
