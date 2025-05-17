@@ -488,18 +488,28 @@ export const createReservation = async (
 
     // Helper: check if a suite is available for the given dates
     async function isSuiteAvailable(suiteId: string) {
+      console.log(`Backend: Checking if suite ${suiteId} is available between ${startDate} and ${endDate}`);
+      
+      // Parse the dates properly to ensure correct comparison
+      const reservationStartDate = new Date(startDate);
+      const reservationEndDate = new Date(endDate);
+      
+      console.log(`Backend: Parsed dates - Start: ${reservationStartDate.toISOString()}, End: ${reservationEndDate.toISOString()}`);
+      
       const overlapping = await prisma.reservation.count({
         where: {
           resourceId: suiteId,
           status: { in: ['CONFIRMED', 'CHECKED_IN'] },
           OR: [
             {
-              startDate: { lte: endDate },
-              endDate: { gte: startDate },
+              startDate: { lte: reservationEndDate },
+              endDate: { gte: reservationStartDate },
             },
           ],
         },
       });
+      
+      console.log(`Backend: Found ${overlapping} overlapping reservations for suite ${suiteId}`);
       return overlapping === 0;
     }
 

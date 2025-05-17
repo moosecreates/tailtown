@@ -1097,8 +1097,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         onClose={() => {
           console.log('Closing add-ons dialog');
           setAddOnsDialogOpen(false);
-          // Reset the form after closing the dialog
-          handleReset();
+          // Don't reset the form here - the AddOnSelectionDialog will handle navigation
+          // This prevents the calendar from briefly showing before checkout
         }}
         reservationId={newReservationId}
         serviceId={selectedService}

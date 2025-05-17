@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogTitle,
@@ -25,6 +26,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import { serviceManagement } from '../../services/serviceManagement';
 import { reservationService, Reservation } from '../../services/reservationService';
 import addonService, { AddOnService } from '../../services/addonService';
+import { useShoppingCart } from '../../contexts/ShoppingCartContext';
 
 interface AddOnSelectionDialogProps {
   open: boolean;
@@ -50,6 +52,7 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
   serviceId,
   onAddOnsAdded
 }) => {
+  const navigate = useNavigate();
   // State for available add-ons
   const [availableAddOns, setAvailableAddOns] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -150,19 +153,94 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
   
   /**
    * Handle saving add-ons to the reservation
-   * If there are no add-ons selected, simply close the dialog
+   * If there are no add-ons selected, add the reservation to cart and proceed to checkout
    * Otherwise, save the add-ons and show a success message
    */
+  // Get access to shopping cart context
+  const { addToCart } = useShoppingCart();
+
   const handleSaveAddOns = async () => {
-    if (selectedAddOns.length === 0) {
-      onClose();
-      return;
-    }
-    
     try {
-      // Start saving process and clear any previous errors
       setSaving(true);
       setError(null);
+      
+      // Fetch reservation details to add to cart
+      console.log('AddOnSelectionDialog: Fetching reservation details for cart, ID:', reservationId);
+      const reservationDetails = await reservationService.getReservationById(reservationId);
+      
+      if (!reservationDetails) {
+        throw new Error('Could not retrieve reservation details');
+      }
+      
+      console.log('AddOnSelectionDialog: Got reservation details:', reservationDetails);
+      
+      // If no add-ons are selected, add reservation to cart and proceed to checkout
+      if (selectedAddOns.length === 0) {
+        // Create cart item from reservation
+        const cartItem = {
+          id: reservationId,
+          name: `${reservationDetails.service?.name || 'Reservation'} - ${reservationDetails.pet?.name || 'Pet'}`,
+          price: reservationDetails.service?.price || 0,
+          quantity: 1,
+          serviceName: reservationDetails.service?.name,
+          petName: reservationDetails.pet?.name,
+          startDate: new Date(reservationDetails.startDate),
+          endDate: new Date(reservationDetails.endDate)
+        };
+        
+        // Add to cart through context
+        console.log('AddOnSelectionDialog: Adding reservation to cart:', cartItem);
+        addToCart(cartItem);
+        
+        // Also directly update localStorage as backup
+        try {
+          const existingCart = localStorage.getItem('tailtownCart');
+          let cartArray = [];
+          
+          if (existingCart) {
+            cartArray = JSON.parse(existingCart);
+          }
+          
+          cartArray.push(cartItem);
+          localStorage.setItem('tailtownCart', JSON.stringify(cartArray));
+          console.log('AddOnSelectionDialog: Successfully added to localStorage:', cartArray);
+        } catch (error) {
+          console.error('AddOnSelectionDialog: Error updating localStorage:', error);
+        }
+        
+        // Create a hidden form to submit directly to checkout page
+        // This bypasses React Router completely and prevents any intermediate navigation
+        console.log('AddOnSelectionDialog: No add-ons selected, creating direct navigation form to checkout');
+        
+        // Create a hidden form element
+        const form = document.createElement('form');
+        form.style.display = 'none';
+        form.method = 'get';
+        form.action = '/checkout';
+        
+        // Add a timestamp to prevent caching
+        const timestamp = document.createElement('input');
+        timestamp.type = 'hidden';
+        timestamp.name = 'timestamp';
+        timestamp.value = Date.now().toString();
+        form.appendChild(timestamp);
+        
+        // Add the form to the document body
+        document.body.appendChild(form);
+        
+        // Close the dialog
+        onClose();
+        
+        // Submit the form immediately
+        console.log('AddOnSelectionDialog: Submitting direct navigation form to checkout');
+        form.submit();
+        
+        // Remove the form after submission
+        setTimeout(() => {
+          document.body.removeChild(form);
+        }, 100);
+        return;
+      }
       
       // Prepare add-on data for API submission
       // The backend expects an array of objects with serviceId and quantity
@@ -177,16 +255,84 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
       // Save add-ons to the reservation using the reservation service
       await reservationService.addAddOnsToReservation(reservationId, addOnData);
       
+      // Create cart item with add-ons
+      // Transform AddOn objects to match CartItem.addOns interface
+      const formattedAddOns = selectedAddOns.map(addon => ({
+        id: addon.addOnId,
+        name: addon.name,
+        price: addon.price,
+        quantity: addon.quantity
+      }));
+      
+      const cartItem = {
+        id: reservationId,
+        name: `${reservationDetails.service?.name || 'Reservation'} - ${reservationDetails.pet?.name || 'Pet'}`,
+        price: reservationDetails.service?.price || 0,
+        quantity: 1,
+        serviceName: reservationDetails.service?.name,
+        petName: reservationDetails.pet?.name,
+        startDate: new Date(reservationDetails.startDate),
+        endDate: new Date(reservationDetails.endDate),
+        addOns: formattedAddOns
+      };
+      
+      // Add to cart through context
+      console.log('AddOnSelectionDialog: Adding reservation with add-ons to cart:', cartItem);
+      addToCart(cartItem);
+      
+      // Also directly update localStorage as backup
+      try {
+        const existingCart = localStorage.getItem('tailtownCart');
+        let cartArray = [];
+        
+        if (existingCart) {
+          cartArray = JSON.parse(existingCart);
+        }
+        
+        cartArray.push(cartItem);
+        localStorage.setItem('tailtownCart', JSON.stringify(cartArray));
+        console.log('AddOnSelectionDialog: Successfully added to localStorage with add-ons:', cartArray);
+      } catch (error) {
+        console.error('AddOnSelectionDialog: Error updating localStorage:', error);
+      }
+      
       // Show success message to the user
       setSuccess('Add-on services have been added to the reservation.');
       
       // Notify parent component that add-ons were added successfully
       onAddOnsAdded(true);
       
-      // Close the dialog after a short delay to show the success message
+      // Create a hidden form to submit directly to checkout page
+      // This bypasses React Router completely and prevents any intermediate navigation
+      console.log('AddOnSelectionDialog: Creating direct navigation form to checkout');
+      
+      // Create a hidden form element
+      const form = document.createElement('form');
+      form.style.display = 'none';
+      form.method = 'get';
+      form.action = '/checkout';
+      
+      // Add a timestamp to prevent caching
+      const timestamp = document.createElement('input');
+      timestamp.type = 'hidden';
+      timestamp.name = 'timestamp';
+      timestamp.value = Date.now().toString();
+      form.appendChild(timestamp);
+      
+      // Add the form to the document body
+      document.body.appendChild(form);
+      
+      // Close the dialog
+      onClose();
+      
+      // Submit the form immediately
+      console.log('AddOnSelectionDialog: Submitting direct navigation form to checkout');
+      form.submit();
+      
+      // Remove the form after submission
       setTimeout(() => {
-        onClose();
-      }, 1500);
+        document.body.removeChild(form);
+      }, 100);
     } catch (err: any) {
       console.error('AddOnSelectionDialog: Error saving add-ons:', err);
       setError(err.response?.data?.message || 'Failed to add services to the reservation. Please try again.');
@@ -381,9 +527,9 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
           variant="contained" 
           color="primary"
           onClick={handleSaveAddOns}
-          disabled={selectedAddOns.length === 0 || saving}
+          disabled={saving}
         >
-          {saving ? <CircularProgress size={24} /> : 'Add to Reservation'}
+          {saving ? <CircularProgress size={24} /> : selectedAddOns.length === 0 ? 'Continue Without Add-ons' : 'Add to Reservation'}
         </Button>
       </DialogActions>
     </Dialog>

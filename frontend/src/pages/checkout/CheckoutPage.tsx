@@ -40,36 +40,72 @@ interface CartItemWithAddOns extends CartItem {
 
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
-  const { state, clearCart } = useShoppingCart();
+  const { cartItems, clearCart, addToCart } = useShoppingCart();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('cash'); // Default to cash instead of creditCard
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [savePaymentInfo, setSavePaymentInfo] = useState(false);
+  const [localCartItems, setLocalCartItems] = useState<CartItemWithAddOns[]>([]);
   
-  // Use items from the shopping cart state
-  const cartItems = state.items as CartItemWithAddOns[];
+  // Convert context cart items to CartItemWithAddOns type
+  const extendedCartItems = cartItems as unknown as CartItemWithAddOns[];
   
+  // Load and use cart items directly from localStorage
   useEffect(() => {
-    // If cart is empty and not after a successful checkout, redirect to calendar
-    if (cartItems.length === 0 && !success) {
-      navigate('/calendar');
+    console.log('CheckoutPage: Component mounted, loading cart items from localStorage');
+    try {
+      const savedCart = localStorage.getItem('tailtownCart');
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart) as CartItemWithAddOns[];
+        console.log('CheckoutPage: Found items in localStorage:', parsedCart);
+        
+        // Directly use the localStorage cart items for rendering
+        if (parsedCart.length > 0) {
+          console.log('CheckoutPage: Setting local cart items from localStorage');
+          setLocalCartItems(parsedCart);
+          
+          // Also try to update the context (for completeness)
+          parsedCart.forEach(item => {
+            if (!cartItems.some(cartItem => cartItem.id === item.id)) {
+              addToCart(item);
+            }
+          });
+          return;
+        }
+      }
+      
+      // If we're here, there are no items in localStorage
+      // Check if there are items in the cart context
+      if (extendedCartItems.length > 0) {
+        console.log('CheckoutPage: No items in localStorage but found in context:', extendedCartItems);
+        setLocalCartItems(extendedCartItems);
+        return;
+      }
+      
+      // No items in localStorage or context, redirect if not after successful checkout
+      if (!success) {
+        console.log('CheckoutPage: No cart items found anywhere, redirecting to calendar');
+        navigate('/calendar');
+      }
+    } catch (error) {
+      console.error('CheckoutPage: Error loading cart from localStorage:', error);
+      
+      // Fall back to context cart if localStorage fails
+      if (extendedCartItems.length > 0) {
+        setLocalCartItems(extendedCartItems);
+      } else if (!success) {
+        navigate('/calendar');
+      }
     }
-  }, [cartItems, navigate, success]);
+  }, []);  // Only run once on component mount
   
-  // Calculate subtotal
-  const subtotal = cartItems.reduce((total: number, item: CartItemWithAddOns) => {
-    // Calculate reservation price
-    let itemTotal = item.price || 0;
-    
-    // Add add-ons if any
-    if (item.addOns && item.addOns.length > 0) {
-      itemTotal += item.addOns.reduce((addOnTotal: number, addOn: AddOn) => 
-        addOnTotal + (addOn.price * (addOn.quantity || 1)), 0);
-    }
-    
-    return total + itemTotal;
+  // Calculate subtotal using localCartItems instead of context items
+  const subtotal = localCartItems.reduce((total: number, item: CartItemWithAddOns) => {
+    const itemPrice = item.price || 0;
+    const addOnsTotal = item.addOns?.reduce((addOnTotal, addOn) => addOnTotal + (addOn.price * addOn.quantity), 0) || 0;
+    return total + itemPrice + addOnsTotal;
   }, 0);
   
   // Calculate tax (using 7.44% tax rate as per standard)
@@ -115,11 +151,29 @@ const CheckoutPage: React.FC = () => {
       // For demo purposes, we'll simulate a successful payment after a delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      console.log('CheckoutPage: Payment successful, clearing cart');
+      
       // Process successful payment
       setSuccess(true);
       
-      // Clear the cart after successful payment
+      // Clear the cart after successful payment - this should also clear localStorage
       clearCart();
+      
+      // Double-check that localStorage is cleared
+      localStorage.removeItem('tailtownCart');
+      
+      // Force a refresh of localStorage in case of any caching issues
+      try {
+        localStorage.setItem('tailtownCart', JSON.stringify([]));
+        localStorage.removeItem('tailtownCart');
+      } catch (error) {
+        console.error('CheckoutPage: Error clearing localStorage:', error);
+      }
+      
+      // Set local cart items to empty as well
+      setLocalCartItems([]);
+      
+      console.log('CheckoutPage: Cart cleared after successful payment');
       
       // In a real app, you would also create reservations in the database here
       
@@ -144,19 +198,27 @@ const CheckoutPage: React.FC = () => {
             Payment Successful!
           </Typography>
           <Alert severity="success" sx={{ my: 3 }}>
-            Your reservation has been confirmed. Thank you for your business!
+            Your reservation has been confirmed and your cart has been cleared. Thank you for your business!
           </Alert>
           <Typography variant="body1" paragraph>
             A confirmation email has been sent to your registered email address.
           </Typography>
-          <Button 
-            variant="contained" 
-            color="primary" 
-            onClick={() => navigate('/dashboard')}
-            sx={{ mt: 2 }}
-          >
-            Go to Dashboard
-          </Button>
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 3 }}>
+            <Button 
+              variant="contained" 
+              color="primary" 
+              onClick={() => navigate('/dashboard')}
+            >
+              Go to Dashboard
+            </Button>
+            <Button 
+              variant="outlined" 
+              color="primary" 
+              onClick={() => navigate('/calendar')}
+            >
+              Create New Reservation
+            </Button>
+          </Box>
         </Paper>
       </Container>
     );
@@ -193,9 +255,10 @@ const CheckoutPage: React.FC = () => {
             <Divider sx={{ mb: 2 }} />
             
             {/* Use the new OrderSummary component */}
-            <OrderSummary taxRate={taxRate} />
+            <OrderSummary cartItems={localCartItems} tax={tax} />
           </Paper>
         </Grid>
+        
         
         {/* Payment Information */}
         <Grid item xs={12} md={7}>

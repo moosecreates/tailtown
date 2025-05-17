@@ -39,6 +39,7 @@ import NotFound from './pages/NotFound';
 import PriceRuleRedirect from './components/redirects/PriceRuleRedirect';
 import Scheduling from './pages/staff/Scheduling';
 import OrderEntry from './pages/orders/OrderEntry';
+import CheckoutPage from './pages/checkout/CheckoutPage';
 import PrintKennelCards from './pages/kennels/PrintKennelCards';
 
 // Custom event and utility components
@@ -106,6 +107,7 @@ const AppRoutes = () => {
         <Route path="/settings/price-rules/:id" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />
         <Route path="/staff/scheduling" element={isAuthenticated ? <Scheduling /> : <Navigate to="/login" />} />
         <Route path="/orders/new" element={isAuthenticated ? <OrderEntry /> : <Navigate to="/login" />} />
+        <Route path="/checkout" element={isAuthenticated ? <CheckoutPage /> : <Navigate to="/login" />} />
         <Route path="/analytics" element={isAuthenticated ? <AnalyticsDashboard /> : <Navigate to="/login" />} />
         <Route path="/analytics/customers" element={isAuthenticated ? <CustomerValueReport /> : <Navigate to="/login" />} />
         
