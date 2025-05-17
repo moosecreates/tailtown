@@ -57,10 +57,15 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - Performance tracking
 
 ### Settings & Configuration
-- Centralized system settings
-- User management
+- Consolidated Admin/Settings hub for administrative functions
+- Analytics dashboards with financial metrics and customer value reporting
+- Staff scheduling management
+- User management and permissions
 - Price rules configuration
+- Service and resource management
 - System-wide preferences
+
+See [Navigation Documentation](./docs/development/Navigation.md) for details on the application's navigation structure.
 
 ## Technology Stack
 
