@@ -271,3 +271,30 @@ const mockTransaction = async <T>(callback: (tx: any) => Promise<T>): Promise<T>
 
 // NOTE: Mock data has been removed. The real Prisma models are now used instead.
 // These interfaces are kept for type safety in the service implementation.
+
+// Export mock models for temporary use until Prisma schema is properly migrated
+export const MockPrismaModels = {
+  financialTransaction: {
+    create: async (data: any) => ({ id: `ft-${Date.now()}`, ...data.data }),
+    findUnique: async (data: any) => ({ id: data.where.id, status: 'PENDING', amount: 100, transactionNumber: 'TX123', customerId: 'cust1' }),
+    findMany: async (data: any) => [],
+    update: async (data: any) => ({ id: data.where.id, ...data.data }),
+    count: async (data: any) => 0,
+    delete: async (data: any) => null,
+  },
+  transactionItem: {
+    create: async (data: any) => ({ id: `ti-${Date.now()}`, ...data.data }),
+    findMany: async (data: any) => [],
+  },
+  financialAccount: {
+    findFirst: async (data: any) => data.where.customerId ? 
+      { id: `acct-${data.where.customerId}`, customerId: data.where.customerId, currentBalance: 0, availableBalance: 0 } : null,
+    create: async (data: any) => ({ id: `acct-${Date.now()}`, ...data.data }),
+    update: async (data: any) => ({ id: data.where.id, ...data.data }),
+  },
+  ledgerEntry: {
+    create: async (data: any) => ({ id: `le-${Date.now()}`, ...data.data }),
+    findMany: async (data: any) => [],
+  },
+  $transaction: mockTransaction
+};

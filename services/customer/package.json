@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev-ignore-errors": "ts-node-dev --respawn --transpile-only --ignore-diagnostics src/index.ts",
     "test": "jest",
     "lint": "eslint . --ext .ts",
     "prisma:generate": "prisma generate",

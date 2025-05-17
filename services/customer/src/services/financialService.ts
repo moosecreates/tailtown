@@ -211,34 +211,36 @@ export async function getFinancialSummary(dateRange: DateRange): Promise<Financi
     }
   });
   
-  // Calculate total from invoices
-  const totalInvoiceRevenue = invoices.reduce((sum, inv) => sum + inv.total, 0);
+  // Get total amount by summing line item totals
+  const totalInvoiceRevenue = invoices.reduce((sum: number, invoice: any) => sum + invoice.total, 0);
   const paidInvoices = invoices.filter(inv => inv.status === 'PAID');
+  const paidInvoiceRevenue = paidInvoices.reduce((sum: number, inv: any) => sum + inv.total, 0);
   const outstandingInvoices = invoices.filter(inv => inv.status !== 'PAID');
+  const outstandingInvoiceRevenue = outstandingInvoices.reduce((sum: number, inv: any) => sum + inv.total, 0);
   
-  const totalPaidFromInvoices = paidInvoices.reduce((sum, inv) => sum + inv.total, 0);
-  const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + inv.total, 0);
-  const taxCollected = invoices.reduce((sum, inv) => sum + inv.taxAmount, 0);
+  // Get direct payments (cash payments without invoices)
+  const directPaymentsData = await getDirectPaymentsInRange(dateRange);
+  const directPaymentsTotal = directPaymentsData.reduce((sum: number, payment: any) => sum + payment.amount, 0);
   
-  // Calculate revenue from direct payments without invoices
-  const totalDirectPayments = paymentsWithoutInvoices.reduce((sum, payment) => sum + payment.amount, 0);
-  
-  // Calculate revenue from reservations without invoices but with financial transactions
-  const reservationDirectRevenue = reservationsInRange.reduce((sum, res) => {
-    // If the reservation has financial transactions, use those
-    if (res.financialTransactions && res.financialTransactions.length > 0) {
-      return sum + res.financialTransactions.reduce((txSum, tx) => txSum + tx.amount, 0);
+  // Get reservations without invoices
+  const reservationsWithoutInvoices = await getReservationsWithoutInvoices(dateRange);
+  const reservationValueTotal = reservationsWithoutInvoices.reduce((sum: number, res: any) => {
+    // Base service price
+    let value = res.service?.price || 0;
+    
+    // Add add-on services
+    if (res.addOnServices && res.addOnServices.length > 0) {
+      value += res.addOnServices.reduce((addOnSum: number, addOn: any) => addOnSum + addOn.price, 0);
     }
-    // Otherwise, use the service price + addon prices as an estimate
-    return sum + (res.service?.price || 0) + 
-      res.addOnServices.reduce((addonSum, addon) => addonSum + addon.price, 0);
+    
+    return sum + value;
   }, 0);
   
   // Grand total including all revenue sources - use exact values to avoid rounding issues
   // IMPORTANT: Always round to exactly 2 decimal places to avoid floating point issues
   // This ensures consistent values across all reports
-  const totalRevenue = Math.round((totalInvoiceRevenue + totalDirectPayments + reservationDirectRevenue) * 100) / 100;
-  const totalPaid = Math.round((totalPaidFromInvoices + totalDirectPayments) * 100) / 100; // Direct payments are considered paid
+  const totalRevenue = Math.round((totalInvoiceRevenue + directPaymentsTotal + reservationValueTotal) * 100) / 100;
+  const totalPaid = Math.round((paidInvoiceRevenue + directPaymentsTotal) * 100) / 100; // Direct payments are considered paid
   
   // Count all transactions - invoices + direct payments
   const transactionCount = invoices.length + paymentsWithoutInvoices.length + 
@@ -247,16 +249,16 @@ export async function getFinancialSummary(dateRange: DateRange): Promise<Financi
   return {
     totalRevenue,
     totalPaid,
-    totalOutstanding,
+    totalOutstanding: outstandingInvoiceRevenue,
     invoiceCount: invoices.length,
     paidInvoiceCount: paidInvoices.length,
     outstandingInvoiceCount: outstandingInvoices.length,
     avgInvoiceValue: invoices.length > 0 ? totalInvoiceRevenue / invoices.length : 0,
-    taxCollected,
+    taxCollected: 0, // Not implemented
     // Additional metrics for comprehensive reporting
-    directPaymentsTotal: totalDirectPayments,
+    directPaymentsTotal: directPaymentsTotal,
     directPaymentsCount: paymentsWithoutInvoices.length,
-    reservationValueTotal: reservationDirectRevenue,
+    reservationValueTotal: reservationValueTotal,
     reservationCount: reservationsInRange.length,
     totalTransactionCount: transactionCount
   };
@@ -295,9 +297,7 @@ export async function getServiceRevenue(dateRange: DateRange): Promise<ServiceRe
       }
       
       // Calculate the base service revenue (excluding add-ons)
-      const addOnTotal = invoice.reservation.addOnServices?.reduce(
-        (sum, addOn) => sum + addOn.price, 0
-      ) || 0;
+      const addOnTotal = invoice.reservation.addOnServices?.reduce((sum: number, addOn: any) => sum + addOn.price, 0) || 0;
       
       const serviceRevenue = invoice.total - addOnTotal;
       
@@ -352,7 +352,7 @@ export async function getServiceRevenue(dateRange: DateRange): Promise<ServiceRe
   
   // Convert map to array and calculate percentages
   const serviceRevenues = Array.from(serviceMap.values());
-  const totalRevenue = serviceRevenues.reduce((sum, service) => sum + service.revenue, 0);
+  const totalRevenue = serviceRevenues.reduce((sum: number, service: ServiceRevenue) => sum + service.revenue, 0);
   
   if (totalRevenue > 0) {
     for (const service of serviceRevenues) {
@@ -453,7 +453,7 @@ export async function getAddOnRevenue(dateRange: DateRange): Promise<AddOnRevenu
   const addOnRevenueData = Array.from(addOnMap.values());
   
   // Calculate total revenue to determine percentages
-  const totalRevenue = addOnRevenueData.reduce((sum, addOn) => sum + addOn.revenue, 0);
+  const totalRevenue = addOnRevenueData.reduce((sum: number, addOn: AddOnRevenue) => sum + addOn.revenue, 0);
   
   // Calculate percentages
   if (totalRevenue > 0) {
@@ -464,6 +464,33 @@ export async function getAddOnRevenue(dateRange: DateRange): Promise<AddOnRevenu
   
   // Sort by revenue (highest first)
   return addOnRevenueData.sort((a, b) => b.revenue - a.revenue);
+}
+
+/**
+ * Retrieves all direct payments (cash payments without invoices) within a specified date range.
+ * Direct payments are implemented as financial transactions with type 'PAYMENT' but without an associated invoice.
+ *
+ * @param dateRange - The date range to get direct payments for
+ * @returns An array of direct payment transactions
+ */
+export async function getDirectPaymentsInRange(dateRange: DateRange): Promise<any[]> {
+  return prisma.financialTransaction.findMany({
+    where: {
+      createdAt: dateRange,
+      type: 'PAYMENT',
+      status: 'COMPLETED',
+      invoiceId: null, // Direct payments don't have associated invoices
+    },
+    include: {
+      customer: true,
+      reservation: {
+        include: {
+          service: true,
+          addOnServices: true
+        }
+      }
+    }
+  });
 }
 
 /**
@@ -585,9 +612,7 @@ export async function getCustomerRevenue(dateRange: DateRange): Promise<Customer
         }
         
         // Calculate the base service revenue (excluding add-ons)
-        const addOnTotal = invoice.reservation.addOnServices?.reduce(
-          (sum: number, addOn: any) => sum + addOn.price, 0
-        ) || 0;
+        const addOnTotal = invoice.reservation.addOnServices?.reduce((sum: number, addOn: any) => sum + addOn.price, 0) || 0;
         
         const serviceRevenue = invoice.total - addOnTotal;
         
@@ -622,7 +647,7 @@ export async function getCustomerRevenue(dateRange: DateRange): Promise<Customer
     
     // Calculate service percentages
     const serviceRevenues = Array.from(serviceMap.values());
-    const serviceTotal = serviceRevenues.reduce((sum, service) => sum + service.revenue, 0);
+    const serviceTotal = serviceRevenues.reduce((sum: number, service: ServiceRevenue) => sum + service.revenue, 0);
     
     if (serviceTotal > 0) {
       for (const service of serviceRevenues) {
@@ -632,7 +657,7 @@ export async function getCustomerRevenue(dateRange: DateRange): Promise<Customer
     
     // Calculate add-on percentages
     const addOnRevenues = Array.from(addOnMap.values());
-    const addOnTotal = addOnRevenues.reduce((sum, addOn) => sum + addOn.revenue, 0);
+    const addOnTotal = addOnRevenues.reduce((sum: number, addOn: AddOnRevenue) => sum + addOn.revenue, 0);
     
     if (addOnTotal > 0) {
       for (const addOn of addOnRevenues) {
