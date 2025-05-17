@@ -256,7 +256,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
             <ListItemIcon>
               <SettingsIcon />
             </ListItemIcon>
-            <ListItemText primary="Settings" />
+            <ListItemText primary="Admin/Settings" />
           </ListItemButton>
         </ListItem>
       </List>
