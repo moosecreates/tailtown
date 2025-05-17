@@ -14,7 +14,10 @@ import {
 import { Link } from 'react-router-dom';
 import { 
   Inventory as ResourcesIcon,
-  LocalOffer as ServicesIcon 
+  LocalOffer as ServicesIcon,
+  InsertChart as AnalyticsIcon,
+  CreditCard as PaymentIcon,
+  AssessmentOutlined as ReportIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
@@ -30,6 +33,68 @@ const Settings: React.FC = () => {
         
         <Paper sx={{ p: 3, mt: 3 }}>
           <Grid container spacing={3}>
+            {/* Analytics Dashboard Section */}
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardHeader 
+                  title="Financial Dashboard" 
+                  avatar={<AnalyticsIcon color="primary" />}
+                />
+                <Divider />
+                <CardContent>
+                  <Typography variant="body1" paragraph>
+                    View comprehensive financial analytics with revenue breakdowns, customer metrics, and service performance.
+                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2">Key Metrics</Typography>
+                    <Typography variant="body2" color="text.secondary">Revenue, Reservations, Deposits, Customer Count</Typography>
+                  </Box>
+                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button 
+                      component={Link} 
+                      to="/analytics"
+                      variant="outlined" 
+                      color="primary" 
+                      size="small"
+                    >
+                      Open Dashboard →
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Customer Value Analytics Section */}
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardHeader 
+                  title="Customer Value Analytics" 
+                  avatar={<PaymentIcon color="primary" />}
+                />
+                <Divider />
+                <CardContent>
+                  <Typography variant="body1" paragraph>
+                    Track and analyze customer spending patterns, lifetime value, and service preferences.
+                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2">Insights</Typography>
+                    <Typography variant="body2" color="text.secondary">Top Customers, Spending Trends, Service Preferences</Typography>
+                  </Box>
+                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button 
+                      component={Link} 
+                      to="/analytics/customers"
+                      variant="outlined" 
+                      color="primary" 
+                      size="small"
+                    >
+                      View Customer Reports →
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
             <Grid item xs={12} md={4}>
               <Card>
                 <CardHeader title="General Settings" />
