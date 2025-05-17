@@ -157,8 +157,16 @@ const Dashboard = () => {
           </Typography>
         </Grid>
         
+        {/* REVENUE SECTION HEADER */}
+        <Grid item xs={12}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <Typography variant="h6" color="text.secondary">Actual Revenue</Typography>
+            <Divider sx={{ flexGrow: 1, ml: 2 }} />
+          </Box>
+        </Grid>
+        
         {/* PAID Revenue Cards - Actual Cash Received */}
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid item xs={12} md={6} lg={4}>
           <Card sx={{ height: '100%', backgroundColor: theme.palette.success.light }}>
             <CardContent>
               <Typography color="textSecondary" gutterBottom variant="overline" fontWeight="bold">
@@ -175,7 +183,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid item xs={12} md={6} lg={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography color="textSecondary" gutterBottom variant="overline">
@@ -192,7 +200,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid item xs={12} md={6} lg={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography color="textSecondary" gutterBottom variant="overline">
@@ -209,7 +217,35 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6} lg={3}>
+
+        {/* PENDING REVENUE SECTION HEADER */}
+        <Grid item xs={12}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mt: 3, mb: 1 }}>
+            <Typography variant="h6" color="text.secondary">Pending Revenue</Typography>
+            <Divider sx={{ flexGrow: 1, ml: 2 }} />
+          </Box>
+        </Grid>
+        
+        {/* DEPOSITS & OUTSTANDING REVENUE */}
+        <Grid item xs={12} md={6} lg={4}>
+          <Card sx={{ height: '100%', backgroundColor: theme.palette.warning.light }}>
+            <CardContent>
+              <Typography color="textSecondary" gutterBottom variant="overline" fontWeight="bold">
+                DEPOSITS/PARTIAL PAYMENTS
+              </Typography>
+              <Typography variant="h4" color="text.primary">
+                {dashboardData?.partiallyPaidAmount
+                  ? formatCurrency(dashboardData.partiallyPaidAmount)
+                  : '$0.00'}
+              </Typography>
+              <Typography variant="caption" display="block">
+                From {dashboardData?.partiallyPaidInvoiceCount || 0} invoices with deposits
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12} md={6} lg={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography color="textSecondary" gutterBottom variant="overline">
@@ -228,7 +264,7 @@ const Dashboard = () => {
         </Grid>
         
         {/* RESERVED Revenue Cards - Future/Potential Revenue */}
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid item xs={12} md={6} lg={4}>
           <Card sx={{ height: '100%', backgroundColor: theme.palette.info.light }}>
             <CardContent>
               <Typography color="textSecondary" gutterBottom variant="overline" fontWeight="bold">
@@ -245,7 +281,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6} lg={3}>
+        <Grid item xs={12} md={6} lg={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography color="textSecondary" gutterBottom variant="overline">
@@ -260,7 +296,16 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6} lg={3}>
+
+        {/* SUMMARY SECTION HEADER */}
+        <Grid item xs={12}>
+          <Box sx={{ display: 'flex', alignItems: 'center', mt: 3, mb: 1 }}>
+            <Typography variant="h6" color="text.secondary">Summary</Typography>
+            <Divider sx={{ flexGrow: 1, ml: 2 }} />
+          </Box>
+        </Grid>
+
+        <Grid item xs={12} md={6} lg={6}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography color="textSecondary" gutterBottom variant="overline">
@@ -275,10 +320,10 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6} lg={3}>
-          <Card sx={{ height: '100%' }}>
+        <Grid item xs={12} md={6} lg={6}>
+          <Card sx={{ height: '100%', backgroundColor: '#f0f5ff' }}>
             <CardContent>
-              <Typography color="textSecondary" gutterBottom variant="overline">
+              <Typography color="textSecondary" gutterBottom variant="overline" fontWeight="bold">
                 TOTAL EXPECTED REVENUE
               </Typography>
               <Typography variant="h4">
