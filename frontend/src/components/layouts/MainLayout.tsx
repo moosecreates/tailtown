@@ -27,24 +27,16 @@ import {
   People as PeopleIcon,
   Pets as PetsIcon,
   EventNote as EventNoteIcon,
-  CalendarMonth as CalendarIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
   AccountCircle as AccountCircleIcon,
-  LocalOffer as ServicesIcon,
-  Inventory as ResourcesIcon,
   Hotel as SuitesIcon,
   ContentCut as GroomingIcon,
   FitnessCenter as TrainingIcon,
   Home as DaycareIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
-  Schedule as ScheduleIcon,
-  ShoppingCart as OrdersIcon,
-  Print as PrintIcon,
-  InsertChart as AnalyticsIcon,
-  CreditCard as PaymentIcon,
-  AssessmentOutlined as ReportIcon
+  Print as PrintIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -118,16 +110,10 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     // New Order functionality moved to Calendar-based flow - see docs/features/OrderEntry.md
     // Staff Scheduling moved to Admin/Settings
     // Price Rules moved to Settings
-    { 
-      path: '/calendar', 
-      label: 'Calendar', 
-      icon: CalendarIcon,
-      children: [
-        { path: '/calendar', label: 'Boarding & Daycare', icon: DaycareIcon },
-        { path: '/calendar/grooming', label: 'Grooming', icon: GroomingIcon },
-        { path: '/calendar/training', label: 'Training', icon: TrainingIcon },
-      ] 
-    },
+    // Calendar split into direct navigation items for one-click access
+    { path: '/calendar', label: 'Boarding Calendar', icon: DaycareIcon },
+    { path: '/calendar/grooming', label: 'Grooming Calendar', icon: GroomingIcon },
+    { path: '/calendar/training', label: 'Training Calendar', icon: TrainingIcon },
     // Analytics moved to Admin/Settings
   ];
 
