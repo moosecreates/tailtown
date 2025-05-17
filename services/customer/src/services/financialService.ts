@@ -117,9 +117,13 @@ export function getDateRangeFilter(period: string, startDate?: string, endDate?:
 }
 
 /**
- * Gets invoice data, consistently filtered by status and date range
+ * Retrieves all invoices within a specified date range.
+ * Used by the financial summary and revenue calculation functions.
+ *
+ * @param dateRange - The date range to get invoices for
+ * @returns An array of Invoice objects
  */
-export async function getInvoicesInRange(dateRange: DateRange) {
+export async function getInvoicesInRange(dateRange: DateRange): Promise<any[]> {
   return prisma.invoice.findMany({
     where: {
       issueDate: dateRange,
@@ -153,7 +157,17 @@ export async function getInvoicesInRange(dateRange: DateRange) {
 }
 
 /**
- * Gets financial summary data for a date range, including both invoice data and direct payments
+ * Gets comprehensive financial summary data for a specified date range.
+ * This is the primary function for retrieving financial metrics and should be used
+ * as the single source of truth for financial reporting.
+ *
+ * Revenue calculation formula: Invoice Revenue + Direct Payments + Reservation Value
+ * - Invoice Revenue: Sum of all invoice totals in the date range
+ * - Direct Payments: Sum of all direct payments in the date range
+ * - Reservation Value: Sum of all reservation service prices + add-on prices for reservations without invoices
+ *
+ * @param dateRange - The date range to get financial data for (includes start and end dates)
+ * @returns A FinancialSummary object containing all financial metrics
  */
 export async function getFinancialSummary(dateRange: DateRange): Promise<FinancialSummary> {
   // Get traditional invoice data
@@ -249,7 +263,14 @@ export async function getFinancialSummary(dateRange: DateRange): Promise<Financi
 }
 
 /**
- * Gets revenue breakdown by service
+ * Calculates service revenue broken down by service type for a specified date range.
+ * Includes revenue from both invoiced services and scheduled services without invoices.
+ *
+ * IMPORTANT: This function includes revenue from reservations that don't have invoices yet,
+ * which is critical for accurate revenue forecasting and reporting.
+ *
+ * @param dateRange - The date range to calculate service revenue for
+ * @returns An array of ServiceRevenue objects containing revenue data per service
  */
 export async function getServiceRevenue(dateRange: DateRange): Promise<ServiceRevenue[]> {
   // Get all valid invoices in the date range
@@ -344,7 +365,14 @@ export async function getServiceRevenue(dateRange: DateRange): Promise<ServiceRe
 }
 
 /**
- * Gets revenue breakdown by add-on
+ * Calculates add-on service revenue broken down by add-on type for a specified date range.
+ * Includes revenue from both invoiced add-ons and scheduled add-ons without invoices.
+ *
+ * IMPORTANT: This function includes add-ons from reservations that don't have invoices yet,
+ * which is critical for accurate revenue forecasting and reporting.
+ *
+ * @param dateRange - The date range to calculate add-on revenue for
+ * @returns An array of AddOnRevenue objects containing revenue data per add-on
  */
 export async function getAddOnRevenue(dateRange: DateRange): Promise<AddOnRevenue[]> {
   // Get all valid invoices in the date range
@@ -439,6 +467,62 @@ export async function getAddOnRevenue(dateRange: DateRange): Promise<AddOnRevenu
 }
 
 /**
+ * Retrieves all reservations that don't have associated invoices within a specified date range.
+ * This is critical for calculating potential revenue from scheduled services that haven't been invoiced yet.
+ *
+ * Only includes reservations with statuses other than 'CANCELLED'.
+ *
+ * @param dateRange - The date range to get reservations for
+ * @returns An array of Reservation objects without associated invoices
+ */
+export async function getReservationsWithoutInvoices(dateRange: DateRange): Promise<any[]> {
+  return prisma.reservation.findMany({
+    where: {
+      startDate: dateRange,
+      status: {
+        in: VALID_RESERVATION_STATUSES,
+        notIn: ['CANCELLED', 'NO_SHOW']
+      },
+      invoice: null // Reservations without invoices
+    },
+    include: {
+      service: true,
+      addOnServices: true,
+      financialTransactions: {
+        include: {
+          payment: true
+        }
+      }
+    }
+  });
+}
+
+/**
+ * Gets daily revenue for a date range
+ */
+export async function getDailyRevenue(dateRange: DateRange): Promise<{date: string; revenue: number}[]> {
+  const invoices = await getInvoicesInRange(dateRange);
+  
+  // Group invoices by date
+  const dailyRevenueMap = new Map<string, number>();
+  
+  for (const invoice of invoices) {
+    const dateStr = invoice.issueDate.toISOString().split('T')[0];
+    const currentTotal = dailyRevenueMap.get(dateStr) || 0;
+    dailyRevenueMap.set(dateStr, currentTotal + invoice.total);
+  }
+  
+  // Convert map to array
+  const dailyRevenue = Array.from(dailyRevenueMap.entries()).map(([date, revenue]) => ({
+    date,
+    revenue
+  }));
+  
+  // Sort by date (ascending)
+  return dailyRevenue.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
  * Gets revenue breakdown by customer
  */
 export async function getCustomerRevenue(dateRange: DateRange): Promise<CustomerRevenue[]> {
@@ -502,7 +586,7 @@ export async function getCustomerRevenue(dateRange: DateRange): Promise<Customer
         
         // Calculate the base service revenue (excluding add-ons)
         const addOnTotal = invoice.reservation.addOnServices?.reduce(
-          (sum, addOn) => sum + addOn.price, 0
+          (sum: number, addOn: any) => sum + addOn.price, 0
         ) || 0;
         
         const serviceRevenue = invoice.total - addOnTotal;
@@ -573,39 +657,15 @@ export async function getCustomerRevenue(dateRange: DateRange): Promise<Customer
   return customerRevenueData.sort((a, b) => b.totalSpend - a.totalSpend);
 }
 
-/**
- * Gets daily revenue for a date range
- */
-export async function getDailyRevenue(dateRange: DateRange): Promise<{date: string; revenue: number}[]> {
-  const invoices = await getInvoicesInRange(dateRange);
-  
-  // Group invoices by date
-  const dailyRevenueMap = new Map<string, number>();
-  
-  for (const invoice of invoices) {
-    const dateStr = invoice.issueDate.toISOString().split('T')[0];
-    const currentTotal = dailyRevenueMap.get(dateStr) || 0;
-    dailyRevenueMap.set(dateStr, currentTotal + invoice.total);
-  }
-  
-  // Convert map to array
-  const dailyRevenue = Array.from(dailyRevenueMap.entries()).map(([date, revenue]) => ({
-    date,
-    revenue
-  }));
-  
-  // Sort by date (ascending)
-  return dailyRevenue.sort((a, b) => a.date.localeCompare(b.date));
-}
-
 export default {
-  getDateRangeFilter,
   getFinancialSummary,
   getServiceRevenue,
   getAddOnRevenue,
   getCustomerRevenue,
+  getInvoicesInRange,
+  getDirectPaymentsInRange,
+  getReservationsWithoutInvoices,
   getDailyRevenue,
-  // Export constants
   VALID_INVOICE_STATUSES,
   INVALID_INVOICE_STATUSES,
   VALID_RESERVATION_STATUSES,

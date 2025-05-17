@@ -830,7 +830,22 @@ export const deleteReservation = async (
   }
 };
 
-// Get today's revenue
+/**
+ * Gets today's total revenue from all sources.
+ * 
+ * This endpoint calculates revenue from two sources:
+ * 1. Service Revenue: The base price of all scheduled services for today
+ * 2. Add-On Revenue: The price of all add-on services for today
+ * 
+ * IMPORTANT IMPLEMENTATION DETAILS:
+ * - Only includes reservations with statuses: CONFIRMED, CHECKED_IN, COMPLETED
+ * - Includes both invoiced and non-invoiced reservations
+ * - Ensures consistent calculation with the financial service
+ * - This function must match the revenue shown in the Financial Analytics Dashboard
+ *
+ * @route GET /api/reservations/revenue/today
+ * @returns {Object} Object containing the total revenue for today
+ */
 export const getTodayRevenue = async (
   req: Request,
   res: Response,
