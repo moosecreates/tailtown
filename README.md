@@ -29,6 +29,10 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - Service and add-on itemization
 - Configurable tax rate (7.44%)
 - Payment tracking and history
+- Multiple payment methods (cash, credit card, check, account)
+- Persistent shopping cart with localStorage backup
+- Streamlined checkout process with direct navigation
+- Clean cart management between orders
 - Customer account balance management
 - Invoice status tracking (draft, sent, paid, etc.)
 
