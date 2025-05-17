@@ -26,7 +26,11 @@ interface AddOn {
   quantity: number;
 }
 
+// Explicitly include all required properties including those from CartItem
 interface CartItemWithAddOns extends CartItem {
+  id: string;
+  price: number;
+  quantity?: number;
   addOns?: AddOn[];
   serviceName?: string;
   petName?: string;
