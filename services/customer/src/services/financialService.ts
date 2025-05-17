@@ -250,11 +250,13 @@ export async function getFinancialSummary(dateRange: DateRange): Promise<Financi
  * Gets revenue breakdown by service
  */
 export async function getServiceRevenue(dateRange: DateRange): Promise<ServiceRevenue[]> {
+  // Get all valid invoices in the date range
   const invoices = await getInvoicesInRange(dateRange);
   
+  // Create a map to store service revenue data
   const serviceMap = new Map<string, ServiceRevenue>();
   
-  // Process invoices to extract service revenue
+  // Process each invoice
   for (const invoice of invoices) {
     if (invoice.reservation?.service) {
       const service = invoice.reservation.service;
@@ -270,12 +272,10 @@ export async function getServiceRevenue(dateRange: DateRange): Promise<ServiceRe
       }
       
       // Calculate the base service revenue (excluding add-ons)
-      // First, get the total of all known add-ons
       const addOnTotal = invoice.reservation.addOnServices?.reduce(
         (sum, addOn) => sum + addOn.price, 0
       ) || 0;
       
-      // The service revenue is the invoice total minus add-ons
       const serviceRevenue = invoice.total - addOnTotal;
       
       const data = serviceMap.get(service.id)!;
@@ -285,32 +285,73 @@ export async function getServiceRevenue(dateRange: DateRange): Promise<ServiceRe
     }
   }
   
-  // Convert map to array
-  const serviceRevenueData = Array.from(serviceMap.values());
+  // Get reservations that match the date range but don't have invoices yet
+  // This ensures we include revenue from scheduled services that haven't been invoiced
+  const reservationsWithoutInvoices = await prisma.reservation.findMany({
+    where: {
+      startDate: dateRange,
+      status: {
+        in: VALID_RESERVATION_STATUSES,
+        notIn: ['CANCELLED', 'NO_SHOW']
+      },
+      invoice: null // Reservations without invoices
+    },
+    include: {
+      service: true,
+      addOnServices: true
+    }
+  });
   
-  // Calculate total revenue to determine percentages
-  const totalRevenue = serviceRevenueData.reduce((sum, service) => sum + service.revenue, 0);
+  // Process reservations without invoices
+  for (const reservation of reservationsWithoutInvoices) {
+    if (reservation.service) {
+      const service = reservation.service;
+      
+      if (!serviceMap.has(service.id)) {
+        serviceMap.set(service.id, {
+          id: service.id,
+          name: service.name,
+          count: 0,
+          revenue: 0,
+          percentageOfTotal: 0
+        });
+      }
+      
+      // Calculate the service revenue (base price of the service)
+      const serviceRevenue = service.price;
+      
+      const data = serviceMap.get(service.id)!;
+      data.count += 1;
+      data.revenue += serviceRevenue;
+      serviceMap.set(service.id, data);
+    }
+  }
   
-  // Calculate percentages
+  // Convert map to array and calculate percentages
+  const serviceRevenues = Array.from(serviceMap.values());
+  const totalRevenue = serviceRevenues.reduce((sum, service) => sum + service.revenue, 0);
+  
   if (totalRevenue > 0) {
-    for (const service of serviceRevenueData) {
+    for (const service of serviceRevenues) {
       service.percentageOfTotal = (service.revenue / totalRevenue) * 100;
     }
   }
   
   // Sort by revenue (highest first)
-  return serviceRevenueData.sort((a, b) => b.revenue - a.revenue);
+  return serviceRevenues.sort((a, b) => b.revenue - a.revenue);
 }
 
 /**
  * Gets revenue breakdown by add-on
  */
 export async function getAddOnRevenue(dateRange: DateRange): Promise<AddOnRevenue[]> {
+  // Get all valid invoices in the date range
   const invoices = await getInvoicesInRange(dateRange);
   
+  // Create a map to store add-on revenue data
   const addOnMap = new Map<string, AddOnRevenue>();
   
-  // Process invoices to extract add-on revenue
+  // Process all invoices
   for (const invoice of invoices) {
     if (invoice.reservation?.addOnServices) {
       for (const addOnService of invoice.reservation.addOnServices) {
@@ -334,7 +375,51 @@ export async function getAddOnRevenue(dateRange: DateRange): Promise<AddOnRevenu
     }
   }
   
-  // Convert map to array
+  // Get reservations that match the date range but don't have invoices yet
+  // This ensures we include revenue from add-ons in scheduled services that haven't been invoiced
+  const reservationsWithoutInvoices = await prisma.reservation.findMany({
+    where: {
+      startDate: dateRange,
+      status: {
+        in: VALID_RESERVATION_STATUSES,
+        notIn: ['CANCELLED', 'NO_SHOW']
+      },
+      invoice: null // Reservations without invoices
+    },
+    include: {
+      addOnServices: {
+        include: {
+          addOn: true
+        }
+      }
+    }
+  });
+  
+  // Process add-ons from reservations without invoices
+  for (const reservation of reservationsWithoutInvoices) {
+    if (reservation.addOnServices && reservation.addOnServices.length > 0) {
+      for (const addOnService of reservation.addOnServices) {
+        const addOn = addOnService.addOn;
+        
+        if (!addOnMap.has(addOn.id)) {
+          addOnMap.set(addOn.id, {
+            id: addOn.id,
+            name: addOn.name,
+            count: 0,
+            revenue: 0,
+            percentageOfTotal: 0
+          });
+        }
+        
+        const data = addOnMap.get(addOn.id)!;
+        data.count += 1;
+        data.revenue += addOnService.price;
+        addOnMap.set(addOn.id, data);
+      }
+    }
+  }
+  
+  // Convert map to array and calculate percentages
   const addOnRevenueData = Array.from(addOnMap.values());
   
   // Calculate total revenue to determine percentages
