@@ -21,6 +21,7 @@ import addonRoutes from './routes/addon.routes';
 import analyticsRoutes from './routes/analytics.routes';
 import financialTransactionRoutes from './routes/financialTransaction.routes';
 import reportingRoutes from './routes/reporting.routes';
+import reconciliationRoutes from './routes/reconciliation.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 // Load environment variables
@@ -209,6 +210,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/validation', validationRoutes);
 app.use('/api/financial-transactions', financialTransactionRoutes);
 app.use('/api/reporting', reportingRoutes);
+app.use('/api/reconciliation', reconciliationRoutes);
 
 // Additional routes without /api prefix for staff (to match frontend API calls)
 app.use('/staff', staffRoutes);

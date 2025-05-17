@@ -18,6 +18,16 @@ export enum TransactionType {
   DISCOUNT = 'DISCOUNT'
 }
 
+export enum ReconciliationType {
+  MANUAL = 'MANUAL',
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+  QUARTERLY = 'QUARTERLY',
+  SYSTEM = 'SYSTEM',
+  ON_DEMAND = 'ON_DEMAND'
+}
+
 export enum TransactionStatus {
   PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
@@ -37,12 +47,13 @@ export enum LedgerEntryType {
   PAYMENT = 'PAYMENT'
 }
 
-export enum ReconciliationType {
+// ReconciliationFrequency used for scheduling
+export enum ReconciliationFrequency {
   DAILY = 'DAILY',
   WEEKLY = 'WEEKLY',
   MONTHLY = 'MONTHLY',
-  MANUAL = 'MANUAL',
-  SYSTEM = 'SYSTEM'
+  QUARTERLY = 'QUARTERLY',
+  ON_DEMAND = 'ON_DEMAND'
 }
 
 export enum ReconciliationStatus {
@@ -143,6 +154,48 @@ export interface FinancialReconciliation {
   updatedAt: Date;
 }
 
+export interface ReconciliationSchedule {
+  id: string;
+  frequency: ReconciliationFrequency;
+  reconciliationType: ReconciliationType;
+  isActive: boolean;
+  lastRun: Date | null;
+  nextRun: Date;
+  lastError?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ReconciliationNotification {
+  id: string;
+  reconciliationId: string;
+  notificationType: string;
+  notificationSent: Date;
+  notificationContent: string;
+  createdAt: Date;
+}
+
+export interface ReconciliationResolution {
+  id: string;
+  reconciliationId: string;
+  discrepancyIndex: number;
+  resolution: string;
+  resolvedById: string;
+  resolvedAt: Date;
+  createdAt: Date;
+}
+
+export interface Reservation {
+  id: string;
+  customerId: string;
+  startDate: Date;
+  endDate: Date;
+  status: string;
+  payments?: Payment[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Additional types needed for the controller
 export interface Payment {
   id: string;
@@ -216,121 +269,5 @@ const mockTransaction = async <T>(callback: (tx: any) => Promise<T>): Promise<T>
   return await callback(txContext);
 };
 
-// Mock Prisma models to use until Prisma schema is updated
-export const MockPrismaModels = {
-  financialTransaction: {
-    create: async (data: any) => ({ id: `ft-${Date.now()}`, ...data.data }),
-    findUnique: async (data: any) => data.where?.id ? 
-      { 
-        id: data.where.id, 
-        status: 'PENDING', 
-        amount: 100, 
-        transactionNumber: 'TX123', 
-        customerId: 'cust1',
-        invoiceId: 'inv1',
-        paymentId: 'pay1',
-        reservationId: 'res1',
-        paymentMethod: 'CARD',
-        notes: '',
-        type: 'PAYMENT',
-        items: [],
-        payment: { id: 'pay1', amount: 100, status: 'PENDING' }
-      } : null,
-    findMany: async (data: any) => [
-      { 
-        id: 'ft-1', 
-        status: 'COMPLETED', 
-        amount: 150, 
-        transactionNumber: 'TX001', 
-        customerId: 'cust1',
-        invoiceId: 'inv1',
-        paymentId: 'pay1',
-        reservationId: null,
-        paymentMethod: 'CARD',
-        notes: 'Payment for services',
-        type: 'PAYMENT',
-        items: [{ id: 'item1', amount: 150, description: 'Product A' }],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        timestamp: new Date()
-      },
-      { 
-        id: 'ft-2', 
-        status: 'PENDING', 
-        amount: 75, 
-        transactionNumber: 'TX002', 
-        customerId: 'cust1',
-        invoiceId: 'inv2',
-        paymentId: 'pay2',
-        reservationId: null,
-        paymentMethod: 'CARD',
-        notes: 'Payment for services',
-        type: 'PAYMENT',
-        items: [{ id: 'item2', amount: 75, description: 'Product B' }],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        timestamp: new Date()
-      }
-    ],
-    update: async (data: any) => ({ id: data.where.id, ...data.data }),
-    count: async (data: any) => 2,
-    delete: async (data: any) => null,
-  },
-  transactionItem: {
-    create: async (data: any) => ({ id: `ti-${Date.now()}`, ...data.data }),
-    findMany: async (data: any) => [],
-  },
-  financialAccount: {
-    findFirst: async (data: any) => data.where.customerId ? 
-      { id: `acct-${data.where.customerId}`, customerId: data.where.customerId, currentBalance: 0, availableBalance: 0 } : null,
-    create: async (data: any) => ({ id: `acct-${Date.now()}`, ...data.data }),
-    update: async (data: any) => ({ id: data.where.id, ...data.data }),
-  },
-  ledgerEntry: {
-    create: async (data: any) => ({ id: `le-${Date.now()}`, ...data.data }),
-    findMany: async (data: any) => [],
-  },
-  financialReconciliation: {
-    create: async (data: any) => ({ id: `fr-${Date.now()}`, ...data.data }),
-    findMany: async (data: any) => [],
-  },
-  payment: {
-    create: async (data: any) => ({ id: `pay-${Date.now()}`, ...data.data }),
-    findUnique: async (data: any) => ({ 
-      id: data.where?.id, 
-      amount: 100, 
-      status: 'PENDING',
-      refundedAmount: 0
-    }),
-    findMany: async (data: any) => [
-      { 
-        id: 'pay1', 
-        amount: 100, 
-        status: 'PENDING',
-        refundedAmount: 0 
-      }
-    ],
-    update: async (data: any) => ({ id: data.where.id, ...data.data }),
-  },
-  invoice: {
-    findUnique: async (data: any) => ({ 
-      id: data.where.id, 
-      total: 100, 
-      status: 'PENDING', 
-      invoiceNumber: `INV-${data.where.id}`,
-      number: `INV-${data.where.id}`
-    }),
-    findMany: async (data: any) => [
-      { 
-        id: 'inv1', 
-        total: 100, 
-        status: 'PENDING', 
-        invoiceNumber: 'INV-001',
-        number: 'INV-001' 
-      }
-    ],
-    update: async (data: any) => ({ id: data.where.id, ...data.data }),
-  },
-  // Add the transaction method to our mock
-  $transaction: mockTransaction
-};
+// NOTE: Mock data has been removed. The real Prisma models are now used instead.
+// These interfaces are kept for type safety in the service implementation.

@@ -6,60 +6,106 @@
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                           Frontend (React)                              │
-│                                                                        │
-│  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐           │
-│  │ Calendar │   │ Customer │   │  Pets    │   │ Services │           │
-│  │   Page   │   │   Page   │   │  Page    │   │   Page   │           │
-│  └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘           │
-│       │              │              │              │                   │
-│  ┌────▼──────────────▼──────────────▼──────────────▼─────┐           │
-│  │                  Service Layer                         │           │
-│  │    (API calls, state management, data formatting)      │           │
-│  └────────────────────────┬───────────────────────────────┘           │
-└───────────────────────────┼────────────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         Backend (Express)                               │
-│                                                                        │
-│  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐           │
-│  │ Calendar │   │ Customer │   │   Pet    │   │ Service  │           │
-│  │ Routes   │   │  Routes  │   │  Routes  │   │  Routes  │           │
-│  └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘           │
-│       │              │              │              │                   │
-│  ┌────▼──────────────▼──────────────▼──────────────▼─────┐           │
-│  │                  Controllers                           │           │
-│  │         (Business logic, data validation)              │           │
-│  └────────────────────────┬───────────────────────────────┘           │
-│                           │                                           │
-│  ┌─────────────────────────────────────────────┐                     │
-│  │               Prisma ORM                     │                     │
-│  └────────────────────────┬────────────────────┘                     │
-└───────────────────────────┼────────────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                      PostgreSQL Database                                │
-└─────────────────────────────────────────────────────────────────────────┘
+│                           Frontend (React)                               │
+│                                                                          │
+│  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐              │
+│  │ Calendar │   │ Customer │   │  Pets    │   │ Services │              │
+│  │   Page   │   │   Page   │   │  Page    │   │   Page   │              │
+│  └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘              │
+│       │              │              │              │                     │
+│  ┌────┴─────┐   ┌────┴─────┐   ┌────┴─────┐   ┌────┴─────┐              │
+│  │ Resources│   │ Checkout │   │ Invoices │   │ Settings │              │
+│  │   Page   │   │   Page   │   │   Page   │   │   Page   │              │
+│  └────┬─────┘   └────┬─────┘   └────┬─────┘   └────┬─────┘              │
+│       │              │              │              │                     │
+│  ┌────▼──────────────▼──────────────▼──────────────▼─────────────┐      │
+│  │                        Context Providers                       │      │
+│  │  (Authentication, Shopping Cart, Theme, Error Handling)        │      │
+│  └────────────────────────────┬─────────────────────────────────┘      │
+│                               │                                         │
+│  ┌────────────────────────────▼─────────────────────────────────┐      │
+│  │                         Service Layer                         │      │
+│  │   (API calls, state management, data formatting, utilities)    │      │
+│  └────────────────────────────┬─────────────────────────────────┘      │
+└──────────────────────────────┬┼┬─────────────────────────────────────────┘
+                             ┌─┘ └─┐
+                             │     │
+                             ▼     ▼
+┌────────────────────────────────┐ ┌────────────────────────────────────────┐
+│     API Gateway/Proxy          │ │        Static Assets (Netlify)         │
+└─────────────────┬──────────────┘ └────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            Backend (Express)                                 │
+│                                                                              │
+│  ┌──────────┐   ┌──────────┐   ┌───────────┐   ┌──────────────┐            │
+│  │ Calendar │   │ Customer │   │ Pet       │   │ Service      │            │
+│  │ Routes   │   │ Routes   │   │ Routes    │   │ Routes       │            │
+│  └────┬─────┘   └────┬─────┘   └─────┬─────┘   └──────┬───────┘            │
+│       │              │               │                 │                     │
+│  ┌────┴─────┐   ┌────┴─────┐   ┌─────┴─────┐   ┌──────┴───────┐            │
+│  │ Resource │   │ Invoice  │   │ Staff     │   │ Reconcil-    │            │
+│  │ Routes   │   │ Routes   │   │ Routes    │   │ iation Routes│            │
+│  └────┬─────┘   └────┬─────┘   └─────┬─────┘   └──────┬───────┘            │
+│       │              │               │                 │                     │
+│  ┌────▼──────────────▼───────────────▼─────────────────▼─────────┐         │
+│  │                       Controllers                              │         │
+│  │    (Business logic, validation, error handling, auth checks)   │         │
+│  └────────────────────────────────┬────────────────────────────┘         │
+│                                    │                                        │
+│  ┌────────────────────────────────▼────────────────────────────┐         │
+│  │                        Service Layer                          │         │
+│  │  (Business logic, complex operations, financial calculations) │         │
+│  └────────────────────────────────┬────────────────────────────┘         │
+│                                    │                                        │
+│  ┌────────────────────────────────▼────────────────────────────┐         │
+│  │                          Prisma ORM                          │         │
+│  │            (Database operations, schema validation)          │         │
+│  └────────────────────────────────┬────────────────────────────┘         │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           PostgreSQL Database                               │
+│                                                                             │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
+│  │Reserva-  │  │ Customers│  │ Pets     │  │ Services │  │ Resources│     │
+│  │tions     │  │          │  │          │  │          │  │          │     │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────┘     │
+│                                                                             │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
+│  │ Invoices │  │ Payments │  │ Staff    │  │ Price    │  │ AddOns   │     │
+│  │          │  │          │  │Schedules │  │ Rules    │  │          │     │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────┘     │
+└─────────────────────────────────────────────────────────────────────────────┘
 
 # Data Flow
 
-1. User interacts with the frontend (e.g., creates a reservation)
-2. Frontend service layer makes API call to backend
-3. Backend routes direct request to appropriate controller
-4. Controller validates data and performs business logic
-5. Prisma ORM handles database operations
-6. Response flows back up through the layers
-7. Frontend updates UI with new data
+1. User interacts with the frontend (e.g., creates a reservation, processes payment)
+2. Frontend contexts manage global state (auth, cart, errors)
+3. Frontend service layer formats data and makes API calls
+4. API gateway routes requests to appropriate backend service
+5. Backend routes direct request to appropriate controller
+6. Controllers validate and authorize requests
+7. Service layer handles complex business logic and calculations
+8. Prisma ORM handles database operations with validation
+9. Response flows back through the layers with proper error handling
+10. Frontend updates UI with new data and provides feedback
 
 # Key Features
 
-- JWT Authentication
-- Role-based access control
-- Real-time calendar updates
-- Responsive UI
-- Type safety with TypeScript
-- Data validation at multiple layers
-- Error handling and logging
-- Database migrations with Prisma
+- JWT Authentication and role-based access control
+- Comprehensive financial system with invoicing and reconciliation
+- Real-time calendar management for multiple service types
+- Customer account history with financial tracking
+- Pet management with vaccination status tracking and visual indicators
+- Staff availability and scheduling system
+- Inventory and resource management for kennels/suites
+- Shopping cart with checkout process
+- Price rules and promotional discounts
+- Responsive Material-UI interface with consistent design
+- End-to-end type safety with TypeScript
+- Robust error handling and logging
+- Database migrations and schema management with Prisma
+- Environment-specific configurations (dev, test, prod)

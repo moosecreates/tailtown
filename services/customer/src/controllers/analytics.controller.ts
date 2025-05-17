@@ -163,6 +163,7 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
     // Get customer revenue data to get unique customer count 
     const customerRevenue = await financialService.getCustomerRevenue(dateRange);
     
+    // Add comprehensive payment data to the response
     res.status(200).json({
       status: 'success',
       data: {
@@ -172,7 +173,16 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
         serviceData,
         addOnData,
         addOnRevenue,
-        reservationCount: financialSummary.invoiceCount
+        // Payment and transaction data
+        invoiceCount: financialSummary.invoiceCount,
+        paidInvoiceCount: financialSummary.paidInvoiceCount,
+        directPaymentsTotal: financialSummary.directPaymentsTotal,
+        directPaymentsCount: financialSummary.directPaymentsCount,
+        reservationValueTotal: financialSummary.reservationValueTotal,
+        reservationCount: financialSummary.reservationCount,
+        totalTransactionCount: financialSummary.totalTransactionCount,
+        totalPaid: financialSummary.totalPaid,
+        totalOutstanding: financialSummary.totalOutstanding
       }
     });
   } catch (error) {

@@ -9,33 +9,36 @@ datasource db {
 }
 
 model Customer {
-  id               String                  @id @default(uuid())
-  email            String                  @unique
-  firstName        String
-  lastName         String
-  phone            String?
-  alternatePhone   String?
-  address          String?
-  city             String?
-  state            String?
-  zipCode          String?
-  notes            String?
-  portalEnabled    Boolean                 @default(true)
-  preferredContact ContactMethod           @default(EMAIL)
-  emergencyContact String?
-  emergencyPhone   String?
-  vatTaxId         String?
-  referralSource   String?
-  tags             String[]                @default([])
-  isActive         Boolean                 @default(true)
-  createdAt        DateTime                @default(now())
-  updatedAt        DateTime                @updatedAt
-  documents        Document[]
-  invoices         Invoice[]
-  notifications    NotificationPreference?
-  payments         Payment[]
-  pets             Pet[]
-  reservations     Reservation[]
+  id                    String                  @id @default(uuid())
+  email                 String                  @unique
+  firstName             String
+  lastName              String
+  phone                 String?
+  alternatePhone        String?
+  address               String?
+  city                  String?
+  state                 String?
+  zipCode               String?
+  notes                 String?
+  portalEnabled         Boolean                 @default(true)
+  preferredContact      ContactMethod           @default(EMAIL)
+  emergencyContact      String?
+  emergencyPhone        String?
+  vatTaxId              String?
+  referralSource        String?
+  tags                  String[]                @default([])
+  isActive              Boolean                 @default(true)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  documents             Document[]
+  invoices              Invoice[]
+  notifications         NotificationPreference?
+  payments              Payment[]
+  pets                  Pet[]
+  reservations          Reservation[]
+  // Financial relations
+  financialTransactions FinancialTransaction[]
+  financialAccounts     FinancialAccount[]
 
   @@index([firstName, lastName], map: "customers_name_search_idx")
   @@index([email], map: "customers_email_search_idx")
@@ -83,40 +86,42 @@ model Pet {
 }
 
 model Reservation {
-  id                 String             @id @default(uuid())
-  orderNumber        String?            @unique
-  startDate          DateTime
-  endDate            DateTime
-  status             ReservationStatus  @default(PENDING)
-  notes              String?
-  staffNotes         String?
-  checkInWindow      Int?
-  isRecurring        Boolean            @default(false)
-  recurringPattern   String?
-  preChecked         Boolean            @default(false)
-  checkInDate        DateTime?
-  checkOutDate       DateTime?
-  earlyDropOff       Boolean            @default(false)
-  latePickup         Boolean            @default(false)
-  customPickupPerson String?
-  confirmedBy        String?
-  cancelReason       String?
-  cancelDate         DateTime?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  customerId         String
-  petId              String
-  serviceId          String
-  resourceId         String?
-  staffAssignedId    String?
-  checkIns           CheckIn[]
-  invoice            Invoice?
-  addOnServices      ReservationAddOn[]
-  customer           Customer           @relation(fields: [customerId], references: [id])
-  pet                Pet                @relation(fields: [petId], references: [id])
-  resource           Resource?          @relation(fields: [resourceId], references: [id])
-  service            Service            @relation(fields: [serviceId], references: [id])
-  staffAssigned      Staff?             @relation(fields: [staffAssignedId], references: [id])
+  id                    String                 @id @default(uuid())
+  orderNumber           String?                @unique
+  startDate             DateTime
+  endDate               DateTime
+  status                ReservationStatus      @default(PENDING)
+  notes                 String?
+  staffNotes            String?
+  checkInWindow         Int?
+  isRecurring           Boolean                @default(false)
+  recurringPattern      String?
+  preChecked            Boolean                @default(false)
+  checkInDate           DateTime?
+  checkOutDate          DateTime?
+  earlyDropOff          Boolean                @default(false)
+  latePickup            Boolean                @default(false)
+  customPickupPerson    String?
+  confirmedBy           String?
+  cancelReason          String?
+  cancelDate            DateTime?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  customerId            String
+  petId                 String
+  serviceId             String
+  resourceId            String?
+  staffAssignedId       String?
+  checkIns              CheckIn[]
+  invoice               Invoice?
+  addOnServices         ReservationAddOn[]
+  customer              Customer               @relation(fields: [customerId], references: [id])
+  pet                   Pet                    @relation(fields: [petId], references: [id])
+  resource              Resource?              @relation(fields: [resourceId], references: [id])
+  // Financial relation
+  financialTransactions FinancialTransaction[]
+  service               Service                @relation(fields: [serviceId], references: [id])
+  staffAssigned         Staff?                 @relation(fields: [staffAssignedId], references: [id])
 
   @@index([startDate, endDate], map: "reservations_date_range_idx")
   @@index([status, startDate], map: "reservations_status_date_idx")
@@ -305,61 +310,65 @@ model StaffSchedule {
 }
 
 model Invoice {
-  id            String            @id @default(uuid())
-  invoiceNumber String            @unique
-  customerId    String
-  reservationId String?           @unique
-  issueDate     DateTime          @default(now())
-  dueDate       DateTime
-  status        InvoiceStatus     @default(DRAFT)
-  subtotal      Float
-  taxRate       Float             @default(0)
-  taxAmount     Float             @default(0)
-  discount      Float             @default(0)
-  total         Float
-  notes         String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  lineItems     InvoiceLineItem[]
-  customer      Customer          @relation(fields: [customerId], references: [id])
-  reservation   Reservation?      @relation(fields: [reservationId], references: [id])
-  payments      Payment[]
+  id                    String                 @id @default(uuid())
+  invoiceNumber         String                 @unique
+  customerId            String
+  reservationId         String?                @unique
+  issueDate             DateTime               @default(now())
+  dueDate               DateTime
+  status                InvoiceStatus          @default(DRAFT)
+  subtotal              Float
+  taxRate               Float                  @default(7.44)
+  taxAmount             Float                  @default(0)
+  discount              Float                  @default(0)
+  total                 Float
+  notes                 String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  lineItems             InvoiceLineItem[]
+  customer              Customer               @relation(fields: [customerId], references: [id])
+  reservation           Reservation?           @relation(fields: [reservationId], references: [id])
+  payments              Payment[]
+  financialTransactions FinancialTransaction[]
 
   @@map("invoices")
 }
 
 model InvoiceLineItem {
-  id          String   @id @default(uuid())
-  invoiceId   String
-  description String
-  quantity    Int      @default(1)
-  unitPrice   Float
-  amount      Float
-  taxable     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  id                    String                 @id @default(uuid())
+  invoiceId             String
+  description           String
+  quantity              Int                    @default(1)
+  unitPrice             Float
+  amount                Float
+  taxable               Boolean                @default(true)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  invoice               Invoice                @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  financialTransactions FinancialTransaction[]
 
   @@map("invoice_line_items")
 }
 
 model Payment {
-  id              String        @id @default(uuid())
-  invoiceId       String
-  customerId      String
-  amount          Float
-  method          PaymentMethod
-  status          PaymentStatus @default(PENDING)
-  transactionId   String?
-  paymentDate     DateTime      @default(now())
-  gatewayResponse Json?
-  refundedAmount  Float         @default(0)
-  refundReason    String?
-  notes           String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  customer        Customer      @relation(fields: [customerId], references: [id])
-  invoice         Invoice       @relation(fields: [invoiceId], references: [id])
+  id                    String                 @id @default(uuid())
+  invoiceId             String
+  customerId            String
+  amount                Float
+  method                PaymentMethod
+  status                PaymentStatus          @default(PENDING)
+  transactionId         String?
+  paymentDate           DateTime               @default(now())
+  gatewayResponse       Json?
+  refundedAmount        Float                  @default(0)
+  refundReason          String?
+  notes                 String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  customer              Customer               @relation(fields: [customerId], references: [id])
+  invoice               Invoice                @relation(fields: [invoiceId], references: [id])
+  // Financial relation
+  financialTransactions FinancialTransaction[]
 
   @@index([customerId, paymentDate], map: "payments_customer_date_idx")
   @@index([status, paymentDate], map: "payments_status_date_idx")
@@ -648,4 +657,230 @@ enum PriceRuleType {
 enum DiscountType {
   PERCENTAGE
   FIXED_AMOUNT
+}
+
+// Financial Transaction Models
+model FinancialTransaction {
+  id                   String                 @id @default(uuid())
+  transactionNumber    String                 @unique
+  type                 TransactionType
+  amount               Float
+  relatedAmount        Float? // For partial refunds or adjustments
+  status               TransactionStatus      @default(PENDING)
+  paymentMethod        PaymentMethod?
+  notes                String?
+  metadata             Json? // Flexible field for additional transaction data
+  timestamp            DateTime               @default(now())
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  // Relationships to existing entities
+  customerId           String?
+  invoiceId            String?
+  paymentId            String?
+  reservationId        String?
+  // Transaction creator and processor
+  createdById          String?
+  processedById        String?
+  processedAt          DateTime?
+  // References to other entities
+  customer             Customer?              @relation(fields: [customerId], references: [id])
+  invoice              Invoice?               @relation(fields: [invoiceId], references: [id])
+  payment              Payment?               @relation(fields: [paymentId], references: [id])
+  reservation          Reservation?           @relation(fields: [reservationId], references: [id])
+  // Transactions can be linked to create audit trails
+  relatedTransaction   FinancialTransaction?  @relation("RelatedTransactions", fields: [relatedTransactionId], references: [id])
+  relatedTransactionId String?
+  childTransactions    FinancialTransaction[] @relation("RelatedTransactions")
+  // Transaction items for detailed breakdown
+  items                TransactionItem[]
+  InvoiceLineItem      InvoiceLineItem?       @relation(fields: [invoiceLineItemId], references: [id])
+  invoiceLineItemId    String?
+
+  @@index([type, status], map: "financial_transactions_type_status_idx")
+  @@index([customerId, timestamp], map: "financial_transactions_customer_date_idx")
+  @@index([invoiceId], map: "financial_transactions_invoice_idx")
+  @@index([transactionNumber], map: "financial_transactions_number_idx")
+  @@map("financial_transactions")
+}
+
+model TransactionItem {
+  id                String               @id @default(uuid())
+  transactionId     String
+  description       String
+  amount            Float
+  quantity          Int                  @default(1)
+  unitPrice         Float
+  taxable           Boolean              @default(true)
+  taxRate           Float?
+  taxAmount         Float?
+  discountAmount    Float?
+  discountType      DiscountType?
+  discountRuleId    String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  // References to related items
+  invoiceLineItemId String?
+  serviceId         String?
+  addOnServiceId    String?
+  reservationId     String?
+  // Relationships
+  transaction       FinancialTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId], map: "transaction_items_transaction_idx")
+  @@map("transaction_items")
+}
+
+// Financial account ledger for running balances
+model FinancialAccount {
+  id               String        @id @default(uuid())
+  accountNumber    String        @unique
+  customerId       String
+  currentBalance   Float         @default(0)
+  availableBalance Float         @default(0) // May differ from currentBalance for pending transactions
+  lastTransaction  DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  // Relationships
+  customer         Customer      @relation(fields: [customerId], references: [id])
+  entries          LedgerEntry[]
+
+  @@index([customerId], map: "financial_accounts_customer_idx")
+  @@map("financial_accounts")
+}
+
+// Individual ledger entries for account activity
+model LedgerEntry {
+  id            String           @id @default(uuid())
+  accountId     String
+  transactionId String?
+  entryType     LedgerEntryType
+  amount        Float
+  balanceAfter  Float
+  description   String
+  timestamp     DateTime         @default(now())
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  // Relationships
+  account       FinancialAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, timestamp], map: "ledger_entries_account_date_idx")
+  @@map("ledger_entries")
+}
+
+// Reconciliation records for financial data verification
+model FinancialReconciliation {
+  id                 String               @id @default(uuid())
+  reconciliationDate DateTime
+  startDate          DateTime
+  endDate            DateTime
+  reconciliationType ReconciliationType
+  status             ReconciliationStatus @default(IN_PROGRESS)
+  discrepancies      Json?
+  notes              String?
+  performedById      String?
+  verifiedById       String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  @@index([reconciliationDate], map: "financial_reconciliations_date_idx")
+  @@index([status], map: "financial_reconciliations_status_idx")
+  @@map("financial_reconciliations")
+}
+
+// Reconciliation schedules for automated reconciliation jobs
+model ReconciliationSchedule {
+  id                 String                  @id @default(uuid())
+  frequency          ReconciliationFrequency
+  reconciliationType ReconciliationType
+  isActive           Boolean                 @default(true)
+  lastRun            DateTime?
+  nextRun            DateTime
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  @@map("reconciliation_schedules")
+}
+
+// Notifications for reconciliation discrepancies and alerts
+model ReconciliationNotification {
+  id               String   @id @default(uuid())
+  reconciliationId String
+  notificationType String
+  message          String
+  recipientIds     String[]
+  readBy           String[]
+  sentAt           DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("reconciliation_notifications")
+}
+
+// Resolution records for reconciliation discrepancies
+model ReconciliationResolution {
+  id               String   @id @default(uuid())
+  reconciliationId String
+  discrepancyIndex Int
+  resolution       String
+  actionTaken      String
+  resolvedById     String
+  resolvedAt       DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("reconciliation_resolutions")
+}
+
+// Additional enums for financial transactions
+enum TransactionType {
+  PAYMENT
+  REFUND
+  ADJUSTMENT
+  CREDIT
+  DEBIT
+  VOID
+  FEE
+  TAX
+  DISCOUNT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  VOIDED
+  RECONCILED
+  DISPUTED
+}
+
+enum LedgerEntryType {
+  DEPOSIT
+  WITHDRAWAL
+  ADJUSTMENT
+  FEE
+  INTEREST
+  REFUND
+  PAYMENT
+}
+
+enum ReconciliationType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  MANUAL
+  SYSTEM
+}
+
+enum ReconciliationStatus {
+  IN_PROGRESS
+  COMPLETED
+  DISCREPANCIES_FOUND
+  VERIFIED
+  CANCELLED
+}
+
+enum ReconciliationFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
 }

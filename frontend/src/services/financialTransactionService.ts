@@ -321,7 +321,7 @@ class FinancialTransactionService {
         quantity: item.quantity || 1,
         unitPrice: item.price || 0,
         taxable: true,
-        serviceId: item.serviceId,
+        serviceId: (item as any).serviceId, // Safely access serviceId which might not exist on all items
         reservationId: item.id.startsWith('temp-') ? undefined : item.id
       };
 

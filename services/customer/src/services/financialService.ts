@@ -28,6 +28,12 @@ export interface FinancialSummary {
   outstandingInvoiceCount: number;
   avgInvoiceValue: number;
   taxCollected: number;
+  // Additional fields for direct payments and reservations
+  directPaymentsTotal: number;
+  directPaymentsCount: number;
+  reservationValueTotal: number;
+  reservationCount: number;
+  totalTransactionCount: number;
 }
 
 export interface ServiceRevenue {
@@ -147,18 +153,80 @@ export async function getInvoicesInRange(dateRange: DateRange) {
 }
 
 /**
- * Gets financial summary data for a date range
+ * Gets financial summary data for a date range, including both invoice data and direct payments
  */
 export async function getFinancialSummary(dateRange: DateRange): Promise<FinancialSummary> {
+  // Get traditional invoice data
   const invoices = await getInvoicesInRange(dateRange);
   
-  const totalRevenue = invoices.reduce((sum, inv) => sum + inv.total, 0);
+  // Get all direct payments (including cash payments) that may not be linked to invoices
+  const directPayments = await prisma.payment.findMany({
+    where: {
+      paymentDate: dateRange,
+      status: {
+        in: VALID_PAYMENT_STATUSES
+      }
+    },
+    include: {
+      invoice: true,
+      customer: true
+    }
+  });
+  
+  // Find payments that don't have associated invoices
+  const paymentsWithoutInvoices = directPayments.filter(payment => !payment.invoiceId);
+  
+  // Get reservations that match the date range but don't have invoices
+  const reservationsInRange = await prisma.reservation.findMany({
+    where: {
+      startDate: dateRange,
+      status: {
+        in: VALID_RESERVATION_STATUSES,
+        notIn: ['CANCELLED', 'NO_SHOW']
+      },
+      invoice: null // Reservations without invoices
+    },
+    include: {
+      service: true,
+      addOnServices: true,
+      financialTransactions: {
+        include: {
+          payment: true
+        }
+      }
+    }
+  });
+  
+  // Calculate total from invoices
+  const totalInvoiceRevenue = invoices.reduce((sum, inv) => sum + inv.total, 0);
   const paidInvoices = invoices.filter(inv => inv.status === 'PAID');
   const outstandingInvoices = invoices.filter(inv => inv.status !== 'PAID');
   
-  const totalPaid = paidInvoices.reduce((sum, inv) => sum + inv.total, 0);
+  const totalPaidFromInvoices = paidInvoices.reduce((sum, inv) => sum + inv.total, 0);
   const totalOutstanding = outstandingInvoices.reduce((sum, inv) => sum + inv.total, 0);
   const taxCollected = invoices.reduce((sum, inv) => sum + inv.taxAmount, 0);
+  
+  // Calculate revenue from direct payments without invoices
+  const totalDirectPayments = paymentsWithoutInvoices.reduce((sum, payment) => sum + payment.amount, 0);
+  
+  // Calculate revenue from reservations without invoices but with financial transactions
+  const reservationDirectRevenue = reservationsInRange.reduce((sum, res) => {
+    // If the reservation has financial transactions, use those
+    if (res.financialTransactions && res.financialTransactions.length > 0) {
+      return sum + res.financialTransactions.reduce((txSum, tx) => txSum + tx.amount, 0);
+    }
+    // Otherwise, use the service price + addon prices as an estimate
+    return sum + (res.service?.price || 0) + 
+      res.addOnServices.reduce((addonSum, addon) => addonSum + addon.price, 0);
+  }, 0);
+  
+  // Grand total including all revenue sources
+  const totalRevenue = totalInvoiceRevenue + totalDirectPayments + reservationDirectRevenue;
+  const totalPaid = totalPaidFromInvoices + totalDirectPayments; // Direct payments are considered paid
+  
+  // Count all transactions - invoices + direct payments
+  const transactionCount = invoices.length + paymentsWithoutInvoices.length + 
+    reservationsInRange.filter(res => res.financialTransactions.length > 0).length;
   
   return {
     totalRevenue,
@@ -167,8 +235,14 @@ export async function getFinancialSummary(dateRange: DateRange): Promise<Financi
     invoiceCount: invoices.length,
     paidInvoiceCount: paidInvoices.length,
     outstandingInvoiceCount: outstandingInvoices.length,
-    avgInvoiceValue: invoices.length > 0 ? totalRevenue / invoices.length : 0,
-    taxCollected
+    avgInvoiceValue: invoices.length > 0 ? totalInvoiceRevenue / invoices.length : 0,
+    taxCollected,
+    // Additional metrics for comprehensive reporting
+    directPaymentsTotal: totalDirectPayments,
+    directPaymentsCount: paymentsWithoutInvoices.length,
+    reservationValueTotal: reservationDirectRevenue,
+    reservationCount: reservationsInRange.length,
+    totalTransactionCount: transactionCount
   };
 }
 

@@ -11,6 +11,7 @@ import {
   LedgerEntryType
 } from '../types/financialTypes';
 import AppError from '../utils/appError';
+import validationService from '../services/validationService';
 
 // Note: This controller uses temporary type definitions until
 // the Prisma schema is properly migrated. The actual database
@@ -57,17 +58,37 @@ export const createFinancialTransaction = async (
       items = [],
     } = req.body;
 
-    // Validate required fields
-    if (!type || !amount) {
-      return next(new AppError('Transaction type and amount are required', 400));
+    // Validate transaction data using validation service
+    const transactionData = {
+      transactionNumber: `TX-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(10000 + Math.random() * 90000)}`,
+      type,
+      amount,
+      status,
+      paymentMethod,
+      notes,
+      timestamp: new Date(),
+      customerId,
+      items: items.map((item: any) => ({
+        description: item.description,
+        quantity: item.quantity || 1,
+        unitPrice: item.unitPrice,
+        amount: item.amount,
+        taxable: item.taxable !== undefined ? item.taxable : true,
+        taxRate: item.taxRate,
+        taxAmount: item.taxAmount,
+        discountAmount: item.discountAmount
+      }))
+    };
+
+    // Perform comprehensive field-level validation
+    const validationResult = await validationService.validateTransaction(transactionData);
+    
+    if (!validationResult.success) {
+      return next(new AppError(`Transaction validation failed: ${validationResult.errors?.join(', ')}`, 400));
     }
 
-    if (!Object.values(TransactionType).includes(type)) {
-      return next(new AppError(`Invalid transaction type: ${type}`, 400));
-    }
-
-    // Generate unique transaction number
-    const transactionNumber = `TR-${Date.now()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+    // Use validated transaction number from the validation service
+    const transactionNumber = transactionData.transactionNumber;
 
     // Use a database transaction to ensure atomicity
     const result = await prismaExtended.$transaction(async (prisma) => {
@@ -487,9 +508,21 @@ export const processPayment = async (
       items = [],
     } = req.body;
 
-    // Validate required fields
-    if (!invoiceId || !customerId || !amount || !method) {
-      return next(new AppError('Invoice ID, customer ID, amount, and payment method are required', 400));
+    // Validate payment data using validation service
+    const paymentData = {
+      amount,
+      paymentMethod: method,
+      status: 'PENDING',
+      paymentDate: new Date(),
+      customerId,
+      invoiceId
+    };
+
+    // Perform comprehensive field-level validation
+    const validationResult = await validationService.validatePayment(paymentData);
+    
+    if (!validationResult.success) {
+      return next(new AppError(`Payment validation failed: ${validationResult.errors?.join(', ')}`, 400));
     }
 
     // Use a transaction to ensure atomicity
@@ -639,83 +672,6 @@ export const processPayment = async (
   } catch (error: any) {
     console.error('Error processing payment:', error);
     return next(new AppError(error.message || 'Error processing payment', 500));
-  }
-};
-
-/**
- * Get customer's financial account and transaction history
- */
-export const getCustomerFinancialData = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { customerId } = req.params;
-
-    // Get customer's financial account
-    const account = await prismaExtended.financialAccount.findFirst({
-      where: { customerId },
-      include: {
-        entries: {
-          orderBy: {
-            timestamp: 'desc',
-          },
-          take: 20,
-        },
-      },
-    });
-
-    // Get recent transactions
-    const transactions = await prismaExtended.financialTransaction.findMany({
-      where: { customerId },
-      include: {
-        items: true,
-        invoice: {
-          select: {
-            invoiceNumber: true,
-            total: true,
-          },
-        },
-      },
-      orderBy: {
-        timestamp: 'desc',
-      },
-      take: 20,
-    });
-
-    // Get pending invoices
-    const pendingInvoices = await prismaExtended.invoice.findMany({
-      where: {
-        customerId,
-        status: {
-          in: ['DRAFT', 'SENT', 'OVERDUE'],
-        },
-      },
-      orderBy: {
-        dueDate: 'asc',
-      },
-    });
-
-    // Calculate total pending amount
-    const totalPendingAmount = pendingInvoices.reduce((sum, inv) => sum + inv.total, 0);
-
-    res.status(200).json({
-      status: 'success',
-      data: {
-        account: account || {
-          currentBalance: 0,
-          availableBalance: 0,
-          entries: [],
-        },
-        recentTransactions: transactions,
-        pendingInvoices,
-        totalPendingAmount,
-      },
-    });
-  } catch (error: any) {
-    console.error('Error fetching customer financial data:', error);
-    return next(new AppError(error.message || 'Error fetching customer financial data', 500));
   }
 };
 
@@ -1021,6 +977,83 @@ export const reconcileFinancialData = async (
   } catch (error: any) {
     console.error('Error performing financial reconciliation:', error);
     return next(new AppError(error.message || 'Error performing financial reconciliation', 500));
+  }
+};
+
+/**
+ * Get customer's financial account and transaction history
+ */
+export const getCustomerFinancialData = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { customerId } = req.params;
+
+    // Get customer's financial account
+    const account = await prismaExtended.financialAccount.findFirst({
+      where: { customerId },
+      include: {
+        entries: {
+          orderBy: {
+            timestamp: 'desc',
+          },
+          take: 20,
+        },
+      },
+    });
+
+    // Get recent transactions
+    const transactions = await prismaExtended.financialTransaction.findMany({
+      where: { customerId },
+      include: {
+        items: true,
+        invoice: {
+          select: {
+            invoiceNumber: true,
+            total: true,
+          },
+        },
+      },
+      orderBy: {
+        timestamp: 'desc',
+      },
+      take: 20,
+    });
+
+    // Get pending invoices
+    const pendingInvoices = await prismaExtended.invoice.findMany({
+      where: {
+        customerId,
+        status: {
+          in: ['DRAFT', 'SENT', 'OVERDUE'],
+        },
+      },
+      orderBy: {
+        dueDate: 'asc',
+      },
+    });
+
+    // Calculate total pending amount
+    const totalPendingAmount = pendingInvoices.reduce((sum, inv) => sum + inv.total, 0);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        account: account || {
+          currentBalance: 0,
+          availableBalance: 0,
+          entries: [],
+        },
+        recentTransactions: transactions,
+        pendingInvoices,
+        totalPendingAmount,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error fetching customer financial data:', error);
+    return next(new AppError(error.message || 'Error fetching customer financial data', 500));
   }
 };
 
