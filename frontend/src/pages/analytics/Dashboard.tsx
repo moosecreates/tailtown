@@ -339,19 +339,19 @@ const Dashboard = () => {
         </Grid>
         
         {/* Service Revenue Chart */}
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardHeader 
-              title="Revenue by Service" 
-              subheader={`${getPeriodLabel()} breakdown by service type`}
+              title="Service Revenue" 
+              subheader={`${getPeriodLabel()} revenue breakdown by service`}
             />
             <Divider />
             <CardContent>
-              <Box sx={{ height: 350 }}>
+              <Box sx={{ height: 380 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={serviceData?.services || []}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                    margin={{ top: 20, right: 30, left: 40, bottom: 70 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
@@ -365,12 +365,11 @@ const Dashboard = () => {
                       tickFormatter={(value) => formatCurrency(value)}
                     />
                     <Tooltip 
-                      formatter={(value: number) => [formatCurrency(value), 'Revenue']}
+                      formatter={(value: number) => [formatCurrency(value), '']}
                     />
-                    <Legend />
                     <Bar 
                       dataKey="revenue" 
-                      name="Revenue" 
+                      name="Amount" 
                       fill={theme.palette.primary.main}
                     />
                   </BarChart>
@@ -381,7 +380,7 @@ const Dashboard = () => {
         </Grid>
         
         {/* Service Distribution Chart */}
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={6}>
           <Card>
             <CardHeader 
               title="Service Distribution" 
@@ -389,16 +388,16 @@ const Dashboard = () => {
             />
             <Divider />
             <CardContent>
-              <Box sx={{ height: 350, display: 'flex', justifyContent: 'center' }}>
+              <Box sx={{ height: 380, display: 'flex', justifyContent: 'center' }}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
+                  <PieChart margin={{ top: 0, right: 30, left: 30, bottom: 0 }}>
                     <Pie
                       data={serviceData?.services || []}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={100}
+                      labelLine={true}
+                      label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
+                      outerRadius={90}
                       fill="#8884d8"
                       dataKey="count"
                       nameKey="name"
