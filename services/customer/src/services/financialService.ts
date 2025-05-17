@@ -221,8 +221,10 @@ export async function getFinancialSummary(dateRange: DateRange): Promise<Financi
   }, 0);
   
   // Grand total including all revenue sources - use exact values to avoid rounding issues
-  const totalRevenue = parseFloat((totalInvoiceRevenue + totalDirectPayments + reservationDirectRevenue).toFixed(2));
-  const totalPaid = parseFloat((totalPaidFromInvoices + totalDirectPayments).toFixed(2)); // Direct payments are considered paid
+  // IMPORTANT: Always round to exactly 2 decimal places to avoid floating point issues
+  // This ensures consistent values across all reports
+  const totalRevenue = Math.round((totalInvoiceRevenue + totalDirectPayments + reservationDirectRevenue) * 100) / 100;
+  const totalPaid = Math.round((totalPaidFromInvoices + totalDirectPayments) * 100) / 100; // Direct payments are considered paid
   
   // Count all transactions - invoices + direct payments
   const transactionCount = invoices.length + paymentsWithoutInvoices.length + 

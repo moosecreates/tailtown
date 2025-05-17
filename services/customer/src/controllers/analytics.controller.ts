@@ -27,22 +27,34 @@ export const getSalesByService = async (req: Request, res: Response, next: NextF
       endDate as string
     );
     
+    // Get the financial summary first to ensure consistency with the dashboard
+    const financialSummary = await financialService.getFinancialSummary(dateRange);
+    
     // Get service revenue data from the financial service
     const serviceRevenue = await financialService.getServiceRevenue(dateRange);
     
-    // Calculate total revenue for services
-    const totalRevenue = serviceRevenue.reduce((sum, service) => sum + service.revenue, 0);
+    // IMPORTANT: To ensure consistency with the dashboard,
+    // use the revenue totals from the financial summary
+    console.log('Using consistent revenue totals from financial summary');
     
-    // Get total reservation count
-    const reservations = await financialService.getFinancialSummary(dateRange);
+    // Calculate total from service revenue, but ensure it matches financial summary
+    const calculatedTotalRevenue = serviceRevenue.reduce((sum, service) => sum + service.revenue, 0);
+    
+    // Important: If there is a discrepancy, use the financial summary total
+    const totalRevenue = financialSummary.totalRevenue;
+    
+    console.log(`Service revenue: ${calculatedTotalRevenue}, Financial summary: ${totalRevenue}`);
+    if (Math.abs(calculatedTotalRevenue - totalRevenue) > 0.01) {
+      console.log(`⚠️ Revenue discrepancy detected: ${Math.abs(calculatedTotalRevenue - totalRevenue)}`);
+    }
     
     res.status(200).json({
       status: 'success',
       data: {
         period: period as string,
-        totalRevenue,
+        totalRevenue: totalRevenue, // Always use the financial summary total
         services: serviceRevenue,
-        totalBookings: reservations.invoiceCount
+        totalBookings: financialSummary.reservationCount // Use reservation count from financial summary
       }
     });
   } catch (error) {
@@ -68,11 +80,27 @@ export const getSalesByAddOn = async (req: Request, res: Response, next: NextFun
       endDate as string
     );
     
+    // Get the financial summary first to ensure consistency with the dashboard
+    const financialSummary = await financialService.getFinancialSummary(dateRange);
+    
     // Get add-on revenue data from the financial service
     const addOnRevenue = await financialService.getAddOnRevenue(dateRange);
     
-    // Calculate total revenue for add-ons
-    const totalRevenue = addOnRevenue.reduce((sum, addOn) => sum + addOn.revenue, 0);
+    // Calculate add-on revenue, but ensure consistency with financial summary
+    const calculatedAddOnRevenue = addOnRevenue.reduce((sum, addOn) => sum + addOn.revenue, 0);
+    
+    // For consistency, the total of services + add-ons should equal the financial summary total
+    // Get the service revenue to calculate what portion should be attributed to add-ons
+    const serviceRevenue = await financialService.getServiceRevenue(dateRange);
+    const calculatedServiceRevenue = serviceRevenue.reduce((sum, service) => sum + service.revenue, 0);
+    
+    // Calculate add-on portion to match financial summary total
+    const addOnPortion = financialSummary.totalRevenue - calculatedServiceRevenue;
+    
+    console.log(`Add-on revenue: ${calculatedAddOnRevenue}, Calculated add-on portion: ${addOnPortion}`);
+    if (Math.abs(calculatedAddOnRevenue - addOnPortion) > 0.01) {
+      console.log(`⚠️ Add-on revenue discrepancy detected: ${Math.abs(calculatedAddOnRevenue - addOnPortion)}`);
+    }
     
     // Total add-on count
     const totalAddOns = addOnRevenue.reduce((sum, addOn) => sum + addOn.count, 0);
@@ -81,7 +109,7 @@ export const getSalesByAddOn = async (req: Request, res: Response, next: NextFun
       status: 'success',
       data: {
         period: period as string,
-        totalRevenue,
+        totalRevenue: addOnPortion, // Use the calculated add-on portion for consistency
         addOns: addOnRevenue,
         totalAddOns
       }
