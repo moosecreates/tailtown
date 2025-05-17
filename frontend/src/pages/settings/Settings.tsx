@@ -32,7 +32,11 @@ const Settings: React.FC = () => {
           Configure your application settings and preferences.
         </Typography>
         
-        <Paper sx={{ p: 3, mt: 3 }}>
+        {/* Analytics & Reporting Section */}
+        <Paper sx={{ p: 3, mt: 3, mb: 4 }}>
+          <Typography variant="h5" sx={{ mb: 2 }}>
+            Analytics & Reporting
+          </Typography>
           <Grid container spacing={3}>
             {/* Analytics Dashboard Section */}
             <Grid item xs={12} md={4}>
@@ -95,9 +99,17 @@ const Settings: React.FC = () => {
                 </CardContent>
               </Card>
             </Grid>
-
+          </Grid>
+        </Paper>
+        
+        {/* Business Operations Section */}
+        <Paper sx={{ p: 3, mt: 3, mb: 4 }}>
+          <Typography variant="h5" sx={{ mb: 2 }}>
+            Business Operations
+          </Typography>
+          <Grid container spacing={3}>
             {/* Staff Scheduling Section */}
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={6}>
               <Card>
                 <CardHeader 
                   title="Staff Scheduling" 
@@ -127,20 +139,15 @@ const Settings: React.FC = () => {
               </Card>
             </Grid>
 
-            <Grid item xs={12} md={4}>
-              <Card>
-                <CardHeader title="General Settings" />
-                <Divider />
-                <CardContent>
-                  <Typography variant="body1" paragraph>
-                    This section will contain general application settings.
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Coming soon...
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Service Configuration Section */}
+        <Paper sx={{ p: 3, mt: 3, mb: 4 }}>
+          <Typography variant="h5" sx={{ mb: 2 }}>
+            Service Configuration
+          </Typography>
+          <Grid container spacing={3}>
             
             <Grid item xs={12} md={4}>
               <Card>
@@ -196,7 +203,7 @@ const Settings: React.FC = () => {
               </Card>
             </Grid>
             
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={6}>
               <Card>
                 <CardHeader 
                   title="Services" 
@@ -226,7 +233,7 @@ const Settings: React.FC = () => {
               </Card>
             </Grid>
             
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={6}>
               <Card>
                 <CardHeader 
                   title="Resources" 
@@ -255,8 +262,31 @@ const Settings: React.FC = () => {
                 </CardContent>
               </Card>
             </Grid>
+          </Grid>
+        </Paper>
+
+        {/* System Settings Section */}
+        <Paper sx={{ p: 3, mt: 3 }}>
+          <Typography variant="h5" sx={{ mb: 2 }}>
+            System Settings
+          </Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardHeader title="General Settings" />
+                <Divider />
+                <CardContent>
+                  <Typography variant="body1" paragraph>
+                    This section will contain general application settings.
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Coming soon...
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
             
-            <Grid item xs={12}>
+            <Grid item xs={12} md={6}>
               <Card>
                 <CardHeader title="System Information" />
                 <Divider />
