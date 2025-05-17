@@ -691,6 +691,7 @@ export default {
   getDirectPaymentsInRange,
   getReservationsWithoutInvoices,
   getDailyRevenue,
+  getDateRangeFilter,
   VALID_INVOICE_STATUSES,
   INVALID_INVOICE_STATUSES,
   VALID_RESERVATION_STATUSES,
