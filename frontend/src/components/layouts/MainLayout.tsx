@@ -128,15 +128,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
         { path: '/calendar/training', label: 'Training', icon: TrainingIcon },
       ] 
     },
-    { 
-      path: '/analytics', 
-      label: 'Analytics', 
-      icon: AnalyticsIcon,
-      children: [
-        { path: '/analytics', label: 'Sales Dashboard', icon: ReportIcon },
-        { path: '/analytics/customers', label: 'Customer Value', icon: PaymentIcon },
-      ] 
-    },
+    // Analytics moved to Admin/Settings
   ];
 
   const drawer = (
