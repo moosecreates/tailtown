@@ -1,0 +1,196 @@
+// Financial Transaction Models
+// These models will be added to the schema.prisma file
+
+model FinancialTransaction {
+  id                String                    @id @default(uuid())
+  transactionNumber String                    @unique
+  type              TransactionType
+  amount            Float
+  relatedAmount     Float?                    // For partial refunds or adjustments
+  status            TransactionStatus         @default(PENDING)
+  paymentMethod     PaymentMethod?
+  notes             String?
+  metadata          Json?                     // Flexible field for additional transaction data
+  timestamp         DateTime                  @default(now())
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  // Relationships to existing entities
+  customerId        String?
+  invoiceId         String?
+  paymentId         String?
+  reservationId     String?
+  // Transaction creator and processor
+  createdById       String?
+  processedById     String?
+  processedAt       DateTime?
+  // References to other entities
+  customer          Customer?                 @relation(fields: [customerId], references: [id])
+  invoice           Invoice?                  @relation(fields: [invoiceId], references: [id])
+  payment           Payment?                  @relation(fields: [paymentId], references: [id])
+  // Transactions can be linked to create audit trails
+  relatedTransaction FinancialTransaction?    @relation("RelatedTransactions", fields: [relatedTransactionId], references: [id])
+  relatedTransactionId String?
+  childTransactions FinancialTransaction[]    @relation("RelatedTransactions")
+  // Transaction items for detailed breakdown
+  items             TransactionItem[]
+
+  @@index([type, status], map: "financial_transactions_type_status_idx")
+  @@index([customerId, timestamp], map: "financial_transactions_customer_date_idx")
+  @@index([invoiceId], map: "financial_transactions_invoice_idx")
+  @@index([transactionNumber], map: "financial_transactions_number_idx")
+  @@map("financial_transactions")
+}
+
+model TransactionItem {
+  id                  String               @id @default(uuid())
+  transactionId       String
+  description         String
+  amount              Float
+  quantity            Int                  @default(1)
+  unitPrice           Float
+  taxable             Boolean              @default(true)
+  taxRate             Float?
+  taxAmount           Float?
+  discountAmount      Float?
+  discountType        DiscountType?
+  discountRuleId      String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  // References to related items
+  invoiceLineItemId   String?
+  serviceId           String?
+  addOnServiceId      String?
+  reservationId       String?
+  // Relationships
+  transaction         FinancialTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId], map: "transaction_items_transaction_idx")
+  @@map("transaction_items")
+}
+
+// Financial account ledger for running balances
+model FinancialAccount {
+  id                String                 @id @default(uuid())
+  accountNumber     String                 @unique
+  customerId        String
+  currentBalance    Float                  @default(0)
+  availableBalance  Float                  @default(0) // May differ from currentBalance for pending transactions
+  lastTransaction   DateTime?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  // Relationships
+  customer          Customer               @relation(fields: [customerId], references: [id])
+  entries           LedgerEntry[]
+
+  @@index([customerId], map: "financial_accounts_customer_idx")
+  @@map("financial_accounts")
+}
+
+// Individual ledger entries for account activity
+model LedgerEntry {
+  id                String                 @id @default(uuid())
+  accountId         String
+  transactionId     String?
+  entryType         LedgerEntryType
+  amount            Float
+  balanceAfter      Float
+  description       String
+  timestamp         DateTime               @default(now())
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  // Relationships
+  account           FinancialAccount       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, timestamp], map: "ledger_entries_account_date_idx")
+  @@map("ledger_entries")
+}
+
+// Reconciliation records for financial data verification
+model FinancialReconciliation {
+  id                String                 @id @default(uuid())
+  reconciliationDate DateTime
+  startDate         DateTime
+  endDate           DateTime
+  reconciliationType ReconciliationType
+  status            ReconciliationStatus   @default(IN_PROGRESS)
+  discrepancies     Json?
+  notes             String?
+  performedById     String?
+  verifiedById      String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  @@index([reconciliationDate], map: "financial_reconciliations_date_idx")
+  @@index([status], map: "financial_reconciliations_status_idx")
+  @@map("financial_reconciliations")
+}
+
+// New enums needed for financial transactions
+
+enum TransactionType {
+  PAYMENT
+  REFUND
+  ADJUSTMENT
+  CREDIT
+  DEBIT
+  VOID
+  FEE
+  TAX
+  DISCOUNT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  VOIDED
+  RECONCILED
+  DISPUTED
+}
+
+enum LedgerEntryType {
+  DEPOSIT
+  WITHDRAWAL
+  ADJUSTMENT
+  FEE
+  INTEREST
+  REFUND
+  PAYMENT
+}
+
+enum ReconciliationType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  MANUAL
+  SYSTEM
+}
+
+enum ReconciliationStatus {
+  IN_PROGRESS
+  COMPLETED
+  DISCREPANCIES_FOUND
+  VERIFIED
+  CANCELLED
+}
+
+// Extensions to existing models
+
+// Add to existing Customer model
+model Customer {
+  // Existing fields...
+  financialTransactions FinancialTransaction[]
+  financialAccounts FinancialAccount[]
+}
+
+// Add to existing Invoice model
+model Invoice {
+  // Existing fields...
+  financialTransactions FinancialTransaction[]
+}
+
+// Add to existing Payment model
+model Payment {
+  // Existing fields...
+  financialTransactions FinancialTransaction[]
+}
