@@ -12,6 +12,7 @@ import {
   Button
 } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { Inventory as ResourcesIcon } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
   return (
@@ -89,6 +90,36 @@ const Settings: React.FC = () => {
                       size="small"
                     >
                       Manage Price Rules →
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardHeader 
+                  title="Resources" 
+                  avatar={<ResourcesIcon color="primary" />}
+                />
+                <Divider />
+                <CardContent>
+                  <Typography variant="body1" paragraph>
+                    Manage facility resources including kennels, grooming stations, and equipment.
+                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2">Resource Types</Typography>
+                    <Typography variant="body2" color="text.secondary">Kennels, Grooming Stations, Training Areas</Typography>
+                  </Box>
+                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button 
+                      component={Link} 
+                      to="/resources"
+                      variant="outlined" 
+                      color="primary" 
+                      size="small"
+                    >
+                      Manage Resources →
                     </Button>
                   </Box>
                 </CardContent>
