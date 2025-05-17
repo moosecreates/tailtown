@@ -159,6 +159,15 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
   // Get access to shopping cart context
   const { addToCart } = useShoppingCart();
 
+  /**
+   * Handles saving add-ons to a reservation and navigating to checkout
+   * 
+   * This function manages several critical processes:
+   * 1. Fetches reservation details to create a cart item
+   * 2. Adds the reservation to the cart (with or without add-ons)
+   * 3. Updates localStorage directly as a backup mechanism
+   * 4. Uses direct form submission to navigate to checkout without intermediate steps
+   */
   const handleSaveAddOns = async () => {
     try {
       setSaving(true);
@@ -208,6 +217,14 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
           console.error('AddOnSelectionDialog: Error updating localStorage:', error);
         }
         
+        /**
+         * Direct Navigation Approach
+         * 
+         * We use a hidden form submission instead of React Router navigation to:
+         * 1. Bypass any React state update race conditions
+         * 2. Prevent the calendar from briefly appearing during navigation
+         * 3. Force a complete page reload to ensure fresh state at checkout
+         */
         // Create a hidden form to submit directly to checkout page
         // This bypasses React Router completely and prevents any intermediate navigation
         console.log('AddOnSelectionDialog: No add-ons selected, creating direct navigation form to checkout');

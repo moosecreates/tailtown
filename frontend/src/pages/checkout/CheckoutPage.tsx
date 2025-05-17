@@ -52,7 +52,19 @@ const CheckoutPage: React.FC = () => {
   // Convert context cart items to CartItemWithAddOns type
   const extendedCartItems = cartItems as unknown as CartItemWithAddOns[];
   
-  // Load and use cart items directly from localStorage
+  /**
+   * Cart Loading from localStorage
+   * 
+   * This effect handles loading cart items directly from localStorage on component mount.
+   * It implements a fallback strategy to ensure the checkout page always has cart data:
+   * 1. First checks if cart items exist in the React context
+   * 2. If not, loads cart items directly from localStorage
+   * 3. Updates the local state to use these items for rendering
+   * 4. Also updates the context state for consistency
+   * 
+   * This approach prevents the checkout page from redirecting back to the calendar
+   * due to empty cart state during page navigation.
+   */
   useEffect(() => {
     console.log('CheckoutPage: Component mounted, loading cart items from localStorage');
     try {
@@ -156,6 +168,18 @@ const CheckoutPage: React.FC = () => {
       // Process successful payment
       setSuccess(true);
       
+      /**
+       * Multi-layer Cart Clearing
+       * 
+       * We implement multiple layers of cart clearing to ensure a clean slate for new orders:
+       * 1. Call the clearCart function from ShoppingCartContext (clears React state and localStorage)
+       * 2. Directly clear localStorage again as an additional safeguard
+       * 3. Perform a write-then-remove operation to handle potential caching issues
+       * 4. Clear the local component state to ensure consistent rendering
+       * 
+       * This redundant approach prevents cart items from persisting between orders
+       * and ensures customers start with an empty cart for their next reservation.
+       */
       // Clear the cart after successful payment - this should also clear localStorage
       clearCart();
       

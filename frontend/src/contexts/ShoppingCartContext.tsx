@@ -36,7 +36,19 @@ const ShoppingCartContext = createContext<ShoppingCartContextType>(defaultContex
 // Custom hook to use shopping cart context
 export const useShoppingCart = () => useContext(ShoppingCartContext);
 
-// Provider component
+/**
+ * ShoppingCartProvider Component
+ * 
+ * This component provides cart state management with localStorage persistence.
+ * It handles:
+ * - Loading cart items from localStorage on initialization
+ * - Saving cart items to localStorage when they change
+ * - Adding, removing, and clearing cart items
+ * - Calculating cart totals
+ * 
+ * The dual storage approach (React state + localStorage) ensures cart data
+ * persists between page navigations and browser refreshes.
+ */
 export const ShoppingCartProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   // Initialize cart items from localStorage
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
@@ -74,6 +86,19 @@ export const ShoppingCartProvider: React.FC<{children: ReactNode}> = ({ children
     setCartItems(prevItems => prevItems.filter(item => item.id !== id));
   };
 
+  /**
+   * Clears the shopping cart completely
+   * 
+   * This function implements a thorough cart clearing mechanism with multiple safeguards:
+   * 1. Clears the React state by setting cartItems to an empty array
+   * 2. Removes the tailtownCart item from localStorage
+   * 3. Performs a double-clear operation to handle potential caching issues:
+   *    - First sets localStorage to an empty array
+   *    - Then removes the item completely
+   * 
+   * This redundant approach ensures the cart is properly cleared between orders
+   * and prevents items from accumulating across multiple checkout sessions.
+   */
   const clearCart = () => {
     console.log('ShoppingCartContext: Clearing cart');
     // Clear the React state
