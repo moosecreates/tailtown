@@ -433,8 +433,8 @@ const Dashboard = () => {
                       <tr>
                         <th style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #ddd' }}>Add-On</th>
                         <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #ddd' }}>Sales</th>
-                        <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #ddd' }}>Revenue</th>
                         <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #ddd' }}>Avg. Price</th>
+                        <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #ddd' }}>Revenue</th>
                         <th style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #ddd' }}>% of Total</th>
                       </tr>
                     </thead>
@@ -443,10 +443,10 @@ const Dashboard = () => {
                         <tr key={addon.id}>
                           <td style={{ padding: '8px', borderBottom: '1px solid #ddd' }}>{addon.name}</td>
                           <td style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #ddd' }}>{addon.count}</td>
-                          <td style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #ddd' }}>{formatCurrency(addon.revenue)}</td>
                           <td style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #ddd' }}>
                             {formatCurrency(addon.count > 0 ? addon.revenue / addon.count : 0)}
                           </td>
+                          <td style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #ddd' }}>{formatCurrency(addon.revenue)}</td>
                           <td style={{ textAlign: 'right', padding: '8px', borderBottom: '1px solid #ddd' }}>
                             {addonData.totalRevenue > 0 
                               ? `${((addon.revenue / addonData.totalRevenue) * 100).toFixed(1)}%` 
@@ -460,10 +460,10 @@ const Dashboard = () => {
                         <td style={{ textAlign: 'right', padding: '8px', borderTop: '2px solid #ddd' }}>
                           {addonData.addOns.reduce((sum: number, addon: any) => sum + addon.count, 0)}
                         </td>
+                        <td style={{ textAlign: 'right', padding: '8px', borderTop: '2px solid #ddd' }}></td>
                         <td style={{ textAlign: 'right', padding: '8px', borderTop: '2px solid #ddd' }}>
                           {formatCurrency(addonData.totalRevenue)}
                         </td>
-                        <td style={{ textAlign: 'right', padding: '8px', borderTop: '2px solid #ddd' }}></td>
                         <td style={{ textAlign: 'right', padding: '8px', borderTop: '2px solid #ddd' }}>100%</td>
                       </tr>
                     </tbody>
