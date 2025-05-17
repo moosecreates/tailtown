@@ -841,6 +841,7 @@ export const getTodayRevenue = async (
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
 
+    // Get all reservations for today
     const reservations = await prisma.reservation.findMany({
       where: {
         startDate: {
@@ -853,12 +854,30 @@ export const getTodayRevenue = async (
       },
       include: {
         service: true,
+        addOnServices: {
+          include: {
+            addOn: true
+          }
+        }
       },
     });
 
-    const revenue = reservations.reduce((acc, reservation) => {
+    // Calculate service revenue
+    const serviceRevenue = reservations.reduce((acc, reservation) => {
       return acc + (reservation.service?.price || 0);
     }, 0);
+
+    // Calculate add-on revenue
+    const addOnRevenue = reservations.reduce((acc, reservation) => {
+      return acc + (reservation.addOnServices?.reduce((addOnAcc, addOnService) => {
+        // Simply use the price field as the ReservationAddOn model doesn't have a quantity field
+        const price = typeof addOnService.price === 'number' ? addOnService.price : 0;
+        return addOnAcc + price;
+      }, 0) || 0);
+    }, 0);
+
+    // Total revenue is the sum of service revenue and add-on revenue
+    const revenue = serviceRevenue + addOnRevenue;
 
     res.status(200).json({
       status: 'success',
