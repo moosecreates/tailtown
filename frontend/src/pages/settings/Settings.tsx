@@ -17,7 +17,8 @@ import {
   LocalOffer as ServicesIcon,
   InsertChart as AnalyticsIcon,
   CreditCard as PaymentIcon,
-  AssessmentOutlined as ReportIcon
+  AssessmentOutlined as ReportIcon,
+  Schedule as ScheduleIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
@@ -89,6 +90,37 @@ const Settings: React.FC = () => {
                       size="small"
                     >
                       View Customer Reports →
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            {/* Staff Scheduling Section */}
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardHeader 
+                  title="Staff Scheduling" 
+                  avatar={<ScheduleIcon color="primary" />}
+                />
+                <Divider />
+                <CardContent>
+                  <Typography variant="body1" paragraph>
+                    Manage staff schedules, availability patterns, and time off requests.
+                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2">Schedule Features</Typography>
+                    <Typography variant="body2" color="text.secondary">Weekly Availability, Time Off Requests, Shift Assignments</Typography>
+                  </Box>
+                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button 
+                      component={Link} 
+                      to="/staff/scheduling"
+                      variant="outlined" 
+                      color="primary" 
+                      size="small"
+                    >
+                      Manage Staff Schedules →
                     </Button>
                   </Box>
                 </CardContent>
