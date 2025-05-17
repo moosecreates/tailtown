@@ -287,7 +287,7 @@ const Dashboard = () => {
                   : '$0.00'}
               </Typography>
               <Typography variant="caption" display="block">
-                Paid + Reserved
+                Total from all sources
               </Typography>
             </CardContent>
           </Card>

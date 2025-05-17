@@ -220,9 +220,9 @@ export async function getFinancialSummary(dateRange: DateRange): Promise<Financi
       res.addOnServices.reduce((addonSum, addon) => addonSum + addon.price, 0);
   }, 0);
   
-  // Grand total including all revenue sources
-  const totalRevenue = totalInvoiceRevenue + totalDirectPayments + reservationDirectRevenue;
-  const totalPaid = totalPaidFromInvoices + totalDirectPayments; // Direct payments are considered paid
+  // Grand total including all revenue sources - use exact values to avoid rounding issues
+  const totalRevenue = parseFloat((totalInvoiceRevenue + totalDirectPayments + reservationDirectRevenue).toFixed(2));
+  const totalPaid = parseFloat((totalPaidFromInvoices + totalDirectPayments).toFixed(2)); // Direct payments are considered paid
   
   // Count all transactions - invoices + direct payments
   const transactionCount = invoices.length + paymentsWithoutInvoices.length + 
