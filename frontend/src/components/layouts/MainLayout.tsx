@@ -95,6 +95,10 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
 
   const navItems: NavItem[] = [
     { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
+    // Calendar items placed below Dashboard for quick access
+    { path: '/calendar', label: 'Boarding Calendar', icon: DaycareIcon },
+    { path: '/calendar/grooming', label: 'Grooming Calendar', icon: GroomingIcon },
+    { path: '/calendar/training', label: 'Training Calendar', icon: TrainingIcon },
     { path: '/customers', label: 'Customers', icon: PeopleIcon },
     { path: '/pets', label: 'Pets', icon: PetsIcon },
     { 
@@ -110,10 +114,6 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     // New Order functionality moved to Calendar-based flow - see docs/features/OrderEntry.md
     // Staff Scheduling moved to Admin/Settings
     // Price Rules moved to Settings
-    // Calendar split into direct navigation items for one-click access
-    { path: '/calendar', label: 'Boarding Calendar', icon: DaycareIcon },
-    { path: '/calendar/grooming', label: 'Grooming Calendar', icon: GroomingIcon },
-    { path: '/calendar/training', label: 'Training Calendar', icon: TrainingIcon },
     // Analytics moved to Admin/Settings
   ];
 
