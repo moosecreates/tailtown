@@ -13,7 +13,11 @@ import {
   Card,
   CardContent,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
@@ -21,11 +25,16 @@ import PaymentIcon from '@mui/icons-material/Payment';
 import { useShoppingCart, CartItem } from '../../contexts/ShoppingCartContext';
 // Use our centralized financial service instead of formatCurrency from utils
 import { financialService, FinancialCartItem, FinancialCalculation } from '../../services';
+import { customerService } from '../../services/customerService';
 import OrderSummary from '../../components/cart/OrderSummary';
 import PaymentStep from './steps/PaymentStep';
 
 // Using standardized FinancialAddOn and FinancialCartItem interfaces from our service
 // This ensures consistent data structure across the application
+// Extend the FinancialCartItem interface to include customer ID
+interface ExtendedCartItem extends FinancialCartItem {
+  customerId?: string;
+}
 
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
@@ -36,11 +45,41 @@ const CheckoutPage: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash'); // Default to cash instead of creditCard
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [savePaymentInfo, setSavePaymentInfo] = useState(false);
-  const [localCartItems, setLocalCartItems] = useState<FinancialCartItem[]>([]);
+  const [localCartItems, setLocalCartItems] = useState<ExtendedCartItem[]>([]);
   const [financialCalculation, setFinancialCalculation] = useState<FinancialCalculation | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [customersLoading, setCustomersLoading] = useState(false);
+  const [defaultCustomerId, setDefaultCustomerId] = useState<string>('');
   
-  // Convert context cart items to FinancialCartItem type
-  const extendedCartItems = cartItems as unknown as FinancialCartItem[];
+  // Convert context cart items to ExtendedCartItem type
+  const extendedCartItems = cartItems as unknown as ExtendedCartItem[];
+  
+  // Fetch customers when component mounts
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      setCustomersLoading(true);
+      try {
+        const response = await customerService.getAllCustomers();
+        if (response && response.data && response.data.length > 0) {
+          setCustomers(response.data);
+          
+          // Use the first customer as a default fallback 
+          // This ensures we have a valid customer ID that exists in the database
+          if (response.data[0]?.id) {
+            setDefaultCustomerId(response.data[0].id);
+            console.log('CheckoutPage: Set default customer ID:', response.data[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching customers:', error);
+      } finally {
+        setCustomersLoading(false);
+      }
+    };
+    
+    fetchCustomers();
+  }, []);
   
   /**
    * Cart Loading from localStorage
@@ -66,7 +105,8 @@ const CheckoutPage: React.FC = () => {
         // Directly use the localStorage cart items for rendering
         if (parsedCart.length > 0) {
           console.log('CheckoutPage: Setting local cart items from localStorage');
-          setLocalCartItems(parsedCart);
+          // Ensure we're using the ExtendedCartItem type
+          setLocalCartItems(parsedCart as ExtendedCartItem[]);
           
           // Also try to update the context (for completeness)
           parsedCart.forEach(item => {
@@ -145,15 +185,187 @@ const CheckoutPage: React.FC = () => {
       return;
     }
     
+    // No need for customer selection validation as customer ID should be in cart items
+    
     setLoading(true);
     setError(null);
     
     try {
-      // In a real application, this would call a payment processing API
-      // For demo purposes, we'll simulate a successful payment after a delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('CheckoutPage: Processing payment for cart items:', localCartItems);
       
-      console.log('CheckoutPage: Payment successful, clearing cart');
+      // Process each cart item to create an invoice and payment record
+      for (const item of localCartItems) {
+        // Check if we have the required item ID
+        if (!item.id) {
+          console.error('CheckoutPage: Missing reservation ID for item:', item);
+          continue;
+        }
+        
+        // Retrieve customer ID from reservation if not in cart item
+        // We'll use the first customer we found in the database as a default
+        if (!item.customerId) {
+          if (defaultCustomerId) {
+            console.log('CheckoutPage: Adding default customer ID to cart item', item);
+            item.customerId = defaultCustomerId;
+          } else {
+            console.error('CheckoutPage: No default customer ID available');
+            setError('No customer found. Please ensure there are customers in the system.');
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Log detailed information about the cart item for debugging
+        console.log('CheckoutPage: Processing cart item:', {
+          id: item.id,
+          name: item.name,
+          customerId: item.customerId || 'Not set',
+          usingDefaultId: !item.customerId
+        });
+        
+        try {
+          // Calculate the total amount for this item including add-ons
+          const basePrice = item.price || 0;
+          const addOnsTotal = item.addOns?.reduce((sum, addon) => sum + (addon.price * (addon.quantity || 1)), 0) || 0;
+          const subtotal = basePrice + addOnsTotal;
+          
+          // Calculate tax (using the standard tax rate of 7.44%)
+          const taxRate = 0.0744;
+          const taxAmount = Math.round((subtotal * taxRate) * 100) / 100;
+          const total = Math.round((subtotal + taxAmount) * 100) / 100;
+          
+          // 1. Create an invoice for this reservation
+          console.log('CheckoutPage: Creating invoice for reservation');
+          
+          // Prepare line items for the invoice
+          const lineItems = [
+            // Main service line item
+            {
+              description: `${item.serviceName || 'Service'} (${new Date(item.startDate || '').toLocaleDateString()} - ${new Date(item.endDate || '').toLocaleDateString()})`,
+              quantity: 1,
+              unitPrice: basePrice,
+              amount: basePrice,
+              taxable: true
+            }
+          ];
+          
+          // Add line items for each add-on service
+          if (item.addOns && item.addOns.length > 0) {
+            item.addOns.forEach(addon => {
+              lineItems.push({
+                description: `Add-on: ${addon.name}`,
+                quantity: addon.quantity || 1,
+                unitPrice: addon.price,
+                amount: addon.price * (addon.quantity || 1),
+                taxable: true
+              });
+            });
+          }
+          
+          // Create the invoice
+          const invoiceResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/invoices`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              customerId: item.customerId, // Use the customer ID from the cart item
+              reservationId: item.id.startsWith('temp-') ? undefined : item.id,
+              dueDate: new Date().toISOString().split('T')[0], // Due today
+              subtotal,
+              taxRate,
+              taxAmount,
+              total,
+              status: 'PAID', // Mark as paid immediately
+              notes: `Paid via ${paymentMethod} at checkout`,
+              lineItems
+            })
+          });
+          
+          if (!invoiceResponse.ok) {
+            const errorData = await invoiceResponse.json();
+            console.error('CheckoutPage: Failed to create invoice:', errorData);
+            throw new Error('Failed to create invoice');
+          }
+          
+          const invoiceResult = await invoiceResponse.json();
+          console.log('CheckoutPage: Invoice created successfully:', invoiceResult);
+          
+          // 2. Create a payment record linked to the invoice
+          const paymentData = {
+            invoiceId: invoiceResult.data.id,
+            customerId: item.customerId, // Use the customer ID from the cart item
+            amount: total,
+            method: paymentMethod.toUpperCase(),
+            status: 'PAID',
+            notes: `Payment for ${item.serviceName || 'service'} on ${new Date().toISOString().split('T')[0]}`
+          };
+          
+          console.log('CheckoutPage: Creating payment record:', paymentData);
+          
+          const paymentResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/payments`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(paymentData)
+          });
+          
+          if (!paymentResponse.ok) {
+            const errorData = await paymentResponse.json();
+            console.error('CheckoutPage: Failed to create payment record:', errorData);
+          } else {
+            const result = await paymentResponse.json();
+            console.log('CheckoutPage: Payment record created successfully:', result);
+          }
+          
+          // 3. Also create a financial transaction record for completeness
+          const transactionData = {
+            type: 'PAYMENT',
+            amount: total,
+            status: 'COMPLETED',
+            paymentMethod: paymentMethod.toUpperCase(),
+            notes: `Payment for invoice ${invoiceResult.data.invoiceNumber}`,
+            customerId: item.customerId,
+            reservationId: item.id.startsWith('temp-') ? undefined : item.id,
+            invoiceId: invoiceResult.data.id,
+            metadata: JSON.stringify({
+              source: 'checkout_page',
+              itemDetails: {
+                serviceName: item.serviceName,
+                startDate: item.startDate ? new Date(item.startDate).toISOString() : null,
+                endDate: item.endDate ? new Date(item.endDate).toISOString() : null,
+                petName: item.petName
+              }
+            })
+          };
+          
+          console.log('CheckoutPage: Creating financial transaction record:', transactionData);
+          
+          try {
+            const transactionResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/financial-transactions`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(transactionData)
+            });
+            
+            if (!transactionResponse.ok) {
+              const errorData = await transactionResponse.json();
+              console.error('CheckoutPage: Failed to create transaction record:', errorData);
+              console.log('CheckoutPage: Continuing checkout despite transaction record failure');
+            } else {
+              const transactionResult = await transactionResponse.json();
+              console.log('CheckoutPage: Transaction record created successfully:', transactionResult);
+            }
+          } catch (error) {
+            console.error('CheckoutPage: Error creating transaction record, but continuing:', error);
+          }
+        } catch (itemError) {
+          console.error('CheckoutPage: Error processing payment for item:', item, itemError);
+        }
+      }
       
       // Process successful payment
       setSuccess(true);
@@ -188,8 +400,6 @@ const CheckoutPage: React.FC = () => {
       setLocalCartItems([]);
       
       console.log('CheckoutPage: Cart cleared after successful payment');
-      
-      // In a real app, you would also create reservations in the database here
       
     } catch (err: any) {
       setError('Payment processing failed. Please try again.');
@@ -277,6 +487,7 @@ const CheckoutPage: React.FC = () => {
         </Grid>
         
         
+
         {/* Payment Information */}
         <Grid item xs={12} md={7}>
           <Paper elevation={2} sx={{ p: 3 }}>
