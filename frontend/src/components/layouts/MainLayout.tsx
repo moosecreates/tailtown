@@ -115,7 +115,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
       ] 
     },
     { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
-    { path: '/orders/new', label: 'New Order', icon: OrdersIcon },
+    // New Order functionality moved to Calendar-based flow - see docs/features/OrderEntry.md
     // Staff Scheduling moved to Admin/Settings
     // Price Rules moved to Settings
     { 
