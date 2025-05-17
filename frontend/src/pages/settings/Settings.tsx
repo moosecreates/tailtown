@@ -12,7 +12,10 @@ import {
   Button
 } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { Inventory as ResourcesIcon } from '@mui/icons-material';
+import { 
+  Inventory as ResourcesIcon,
+  LocalOffer as ServicesIcon 
+} from '@mui/icons-material';
 
 const Settings: React.FC = () => {
   return (
@@ -90,6 +93,36 @@ const Settings: React.FC = () => {
                       size="small"
                     >
                       Manage Price Rules →
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <Card>
+                <CardHeader 
+                  title="Services" 
+                  avatar={<ServicesIcon color="primary" />}
+                />
+                <Divider />
+                <CardContent>
+                  <Typography variant="body1" paragraph>
+                    Manage pet services including boarding, daycare, grooming, and training options.
+                  </Typography>
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2">Service Categories</Typography>
+                    <Typography variant="body2" color="text.secondary">Boarding, Daycare, Grooming, Training</Typography>
+                  </Box>
+                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button 
+                      component={Link} 
+                      to="/services"
+                      variant="outlined" 
+                      color="primary" 
+                      size="small"
+                    >
+                      Manage Services →
                     </Button>
                   </Box>
                 </CardContent>

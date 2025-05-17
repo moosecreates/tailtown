@@ -105,7 +105,6 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
     { path: '/customers', label: 'Customers', icon: PeopleIcon },
     { path: '/pets', label: 'Pets', icon: PetsIcon },
-    { path: '/services', label: 'Services', icon: ServicesIcon },
     { 
       path: '/suites', 
       label: 'Kennels', 
