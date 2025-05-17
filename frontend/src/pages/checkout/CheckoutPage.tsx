@@ -10,16 +10,12 @@ import {
   Grid,
   CircularProgress,
   Alert,
-  Card,
-  CardContent,
   FormControlLabel,
   Checkbox
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import PaymentIcon from '@mui/icons-material/Payment';
 import { useShoppingCart, CartItem } from '../../contexts/ShoppingCartContext';
-import { formatCurrency } from '../../utils/formatters';
 import OrderSummary from '../../components/cart/OrderSummary';
 import PaymentStep from './steps/PaymentStep';
 
@@ -44,7 +40,7 @@ const CheckoutPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState('cash'); // Default to cash instead of creditCard
+  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [savePaymentInfo, setSavePaymentInfo] = useState(false);
   
@@ -209,10 +205,7 @@ const CheckoutPage: React.FC = () => {
               {/* Use the PaymentStep component */}
               <PaymentStep
                 paymentMethod={paymentMethod}
-                onPaymentMethodChange={(method) => {
-                  console.log('CheckoutPage: Payment method changed to:', method);
-                  setPaymentMethod(method);
-                }}
+                onPaymentMethodChange={(method) => setPaymentMethod(method)}
                 paymentAmount={paymentAmount}
                 onPaymentAmountChange={(amount) => setPaymentAmount(amount)}
                 totalAmount={total}
