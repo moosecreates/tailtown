@@ -68,6 +68,11 @@ const emptyCustomer: Customer = {
   city: '',
   state: '',
   zipCode: '',
+  emergencyContact: '',
+  emergencyPhone: '',
+  emergencyContactRelationship: '',
+  emergencyContactEmail: '',
+  emergencyContactNotes: '',
   pets: []
 };
 
@@ -211,6 +216,12 @@ const CustomerDetails: React.FC = () => {
   const CustomerForm = () => (
     <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
       <Grid container spacing={2}>
+        {/* Customer Personal Information */}
+        <Grid item xs={12}>
+          <Typography variant="h6" color="primary" gutterBottom sx={{ borderBottom: '1px solid #eee', pb: 1, mb: 2 }}>
+            Customer Information
+          </Typography>
+        </Grid>
         <Grid item xs={12} md={6}>
           <TextField
             fullWidth
@@ -302,6 +313,89 @@ const CustomerDetails: React.FC = () => {
             value={customer.zipCode}
             onChange={handleInputChange}
             disabled={!editing}
+          />
+        </Grid>
+
+        {/* Emergency Contact Information */}
+        <Grid item xs={12} sx={{ mt: 3 }}>
+          <Typography variant="h6" color="error" gutterBottom sx={{ borderBottom: '1px solid #eee', pb: 1, mb: 2 }}>
+            Emergency Contact Information
+          </Typography>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            id="customer-emergencyContact"
+            label="Emergency Contact Name"
+            name="emergencyContact"
+            value={customer.emergencyContact || ''}
+            onChange={handleInputChange}
+            disabled={!editing}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <PersonIcon color="error" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            id="customer-emergencyContactRelationship"
+            label="Relationship to Customer"
+            name="emergencyContactRelationship"
+            value={customer.emergencyContactRelationship || ''}
+            onChange={handleInputChange}
+            disabled={!editing}
+            placeholder="e.g., Spouse, Parent, Friend"
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            id="customer-emergencyPhone"
+            label="Emergency Contact Phone"
+            name="emergencyPhone"
+            value={customer.emergencyPhone || ''}
+            onChange={handleInputChange}
+            disabled={!editing}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Typography color="error" variant="caption" fontWeight="bold">
+                    !
+                  </Typography>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField
+            fullWidth
+            id="customer-emergencyContactEmail"
+            label="Emergency Contact Email"
+            name="emergencyContactEmail"
+            type="email"
+            value={customer.emergencyContactEmail || ''}
+            onChange={handleInputChange}
+            disabled={!editing}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            id="customer-emergencyContactNotes"
+            label="Emergency Contact Notes"
+            name="emergencyContactNotes"
+            value={customer.emergencyContactNotes || ''}
+            onChange={handleInputChange}
+            disabled={!editing}
+            multiline
+            rows={2}
+            placeholder="Special instructions or additional emergency contact details"
           />
         </Grid>
       </Grid>

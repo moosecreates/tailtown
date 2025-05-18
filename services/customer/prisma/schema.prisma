@@ -9,36 +9,41 @@ datasource db {
 }
 
 model Customer {
-  id                    String                  @id @default(uuid())
-  email                 String                  @unique
-  firstName             String
-  lastName              String
-  phone                 String?
-  alternatePhone        String?
-  address               String?
-  city                  String?
-  state                 String?
-  zipCode               String?
-  notes                 String?
-  portalEnabled         Boolean                 @default(true)
-  preferredContact      ContactMethod           @default(EMAIL)
-  emergencyContact      String?
-  emergencyPhone        String?
-  vatTaxId              String?
-  referralSource        String?
-  tags                  String[]                @default([])
-  isActive              Boolean                 @default(true)
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
-  documents             Document[]
-  invoices              Invoice[]
-  notifications         NotificationPreference?
-  payments              Payment[]
-  pets                  Pet[]
-  reservations          Reservation[]
+  id                        String                  @id @default(uuid())
+  email                     String                  @unique
+  firstName                 String
+  lastName                  String
+  phone                     String?
+  alternatePhone            String?
+  address                   String?
+  city                      String?
+  state                     String?
+  zipCode                   String?
+  notes                     String?
+  portalEnabled             Boolean                 @default(true)
+  preferredContact          ContactMethod           @default(EMAIL)
+  // Emergency contact fields
+  emergencyContact          String?
+  emergencyPhone            String?
+  emergencyContactRelationship String?
+  emergencyContactEmail     String?
+  emergencyContactNotes     String?
+  // Other fields
+  vatTaxId                  String?
+  referralSource            String?
+  tags                      String[]                @default([])
+  isActive                  Boolean                 @default(true)
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt
+  documents                 Document[]
+  invoices                  Invoice[]
+  notifications             NotificationPreference?
+  payments                  Payment[]
+  pets                      Pet[]
+  reservations              Reservation[]
   // Financial relations
-  financialTransactions FinancialTransaction[]
-  financialAccounts     FinancialAccount[]
+  financialTransactions     FinancialTransaction[]
+  financialAccounts         FinancialAccount[]
 
   @@index([firstName, lastName], map: "customers_name_search_idx")
   @@index([email], map: "customers_email_search_idx")

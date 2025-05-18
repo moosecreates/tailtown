@@ -12,8 +12,13 @@ export interface Customer {
   notes?: string;
   portalEnabled?: boolean;
   preferredContact?: 'EMAIL' | 'SMS' | 'BOTH';
+  // Emergency contact information
   emergencyContact?: string;
   emergencyPhone?: string;
+  emergencyContactRelationship?: string;
+  emergencyContactEmail?: string;
+  emergencyContactNotes?: string;
+  // Other customer fields
   vatTaxId?: string;
   referralSource?: string;
   tags?: string[];
