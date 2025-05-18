@@ -15,6 +15,15 @@ Welcome to the Tailtown Pet Resort Management System wiki! This wiki contains de
 - [Kennel Management](./features/KennelManagement.md)
 - [Kennel Calendar](./features/KennelCalendar.md)
 - [Reservations](./features/Reservations.md)
+- [Checkout Process](./features/CheckoutProcess.md)
+
+## Fixes and Solutions
+
+Documentation of common issues and their solutions:
+
+- [Emergency Contact Notes Fix](./fixes/emergency-contact-notes-fix.md) - Resolving text direction and focus issues in emergency contact fields
+- [Reservation Type Fix](./fixes/reservation-type-fix.md) - Fixing missing type definitions for reservation payments and invoices
+- [Financial Transaction Types Fix](./fixes/financial-transaction-types-fix.md) - Resolving TypeScript errors with implicit any[] types
 
 ## Getting Started
 
