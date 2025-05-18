@@ -94,7 +94,7 @@ New TypeScript types and enums have been created to support the enhanced feature
 
 ### In Progress
 - 🔄 Integration testing of the complete reservation flow
-- 🔄 Fixing service availability issues in the UI
+- ✅ Fixed service availability issues by adding boarding services to the database
 - 🔄 Validation and error handling improvements
 
 ### Pending
@@ -106,4 +106,7 @@ New TypeScript types and enums have been created to support the enhanced feature
 - Additional form validation where needed
 - Performance optimization for complex state management
 - Mobile responsiveness improvements
-- Fix service availability display in the reservation wizard
+- ✅ Fixed service availability display in the reservation wizard by adding boarding services
+- Add comprehensive error handling for API failures
+- Create test suites for the new components
+- Improve loading states and feedback during form submission
