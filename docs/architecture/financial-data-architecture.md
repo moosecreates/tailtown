@@ -45,6 +45,38 @@ Common type definitions for financial data ensure consistent data structures acr
 - `ServiceRevenue`: Revenue breakdown by service
 - `AddOnRevenue`: Revenue breakdown by add-on
 - `CustomerRevenue`: Revenue breakdown by customer
+- `FinancialTransaction`: Financial transaction records with proper typing
+  ```typescript
+  interface FinancialTransaction {
+    id: string;
+    transactionNumber: string;
+    status: string;
+    amount: number;
+    customerId: string;
+    timestamp: Date;
+  }
+  ```
+- `Reservation`: Complete reservation data including payments and invoices
+  ```typescript
+  // Payment history for the reservation
+  payments?: Array<{
+    id: string;
+    amount: number;
+    method: string;
+    status: string;
+    createdAt: string;
+    transactionId?: string;
+  }>;
+  
+  // Multiple invoices for the reservation
+  invoices?: Array<{
+    id: string;
+    invoiceNumber: string;
+    status: string;
+    total: number;
+    createdAt: string;
+  }>;
+  ```
 
 ### Controllers and API Endpoints
 
@@ -69,6 +101,16 @@ To maintain financial data consistency, follow these rules:
 2. **Use standard filters**: Use the predefined status filters for invoices, reservations, and payments
 3. **Follow the data flow**: All financial data should flow through a standardized pipeline
 4. **Test thoroughly**: Run validation tests after any changes to financial calculations
+5. **Maintain type safety**: Always use explicit typing for financial data structures
+   ```typescript
+   // Good: Explicitly typed array
+   const transactions: FinancialTransaction[] = [];
+   
+   // Bad: Implicitly typed array
+   const transactions = [];
+   ```
+6. **Document financial interfaces**: Ensure all financial data structures have clear interface definitions
+7. **Avoid any type**: Never use `any` type for financial data to prevent calculation errors
 
 ## Database Schema
 
