@@ -57,7 +57,7 @@ const LodgingServicesStep: React.FC = () => {
   const [loadingSuites, setLoadingSuites] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load available services
+  // Load available services and auto-select the first boarding service if none is selected
   useEffect(() => {
     const loadServices = async () => {
       setLoadingServices(true);
@@ -69,6 +69,11 @@ const LodgingServicesStep: React.FC = () => {
           (svc: Service) => svc.serviceCategory === 'BOARDING'
         );
         setServices(boardingServices);
+        
+        // Auto-select the first boarding service if none is selected
+        if (!service && boardingServices.length > 0) {
+          dispatch({ type: 'SET_SERVICE', payload: boardingServices[0] });
+        }
       } catch (err) {
         console.error('Error loading services:', err);
         setError('Failed to load available services. Please try again.');
@@ -78,7 +83,7 @@ const LodgingServicesStep: React.FC = () => {
     };
 
     loadServices();
-  }, []);
+  }, [service, dispatch]);
 
   // Load available suites when service changes or dates change
   useEffect(() => {
@@ -422,11 +427,11 @@ const LodgingServicesStep: React.FC = () => {
         </Alert>
       )}
       
-      {/* Service selection */}
-      <Typography variant="subtitle1" gutterBottom>
-        Select Service
-      </Typography>
-      {renderServiceCards()}
+      {!service && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Loading boarding service information...
+        </Alert>
+      )}
       
       {/* Lodging preference for multiple pets */}
       {service && renderLodgingPreference()}
