@@ -13,6 +13,7 @@ import ReservationForm from '../reservations/ReservationForm';
 import { Reservation } from '../../services/reservationService';
 import { ServiceCategory } from '../../types/service';
 import AddOnSelectionDialog from '../reservations/AddOnSelectionDialog';
+import EnhancedReservationModal from '../reservations/EnhancedReservationModal';
 
 /**
  * Props for the Calendar component

@@ -20,7 +20,27 @@ export interface Reservation {
     invoiceNumber: string;
     status: string;
     total: number;
+    createdAt?: string;
   }; // Associated invoice
+  
+  // Multiple invoices for the reservation
+  invoices?: Array<{
+    id: string;
+    invoiceNumber: string;
+    status: string;
+    total: number;
+    createdAt: string;
+  }>;
+  
+  // Payment history for the reservation
+  payments?: Array<{
+    id: string;
+    amount: number;
+    method: string;
+    status: string;
+    createdAt: string;
+    transactionId?: string;
+  }>;
   customer?: {
     id: string;
     firstName: string;
