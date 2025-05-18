@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Documentation for calendar components in `docs/features/CalendarComponents.md`
+- Enhanced customer profiles with comprehensive emergency contact information (relationship, email, notes)
+- Documentation for customer management features in `docs/features/CustomerManagement.md`
 - Analytics dashboard with service revenue breakdown and filtering options
 - Customer value reporting with transaction history and service type breakdown
 - Backend API endpoints for analytics data retrieval
