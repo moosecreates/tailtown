@@ -13,6 +13,8 @@ import { resourceRoutes } from './routes/resource.routes';
 import { suiteRoutes } from './routes/suite.routes';
 import { staffRoutes } from './routes/staff.routes';
 import { scheduleRoutes } from './routes/schedule.routes';
+import petCareRoutes from './routes/petCare.routes';
+import recurringReservationRoutes from './routes/recurringReservation.routes';
 import priceRuleRoutes from './routes/priceRule.routes';
 import invoiceRoutes from './routes/invoice.routes';
 import paymentRoutes from './routes/payment.routes';
@@ -211,6 +213,8 @@ app.use('/api/validation', validationRoutes);
 app.use('/api/financial-transactions', financialTransactionRoutes);
 app.use('/api/reporting', reportingRoutes);
 app.use('/api/reconciliation', reconciliationRoutes);
+app.use('/api/pet-care', petCareRoutes);
+app.use('/api/recurring-reservations', recurringReservationRoutes);
 
 // Additional routes without /api prefix for staff (to match frontend API calls)
 app.use('/staff', staffRoutes);
