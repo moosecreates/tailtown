@@ -245,6 +245,8 @@ export const updateCustomer = async (
     const { id } = req.params;
     const customerData = req.body;
     
+    console.log('Updating customer with data:', JSON.stringify(customerData, null, 2));
+    
     // First check if customer exists
     const customerExists = await prisma.customer.findUnique({
       where: { id },
@@ -255,10 +257,33 @@ export const updateCustomer = async (
       return next(new AppError('Customer not found', 404));
     }
     
+    // Validate emergency contact information when provided
+    if (customerData.emergencyPhone && !customerData.emergencyContact) {
+      return next(new AppError('Emergency contact name is required when providing an emergency phone', 400));
+    }
+    
     // Update customer with transaction to ensure all related records are updated
     const updatedCustomer = await prisma.$transaction(async (prismaClient) => {
-      // Remove pets and notifications from the base data since they need special handling
-      const { pets, notifications, ...basicCustomerData } = customerData;
+      // Remove nested objects and arrays from the update data
+      const { pets, notifications, financialTransactions, financialAccounts, documents, invoices, payments, reservations, ...basicCustomerData } = customerData;
+      
+      // Make sure we're not trying to update the ID or timestamps
+      delete basicCustomerData.id;
+      delete basicCustomerData.createdAt;
+      delete basicCustomerData.updatedAt;
+      
+      // Log emergency contact fields if they're included in the update
+      if (basicCustomerData.emergencyContact || basicCustomerData.emergencyPhone || 
+          basicCustomerData.emergencyContactRelationship || basicCustomerData.emergencyContactEmail || 
+          basicCustomerData.emergencyContactNotes) {
+        console.log('Emergency contact information being updated:', {
+          contact: basicCustomerData.emergencyContact,
+          phone: basicCustomerData.emergencyPhone,
+          relationship: basicCustomerData.emergencyContactRelationship,
+          email: basicCustomerData.emergencyContactEmail,
+          notes: basicCustomerData.emergencyContactNotes
+        });
+      }
 
       // Update basic customer data
       const customer = await prismaClient.customer.update({
@@ -299,13 +324,60 @@ export const updateCustomer = async (
       });
     });
     
+    console.log('Customer updated successfully:', updatedCustomer?.id || 'unknown');
+    
+    // Log the emergency contact information in the updated customer
+    if (updatedCustomer) {
+      // Type safe approach to log emergency contact info
+      const emergencyInfo: Record<string, any> = {
+        contact: updatedCustomer.emergencyContact,
+        phone: updatedCustomer.emergencyPhone
+      };
+      
+      // Add the new fields if they exist in the data
+      // These will be available after Prisma regenerates types from the schema
+      const customerData = updatedCustomer as any;
+      if ('emergencyContactRelationship' in customerData) {
+        emergencyInfo.relationship = customerData.emergencyContactRelationship;
+      }
+      if ('emergencyContactEmail' in customerData) {
+        emergencyInfo.email = customerData.emergencyContactEmail;
+      }
+      if ('emergencyContactNotes' in customerData) {
+        emergencyInfo.notes = customerData.emergencyContactNotes;
+      }
+      
+      console.log('Updated emergency contact information:', emergencyInfo);
+    }
+    
     res.status(200).json({
       status: 'success',
       data: updatedCustomer,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating customer:', error);
-    next(error);
+    
+    // Log more detailed error information
+    if (error.code) {
+      console.error('Error code:', error.code);
+    }
+    if (error.meta) {
+      console.error('Error meta:', error.meta);
+    }
+    if (error.message) {
+      console.error('Error message:', error.message);
+    }
+    
+    // Send a more detailed error response
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to update customer',
+      error: {
+        code: error.code,
+        meta: error.meta,
+        message: error.message
+      }
+    });
   }
 };
 

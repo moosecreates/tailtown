@@ -31,6 +31,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Customer, customerService } from '../../services/customerService';
 import AccountHistory from '../../components/customers/AccountHistory';
 
+
 interface TabPanelProps {
   children?: React.ReactNode;
   index: number;
@@ -126,25 +127,42 @@ const CustomerDetails: React.FC = () => {
   };
   
   // Handle form input changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    const activeElement = document.activeElement;
-    const activeElementId = activeElement ? activeElement.id : null;
+    const inputType = e.target.type;
+    const elementId = e.target.id;
     
+    // Update the customer state
     setCustomer(prev => ({
       ...prev,
       [name]: value
     }));
     
-    // Use setTimeout to ensure focus is restored after the state update and re-render
-    setTimeout(() => {
-      if (activeElementId) {
-        const elementToFocus = document.getElementById(activeElementId);
-        if (elementToFocus) {
-          (elementToFocus as HTMLElement).focus();
+    // For all input types, maintain focus after state update
+    requestAnimationFrame(() => {
+      const element = document.getElementById(elementId);
+      if (element) {
+        // For textarea and text inputs, try to maintain cursor position
+        if ((inputType === 'text' || inputType === 'textarea') && 'selectionStart' in e.target) {
+          try {
+            const input = element as HTMLInputElement | HTMLTextAreaElement;
+            const selectionStart = e.target.selectionStart;
+            const selectionEnd = e.target.selectionEnd;
+            
+            // Only attempt to set selection range for supported input types
+            if (input.type !== 'email' && input.type !== 'number') {
+              input.setSelectionRange(selectionStart, selectionEnd);
+            }
+          } catch (error) {
+            // Silently fail if setSelectionRange is not supported
+            console.log(`Selection range not supported for ${inputType}`);
+          }
         }
+        
+        // Always focus the element
+        element.focus();
       }
-    }, 0);
+    });
   };
   
   // Handle customer save
@@ -390,12 +408,29 @@ const CustomerDetails: React.FC = () => {
             id="customer-emergencyContactNotes"
             label="Emergency Contact Notes"
             name="emergencyContactNotes"
+            multiline
+            minRows={4}
             value={customer.emergencyContactNotes || ''}
             onChange={handleInputChange}
             disabled={!editing}
-            multiline
-            rows={2}
             placeholder="Special instructions or additional emergency contact details"
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: 'divider',
+                },
+                '&:hover fieldset': {
+                  borderColor: 'primary.main',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: 'primary.main',
+                },
+                '& .MuiInputBase-input': {
+                  direction: 'ltr',
+                  textAlign: 'left',
+                }
+              },
+            }}
           />
         </Grid>
       </Grid>

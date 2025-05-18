@@ -48,13 +48,46 @@ export const customerService = {
   updateCustomer: async (id: string, customer: Partial<Customer>): Promise<Customer> => {
     try {
       console.log('Making PUT request to: /api/customers/' + id);
-      console.log('With data:', customer);
-      const response = await api.put(`/api/customers/${id}`, customer);
+      
+      // Create a clean copy of the customer data
+      const customerData = { ...customer };
+      
+      // Log the complete data being sent
+      console.log('With complete data:', JSON.stringify(customerData, null, 2));
+      
+      // Log emergency contact fields specifically
+      if (customer.emergencyContact || customer.emergencyPhone || 
+          customer.emergencyContactRelationship || customer.emergencyContactEmail || 
+          customer.emergencyContactNotes) {
+        console.log('Emergency contact data being sent:', {
+          name: customer.emergencyContact,
+          phone: customer.emergencyPhone,
+          relationship: customer.emergencyContactRelationship,
+          email: customer.emergencyContactEmail,
+          notes: customer.emergencyContactNotes
+        });
+      }
+      
+      const response = await api.put(`/api/customers/${id}`, customerData);
       console.log('Response:', response);
+      
       if (!response.data?.data) {
         throw new Error('No data in response');
       }
-      return response.data.data;
+      
+      // Log emergency contact fields in response
+      const responseData = response.data.data;
+      if (responseData) {
+        console.log('Emergency contact data received:', {
+          name: responseData.emergencyContact,
+          phone: responseData.emergencyPhone,
+          relationship: responseData.emergencyContactRelationship,
+          email: responseData.emergencyContactEmail,
+          notes: responseData.emergencyContactNotes
+        });
+      }
+      
+      return responseData;
     } catch (error: any) {
       console.error('Error in updateCustomer:', error);
       console.error('Response:', error.response);
