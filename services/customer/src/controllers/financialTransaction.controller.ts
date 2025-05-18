@@ -57,8 +57,18 @@ export const getFinancialTransactions = async (
   next: NextFunction
 ) => {
   try {
-    // Create empty transactions array for now
-    const transactions = [];
+    // Define a transaction interface for proper typing
+    interface FinancialTransaction {
+      id: string;
+      transactionNumber: string;
+      status: string;
+      amount: number;
+      customerId: string;
+      timestamp: Date;
+    }
+    
+    // Create empty transactions array with proper typing
+    const transactions: FinancialTransaction[] = [];
     
     res.status(200).json({
       status: 'success',
