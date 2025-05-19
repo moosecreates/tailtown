@@ -6,26 +6,17 @@ import {
   Paper,
   TextField,
   Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   FormControl,
   InputLabel,
   Select,
   MenuItem
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import PersonIcon from '@mui/icons-material/Person';
 import PetsIcon from '@mui/icons-material/Pets';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import MedicationIcon from '@mui/icons-material/Medication';
 import FastfoodIcon from '@mui/icons-material/Fastfood';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
-import NoteIcon from '@mui/icons-material/Note';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 import { format } from 'date-fns';
 
@@ -84,16 +75,32 @@ const NotesConfirmationStep: React.FC = () => {
 
   // Find selected suite details
   const getSelectedSuite = () => {
-    // This would typically come from your state or be passed as a prop
-    // For now, we'll just return a placeholder
+    // If no suite ID is available, return null
     if (!suiteId) return null;
+    
+    // Map suite types to display names
+    const suiteTypes: Record<string, string> = {
+      'STANDARD_SUITE': 'Standard Suite',
+      'STANDARD_PLUS_SUITE': 'Standard Plus Suite',
+      'VIP_SUITE': 'VIP Suite'
+    };
+    
+    // Use the provided suite information if available, otherwise extract from ID and other properties
+    const displayNumber = formData.suiteNumber || suiteId.split('-').pop() || '';
+    const displayType = formData.suiteTypeDisplay || 
+                        (formData.suiteType ? suiteTypes[formData.suiteType] || 'Standard Suite' : 
+                        (lodgingPreference ? suiteTypes[lodgingPreference] || 'Standard Suite' : 'Standard Suite'));
     
     return {
       id: suiteId,
-      name: 'Selected Suite', // This would be replaced with actual suite data
-      type: 'Standard'
+      name: `Suite ${displayNumber}`,
+      number: displayNumber,
+      type: displayType
     };
   };
+  
+  // Get the suite information
+  const suiteInfo = getSelectedSuite();
 
   // Get recurrence text
   const getRecurrenceText = () => {
@@ -112,63 +119,92 @@ const NotesConfirmationStep: React.FC = () => {
           .join(', ');
         break;
       case 'MONTHLY':
-        text = `Every ${recurringPattern.interval || 1} month(s) on day ${startDate?.getDate() || '?'}`;
+        text = `Every ${recurringPattern.interval || 1} month(s)`;
         break;
       default:
         text = 'Custom recurrence';
     }
     
     if (recurringPattern.endDate) {
-      text += ` until ${format(recurringPattern.endDate, 'MMMM d, yyyy')}`;
+      text += ` until ${format(new Date(recurringPattern.endDate), 'MMMM d, yyyy')}`;
+    } else if (recurringPattern.maxOccurrences) {
+      text += ` for ${recurringPattern.maxOccurrences} occurrences`;
     }
     
     return text;
   };
 
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom>
-        Notes & Confirmation
-      </Typography>
+    <Box sx={{ p: 1 }}>
+      {/* Suite Information Banner */}
+      {suiteInfo && (
+        <Box 
+          sx={{ 
+            mb: 3, 
+            p: 2, 
+            bgcolor: 'primary.main', 
+            color: 'primary.contrastText',
+            borderRadius: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
+              <MeetingRoomIcon fontSize="large" />
+            </Box>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                {suiteInfo.type} {suiteInfo.number ? suiteInfo.number : ''}
+              </Typography>
+              <Typography variant="body2">
+                {service?.name || 'No Service Selected'}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      )}
       
-      {/* Notes Section */}
-      <Paper elevation={0} variant="outlined" sx={{ p: 2, mb: 3 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          <NoteIcon sx={{ mr: 1, verticalAlign: 'text-bottom' }} />
-          Reservation Notes
+      {/* Notes Section - More Compact */}
+      <Paper elevation={0} variant="outlined" sx={{ p: 1, mb: 2 }}>
+        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+          Notes & Status
         </Typography>
         
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
+        <Grid container spacing={1}>
+          <Grid item xs={12} md={4}>
             <TextField
               label="Staff Notes"
-              placeholder="Internal notes for staff only"
+              placeholder="Staff only"
               fullWidth
               multiline
-              rows={3}
+              rows={2}
+              size="small"
               value={staffNotes}
               onChange={handleStaffNotesChange}
               variant="outlined"
-              margin="normal"
+              margin="dense"
             />
           </Grid>
           
-          <Grid item xs={12}>
+          <Grid item xs={12} md={4}>
             <TextField
               label="Customer Notes"
-              placeholder="Notes visible to the customer"
+              placeholder="Visible to customer"
               fullWidth
               multiline
-              rows={3}
+              rows={2}
+              size="small"
               value={customerNotes}
               onChange={handleCustomerNotesChange}
               variant="outlined"
-              margin="normal"
+              margin="dense"
             />
           </Grid>
           
-          <Grid item xs={12} sm={6}>
-            <FormControl fullWidth margin="normal">
+          <Grid item xs={12} md={4}>
+            <FormControl fullWidth margin="dense" size="small">
               <InputLabel id="reservation-status-label">Status</InputLabel>
               <Select
                 labelId="reservation-status-label"
@@ -190,299 +226,237 @@ const NotesConfirmationStep: React.FC = () => {
         </Grid>
       </Paper>
       
-      {/* Reservation Summary */}
-      <Paper elevation={0} variant="outlined" sx={{ p: 2, mb: 3 }}>
-        <Typography variant="subtitle1" gutterBottom sx={{ mb: 2 }}>
+      {/* Reservation Summary - Compact Version */}
+      <Paper elevation={0} variant="outlined" sx={{ p: 1, mb: 2 }}>
+        <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
           Reservation Summary
         </Typography>
         
         {/* Customer & Pets Summary */}
-        <Accordion defaultExpanded>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <PersonIcon sx={{ mr: 1 }} />
-              <Typography>Customer & Pets</Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails>
-            <List disablePadding>
-              <ListItem>
-                <ListItemIcon>
-                  <PersonIcon />
-                </ListItemIcon>
-                <ListItemText 
-                  primary="Customer" 
-                  secondary={
-                    customer
-                      ? `${customer.firstName} ${customer.lastName} (${customer.email})`
-                      : 'No customer selected'
-                  } 
-                />
-              </ListItem>
-              
-              <Divider component="li" sx={{ my: 1 }} />
-              
-              <ListItem>
-                <ListItemIcon>
-                  <PetsIcon />
-                </ListItemIcon>
-                <ListItemText 
-                  primary={`Pets (${selectedPetObjects.length})`} 
-                  secondary={
-                    selectedPetObjects.length
-                      ? selectedPetObjects.map(pet => pet.name).join(', ')
-                      : 'No pets selected'
-                  } 
-                />
-              </ListItem>
+        <Box sx={{ mb: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+          <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <PersonIcon fontSize="small" sx={{ mr: 1 }} />
+            Customer & Pets
+          </Typography>
+          
+          <Grid container spacing={1}>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                Customer:
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {customer
+                  ? `${customer?.firstName || ''} ${customer?.lastName || ''} ${customer?.email ? `(${customer.email})` : ''}`
+                  : 'No customer selected'}
+              </Typography>
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                Pets ({selectedPetObjects.length}):
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {selectedPetObjects.length
+                  ? selectedPetObjects.map(pet => pet.name).join(', ')
+                  : 'No pets selected'}
+              </Typography>
               
               {selectedPetObjects.length > 1 && (
-                <ListItem>
-                  <ListItemText
-                    primary="Lodging Preference"
-                    secondary={
-                      lodgingPreference === LodgingPreference.STANDARD
-                        ? 'Standard (separate accommodations)'
-                        : lodgingPreference === LodgingPreference.SHARED_WITH_SIBLING
-                        ? 'Shared accommodations (pets together)'
-                        : 'Explicitly separate accommodations'
-                    }
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    sx={{ pl: 4 }}
-                  />
-                </ListItem>
+                <Typography variant="body2" color="text.secondary">
+                  Lodging: {lodgingPreference === LodgingPreference.STANDARD
+                    ? 'Separate accommodations'
+                    : lodgingPreference === LodgingPreference.SHARED_WITH_SIBLING
+                    ? 'Shared accommodations'
+                    : 'Explicitly separate'}
+                </Typography>
               )}
-            </List>
-          </AccordionDetails>
-        </Accordion>
+            </Grid>
+          </Grid>
+        </Box>
         
         {/* Schedule Summary */}
-        <Accordion defaultExpanded>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <CalendarTodayIcon sx={{ mr: 1 }} />
-              <Typography>Schedule</Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails>
-            <List disablePadding>
-              <ListItem>
-                <ListItemText 
-                  primary="Service" 
-                  secondary={service ? service.name : 'No service selected'} 
-                />
-              </ListItem>
-              
-              <ListItem>
-                <ListItemText 
-                  primary="Start Date & Time" 
-                  secondary={formatDateTime(startDate)} 
-                />
-              </ListItem>
-              
-              <ListItem>
-                <ListItemText 
-                  primary="End Date & Time" 
-                  secondary={formatDateTime(endDate)} 
-                />
-              </ListItem>
-              
-              <ListItem>
-                <ListItemIcon>
-                  <EventRepeatIcon />
-                </ListItemIcon>
-                <ListItemText 
-                  primary="Recurrence" 
-                  secondary={getRecurrenceText()} 
-                />
-              </ListItem>
-              
-              {suiteId && (
-                <ListItem>
-                  <ListItemIcon>
-                    <MeetingRoomIcon />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="Selected Suite" 
-                    secondary={getSelectedSuite()?.name || suiteId} 
-                  />
-                </ListItem>
-              )}
-            </List>
-          </AccordionDetails>
-        </Accordion>
+        <Box sx={{ mb: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+          <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <CalendarTodayIcon fontSize="small" sx={{ mr: 1 }} />
+            Schedule
+          </Typography>
+          
+          <Grid container spacing={1}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                Service:
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {service?.name || 'No service selected'}
+              </Typography>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                Start:
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {formatDateTime(startDate)}
+              </Typography>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                End:
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {formatDateTime(endDate)}
+              </Typography>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+                <EventRepeatIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                Recurrence:
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {getRecurrenceText()}
+              </Typography>
+            </Grid>
+            
+            {suiteId && (
+              <Grid item xs={12}>
+                <Typography variant="body2" sx={{ fontWeight: 'medium', display: 'flex', alignItems: 'center' }}>
+                  <MeetingRoomIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  Suite:
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {getSelectedSuite()?.name || `Suite ${suiteId.split('-').pop()}`} ({getSelectedSuite()?.type || 'Standard'})
+                </Typography>
+              </Grid>
+            )}
+          </Grid>
+        </Box>
         
         {/* Feeding Preferences Summary */}
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <FastfoodIcon sx={{ mr: 1 }} />
-              <Typography>Feeding Preferences</Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails>
-            {selectedPetObjects.length > 0 ? (
-              <Grid container spacing={2}>
-                {selectedPetObjects.map(pet => {
-                  const petFeedingPref = feedingPreferences[pet.id];
-                  
-                  return (
-                    <Grid item xs={12} key={pet.id}>
-                      <Paper variant="outlined" sx={{ p: 2 }}>
-                        <Typography variant="subtitle2">
-                          {pet.name}
+        <Box sx={{ mb: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+          <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <FastfoodIcon fontSize="small" sx={{ mr: 1 }} />
+            Feeding Preferences
+          </Typography>
+          
+          {selectedPetObjects.length > 0 ? (
+            <Grid container spacing={1}>
+              {selectedPetObjects.map(pet => {
+                const petFeedingPref = feedingPreferences[pet.id];
+                
+                return (
+                  <Grid item xs={12} key={pet.id}>
+                    <Box sx={{ p: 1, border: '1px solid #e0e0e0', borderRadius: 1, bgcolor: '#ffffff' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                        {pet.name}
+                      </Typography>
+                      
+                      {petFeedingPref ? (
+                        <Grid container spacing={1}>
+                          <Grid item xs={12} sm={6} md={3}>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                              Feeding Times: {petFeedingPref.feedingSchedule.length
+                                ? petFeedingPref.feedingSchedule.join(', ')
+                                : 'None'}
+                            </Typography>
+                          </Grid>
+                          
+                          <Grid item xs={12} sm={6} md={3}>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                              Use House Food: {petFeedingPref.useHouseFood ? 'Yes' : 'No'}
+                            </Typography>
+                          </Grid>
+                          
+                          <Grid item xs={12} sm={6} md={3}>
+                            <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                              Allow Add-ins: {petFeedingPref.allowAddIns ? 'Yes' : 'No'}
+                            </Typography>
+                          </Grid>
+                          
+                          {petFeedingPref.probioticDetails && (
+                            <Grid item xs={12} sm={6} md={3}>
+                              <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                                Probiotic: {`${petFeedingPref.probioticDetails.quantity} (${petFeedingPref.probioticDetails.timing.join(', ')})`}
+                              </Typography>
+                            </Grid>
+                          )}
+                        </Grid>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                          No feeding preferences specified
                         </Typography>
-                        
-                        {petFeedingPref ? (
-                          <List dense disablePadding>
-                            <ListItem>
-                              <ListItemText 
-                                primary="Feeding Times" 
-                                secondary={
-                                  petFeedingPref.feedingSchedule.length
-                                    ? petFeedingPref.feedingSchedule.join(', ')
-                                    : 'None specified'
-                                } 
-                              />
-                            </ListItem>
-                            
-                            <ListItem>
-                              <ListItemText 
-                                primary="Use House Food" 
-                                secondary={petFeedingPref.useHouseFood ? 'Yes' : 'No'} 
-                              />
-                            </ListItem>
-                            
-                            <ListItem>
-                              <ListItemText 
-                                primary="Allow Food Add-ins" 
-                                secondary={petFeedingPref.allowAddIns ? 'Yes' : 'No'} 
-                              />
-                            </ListItem>
-                            
-                            {petFeedingPref.probioticDetails && (
-                              <ListItem>
-                                <ListItemText 
-                                  primary="Probiotics" 
-                                  secondary={`${petFeedingPref.probioticDetails.quantity} ${
-                                    petFeedingPref.probioticDetails.timing.length
-                                      ? `(${petFeedingPref.probioticDetails.timing.join(', ')})`
-                                      : ''
-                                  }`} 
-                                />
-                              </ListItem>
-                            )}
-                            
-                            {petFeedingPref.specialInstructions && (
-                              <ListItem>
-                                <ListItemText 
-                                  primary="Special Instructions" 
-                                  secondary={petFeedingPref.specialInstructions} 
-                                />
-                              </ListItem>
-                            )}
-                          </List>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            No feeding preferences specified
-                          </Typography>
-                        )}
-                      </Paper>
-                    </Grid>
-                  );
-                })}
-              </Grid>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                No pets selected
-              </Typography>
-            )}
-          </AccordionDetails>
-        </Accordion>
+                      )}
+                    </Box>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              No pets selected
+            </Typography>
+          )}
+        </Box>
         
         {/* Medications Summary */}
-        <Accordion>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <MedicationIcon sx={{ mr: 1 }} />
-              <Typography>Medications</Typography>
-            </Box>
-          </AccordionSummary>
-          <AccordionDetails>
-            {selectedPetObjects.length > 0 ? (
-              <Grid container spacing={2}>
-                {selectedPetObjects.map(pet => {
-                  const petMeds = medications[pet.id] || [];
-                  
-                  return (
-                    <Grid item xs={12} key={pet.id}>
-                      <Paper variant="outlined" sx={{ p: 2 }}>
-                        <Typography variant="subtitle2">
-                          {pet.name}
-                        </Typography>
-                        
-                        {petMeds.length > 0 ? (
-                          <List dense disablePadding>
-                            {petMeds.map((med, index) => (
-                              <React.Fragment key={med.id || index}>
-                                <ListItem>
-                                  <ListItemText 
-                                    primary={med.name} 
-                                    secondary={`${med.dosage} (${med.frequency.replace(/_/g, ' ')})`} 
-                                  />
-                                </ListItem>
+        <Box sx={{ p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+          <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+            <MedicationIcon fontSize="small" sx={{ mr: 1 }} />
+            Medications
+          </Typography>
+          
+          {selectedPetObjects.length > 0 ? (
+            <Grid container spacing={1}>
+              {selectedPetObjects.map(pet => {
+                const petMeds = medications[pet.id] || [];
+                
+                return (
+                  <Grid item xs={12} key={pet.id}>
+                    <Box sx={{ p: 1, border: '1px solid #e0e0e0', borderRadius: 1, bgcolor: '#ffffff' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                        {pet.name}
+                      </Typography>
+                      
+                      {petMeds.length > 0 ? (
+                        <Grid container spacing={1}>
+                          {petMeds.map((med, index) => (
+                            <Grid item xs={12} key={med.id || index}>
+                              <Box sx={{ mb: index < petMeds.length - 1 ? 1 : 0 }}>
+                                <Typography variant="body2" sx={{ fontSize: '0.8rem', fontWeight: 'medium' }}>
+                                  {med.name} - {med.dosage} ({med.frequency.replace(/_/g, ' ')})
+                                </Typography>
                                 
-                                <ListItem>
-                                  <ListItemText 
-                                    primary="Timing Schedule" 
-                                    secondary={med.timingSchedule.map(t => t.replace(/_/g, ' ')).join(', ')} 
-                                    sx={{ pl: 2 }}
-                                  />
-                                </ListItem>
+                                <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                                  Times: {med.timingSchedule.map(t => t.replace(/_/g, ' ')).join(', ')}
+                                </Typography>
                                 
                                 {med.administrationMethod && (
-                                  <ListItem>
-                                    <ListItemText 
-                                      primary="Administration Method" 
-                                      secondary={med.administrationMethod} 
-                                      sx={{ pl: 2 }}
-                                    />
-                                  </ListItem>
+                                  <Typography variant="body2" sx={{ fontSize: '0.8rem', color: 'text.secondary' }}>
+                                    Method: {med.administrationMethod}
+                                  </Typography>
                                 )}
-                                
-                                {med.specialInstructions && (
-                                  <ListItem>
-                                    <ListItemText 
-                                      primary="Special Instructions" 
-                                      secondary={med.specialInstructions} 
-                                      sx={{ pl: 2 }}
-                                    />
-                                  </ListItem>
-                                )}
-                                
-                                {index < petMeds.length - 1 && (
-                                  <Divider component="li" sx={{ my: 1 }} />
-                                )}
-                              </React.Fragment>
-                            ))}
-                          </List>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            No medications specified
-                          </Typography>
-                        )}
-                      </Paper>
-                    </Grid>
-                  );
-                })}
-              </Grid>
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                No pets selected
-              </Typography>
-            )}
-          </AccordionDetails>
-        </Accordion>
+                              </Box>
+                              {index < petMeds.length - 1 && <Divider sx={{ my: 0.5 }} />}
+                            </Grid>
+                          ))}
+                        </Grid>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                          No medications specified
+                        </Typography>
+                      )}
+                    </Box>
+                  </Grid>
+                );
+              })}
+            </Grid>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              No pets selected
+            </Typography>
+          )}
+        </Box>
       </Paper>
     </Box>
   );

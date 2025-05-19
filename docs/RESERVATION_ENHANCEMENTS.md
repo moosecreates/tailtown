@@ -10,9 +10,10 @@ The new reservation system uses a multi-step wizard approach to make the reserva
 
 - **Customer & Pet Selection Step**: Select a customer and one or more pets for the reservation
 - **Care Requirements Step**: Set detailed feeding preferences and medication schedules for each pet
-- **Lodging & Services Step**: Choose service type and accommodations, including room preferences
-- **Schedule & Recurrence Step**: Set reservation dates, times, and recurring patterns if needed
+- **Schedule & Recurrence Step**: Set reservation dates, times, and recurring patterns if needed (pre-filled from calendar selection)
 - **Notes & Confirmation Step**: Add staff/customer notes and review all details before submission
+
+Note: The Lodging & Services step has been completely removed since the suite and service information is automatically determined from the calendar selection. Additionally, the Schedule step is pre-filled with the dates and times selected from the calendar, further streamlining the reservation process.
 
 ### 2. Pet Care Management
 Enhanced pet care management capabilities have been added:
@@ -61,6 +62,9 @@ New data models were created to support these features:
 ### Integration Points
 The enhanced reservation system has been integrated with:
 - `KennelCalendar`: Calendar component for scheduling and viewing reservations
+  - Automatically passes selected suite information to the reservation wizard
+  - Pre-fills the Schedule step with dates and times from the calendar selection
+  - Eliminates redundant data entry by carrying forward calendar selections
 
 ### TypeScript Types
 New TypeScript types and enums have been created to support the enhanced features:
@@ -88,13 +92,44 @@ New TypeScript types and enums have been created to support the enhanced feature
 ### Completed
 - ✅ Database schema enhancements with new models for pet care management
 - ✅ Backend controllers and routes for feeding preferences, medications, and recurring reservations
-- ✅ Frontend wizard component architecture with 5-step process
+- ✅ Frontend wizard component architecture with 4-step process (reduced from 5 steps)
 - ✅ Multi-pet support in reservation flow
 - ✅ Detailed care management forms (feeding, medications)
+- ✅ Completely removed the Lodging & Services step from the reservation wizard
+- ✅ Fixed service availability issues by adding boarding services to the database
+- ✅ Eliminated redundant suite selection by automatically using the suite chosen from the calendar
+- ✅ Pre-filled the Schedule step with dates and times from the calendar selection
+
+## Recent Bug Fixes and Improvements (May 18, 2025)
+
+### Service Selection Enhancements
+
+- ✅ **Removed Service Filtering Restriction**: Modified both `CustomerPetSelectionStep.tsx` and `LodgingServicesStep.tsx` to display all services from the API, not just those with the 'BOARDING' category
+- ✅ **Fixed React Fragment Usage in Material UI Components**: Replaced fragment syntax with array syntax for rendering multiple items in the Select component, eliminating React errors
+- ✅ **Fixed Race Condition in Service Selection**: Added better state management to ensure service values are only set when options are fully loaded
+
+### Pet Selection Enhancements
+
+- ✅ **Auto-Selection of Single Pet**: Added logic to automatically select a pet when a customer has exactly one pet, improving user experience
+- ✅ **Fixed Infinite Loop in Pet Loading**: Removed `selectedPets` from the dependency array in the `useEffect` that loads pets, eliminating hundreds of unnecessary API calls
+- ✅ **Added Optimization for Pet Selection Updates**: Implemented deep comparison to only dispatch updates when the selection actually changes
+
+### Technical Improvements
+
+- ✅ **Better Error Handling and Logging**: Added more detailed logging for debugging
+- ✅ **Code Quality Improvements**: Applied better state management practices and improved component lifecycle handling
+
+### UI Improvements
+
+- ✅ **Compact Confirmation Tab**: Redesigned the Notes & Confirmation step to be more compact and user-friendly
+  - Removed accordion dropdowns in favor of always-visible sections with clear visual separation
+  - Arranged form fields horizontally on larger screens to maximize space usage
+  - Reduced padding, margins, and font sizes for a more compact presentation
+  - Added subtle background colors and borders to visually organize information
+  - Fixed DOM nesting issues that were causing React warnings
 
 ### In Progress
 - 🔄 Integration testing of the complete reservation flow
-- ✅ Fixed service availability issues by adding boarding services to the database
 - 🔄 Validation and error handling improvements
 
 ### Pending
@@ -107,6 +142,10 @@ New TypeScript types and enums have been created to support the enhanced feature
 - Performance optimization for complex state management
 - Mobile responsiveness improvements
 - ✅ Fixed service availability display in the reservation wizard by adding boarding services
+- ✅ Streamlined workflow by completely removing the Lodging & Services step
+- ✅ Eliminated redundant suite selection by automatically using the suite chosen from the calendar
+- ✅ Simplified the reservation process by reducing the number of steps from 5 to 4
+- ✅ Improved user experience by automatically pre-filling dates and times from calendar selection
 - Add comprehensive error handling for API failures
 - Create test suites for the new components
 - Improve loading states and feedback during form submission

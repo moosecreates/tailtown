@@ -12,7 +12,6 @@ import {
   CardHeader,
   Avatar,
   Checkbox,
-  FormControlLabel,
   Button,
   List,
   ListItem,
@@ -21,15 +20,22 @@ import {
   Divider,
   Chip,
   Alert,
-  InputAdornment
+  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  SelectChangeEvent
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import PetsIcon from '@mui/icons-material/Pets';
 import { useReservationWizard } from '../ReservationWizard';
 import { customerService } from '../../../../services/customerService';
 import { petService } from '../../../../services/petService';
+import { serviceManagement } from '../../../../services/serviceManagement';
 import { Customer } from '../../../../types/customer';
 import { Pet } from '../../../../types/pet';
+import { Service } from '../../../../types/service';
 
 /**
  * Customer & Pet Selection Step
@@ -39,12 +45,18 @@ import { Pet } from '../../../../types/pet';
  */
 const CustomerPetSelectionStep: React.FC = () => {
   const { formData, dispatch } = useReservationWizard();
-  const { customer, pets, selectedPets } = formData;
+  const { customer, pets, selectedPets, service } = formData;
 
   // Local state for customer search
   const [customerInput, setCustomerInput] = useState('');
   const [customerOptions, setCustomerOptions] = useState<Customer[]>([]);
   const [customerLoading, setCustomerLoading] = useState(false);
+  
+  // Local state for service selection
+  const [services, setServices] = useState<Service[]>([]);
+  const [loadingServices, setLoadingServices] = useState<boolean>(true); // Start with loading state
+  const [serviceError, setServiceError] = useState<string | null>(null);
+  const [serviceReady, setServiceReady] = useState<boolean>(false); // Track when services are fully ready
 
   // Effect to search for customers when input changes
   useEffect(() => {
@@ -78,6 +90,61 @@ const CustomerPetSelectionStep: React.FC = () => {
     };
   }, [customerInput]);
 
+  // Effect to load available services and handle service selection
+  useEffect(() => {
+    const loadServices = async () => {
+      // Set loading state
+      setLoadingServices(true);
+      setServiceError(null);
+      setServiceReady(false);
+      
+      try {
+        console.log('CustomerPetSelectionStep - Fetching services...');
+        const response = await serviceManagement.getAllServices();
+        console.log('CustomerPetSelectionStep - API response:', response);
+        
+        // Handle different response formats
+        let allServices: Service[] = [];
+        
+        if (response && response.data) {
+          // If response.data is an array, use it directly
+          if (Array.isArray(response.data)) {
+            allServices = response.data;
+          } 
+          // If response.data.data is an array (nested structure), use that
+          else if (response.data.data && Array.isArray(response.data.data)) {
+            allServices = response.data.data;
+          }
+        }
+        
+        console.log('CustomerPetSelectionStep - All services:', allServices);
+        console.log('CustomerPetSelectionStep - Using all services without filtering');
+        
+        // Set services first
+        setServices(allServices);
+        
+        // Wait for next render cycle before marking services as ready
+        setTimeout(() => {
+          setServiceReady(true);
+          setLoadingServices(false);
+          
+          // Only auto-select if no service is already selected
+          if (!service && allServices.length > 0) {
+            console.log('CustomerPetSelectionStep - Auto-selecting first service:', allServices[0]);
+            dispatch({ type: 'SET_SERVICE', payload: allServices[0] });
+          }
+        }, 100);
+      } catch (err) {
+        console.error('Error loading services:', err);
+        setServiceError('Failed to load available services. Please try again.');
+        setLoadingServices(false);
+      }
+    };
+
+    loadServices();
+    // This should only run once when component mounts
+  }, []);
+
   // Effect to load customer's pets when a customer is selected
   useEffect(() => {
     if (!customer) {
@@ -88,15 +155,25 @@ const CustomerPetSelectionStep: React.FC = () => {
 
     const loadPets = async () => {
       try {
+        console.log('Loading pets for customer:', customer.id);
         const response = await petService.getPetsByCustomer(customer.id);
         const petData = response.data || [];
         dispatch({ type: 'SET_PETS', payload: petData });
         
+        // Auto-select the only pet if there's exactly one
+        if (petData.length === 1 && selectedPets.length === 0) {
+          console.log('Auto-selecting the only pet:', petData[0].name);
+          dispatch({ type: 'SET_SELECTED_PETS', payload: [petData[0].id] });
+        }
         // If we already had selected pets, filter to keep only valid ones
-        if (selectedPets.length > 0) {
+        else if (selectedPets.length > 0) {
           const validPetIds = petData.map(p => p.id);
           const newSelectedPets = selectedPets.filter(id => validPetIds.includes(id));
-          dispatch({ type: 'SET_SELECTED_PETS', payload: newSelectedPets });
+          
+          // Only dispatch if the selection actually changed
+          if (JSON.stringify(newSelectedPets) !== JSON.stringify(selectedPets)) {
+            dispatch({ type: 'SET_SELECTED_PETS', payload: newSelectedPets });
+          }
         }
       } catch (error) {
         console.error('Error loading pets:', error);
@@ -104,7 +181,8 @@ const CustomerPetSelectionStep: React.FC = () => {
     };
 
     loadPets();
-  }, [customer, dispatch, selectedPets]);
+  // Remove selectedPets from dependency array to prevent infinite loop
+  }, [customer, dispatch]);
 
   // Handle customer selection
   const handleCustomerChange = (event: any, newCustomer: Customer | null) => {
@@ -127,9 +205,100 @@ const CustomerPetSelectionStep: React.FC = () => {
       });
     }
   };
+  
+  // Handle service selection
+  const handleServiceChange = (event: SelectChangeEvent<string>) => {
+    const serviceId = event.target.value;
+    const selectedService = services.find(s => s.id === serviceId);
+    if (selectedService) {
+      dispatch({ type: 'SET_SERVICE', payload: selectedService });
+    }
+  };
 
+  // Extract suite information from form data
+  const { suiteId, suiteNumber, suiteType, suiteTypeDisplay } = formData;
+  
+  // Get suite number and type for display
+  const getSuiteInfo = () => {
+    if (!suiteId) return null;
+    
+    // Map suite types to display names
+    const suiteTypes: Record<string, string> = {
+      'STANDARD_SUITE': 'Standard Suite',
+      'STANDARD_PLUS_SUITE': 'Standard Plus Suite',
+      'VIP_SUITE': 'VIP Suite'
+    };
+    
+    const displayType = suiteTypeDisplay || suiteTypes[suiteType || 'STANDARD_SUITE'] || 'Suite';
+    const displayNumber = suiteNumber || suiteId.split('-').pop() || '';
+    
+    return `${displayType} ${displayNumber}`;
+  };
+  
+  const suiteInfo = getSuiteInfo();
+  
   return (
     <Box>
+      {/* Service selection section */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Select Service
+        </Typography>
+        <Typography variant="body2" color="text.secondary" paragraph>
+          Choose the boarding service for this reservation
+        </Typography>
+        
+        {serviceError && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {serviceError}
+          </Alert>
+        )}
+        
+        <FormControl fullWidth sx={{ mb: 3 }}>
+          <InputLabel id="service-select-label">Service</InputLabel>
+          <Select
+            labelId="service-select-label"
+            id="service-select"
+            value={serviceReady && service?.id ? service.id : ''}
+            label="Service"
+            onChange={handleServiceChange}
+            disabled={loadingServices || !serviceReady}
+            displayEmpty
+          >
+            {loadingServices ? (
+              <MenuItem value="">
+                <CircularProgress size={20} sx={{ mr: 1 }} /> Loading...
+              </MenuItem>
+            ) : services.length === 0 ? (
+              <MenuItem value="">
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  Loading boarding services...
+                </Box>
+              </MenuItem>
+            ) : [
+                <MenuItem key="placeholder" value="" disabled>
+                  Select a boarding service
+                </MenuItem>,
+                ...services.map(svc => (
+                  <MenuItem key={svc.id} value={svc.id}>
+                    {svc.name} - ${svc.price.toFixed(2)} {svc.duration ? `/ ${svc.duration} mins` : 'per night'}
+                  </MenuItem>
+                ))
+              ]            
+            }
+          </Select>
+        </FormControl>
+      </Box>
+      
+      <Divider sx={{ my: 3 }} />
+      
+      {/* Suite information display */}
+      {suiteInfo && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          Selected Suite: <strong>{suiteInfo}</strong>
+        </Alert>
+      )}
+
       <Typography variant="h6" gutterBottom>
         Select Customer & Pets
       </Typography>
@@ -141,27 +310,28 @@ const CustomerPetSelectionStep: React.FC = () => {
         getOptionLabel={(option: Customer) => 
           `${option.firstName} ${option.lastName} - ${option.email}`
         }
-        isOptionEqualToValue={(option, value) => option.id === value.id}
-        onChange={handleCustomerChange}
-        onInputChange={(event, newInputValue) => setCustomerInput(newInputValue)}
         value={customer}
+        onChange={handleCustomerChange}
+        onInputChange={(event, newInputValue) => {
+          setCustomerInput(newInputValue);
+        }}
         loading={customerLoading}
         renderInput={(params) => (
           <TextField
             {...params}
-            label="Search Customer"
+            label="Search for a customer"
             variant="outlined"
-            placeholder="Start typing to search (min. 2 characters)"
             fullWidth
-            required
-            size="small"
             margin="normal"
             InputProps={{
               ...params.InputProps,
               startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
+                <>
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                  {params.InputProps.startAdornment}
+                </>
               ),
               endAdornment: (
                 <>
@@ -189,7 +359,7 @@ const CustomerPetSelectionStep: React.FC = () => {
             title={`${customer.firstName} ${customer.lastName}`}
             subheader={customer.email}
           />
-          <CardContent sx={{ pt: 0 }}>
+          <CardContent>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body2" color="text.secondary">
@@ -198,7 +368,7 @@ const CustomerPetSelectionStep: React.FC = () => {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body2" color="text.secondary">
-                  <strong>Address:</strong>{' '}
+                  <strong>Address:</strong><br />
                   {customer.address
                     ? `${customer.address}, ${customer.city}, ${customer.state} ${customer.zipCode}`
                     : 'N/A'}
