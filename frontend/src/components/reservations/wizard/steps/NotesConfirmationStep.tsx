@@ -152,7 +152,7 @@ const NotesConfirmationStep: React.FC = () => {
         >
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Box sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
-              <MeetingRoomIcon fontSize="large" />
+              <MeetingRoomIcon fontSize="large" sx={{ color: 'primary.contrastText' }} />
             </Box>
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 0.5 }}>
@@ -235,7 +235,7 @@ const NotesConfirmationStep: React.FC = () => {
         {/* Customer & Pets Summary */}
         <Box sx={{ mb: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
           <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <PersonIcon fontSize="small" sx={{ mr: 1 }} />
+            <PersonIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
             Customer & Pets
           </Typography>
           
@@ -277,7 +277,7 @@ const NotesConfirmationStep: React.FC = () => {
         {/* Schedule Summary */}
         <Box sx={{ mb: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
           <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <CalendarTodayIcon fontSize="small" sx={{ mr: 1 }} />
+            <CalendarTodayIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
             Schedule
           </Typography>
           
@@ -311,7 +311,7 @@ const NotesConfirmationStep: React.FC = () => {
             
             <Grid item xs={12} sm={6} md={3}>
               <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-                <EventRepeatIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom' }} />
+                <EventRepeatIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: 'text-bottom', color: 'primary.main' }} />
                 Recurrence:
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -322,7 +322,7 @@ const NotesConfirmationStep: React.FC = () => {
             {suiteId && (
               <Grid item xs={12}>
                 <Typography variant="body2" sx={{ fontWeight: 'medium', display: 'flex', alignItems: 'center' }}>
-                  <MeetingRoomIcon fontSize="small" sx={{ mr: 0.5 }} />
+                  <MeetingRoomIcon fontSize="small" sx={{ mr: 0.5, color: 'primary.main' }} />
                   Suite:
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -336,7 +336,7 @@ const NotesConfirmationStep: React.FC = () => {
         {/* Feeding Preferences Summary */}
         <Box sx={{ mb: 2, p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
           <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <FastfoodIcon fontSize="small" sx={{ mr: 1 }} />
+            <FastfoodIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
             Feeding Preferences
           </Typography>
           
@@ -402,7 +402,7 @@ const NotesConfirmationStep: React.FC = () => {
         {/* Medications Summary */}
         <Box sx={{ p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
           <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <MedicationIcon fontSize="small" sx={{ mr: 1 }} />
+            <MedicationIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />
             Medications
           </Typography>
           
