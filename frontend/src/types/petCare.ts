@@ -113,7 +113,7 @@ export interface RecurringReservationPattern {
   /** Unique identifier */
   id?: string;
   /** The original reservation that created this pattern */
-  parentReservationId: string;
+  parentReservationId?: string;
   /** How often the reservation recurs */
   frequency: RecurrenceFrequency;
   /** Days of the week (0-6, Sunday to Saturday) */

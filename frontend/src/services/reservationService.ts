@@ -13,6 +13,8 @@ export interface Reservation {
   status: 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
   notes?: string;
   staffNotes?: string;
+  lodgingPreference?: string;
+  manualRoomSelection?: boolean;
   createdAt?: string; // Optional when creating a new reservation, will be set by the backend
   discount?: number; // Discount amount applied to the reservation
   invoice?: {

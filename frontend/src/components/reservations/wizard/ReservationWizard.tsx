@@ -8,6 +8,7 @@ import {
   Paper,
   Typography,
   useTheme,
+  CircularProgress,
 } from '@mui/material';
 import { Customer } from '../../../types/customer';
 import { Pet } from '../../../types/pet';
@@ -317,32 +318,45 @@ const ReservationWizard: React.FC<ReservationWizardProps> = ({
       case 0: // Customer & Pets
         return !!formData.customer && formData.selectedPets.length > 0;
       case 1: // Care Requirements
-        // Each selected pet should have feeding preferences
-        return formData.selectedPets.every(petId => 
-          !!formData.feedingPreferences[petId]
-        );
+        // For care requirements, just check if there's at least one pet selected
+        // We'll make feeding preferences optional for now
+        return formData.selectedPets.length > 0;
       case 2: // Schedule
         return !!formData.startDate && !!formData.endDate;
       case 3: // Confirmation
-        // All previous steps must be valid
-        return isStepValid(0) && isStepValid(1) && 
-               isStepValid(2);
+        // For the final step, just make sure we have the basic required data
+        return !!formData.customer && 
+               formData.selectedPets.length > 0 && 
+               !!formData.service &&
+               !!formData.startDate && 
+               !!formData.endDate;
       default:
-        return false;
+        return true; // Default to true for any other step
     }
   };
   
   // Handle form submission
   const handleSubmit = async () => {
-    if (isStepValid(4)) {
+    console.log('ReservationWizard: handleSubmit called');
+    console.log('ReservationWizard: Current step:', currentStep);
+    console.log('ReservationWizard: Step valid?', isStepValid(currentStep));
+    console.log('ReservationWizard: Form data:', formData);
+    
+    // Always validate the current step, not step 4
+    if (isStepValid(currentStep)) {
+      console.log('ReservationWizard: Step is valid, proceeding with submission');
       setIsSubmitting(true);
       try {
+        console.log('ReservationWizard: Calling onSubmit with form data');
         await onSubmit(formData);
+        console.log('ReservationWizard: Form submitted successfully');
       } catch (error) {
-        console.error('Error submitting reservation:', error);
+        console.error('ReservationWizard: Error submitting reservation:', error);
       } finally {
         setIsSubmitting(false);
       }
+    } else {
+      console.error('ReservationWizard: Form validation failed, cannot submit');
     }
   };
   
@@ -415,6 +429,15 @@ const ReservationWizard: React.FC<ReservationWizardProps> = ({
               </Button>
             )}
             
+            {/* Hidden submit button that can be triggered by the dialog actions */}
+            <Button 
+              id="reservation-submit-button"
+              onClick={handleSubmit}
+              sx={{ display: 'none' }}
+            >
+              Submit
+            </Button>
+            
             {currentStep < steps.length - 1 ? (
               <Button 
                 onClick={goToNextStep} 
@@ -430,8 +453,9 @@ const ReservationWizard: React.FC<ReservationWizardProps> = ({
                 variant="contained" 
                 color="primary"
                 disabled={!isStepValid(currentStep) || isSubmitting}
+                startIcon={isSubmitting ? <CircularProgress size={20} /> : null}
               >
-                {isSubmitting ? 'Saving...' : 'Submit'}
+                {isSubmitting ? 'Processing...' : 'Complete & Checkout'}
               </Button>
             )}
           </Box>
