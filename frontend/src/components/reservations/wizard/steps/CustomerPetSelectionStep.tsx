@@ -31,7 +31,10 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  IconButton
+  IconButton,
+  Radio,
+  RadioGroup,
+  FormControlLabel
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import PetsIcon from '@mui/icons-material/Pets';
@@ -44,6 +47,7 @@ import { serviceManagement } from '../../../../services/serviceManagement';
 import { Customer } from '../../../../types/customer';
 import { Pet } from '../../../../types/pet';
 import { Service } from '../../../../types/service';
+import { LodgingPreference } from '../../../../types/petCare';
 
 /**
  * Customer & Pet Selection Step
@@ -580,6 +584,40 @@ const CustomerPetSelectionStep: React.FC = () => {
               );
             })}
           </List>
+          
+          {/* Lodging preference option for multiple pets */}
+          {selectedPets.length > 1 && (
+            <Box sx={{ mt: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Lodging Preference
+              </Typography>
+              <FormControl component="fieldset">
+                <RadioGroup
+                  value={formData.lodgingPreference || LodgingPreference.STANDARD}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => dispatch({ 
+                    type: 'SET_LODGING_PREFERENCE', 
+                    payload: e.target.value as LodgingPreference 
+                  })}
+                >
+                  <FormControlLabel 
+                    value={LodgingPreference.STANDARD} 
+                    control={<Radio size="small" />} 
+                    label="Standard (system assigned)" 
+                  />
+                  <FormControlLabel 
+                    value={LodgingPreference.SHARED_WITH_SIBLING} 
+                    control={<Radio size="small" />} 
+                    label="Place pets in the same suite when possible" 
+                  />
+                  <FormControlLabel 
+                    value={LodgingPreference.SEPARATE_FROM_SIBLING} 
+                    control={<Radio size="small" />} 
+                    label="Always place pets in separate suites" 
+                  />
+                </RadioGroup>
+              </FormControl>
+            </Box>
+          )}
         </Box>
       )}
       
