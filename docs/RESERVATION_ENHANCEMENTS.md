@@ -134,6 +134,15 @@ New TypeScript types and enums have been created to support the enhanced feature
   - Applied contrastText color to the suite icon in the banner for better visibility
   - Created a cohesive visual language through consistent icon coloring
 
+- ✅ **Emergency Contact Display**: Added emergency contact information throughout the reservation process
+  - Added to the customer card in the first step for immediate visibility
+  - Always displays emergency contact section, even when information is missing
+  - Uses visual indicators (red background and error styling) when emergency contact is missing
+  - Displays a reminder message when emergency contact information needs to be collected
+  - Uses a dashed border with warning colors when emergency information is available
+  - Included contact name, relationship, phone, and email when available
+  - Positioned strategically for easy access during emergencies
+
 ### In Progress
 - 🔄 Integration testing of the complete reservation flow
 - 🔄 Validation and error handling improvements

@@ -365,6 +365,44 @@ const CustomerPetSelectionStep: React.FC = () => {
                 <Typography variant="body2" color="text.secondary">
                   <strong>Phone:</strong> {customer.phone || 'N/A'}
                 </Typography>
+                
+                <Box sx={{ 
+                  mt: 1, 
+                  p: 0.75, 
+                  border: '1px dashed', 
+                  borderColor: customer.emergencyContact ? 'warning.light' : 'error.light', 
+                  borderRadius: 0.5,
+                  bgcolor: customer.emergencyContact ? 'transparent' : 'rgba(255, 0, 0, 0.03)'
+                }}>
+                  <Typography variant="body2" sx={{ 
+                    fontWeight: 'medium', 
+                    fontSize: '0.8rem', 
+                    color: customer.emergencyContact ? 'warning.dark' : 'error.main', 
+                    display: 'flex', 
+                    alignItems: 'center' 
+                  }}>
+                    <span style={{ marginRight: '4px' }}>⚠️</span> 
+                    {customer.emergencyContact ? 'Emergency Contact' : 'Emergency Contact Missing'}
+                  </Typography>
+                  
+                  {customer.emergencyContact ? (
+                    <>
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                        {customer.emergencyContact}
+                        {customer.emergencyContactRelationship ? ` (${customer.emergencyContactRelationship})` : ''}
+                      </Typography>
+                      {customer.emergencyPhone && (
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                          Phone: {customer.emergencyPhone}
+                        </Typography>
+                      )}
+                    </>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                      Please add emergency contact information
+                    </Typography>
+                  )}
+                </Box>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <Typography variant="body2" color="text.secondary">
