@@ -25,10 +25,18 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  SelectChangeEvent
+  SelectChangeEvent,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import PetsIcon from '@mui/icons-material/Pets';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
 import { useReservationWizard } from '../ReservationWizard';
 import { customerService } from '../../../../services/customerService';
 import { petService } from '../../../../services/petService';
@@ -57,6 +65,11 @@ const CustomerPetSelectionStep: React.FC = () => {
   const [loadingServices, setLoadingServices] = useState<boolean>(true); // Start with loading state
   const [serviceError, setServiceError] = useState<string | null>(null);
   const [serviceReady, setServiceReady] = useState<boolean>(false); // Track when services are fully ready
+  
+  // State for customer edit modal
+  const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
+  const [editCustomer, setEditCustomer] = useState<Customer | null>(null);
+  const [savingCustomer, setSavingCustomer] = useState<boolean>(false);
 
   // Effect to search for customers when input changes
   useEffect(() => {
@@ -191,21 +204,64 @@ const CustomerPetSelectionStep: React.FC = () => {
 
   // Handle pet selection
   const handlePetSelection = (petId: string) => {
-    if (selectedPets.includes(petId)) {
+    const updatedSelectedPets = [...selectedPets];
+    
+    if (updatedSelectedPets.includes(petId)) {
       // Remove pet if already selected
-      dispatch({
-        type: 'SET_SELECTED_PETS',
-        payload: selectedPets.filter(id => id !== petId)
-      });
+      const index = updatedSelectedPets.indexOf(petId);
+      updatedSelectedPets.splice(index, 1);
     } else {
-      // Add pet to selection
-      dispatch({
-        type: 'SET_SELECTED_PETS',
-        payload: [...selectedPets, petId]
+      // Add pet if not already selected
+      updatedSelectedPets.push(petId);
+    }
+    
+    dispatch({ type: 'SET_SELECTED_PETS', payload: updatedSelectedPets });
+  };
+  
+  // Handle opening the customer edit modal
+  const handleOpenEditModal = () => {
+    if (customer) {
+      setEditCustomer({...customer});
+      setEditModalOpen(true);
+    }
+  };
+  
+  // Handle closing the customer edit modal
+  const handleCloseEditModal = () => {
+    setEditModalOpen(false);
+    setEditCustomer(null);
+  };
+  
+  // Handle customer field changes in the edit modal
+  const handleCustomerFieldChange = (field: string, value: string) => {
+    if (editCustomer) {
+      setEditCustomer({
+        ...editCustomer,
+        [field]: value
       });
     }
   };
   
+  // Handle saving the edited customer
+  const handleSaveCustomer = async () => {
+    if (!editCustomer || !editCustomer.id) return;
+    
+    try {
+      setSavingCustomer(true);
+      const updatedCustomer = await customerService.updateCustomer(editCustomer.id, editCustomer);
+      
+      // Update the customer in the form data
+      dispatch({ type: 'SET_CUSTOMER', payload: updatedCustomer });
+      
+      // Close the modal
+      handleCloseEditModal();
+    } catch (error) {
+      console.error('Error updating customer:', error);
+    } finally {
+      setSavingCustomer(false);
+    }
+  };
+
   // Handle service selection
   const handleServiceChange = (event: SelectChangeEvent<string>) => {
     const serviceId = event.target.value;
@@ -415,7 +471,12 @@ const CustomerPetSelectionStep: React.FC = () => {
             </Grid>
           </CardContent>
           <CardActions>
-            <Button size="small" color="primary">
+            <Button 
+              size="small" 
+              color="primary" 
+              startIcon={<EditIcon />}
+              onClick={handleOpenEditModal}
+            >
               Edit Customer Info
             </Button>
           </CardActions>
@@ -521,6 +582,123 @@ const CustomerPetSelectionStep: React.FC = () => {
           </List>
         </Box>
       )}
+      
+      {/* Customer Edit Modal */}
+      <Dialog 
+        open={editModalOpen} 
+        onClose={handleCloseEditModal}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogTitle>
+          Edit Customer Information
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseEditModal}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          {editCustomer && (
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="First Name"
+                  fullWidth
+                  margin="normal"
+                  value={editCustomer.firstName || ''}
+                  onChange={(e) => handleCustomerFieldChange('firstName', e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Last Name"
+                  fullWidth
+                  margin="normal"
+                  value={editCustomer.lastName || ''}
+                  onChange={(e) => handleCustomerFieldChange('lastName', e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Email"
+                  type="email"
+                  fullWidth
+                  margin="normal"
+                  value={editCustomer.email || ''}
+                  onChange={(e) => handleCustomerFieldChange('email', e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Phone"
+                  fullWidth
+                  margin="normal"
+                  value={editCustomer.phone || ''}
+                  onChange={(e) => handleCustomerFieldChange('phone', e.target.value)}
+                />
+              </Grid>
+              
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }}>
+                  <Chip label="Emergency Contact Information" color="warning" />
+                </Divider>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Emergency Contact Name"
+                  fullWidth
+                  margin="normal"
+                  value={editCustomer.emergencyContact || ''}
+                  onChange={(e) => handleCustomerFieldChange('emergencyContact', e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Emergency Contact Relationship"
+                  fullWidth
+                  margin="normal"
+                  value={editCustomer.emergencyContactRelationship || ''}
+                  onChange={(e) => handleCustomerFieldChange('emergencyContactRelationship', e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Emergency Contact Email"
+                  type="email"
+                  fullWidth
+                  margin="normal"
+                  value={editCustomer.emergencyContactEmail || ''}
+                  onChange={(e) => handleCustomerFieldChange('emergencyContactEmail', e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Emergency Phone"
+                  fullWidth
+                  margin="normal"
+                  value={editCustomer.emergencyPhone || ''}
+                  onChange={(e) => handleCustomerFieldChange('emergencyPhone', e.target.value)}
+                />
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditModal}>Cancel</Button>
+          <Button 
+            onClick={handleSaveCustomer} 
+            variant="contained" 
+            color="primary"
+            disabled={savingCustomer}
+          >
+            {savingCustomer ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
