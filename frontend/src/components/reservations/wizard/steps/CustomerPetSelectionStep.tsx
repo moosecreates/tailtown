@@ -74,6 +74,9 @@ const CustomerPetSelectionStep: React.FC = () => {
   const [editModalOpen, setEditModalOpen] = useState<boolean>(false);
   const [editCustomer, setEditCustomer] = useState<Customer | null>(null);
   const [savingCustomer, setSavingCustomer] = useState<boolean>(false);
+  
+  // State for room selection
+  const [manualRoomSelection, setManualRoomSelection] = useState<boolean>(false);
 
   // Effect to search for customers when input changes
   useEffect(() => {
@@ -614,6 +617,32 @@ const CustomerPetSelectionStep: React.FC = () => {
                     control={<Radio size="small" />} 
                     label="Always place pets in separate suites" 
                   />
+                  
+                  {formData.lodgingPreference === LodgingPreference.SEPARATE_FROM_SIBLING && (
+                    <Box sx={{ ml: 4, mt: 1, display: 'flex', flexDirection: 'column' }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox 
+                            checked={formData.manualRoomSelection || false}
+                            onChange={(e) => {
+                              setManualRoomSelection(e.target.checked);
+                              dispatch({ 
+                                type: 'SET_MANUAL_ROOM_SELECTION', 
+                                payload: e.target.checked 
+                              });
+                            }}
+                            size="small"
+                          />
+                        }
+                        label="Allow manual room selection"
+                      />
+                      <Typography variant="caption" color="text.secondary" sx={{ ml: 4 }}>
+                        {formData.manualRoomSelection 
+                          ? "You'll be able to select specific rooms for each pet" 
+                          : "System will automatically assign the nearest available rooms"}
+                      </Typography>
+                    </Box>
+                  )}
                 </RadioGroup>
               </FormControl>
             </Box>

@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { Customer } from '../../../types/customer';
 import { Pet } from '../../../types/pet';
-import { Service } from '../../../types/service';
+import { Service, ServiceCategory } from '../../../types/service';
 import { 
   PetFeedingPreference, 
   PetMedication, 
@@ -24,45 +24,49 @@ import { EnhancedReservation } from '../../../types/enhancedReservation';
 import CustomerPetSelectionStep from './steps/CustomerPetSelectionStep';
 // Step 2: Care Requirements
 import CareRequirementsStep from './steps/CareRequirementsStep';
-// Step 3: Lodging & Services
-import LodgingServicesStep from './steps/LodgingServicesStep';
-// Step 4: Schedule & Recurrence
+// Step 3: Schedule & Recurrence
 import ScheduleRecurrenceStep from './steps/ScheduleRecurrenceStep';
-// Step 5: Notes & Confirmation
+// Step 4: Notes & Confirmation
 import NotesConfirmationStep from './steps/NotesConfirmationStep';
 
 // Define the steps in our wizard
 const steps = [
   'Customer & Pets',
   'Care Requirements',
-  'Lodging & Services',
   'Schedule',
   'Confirmation'
 ];
+
+// Note: We've removed the 'Lodging & Services' step as it's now handled automatically from calendar selection
 
 // Define the form data structure for the wizard
 export interface ReservationWizardFormData {
   // Step 1: Customer & Pet Selection
   customer: Customer | null;
   pets: Pet[];
-  selectedPets: string[]; // Array of pet IDs
+  selectedPets: string[];
 
   // Step 2: Care Requirements
-  feedingPreferences: Record<string, PetFeedingPreference>; // Key is petId
-  medications: Record<string, PetMedication[]>; // Key is petId
-  
+  feedingPreferences: Record<string, PetFeedingPreference>;
+  medications: Record<string, PetMedication[]>;
+
   // Step 3: Lodging & Services
   service: Service | null;
-  lodgingPreference: LodgingPreference;
-  addOns: any[]; // Array of selected add-on services
-  suiteId: string | null;
-  
+  lodgingPreference: LodgingPreference | null;
+  manualRoomSelection?: boolean; // Whether to manually select rooms for separate pets
+  addOns: Service[];
+  suiteId: string;
+  // Additional suite information for display
+  suiteNumber?: string;
+  suiteType?: string;
+  suiteTypeDisplay?: string;
+
   // Step 4: Schedule & Recurrence
   startDate: Date | null;
   endDate: Date | null;
   isRecurring: boolean;
-  recurringPattern: Partial<RecurringReservationPattern> | null;
-  
+  recurringPattern: RecurringReservationPattern | null;
+
   // Step 5: Notes & Confirmation
   staffNotes: string;
   customerNotes: string;
@@ -78,8 +82,9 @@ const initialFormData: ReservationWizardFormData = {
   medications: {},
   service: null,
   lodgingPreference: LodgingPreference.STANDARD,
+  manualRoomSelection: false,
   addOns: [],
-  suiteId: null,
+  suiteId: '', // Empty string instead of null to match type
   startDate: null,
   endDate: null,
   isRecurring: false,
@@ -98,12 +103,13 @@ type ReservationWizardAction =
   | { type: 'SET_MEDICATIONS'; payload: { petId: string; medications: PetMedication[] } }
   | { type: 'SET_SERVICE'; payload: Service | null }
   | { type: 'SET_LODGING_PREFERENCE'; payload: LodgingPreference }
+  | { type: 'SET_MANUAL_ROOM_SELECTION'; payload: boolean }
   | { type: 'SET_ADDONS'; payload: any[] }
-  | { type: 'SET_SUITE_ID'; payload: string | null }
+  | { type: 'SET_SUITE_ID'; payload: string }
   | { type: 'SET_START_DATE'; payload: Date | null }
   | { type: 'SET_END_DATE'; payload: Date | null }
   | { type: 'SET_IS_RECURRING'; payload: boolean }
-  | { type: 'SET_RECURRING_PATTERN'; payload: Partial<RecurringReservationPattern> | null }
+  | { type: 'SET_RECURRING_PATTERN'; payload: RecurringReservationPattern | null }
   | { type: 'SET_STAFF_NOTES'; payload: string }
   | { type: 'SET_CUSTOMER_NOTES'; payload: string }
   | { type: 'SET_STATUS'; payload: string }
@@ -142,6 +148,8 @@ function reservationWizardReducer(
       return { ...state, service: action.payload };
     case 'SET_LODGING_PREFERENCE':
       return { ...state, lodgingPreference: action.payload };
+    case 'SET_MANUAL_ROOM_SELECTION':
+      return { ...state, manualRoomSelection: action.payload };
     case 'SET_ADDONS':
       return { ...state, addOns: action.payload };
     case 'SET_SUITE_ID':
@@ -225,12 +233,67 @@ const ReservationWizard: React.FC<ReservationWizardProps> = ({
     initialFormData
   );
   
-  // Load initial data if provided (for editing an existing reservation)
+  // Load initial data if provided (for editing an existing reservation or from calendar selection)
   React.useEffect(() => {
     if (initialData) {
-      // Logic to transform initialData into formData format
-      // This would need to be implemented based on the structure of initialData
-      // dispatch({ type: 'LOAD_INITIAL_DATA', payload: transformedData });
+      console.log('Loading initial data:', initialData);
+      
+      // Create a payload with the initial data
+      const payload: Partial<ReservationWizardFormData> = {};
+      
+      // Copy dates if available
+      if (initialData.startDate) {
+        payload.startDate = new Date(initialData.startDate);
+      }
+      
+      if (initialData.endDate) {
+        payload.endDate = new Date(initialData.endDate);
+      }
+      
+      // Copy suite/service information if available
+      if (initialData.suiteId) {
+        payload.suiteId = initialData.suiteId;
+        
+        // Copy additional suite information if available
+        if (initialData.suiteNumber) {
+          payload.suiteNumber = initialData.suiteNumber;
+        }
+        
+        if (initialData.suiteType) {
+          payload.suiteType = initialData.suiteType;
+        }
+        
+        if (initialData.suiteTypeDisplay) {
+          payload.suiteTypeDisplay = initialData.suiteTypeDisplay;
+        }
+      }
+      
+      if (initialData.service) {
+        // Use type assertion to create a proper Service object
+        const service = initialData.service as any;
+        payload.service = {
+          id: service.id || '',
+          name: service.name || '',
+          description: service.description || '',
+          serviceCategory: service.serviceCategory || ServiceCategory.BOARDING,
+          price: service.price || 0,
+          duration: service.duration || 0,
+          requiresStaff: service.requiresStaff || false,
+          isActive: service.isActive || true
+        };
+      }
+      
+      // Load other properties as needed
+      if (initialData.customer) {
+        payload.customer = initialData.customer;
+      }
+      
+      if (initialData.lodgingPreference) {
+        payload.lodgingPreference = initialData.lodgingPreference;
+      }
+      
+      // Dispatch the action to load the initial data
+      dispatch({ type: 'LOAD_INITIAL_DATA', payload });
     }
   }, [initialData]);
   
@@ -258,14 +321,12 @@ const ReservationWizard: React.FC<ReservationWizardProps> = ({
         return formData.selectedPets.every(petId => 
           !!formData.feedingPreferences[petId]
         );
-      case 2: // Lodging & Services
-        return !!formData.service;
-      case 3: // Schedule
+      case 2: // Schedule
         return !!formData.startDate && !!formData.endDate;
-      case 4: // Confirmation
+      case 3: // Confirmation
         // All previous steps must be valid
         return isStepValid(0) && isStepValid(1) && 
-               isStepValid(2) && isStepValid(3);
+               isStepValid(2);
       default:
         return false;
     }
@@ -306,10 +367,8 @@ const ReservationWizard: React.FC<ReservationWizardProps> = ({
       case 1:
         return <CareRequirementsStep />;
       case 2:
-        return <LodgingServicesStep />;
-      case 3:
         return <ScheduleRecurrenceStep />;
-      case 4:
+      case 3:
         return <NotesConfirmationStep />;
       default:
         return null;
