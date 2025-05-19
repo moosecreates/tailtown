@@ -603,11 +603,18 @@ const CustomerPetSelectionStep: React.FC = () => {
         <DialogContent dividers>
           {editCustomer && (
             <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Divider sx={{ my: 1 }}>
+                  <Chip label="Basic Information" size="small" />
+                </Divider>
+              </Grid>
+              
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="First Name"
                   fullWidth
-                  margin="normal"
+                  size="small"
+                  margin="dense"
                   value={editCustomer.firstName || ''}
                   onChange={(e) => handleCustomerFieldChange('firstName', e.target.value)}
                 />
@@ -616,7 +623,8 @@ const CustomerPetSelectionStep: React.FC = () => {
                 <TextField
                   label="Last Name"
                   fullWidth
-                  margin="normal"
+                  size="small"
+                  margin="dense"
                   value={editCustomer.lastName || ''}
                   onChange={(e) => handleCustomerFieldChange('lastName', e.target.value)}
                 />
@@ -626,7 +634,8 @@ const CustomerPetSelectionStep: React.FC = () => {
                   label="Email"
                   type="email"
                   fullWidth
-                  margin="normal"
+                  size="small"
+                  margin="dense"
                   value={editCustomer.email || ''}
                   onChange={(e) => handleCustomerFieldChange('email', e.target.value)}
                 />
@@ -635,15 +644,67 @@ const CustomerPetSelectionStep: React.FC = () => {
                 <TextField
                   label="Phone"
                   fullWidth
-                  margin="normal"
+                  size="small"
+                  margin="dense"
                   value={editCustomer.phone || ''}
                   onChange={(e) => handleCustomerFieldChange('phone', e.target.value)}
                 />
               </Grid>
               
               <Grid item xs={12}>
-                <Divider sx={{ my: 2 }}>
-                  <Chip label="Emergency Contact Information" color="warning" />
+                <Divider sx={{ my: 1 }}>
+                  <Chip label="Address" size="small" />
+                </Divider>
+              </Grid>
+              
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Street Address"
+                  fullWidth
+                  size="small"
+                  margin="dense"
+                  value={editCustomer.address || ''}
+                  onChange={(e) => handleCustomerFieldChange('address', e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Grid container spacing={1}>
+                  <Grid item xs={5}>
+                    <TextField
+                      label="City"
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                      value={editCustomer.city || ''}
+                      onChange={(e) => handleCustomerFieldChange('city', e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={3}>
+                    <TextField
+                      label="State"
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                      value={editCustomer.state || ''}
+                      onChange={(e) => handleCustomerFieldChange('state', e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={4}>
+                    <TextField
+                      label="Zip"
+                      fullWidth
+                      size="small"
+                      margin="dense"
+                      value={editCustomer.zipCode || ''}
+                      onChange={(e) => handleCustomerFieldChange('zipCode', e.target.value)}
+                    />
+                  </Grid>
+                </Grid>
+              </Grid>
+              
+              <Grid item xs={12}>
+                <Divider sx={{ my: 1 }}>
+                  <Chip label="Emergency Contact" size="small" color="warning" />
                 </Divider>
               </Grid>
               
@@ -651,26 +712,29 @@ const CustomerPetSelectionStep: React.FC = () => {
                 <TextField
                   label="Emergency Contact Name"
                   fullWidth
-                  margin="normal"
+                  size="small"
+                  margin="dense"
                   value={editCustomer.emergencyContact || ''}
                   onChange={(e) => handleCustomerFieldChange('emergencyContact', e.target.value)}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  label="Emergency Contact Relationship"
+                  label="Relationship"
                   fullWidth
-                  margin="normal"
+                  size="small"
+                  margin="dense"
                   value={editCustomer.emergencyContactRelationship || ''}
                   onChange={(e) => handleCustomerFieldChange('emergencyContactRelationship', e.target.value)}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  label="Emergency Contact Email"
+                  label="Emergency Email"
                   type="email"
                   fullWidth
-                  margin="normal"
+                  size="small"
+                  margin="dense"
                   value={editCustomer.emergencyContactEmail || ''}
                   onChange={(e) => handleCustomerFieldChange('emergencyContactEmail', e.target.value)}
                 />
@@ -679,7 +743,8 @@ const CustomerPetSelectionStep: React.FC = () => {
                 <TextField
                   label="Emergency Phone"
                   fullWidth
-                  margin="normal"
+                  size="small"
+                  margin="dense"
                   value={editCustomer.emergencyPhone || ''}
                   onChange={(e) => handleCustomerFieldChange('emergencyPhone', e.target.value)}
                 />
