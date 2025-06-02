@@ -28,7 +28,7 @@ app.registerErrorHandlers();
 const prisma = new PrismaClient();
 
 // Start the service
-const PORT = process.env.PORT || 4567; // Updated to use port 4567 to avoid conflicts
+const PORT = process.env.PORT || 4002; // Updated to use port 4002 to avoid conflicts
 app.listen(PORT, async () => {
   console.log(`Reservation service running on port ${PORT}`);
   console.log(`Health check available at http://localhost:${PORT}/health`);

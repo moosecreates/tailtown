@@ -24,16 +24,18 @@ router.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Resource routes healthy' });
 });
 
-// Resource CRUD routes
-router.get('/', getAllResources);
-router.get('/:id', getResourceById);
-router.post('/', createResource);
-router.patch('/:id', updateResource);
-router.delete('/:id', deleteResource);
-
-// Resource availability routes
+// Resource availability routes - specific routes must come before parameterized routes
 router.get('/availability', checkResourceAvailability);
 router.post('/availability/batch', batchCheckResourceAvailability);
+
+// Resource CRUD routes
+router.get('/', getAllResources);
+router.post('/', createResource);
+
+// Parameterized routes must come last
 router.get('/:id/availability', getResourceAvailability);
+router.get('/:id', getResourceById);
+router.patch('/:id', updateResource);
+router.delete('/:id', deleteResource);
 
 export default router;
