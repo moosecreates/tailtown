@@ -162,15 +162,34 @@ The `test-schema-alignment.js` script tests the following endpoints:
 
 Each test verifies that the endpoint either succeeds or fails gracefully with a proper JSON response.
 
+## Database Migration Approach
+
+We've implemented a database migration approach to address the missing critical tables identified by our schema validation:
+
+1. **SQL Migration Scripts**: Created SQL scripts to generate all critical tables (Customer, Pet, Resource, Reservation, etc.)
+2. **Safe Execution**: The migration script handles errors gracefully and continues execution even if some statements fail
+3. **Documentation**: Added comprehensive documentation for the migration process
+
+The migration files are located in `prisma/migrations/` and include:
+- `create_critical_tables.sql`: SQL script to create all critical tables
+- `apply_migrations.js`: Node.js script to apply the migrations
+- `README.md`: Documentation for the migration process
+
+To apply the migrations:
+
+```bash
+cd services/reservation-service
+node prisma/migrations/apply_migrations.js
+```
+
 ## Future Improvements
 
-1. ~~**Automated schema validation tests**~~ ✅ Implemented with `test-schema-alignment.js`
-2. **Database migration scripts** to create missing critical tables and columns
-3. **Schema migration detection** to automatically adapt to schema changes
-4. **Feature flags** based on schema availability
-5. **Schema documentation generation** to keep documentation in sync with the actual schema
-6. **Enhanced monitoring** with alerts for persistent schema mismatches
-7. **Schema version tracking** to help diagnose environment-specific issues
+1. **Automated schema validation** on service startup with detailed reporting
+2. **Schema migration detection** to automatically adapt to schema changes
+3. **Feature flags** based on schema availability
+4. **Schema documentation generation** to keep documentation in sync with the actual schema
+5. **Enhanced monitoring** with alerts for persistent schema mismatches
+6. **Schema version tracking** to help diagnose environment-specific issues
 
 ## Conclusion
 
