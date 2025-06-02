@@ -36,11 +36,44 @@ app.listen(PORT, async () => {
   // Validate schema on startup
   try {
     console.log('Validating database schema...');
-    const validationResults = await validateSchema(prisma);
-    console.log('Schema validation complete');
+    const { isValid, missingTables, missingColumns, validationMap } = await validateSchema(prisma);
+    
+    if (isValid) {
+      console.log('✅ Schema validation successful - all critical tables and columns exist');
+    } else {
+      console.warn('⚠️ Schema validation detected issues:');
+      
+      if (missingTables.length > 0) {
+        console.warn(`  Missing critical tables: ${missingTables.join(', ')}`);
+        console.warn('  To fix this, run the database migration script:');
+        console.warn('  node prisma/migrations/apply_migrations.js');
+      }
+      
+      if (Object.keys(missingColumns).length > 0) {
+        console.warn('  Missing critical columns:');
+        for (const [table, columns] of Object.entries(missingColumns)) {
+          console.warn(`    ${table}: ${columns.join(', ')}`);
+        }
+        console.warn('  To fix this, run the database migration script:');
+        console.warn('  node prisma/migrations/apply_migrations.js');
+      }
+      
+      console.warn('⚠️ The service will continue to run with defensive programming,');
+      console.warn('  but some functionality may be limited until the schema is fixed.');
+    }
+    
+    // Log optional tables status
+    const optionalTables = ['Service', 'AddOnService', 'ReservationAddOn'];
+    const missingOptionalTables = optionalTables.filter(table => !validationMap.get(table));
+    
+    if (missingOptionalTables.length > 0) {
+      console.info(`ℹ️ Missing optional tables: ${missingOptionalTables.join(', ')}`);
+      console.info('  These tables are not critical but may limit some functionality.');
+    }
   } catch (error) {
-    console.error('Schema validation failed:', error);
-    console.warn('Service may encounter errors due to schema mismatches');
+    console.error('❌ Schema validation failed:', error);
+    console.warn('  Service may encounter errors due to schema mismatches');
+    console.warn('  To fix this, check database connection and run migrations');
   }
 });
 

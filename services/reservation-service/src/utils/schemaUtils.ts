@@ -107,6 +107,40 @@ export async function columnExists(
 }
 
 /**
+ * Get critical columns that should exist for a specific table
+ * 
+ * @param tableName - The name of the table
+ * @returns Array of critical column names
+ */
+function getCriticalColumnsForTable(tableName: string): string[] {
+  const criticalColumns: Record<string, string[]> = {
+    'Reservation': ['id', 'customerId', 'petId', 'startDate', 'endDate', 'status', 'organizationId'],
+    'Customer': ['id', 'firstName', 'lastName', 'email', 'organizationId'],
+    'Pet': ['id', 'name', 'customerId', 'organizationId'],
+    'Resource': ['id', 'name', 'type', 'organizationId']
+  };
+  
+  return criticalColumns[tableName] || [];
+}
+
+/**
+ * Get optional columns that may exist for a specific table
+ * 
+ * @param tableName - The name of the table
+ * @returns Array of optional column names
+ */
+function getOptionalColumnsForTable(tableName: string): string[] {
+  const optionalColumns: Record<string, string[]> = {
+    'Reservation': ['suiteType', 'price', 'deposit', 'notes', 'staffNotes', 'resourceId', 'orderNumber'],
+    'Customer': ['phone', 'address', 'city', 'state', 'zipCode', 'notes'],
+    'Pet': ['breed', 'size', 'weight', 'birthDate', 'notes'],
+    'Resource': ['description', 'capacity', 'isActive']
+  };
+  
+  return optionalColumns[tableName] || [];
+}
+
+/**
  * Initialize schema validation on service startup
  * 
  * This function checks for critical schema elements on service startup
@@ -114,87 +148,78 @@ export async function columnExists(
  * of schema mismatches.
  * 
  * @param prisma - The Prisma client instance
- * @returns A map of schema validation results
+ * @returns Validation results with missing tables and columns
  */
-export async function validateSchema(prisma: PrismaClient): Promise<Map<string, boolean>> {
-  const validationResults = new Map<string, boolean>();
+export async function validateSchema(prisma: PrismaClient): Promise<{ 
+  isValid: boolean; 
+  missingTables: string[]; 
+  missingColumns: Record<string, string[]>;
+  validationMap: Map<string, boolean>;
+}> {
+  let isValid = true;
+  const missingTables: string[] = [];
+  const missingColumns: Record<string, string[]> = {};
+  const validationMap = new Map<string, boolean>();
   
   try {
-    // Check critical tables
-    const criticalTables = [
-      'Reservation', 
-      'Customer', 
-      'Pet', 
-      'Resource'
-    ];
-    
+    // Check for critical tables
+    const criticalTables = ['Reservation', 'Customer', 'Pet', 'Resource'];
     for (const table of criticalTables) {
       const exists = await tableExists(prisma, table);
-      validationResults.set(table, exists);
+      validationMap.set(table, exists);
       
       if (!exists) {
-        logger.warn(`Critical table ${table} is missing from the database schema!`);
+        logger.warn(`Critical table '${table}' does not exist in the database schema`);
+        missingTables.push(table);
+        isValid = false;
+      } else {
+        // Check critical columns for existing tables
+        const columnsToCheck = getCriticalColumnsForTable(table);
+        const missingColumnsForTable: string[] = [];
+        
+        for (const column of columnsToCheck) {
+          const exists = await columnExists(prisma, table, column);
+          validationMap.set(`${table}.${column}`, exists);
+          
+          if (!exists) {
+            logger.warn(`Critical column '${column}' does not exist in table '${table}'`);
+            missingColumnsForTable.push(column);
+            isValid = false;
+          }
+        }
+        
+        // Check optional columns for existing tables
+        const optionalColumns = getOptionalColumnsForTable(table);
+        for (const column of optionalColumns) {
+          const exists = await columnExists(prisma, table, column);
+          validationMap.set(`${table}.${column}`, exists);
+          
+          if (!exists) {
+            logger.info(`Optional column '${column}' does not exist in table '${table}'`);
+          }
+        }
+        
+        if (missingColumnsForTable.length > 0) {
+          missingColumns[table] = missingColumnsForTable;
+        }
       }
     }
     
-    // Check optional tables
-    const optionalTables = [
-      'AddOnService', 
-      'ReservationAddOn', 
-      'Service'
-    ];
-    
+    // Check for optional tables
+    const optionalTables = ['Service', 'AddOnService', 'ReservationAddOn'];
     for (const table of optionalTables) {
       const exists = await tableExists(prisma, table);
-      validationResults.set(table, exists);
+      validationMap.set(table, exists);
       
       if (!exists) {
-        logger.info(`Optional table ${table} is not present in the database schema.`);
-      }
-    }
-    
-    // Check critical columns in Reservation table
-    if (validationResults.get('Reservation')) {
-      const criticalColumns = [
-        'id', 
-        'customerId', 
-        'startDate', 
-        'endDate', 
-        'status'
-      ];
-      
-      for (const column of criticalColumns) {
-        const exists = await columnExists(prisma, 'Reservation', column);
-        validationResults.set(`Reservation.${column}`, exists);
-        
-        if (!exists) {
-          logger.warn(`Critical column ${column} is missing from the Reservation table!`);
-        }
-      }
-      
-      // Check optional columns in Reservation table
-      const optionalColumns = [
-        'suiteType', 
-        'price', 
-        'deposit', 
-        'notes', 
-        'staffNotes'
-      ];
-      
-      for (const column of optionalColumns) {
-        const exists = await columnExists(prisma, 'Reservation', column);
-        validationResults.set(`Reservation.${column}`, exists);
-        
-        if (!exists) {
-          logger.info(`Optional column ${column} is not present in the Reservation table.`);
-        }
+        logger.warn(`Optional table '${table}' does not exist in the database schema`);
       }
     }
     
     logger.info('Schema validation completed');
-    return validationResults;
+    return { isValid, missingTables, missingColumns, validationMap };
   } catch (error) {
     logger.error(`Error during schema validation: ${error instanceof Error ? error.message : String(error)}`);
-    return validationResults;
+    return { isValid: false, missingTables, missingColumns, validationMap };
   }
 }
