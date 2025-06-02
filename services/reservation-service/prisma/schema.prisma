@@ -1,0 +1,200 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Multi-tenant isolation enforced via organizationId
+// Implementing the balanced data modeling approach:
+// - Maintaining domain boundaries
+// - Strategic indexing for common queries
+// - Partition strategies for time-series data
+
+// Core domain models
+model Customer {
+  id             String        @id @default(uuid())
+  firstName      String
+  lastName       String
+  email          String
+  phone          String?
+  address        String?
+  city           String?
+  state          String?
+  zipCode        String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organizationId String        // Tenant isolation
+  pets           Pet[]
+  reservations   Reservation[]
+
+  // Multi-tenant indexing strategy
+  @@index([organizationId])
+  // Common query patterns
+  @@index([organizationId, email])
+  @@index([organizationId, lastName, firstName])
+}
+
+model Pet {
+  id             String        @id @default(uuid())
+  name           String
+  breed          String?
+  size           String?
+  weight         Float?
+  birthDate      DateTime?
+  notes          String?
+  customerId     String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organizationId String        // Tenant isolation
+  customer       Customer      @relation(fields: [customerId], references: [id])
+  reservations   Reservation[]
+
+  // Multi-tenant indexing strategy
+  @@index([organizationId])
+  // Common query patterns
+  @@index([customerId])
+  @@index([organizationId, customerId])
+}
+
+// Resource represents a kennel or other facility resource
+model Resource {
+  id             String        @id @default(uuid())
+  name           String
+  type           String        // VIP_SUITE, STANDARD_PLUS_SUITE, STANDARD_SUITE, etc.
+  description    String?
+  capacity       Int           @default(1)
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organizationId String        // Tenant isolation
+  reservations   Reservation[]
+
+  // Multi-tenant indexing strategy
+  @@index([organizationId])
+  // Common query patterns
+  @@index([organizationId, type])
+  @@index([organizationId, isActive])
+}
+
+// Reservation model with partitioning strategy
+// Note: Actual table partitioning would be implemented at the database level
+model Reservation {
+  id              String            @id @default(uuid())
+  orderNumber     String?
+  customerId      String
+  petId           String
+  resourceId      String?
+  startDate       DateTime
+  endDate         DateTime
+  status          ReservationStatus @default(CONFIRMED)
+  suiteType       String            // VIP_SUITE, STANDARD_PLUS_SUITE, STANDARD_SUITE
+  price           Float?
+  deposit         Float?
+  balance         Float?
+  notes           String?
+  staffNotes      String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  organizationId  String            // Tenant isolation
+  customer        Customer          @relation(fields: [customerId], references: [id])
+  pet             Pet               @relation(fields: [petId], references: [id])
+  resource        Resource?         @relation(fields: [resourceId], references: [id])
+  addOns          ReservationAddOn[]
+
+  // Multi-tenant indexing strategy
+  @@index([organizationId])
+  
+  // Time-based partition strategy implemented via indexes
+  // These indexes support our date range queries for calendar views
+  @@index([organizationId, startDate, endDate])
+  @@index([organizationId, status])
+  
+  // Common query patterns
+  @@index([customerId])
+  @@index([petId])
+  @@index([resourceId])
+  @@index([organizationId, customerId])
+  @@index([orderNumber])
+
+  // Unique constraint for order numbers within a tenant
+  @@unique([orderNumber, organizationId])
+}
+
+// Add-on services that can be added to reservations
+model AddOnService {
+  id              String            @id @default(uuid())
+  name            String
+  description     String?
+  price           Float
+  duration        Int?              // Duration in minutes
+  serviceId       String            // Parent service ID if this is a sub-service
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  organizationId  String            // Tenant isolation
+  reservationAddOns ReservationAddOn[]
+
+  // Multi-tenant indexing strategy
+  @@index([organizationId])
+  // Common query patterns
+  @@index([organizationId, isActive])
+  @@index([serviceId])
+}
+
+// Junction table for reservation add-ons
+model ReservationAddOn {
+  id              String        @id @default(uuid())
+  reservationId   String
+  addOnId         String
+  price           Float
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  organizationId  String        // Tenant isolation
+  reservation     Reservation   @relation(fields: [reservationId], references: [id])
+  addOn           AddOnService  @relation(fields: [addOnId], references: [id])
+
+  // Multi-tenant indexing strategy
+  @@index([organizationId])
+  // Common query patterns
+  @@index([reservationId])
+  @@index([addOnId])
+}
+
+// Service model (e.g., boarding, daycare, grooming)
+model Service {
+  id              String        @id @default(uuid())
+  name            String
+  description     String?
+  price           Float
+  duration        Int?          // Duration in minutes
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  organizationId  String        // Tenant isolation
+
+  // Multi-tenant indexing strategy
+  @@index([organizationId])
+  // Common query patterns
+  @@index([organizationId, isActive])
+}
+
+// Enum for reservation status
+enum ReservationStatus {
+  DRAFT
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+  COMPLETED
+  PENDING_PAYMENT
+  PARTIALLY_PAID
+}
