@@ -31,7 +31,8 @@ import {
   CalendarViewMonth as CalendarViewMonthIcon,
   CalendarViewWeek as CalendarViewWeekIcon,
   CalendarViewDay as CalendarViewDayIcon,
-  Today as TodayIcon
+  Today as TodayIcon,
+  ArrowBackIosNew
 } from '@mui/icons-material';
 import { resourceService, Resource } from '../../services/resourceService';
 import { reservationService, Reservation } from '../../services/reservationService';
@@ -50,6 +51,61 @@ interface KennelCalendarProps {
   onEventUpdate?: (reservation: Reservation) => void;
 }
 
+// Wrapper component to prevent unnecessary re-renders of the reservation form
+// This is a separate component to avoid React hooks rules violations
+interface ReservationFormWrapperProps {
+  selectedKennel: Resource | null;
+  selectedDate: { start: Date; end: Date } | null;
+  selectedReservation: Reservation | null;
+  onSubmit: (formData: any) => Promise<{reservationId?: string} | void>;
+  error?: string | null;
+}
+
+const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = ({ 
+  selectedKennel, 
+  selectedDate, 
+  selectedReservation, 
+  onSubmit,
+  error
+}) => {
+  // If we don't have the required data, don't render the form
+  if (!selectedKennel || !selectedDate) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Create the initial data object for the form directly
+  const formInitialData = selectedReservation ? {
+    ...selectedReservation,
+    // For existing reservations, don't override the resourceId
+    // This prevents issues with invalid resourceIds
+  } : {
+    // For new reservations, pre-populate with the selected kennel
+    // Don't include resourceId directly to avoid out-of-range value errors
+    // Instead, pass the suite information separately
+    suiteNumber: selectedKennel.suiteNumber || '',
+    suiteName: selectedKennel.name || '',
+    suiteType: selectedKennel.type || selectedKennel.attributes?.suiteType || 'STANDARD_SUITE',
+    // Include the start and end dates in the initialData
+    startDate: selectedDate.start,
+    endDate: selectedDate.end,
+    // Add the kennel ID as a separate property that won't be used directly by the Select component
+    kennelId: selectedKennel.id
+  };
+  
+  return (
+    <ReservationForm
+      onSubmit={onSubmit}
+      initialData={formInitialData}
+      defaultDates={selectedDate}
+      showAddOns={true}
+    />
+  );
+};
+
 /**
  * KennelCalendar component provides a grid-based calendar view for kennel reservations
  * 
@@ -61,7 +117,8 @@ interface KennelCalendarProps {
  * - Supports month, week, and day views
  * - Enables editing existing reservations by clicking on occupied cells
  */
-const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
+// Using a standard React function component with explicit return type
+const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => {
   // State for the current date and view
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewType, setViewType] = useState<ViewType>('week');
@@ -71,6 +128,19 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // State for resource availability data from backend API
+  const [availabilityData, setAvailabilityData] = useState<{
+    resources: Array<{
+      resourceId: string;
+      isAvailable: boolean;
+      conflictingReservations?: any[];
+    }>;
+    checkStartDate: string;
+    checkEndDate: string;
+  } | null>(null);
+  const [fetchingAvailability, setFetchingAvailability] = useState<boolean>(false);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   
   // State for the reservation form dialog
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
@@ -117,13 +187,16 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
       setLoading(true);
       
       // Get all kennels (suites)
-      const response = await resourceService.getSuites(
-        kennelTypeFilter !== 'ALL' ? kennelTypeFilter : undefined
-      );
+      const response = await api.get('/api/resources/availability', {
+        params: {
+          resourceType: 'suite',
+          date: formatDateToYYYYMMDD(currentDate),
+        }
+      });
       
-      if (response?.status === 'success' && Array.isArray(response?.data)) {
+      if (response?.data?.status === 'success' && Array.isArray(response?.data?.data)) {
         // Sort kennels by type and number
-        const sortedKennels = [...response.data].sort((a, b) => {
+        const sortedKennels = [...response.data.data].sort((a, b) => {
           // First sort by type
           const typeOrder: Record<string, number> = {
             'VIP_SUITE': 1,
@@ -156,45 +229,80 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
     }
   }, [kennelTypeFilter]);
 
-  // Function to load reservations
+  // Function to load reservations and check resource availability
   const loadReservations = useCallback(async () => {
     try {
       setLoading(true);
+      setFetchingAvailability(true);
       
       // Calculate the date range to fetch reservations
       const days = getDaysToDisplay();
       const startDate = formatDateToYYYYMMDD(days[0]);
       const endDate = formatDateToYYYYMMDD(days[days.length - 1]);
       
-      // Get reservations for the date range
-      // Note: The API actually supports more parameters than the TypeScript interface shows
-      // We're using the actual API capabilities here
-      const response = await api.get('/api/reservations', {
+      // Get traditional reservations for the calendar display
+      const reservationsResponse = await api.get('/api/reservations', {
         params: {
           page: 1,
           limit: 1000,
           sortBy: 'startDate',
           sortOrder: 'asc',
-          status: 'PENDING,CONFIRMED,CHECKED_IN',
+          status: 'PENDING,CONFIRMED,CHECKED_IN', // Only valid statuses
           startDate,
           endDate,
           serviceCategory: 'BOARDING,DAYCARE'
         }
       });
       
-      // The API returns data in a standard format { status: string, data: any[] }
-      if (response?.data?.status === 'success' && Array.isArray(response?.data?.data)) {
-        setReservations(response.data.data);
+      // Get resource availability data for the same date range using the new API
+      // First, we need the list of kennel IDs to check
+      // TypeScript fix: Ensure we only work with kennels that have valid string IDs
+      const kennelIds: string[] = [];
+      kennels.forEach(kennel => {
+        if (kennel && kennel.id && typeof kennel.id === 'string') {
+          kennelIds.push(kennel.id);
+        }
+      });
+      
+      if (kennelIds.length > 0) {
+        try {
+          // Reset any previous errors
+          setAvailabilityError(null);
+          
+          // Call the new batch availability API
+          const availabilityResponse = await api.post('/api/resources/availability/batch', {
+            resourceIds: kennelIds,
+            startDate: startDate,
+            endDate: endDate
+          });
+          
+          if (availabilityResponse?.data?.status === 'success') {
+            setAvailabilityData(availabilityResponse.data.data);
+          } else {
+            setAvailabilityError('Failed to load resource availability');
+          }
+        } catch (err: any) {
+          console.error('Error loading resource availability:', err);
+          // Ensure we always pass a string to setAvailabilityError
+          setAvailabilityError(err.message ? err.message : 'Failed to load resource availability');
+          // We'll continue with the frontend fallback if the availability API fails
+        }
+      }
+      
+      // Set the reservations data for traditional display
+      if (reservationsResponse?.data?.status === 'success' && Array.isArray(reservationsResponse?.data?.data)) {
+        setReservations(reservationsResponse.data.data);
       } else {
         setError('Failed to load reservations');
       }
-    } catch (error) {
-      console.error('Error loading reservations:', error);
-      setError('Failed to load reservations');
+    } catch (err: any) {
+      console.error('Error loading reservations:', err);
+      setError(err.message || 'Failed to load reservations');
     } finally {
       setLoading(false);
+      setFetchingAvailability(false);
     }
-  }, [getDaysToDisplay]);
+  }, [getDaysToDisplay, kennels]);
 
   // Load kennels and reservations when the component mounts or when dependencies change
   useEffect(() => {
@@ -202,8 +310,12 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
   }, [loadKennels]);
 
   useEffect(() => {
-    loadReservations();
-  }, [loadReservations]);
+    // Only load reservations if we have successfully loaded kennels first
+    // This prevents errors when trying to check availability for non-existent kennels
+    if (kennels.length > 0) {
+      loadReservations();
+    }
+  }, [loadReservations, currentDate, viewType, kennels]);
   
   /**
    * Event listener to handle reservation completion
@@ -468,10 +580,51 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
     }
   };
 
-  // Function to check if a kennel is occupied on a specific date
+  /**
+   * Function to check if a kennel is occupied on a specific date
+   * Uses backend API data when available, falls back to frontend check if API data isn't available
+   */
   const isKennelOccupied = (kennel: Resource, date: Date): Reservation | undefined => {
     const dateStr = formatDateToYYYYMMDD(date);
     
+    // First priority: Use backend availability data if we have it
+    if (availabilityData && availabilityData.resources && availabilityData.resources.length > 0) {
+      // Find this resource in our availability data
+      const resourceData = availabilityData.resources.find(r => r.resourceId === kennel.id);
+      
+      if (resourceData) {
+        // If the resource is not available, we need to find the conflicting reservation
+        if (!resourceData.isAvailable && resourceData.conflictingReservations && resourceData.conflictingReservations.length > 0) {
+          // Return the first conflicting reservation that matches our date
+          for (const conflict of resourceData.conflictingReservations) {
+            // Convert reservation dates to Date objects for comparison
+            const startDate = new Date(conflict.startDate);
+            const endDate = new Date(conflict.endDate);
+            
+            // Reset time components for date comparison
+            const compareDate = new Date(date);
+            compareDate.setHours(0, 0, 0, 0);
+            
+            const compareStartDate = new Date(startDate);
+            compareStartDate.setHours(0, 0, 0, 0);
+            
+            const compareEndDate = new Date(endDate);
+            compareEndDate.setHours(0, 0, 0, 0);
+            
+            // If this date falls within the reservation period, return the reservation
+            if (compareDate >= compareStartDate && compareDate <= compareEndDate) {
+              return conflict as Reservation;
+            }
+          }
+        }
+        
+        // If we got here, the resource is available on this date
+        return undefined;
+      }
+    }
+    
+    // Fallback: Check reservations in frontend state (how we did it before)
+    // This is a backup in case the API fails
     return reservations.find(reservation => {
       // Check if the reservation is for this kennel
       // The resource property contains the kennel information
@@ -551,12 +704,11 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
 
   return (
     <Box sx={{ height: 'calc(100vh - 170px)', p: 0 }}>
-      <Paper elevation={3} sx={{ height: '100%', p: 2, display: 'flex', flexDirection: 'column' }}>
-        {/* Calendar Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <IconButton onClick={navigateToPrevious}>
-              <ChevronLeftIcon />
+              <ArrowBackIosNew />
             </IconButton>
             <Typography variant="h6" sx={{ mx: 1 }}>
               {getViewTitle()}
@@ -564,6 +716,13 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
             <IconButton onClick={navigateToNext}>
               <ChevronRightIcon />
             </IconButton>
+            {fetchingAvailability ? (
+              <CircularProgress size={24} sx={{ ml: 1 }} />
+            ) : availabilityError ? (
+              <Typography color="error" sx={{ ml: 1 }}>
+                {availabilityError}
+              </Typography>
+            ) : null}
             <IconButton onClick={navigateToToday} sx={{ ml: 1 }}>
               <TodayIcon />
             </IconButton>
@@ -784,7 +943,7 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
             </TableContainer>
           )}
         </Box>
-      </Paper>
+      </Box>
 
       {/* Reservation Form Dialog */}
       <Dialog 
@@ -847,52 +1006,6 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
         </DialogContent>
       </Dialog>
     </Box>
-  );
-};
-
-// Wrapper component to prevent unnecessary re-renders of the reservation form
-// This is a separate component to avoid React hooks rules violations
-interface ReservationFormWrapperProps {
-  selectedKennel: Resource;
-  selectedDate: { start: Date; end: Date };
-  selectedReservation: Reservation | null;
-  onSubmit: (formData: any) => Promise<{reservationId?: string} | void>;
-  error?: string | null;
-}
-
-const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = ({ 
-  selectedKennel, 
-  selectedDate, 
-  selectedReservation, 
-  onSubmit,
-  error
-}) => {
-  // Create the initial data object for the form directly
-  const formInitialData = selectedReservation ? {
-    ...selectedReservation,
-    // For existing reservations, don't override the resourceId
-    // This prevents issues with invalid resourceIds
-  } : {
-    // For new reservations, pre-populate with the selected kennel
-    // Don't include resourceId directly to avoid out-of-range value errors
-    // Instead, pass the suite information separately
-    suiteNumber: selectedKennel.suiteNumber || '',
-    suiteName: selectedKennel.name || '',
-    suiteType: selectedKennel.type || selectedKennel.attributes?.suiteType || 'STANDARD_SUITE',
-    // Include the start and end dates in the initialData
-    startDate: selectedDate.start,
-    endDate: selectedDate.end,
-    // Add the kennel ID as a separate property that won't be used directly by the Select component
-    kennelId: selectedKennel.id
-  };
-  
-  return (
-    <ReservationForm
-      onSubmit={onSubmit}
-      initialData={formInitialData}
-      defaultDates={selectedDate}
-      showAddOns={true}
-    />
   );
 };
 

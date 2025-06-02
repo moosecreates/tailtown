@@ -239,5 +239,75 @@ export const resourceService = {
       console.error('Error in getAvailableResourcesByDate:', error);
       throw error;
     }
+  },
+
+  /**
+   * Check if a specific resource is available on a given date
+   * Uses the new backend resource availability API
+   * 
+   * @param resourceId - ID of the resource to check
+   * @param date - Date to check in YYYY-MM-DD format
+   * @returns Promise resolving to an object with availability status and conflicting reservations
+   */
+  checkResourceAvailability: async (
+    resourceId: string,
+    date: string
+  ): Promise<{ 
+    status: string; 
+    data: {
+      resourceId: string;
+      isAvailable: boolean;
+      checkDate: string;
+      conflictingReservations?: any[];
+    } 
+  }> => {
+    try {
+      const response: AxiosResponse = await api.get('/api/v1/resources/availability', {
+        params: { resourceId, date }
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in checkResourceAvailability:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Check availability for multiple resources at once
+   * Uses the new backend batch resource availability API
+   * 
+   * @param resourceIds - Array of resource IDs to check
+   * @param startDate - Start date in YYYY-MM-DD format
+   * @param endDate - End date in YYYY-MM-DD format
+   * @returns Promise resolving to an object with availability status for each resource
+   */
+  batchCheckResourceAvailability: async (
+    resourceIds: string[],
+    startDate: string,
+    endDate: string
+  ): Promise<{ 
+    status: string; 
+    data: {
+      checkDate: string | null;
+      checkStartDate: string;
+      checkEndDate: string;
+      resources: Array<{
+        resourceId: string;
+        isAvailable: boolean;
+        conflictingReservations?: any[];
+      }>;
+    } 
+  }> => {
+    try {
+      const response: AxiosResponse = await api.post('/api/v1/resources/availability/batch', {
+        resourceIds,
+        startDate,
+        endDate
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in batchCheckResourceAvailability:', error);
+      throw error;
+    }
   }
 };
