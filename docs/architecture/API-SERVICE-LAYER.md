@@ -272,6 +272,15 @@ Services should include comprehensive testing:
 4. Follow secure coding practices
 5. Don't expose sensitive information in error responses (automatically handled in production)
 
+## Implementation Notes
+
+This section tracks implementation decisions, lessons learned, and refinements to the strategy as the refactoring progresses.
+
+| Date | Component | Decision | Rationale |
+|------|-----------|----------|-----------|
+| 2025-06-01 | Core Service Layer | Created base API service abstraction | Foundation for domain-driven architecture with consistent interfaces |
+| 2025-06-01 | Tenant Middleware | Implemented multi-source tenant ID extraction | Flexibility to handle tenant IDs from headers, JWT claims, or query parameters |
+
 ## Next Steps
 
 - Implement the Reservation Service using this architecture

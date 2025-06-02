@@ -323,3 +323,12 @@ The focus should be on incremental improvements rather than a complete rewrite, 
 ---
 
 *This document will be periodically updated as the architecture evolves and new insights are gained from implementation.*
+
+## Implementation Notes
+
+This section tracks implementation decisions, lessons learned, and refinements to the strategy as the refactoring progresses.
+
+| Date | Component | Decision | Rationale |
+|------|-----------|----------|-----------|
+| 2025-06-01 | API Service Layer | Created shared service abstraction | First step toward service-oriented architecture |
+| 2025-06-01 | Data Modeling | Adopted balanced normalization approach | Maintains domain boundaries while addressing performance |

@@ -179,3 +179,12 @@ Planned improvements to the financial architecture include:
 2. Enhanced audit logging for financial operations
 3. Reconciliation tools for daily/monthly accounting
 4. Integration with external accounting systems
+
+## Implementation Notes
+
+This section tracks implementation decisions, lessons learned, and refinements to the strategy as the refactoring progresses.
+
+| Date | Component | Decision | Rationale |
+|------|-----------|----------|-----------|
+| 2025-06-01 | Financial Data | Documented separation of operational and reporting data | Optimize for both transaction integrity and reporting performance |
+| 2025-06-01 | Financial Modeling | Planned tenant-specific indexes | Prepare for multi-tenant scaling while maintaining query performance |
