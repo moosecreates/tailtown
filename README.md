@@ -42,8 +42,10 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 ### Resource Management
 - Track kennels, rooms, and equipment
 - Maintenance scheduling
-- Occupancy tracking
+- Occupancy tracking with backend validation
 - Resource conflict prevention
+- Backend API for resource availability checking
+- Multi-tenant support for all resource operations
 
 ### Staff Management
 - Staff profiles with contact information
@@ -76,6 +78,25 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ## Development Guidelines
 
+### API Service Layer
+We've implemented a shared API service layer to ensure consistency across all microservices as we transition to a domain-driven architecture. The API layer provides:
+- Standardized API response formats
+- Multi-tenancy support via middleware
+- Consistent error handling
+- Request validation with Zod
+- Service factory for quick bootstrapping
+
+See [API Service Layer Documentation](./docs/architecture/API-SERVICE-LAYER.md) for implementation details and migration guidelines.
+
+### Data Modeling Strategy
+We've adopted a balanced approach to data modeling that maintains domain boundaries while optimizing for performance at scale. Key strategies include:
+- Keeping core domain models properly normalized
+- Creating specialized read models for performance-critical operations
+- Strategic denormalization for common query patterns
+- Optimized indexing strategy for multi-tenant queries
+- Partitioning approach for time-series data like reservations
+
+See [Data Modeling Strategy](./docs/architecture/DATA-MODELING-STRATEGY.md) for the complete approach and implementation guidelines.
 ### Form Standards
 To ensure consistency across the application, we've established guidelines for creating forms. These guidelines cover:
 - Material UI component usage
@@ -85,6 +106,29 @@ To ensure consistency across the application, we've established guidelines for c
 - Form validation
 
 See [Form Guidelines](./docs/development/FormGuidelines.md) for detailed information.
+
+## Documentation
+
+### Architecture Documents
+- [API Service Layer](./docs/architecture/API-SERVICE-LAYER.md) - Shared API abstraction layer for microservices
+- [Data Modeling Strategy](./docs/architecture/DATA-MODELING-STRATEGY.md) - Database design principles and optimization approaches
+- [SaaS Scaling Assessment](./docs/architecture/SaaS-Scaling-Assessment.md) - Analysis and roadmap for scaling to multi-tenant SaaS
+- [Financial Data Architecture](./docs/architecture/financial-data-architecture.md) - Financial data management and calculations
+
+### Feature Documentation
+- [Calendar Components](./docs/features/CalendarComponents.md) - Calendar design and implementation
+- [Kennel Calendar](./docs/features/KennelCalendar.md) - Kennel-specific calendar functionality
+- [Checkout Process](./docs/features/CheckoutProcess.md) - End-to-end checkout workflow
+- [Reservation System](./docs/features/Reservations.md) - Reservation booking and management
+- [Add-On System](./docs/features/AddOnSystem.md) - Service add-on implementation
+
+### Development Guides
+- [Navigation Structure](./docs/development/Navigation.md) - Application navigation design
+- [Form Guidelines](./docs/development/FormGuidelines.md) - UI form standards and patterns
+- [Staff Scheduling Implementation](./docs/development/StaffSchedulingImplementation.md) - Staff scheduling features
+
+### Changelogs
+- [Recent Updates](./docs/changelog/) - Directory containing all change history
 
 ## Project Structure
 
