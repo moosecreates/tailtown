@@ -101,6 +101,32 @@ The pet controller has been updated to:
    - Removed all references to the non-existent `profilePhoto` field
    - Disabled pet photo upload functionality temporarily
 
+### Reservation Service
+
+The reservation service has been comprehensively updated to implement the schema alignment strategy:
+
+1. **Resource Availability Controller**:
+   - Implemented `safeExecutePrismaQuery` helper function to wrap all Prisma calls with error handling
+   - Added graceful fallbacks for schema mismatches, returning default availability status
+   - Used type assertions to handle fields like `organizationId` that may not be recognized by TypeScript
+
+2. **Reservation Controller**:
+   - Implemented full CRUD operations with defensive programming
+   - Used extended types from `prisma-extensions.ts` to handle tenant isolation
+   - Made `suiteType` field handling more robust with conditional validation
+   - Added proper error handling with informative logs and user-friendly messages
+
+3. **Resource Controller**:
+   - Implemented CRUD operations with schema alignment strategy
+   - Added resource availability checking with defensive programming
+   - Used type assertions to handle potential schema mismatches
+   - Implemented tenant isolation with the `organizationId` field
+
+4. **Type Extensions**:
+   - Created extended types in `prisma-extensions.ts` to handle fields not recognized by TypeScript
+   - Used type assertions to override Prisma's generated types
+   - Implemented proper tenant isolation with `organizationId` field
+
 ## Best Practices
 
 When working with the Prisma schema, follow these guidelines:
