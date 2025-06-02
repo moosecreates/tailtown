@@ -26,25 +26,39 @@ export enum ExtendedReservationStatus {
 }
 
 // Extend Prisma's WhereInput types to include organizationId
-export interface ExtendedReservationWhereInput extends Prisma.ReservationWhereInput, TenantFields {}
-export interface ExtendedCustomerWhereInput extends Prisma.CustomerWhereInput, TenantFields {}
-export interface ExtendedPetWhereInput extends Prisma.PetWhereInput, TenantFields {}
-export interface ExtendedResourceWhereInput extends Prisma.ResourceWhereInput, TenantFields {}
-export interface ExtendedAddOnServiceWhereInput extends Prisma.AddOnServiceWhereInput, TenantFields {}
-export interface ExtendedServiceWhereInput extends Prisma.ServiceWhereInput, TenantFields {}
+export interface ExtendedReservationWhereInput extends Prisma.ReservationWhereInput {
+  organizationId?: string | Prisma.StringFilter;
+}
+export interface ExtendedCustomerWhereInput extends Prisma.CustomerWhereInput {
+  organizationId?: string | Prisma.StringFilter;
+}
+export interface ExtendedPetWhereInput extends Prisma.PetWhereInput {
+  organizationId?: string | Prisma.StringFilter;
+}
+export interface ExtendedResourceWhereInput extends Prisma.ResourceWhereInput {
+  organizationId?: string | Prisma.StringFilter;
+}
+export interface ExtendedAddOnServiceWhereInput extends Prisma.AddOnServiceWhereInput {
+  organizationId?: string | Prisma.StringFilter;
+}
+export interface ExtendedServiceWhereInput extends Prisma.ServiceWhereInput {
+  organizationId?: string | Prisma.StringFilter;
+}
 
 // Extend Prisma's model types to include custom fields
-export interface ExtendedReservation extends Prisma.ReservationGetPayload<{}> {
+export type ExtendedReservation = Prisma.ReservationGetPayload<{}> & {
   suiteType?: string;
   price?: number;
   resource?: Prisma.ResourceGetPayload<{}>;
   addOns?: Prisma.ReservationAddOnGetPayload<{ include: { addOn: true } }>[];
+  service?: Prisma.ServiceGetPayload<{}>;
 }
 
 // Define interfaces for Prisma include and select options with additional fields
-export interface ExtendedReservationInclude extends Prisma.ReservationInclude {
+export interface ExtendedReservationInclude extends Omit<Prisma.ReservationInclude, 'service'> {
   // We're keeping this simple to avoid complex Prisma type constraint issues
   addOns?: any;
+  service?: boolean | Prisma.ServiceArgs;
 }
 
 export interface ExtendedPetSelect extends Prisma.PetSelect {

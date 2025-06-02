@@ -1,15 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../../utils/service';
-import { ExtendedReservationWhereInput, ExtendedReservationStatus } from '../../types/prisma-extensions';
+import { ExtendedReservationWhereInput, ExtendedReservationStatus, ExtendedReservationInclude } from '../../types/prisma-extensions';
 
 const prisma = new PrismaClient();
 
 /**
  * Check if a resource is available (not occupied) for a specific date or date range
- * This is the backend implementation of what was previously the frontend isKennelOccupied function
+ * This is the backend implementation of what was previously the frontend isKennelOccupied function.
+ * It properly handles tenant isolation and normalizes dates for consistent availability checks.
  * 
- * @route GET /api/resources/availability
+ * @route GET /api/v1/resources/availability
+ * @param {string} req.query.resourceId - The ID of the resource to check
+ * @param {string} req.query.date - The date to check in YYYY-MM-DD format
+ * @param {string} [req.query.startDate] - Optional start date for a range check in YYYY-MM-DD format
+ * @param {string} [req.query.endDate] - Optional end date for a range check in YYYY-MM-DD format
+ * @param {string} req.tenantId - The tenant ID (provided by middleware)
+ * @returns {Object} Response with isAvailable flag and any conflicting reservations
  */
 export const checkResourceAvailability = async (
   req: Request,
@@ -99,7 +106,7 @@ export const checkResourceAvailability = async (
             name: true
           }
         }
-      }
+      } as unknown as ExtendedReservationInclude
     });
     
     // Available if there are no overlapping reservations
@@ -125,8 +132,17 @@ export const checkResourceAvailability = async (
 
 /**
  * Check availability for multiple resources at once
+ * This batch endpoint allows efficient checking of multiple resources in a single request,
+ * reducing network overhead and improving frontend performance. It's particularly useful
+ * for calendar views that need to display multiple resources simultaneously.
  * 
- * @route POST /api/resources/availability/batch
+ * @route POST /api/v1/resources/availability/batch
+ * @param {string[]} req.body.resourceIds - Array of resource IDs to check
+ * @param {string} [req.body.date] - Single date to check in YYYY-MM-DD format
+ * @param {string} [req.body.startDate] - Start date for a range check in YYYY-MM-DD format
+ * @param {string} [req.body.endDate] - End date for a range check in YYYY-MM-DD format
+ * @param {string} req.tenantId - The tenant ID (provided by middleware)
+ * @returns {Object} Response with availability status for each requested resource
  */
 export const batchCheckResourceAvailability = async (
   req: Request,
