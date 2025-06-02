@@ -9,6 +9,7 @@
  */
 
 import { Router } from 'express';
+// Import controller functions with explicit path
 import {
   getAllReservations,
   getReservationById,
@@ -25,14 +26,18 @@ router.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Reservation routes healthy' });
 });
 
-// Core reservation endpoints
-router.get('/', getAllReservations);
-router.get('/:id', getReservationById);
-router.post('/', createReservation);
-router.patch('/:id', updateReservation);
-router.delete('/:id', deleteReservation);
+// IMPORTANT: Specific routes must come before parameterized routes
 
 // Customer-specific reservation endpoints
 router.get('/customer/:customerId', getCustomerReservations);
+
+// Core reservation endpoints
+router.get('/', getAllReservations);
+router.post('/', createReservation);
+
+// Parameterized routes must come last
+router.get('/:id', getReservationById);
+router.patch('/:id', updateReservation);
+router.delete('/:id', deleteReservation);
 
 export default router;

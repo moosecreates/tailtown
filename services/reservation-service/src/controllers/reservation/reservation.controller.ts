@@ -1,7 +1,36 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../../utils/service';
-import { ExtendedReservationWhereInput, ExtendedReservationStatus, ExtendedReservationInclude } from '../../types/prisma-extensions';
+import { 
+  ExtendedReservationWhereInput, 
+  ExtendedReservationStatus, 
+  ExtendedReservationInclude,
+  ExtendedResourceWhereInput,
+  ExtendedCustomerWhereInput,
+  ExtendedPetWhereInput
+} from '../../types/prisma-extensions';
+
+/**
+ * Helper function to determine suite type based on service type
+ * @param serviceType The service type to map to a suite type
+ * @returns The determined suite type or null if not determinable
+ */
+const determineSuiteType = (serviceType: string): string | null => {
+  switch (serviceType.toLowerCase()) {
+    case 'boarding':
+      return 'standard';
+    case 'luxury_boarding':
+      return 'luxury';
+    case 'daycare':
+      return 'daycare';
+    case 'grooming':
+      return null; // Grooming doesn't need a suite type
+    case 'training':
+      return null; // Training doesn't need a suite type
+    default:
+      return null;
+  }
+};
 
 const prisma = new PrismaClient();
 
@@ -29,6 +58,10 @@ async function safeExecutePrismaQuery<T>(queryFn: () => Promise<T>, fallbackValu
  * @param {string} req.query.status - Filter by reservation status
  * @param {string} req.query.startDate - Filter by start date
  * @param {string} req.query.endDate - Filter by end date
+ * @param {string} req.query.customerId - Filter by customer ID
+ * @param {string} req.query.petId - Filter by pet ID
+ * @param {string} req.query.resourceId - Filter by resource ID
+ * @param {string} req.query.suiteType - Filter by suite type
  * @param {string} req.tenantId - The tenant ID (provided by middleware)
  */
 export const getAllReservations = async (
@@ -36,47 +69,133 @@ export const getAllReservations = async (
   res: Response,
   next: NextFunction
 ) => {
+  // Generate a unique request ID for logging
+  const requestId = `getAll-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+  console.log(`[${requestId}] Processing get all reservations request with query params:`, req.query);
+  
   try {
     // Get tenant ID from request - added by tenant middleware
     const tenantId = req.tenantId;
     if (!tenantId) {
+      console.warn(`[${requestId}] Missing tenant ID in request`);
       return next(new AppError('Tenant ID is required', 401));
     }
 
-    // Parse pagination parameters
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+    // Parse pagination parameters with validation
+    let page = 1;
+    let limit = 10;
+    
+    if (req.query.page) {
+      const parsedPage = parseInt(req.query.page as string);
+      if (!isNaN(parsedPage) && parsedPage > 0) {
+        page = parsedPage;
+      } else {
+        console.warn(`[${requestId}] Invalid page parameter: ${req.query.page}, using default: 1`);
+      }
+    }
+    
+    if (req.query.limit) {
+      const parsedLimit = parseInt(req.query.limit as string);
+      if (!isNaN(parsedLimit) && parsedLimit > 0 && parsedLimit <= 100) {
+        limit = parsedLimit;
+      } else {
+        console.warn(`[${requestId}] Invalid limit parameter: ${req.query.limit}, using default: 10`);
+      }
+    }
+    
     const skip = (page - 1) * limit;
+    console.log(`[${requestId}] Using pagination: page=${page}, limit=${limit}, skip=${skip}`);
 
-    // Build filter conditions
+    // Build filter conditions with validation
     const whereConditions: ExtendedReservationWhereInput = {
       organizationId: tenantId
     };
+    const warnings: string[] = [];
 
     // Add status filter if provided
     if (req.query.status) {
-      // Cast the status to the appropriate type
-      whereConditions.status = req.query.status as any;
+      // Validate status against known values
+      const status = req.query.status as string;
+      const validStatuses = Object.values(ExtendedReservationStatus);
+      
+      if (validStatuses.includes(status as any)) {
+        whereConditions.status = status as any;
+        console.log(`[${requestId}] Filtering by status: ${status}`);
+      } else {
+        console.warn(`[${requestId}] Invalid status filter: ${status}`);
+        warnings.push(`Invalid status filter: ${status} was ignored`);
+      }
     }
 
-    // Add date range filters if provided
+    // Add date range filters if provided with validation
     if (req.query.startDate) {
-      whereConditions.startDate = {
-        gte: new Date(req.query.startDate as string)
-      };
+      try {
+        const startDate = new Date(req.query.startDate as string);
+        if (!isNaN(startDate.getTime())) {
+          whereConditions.startDate = {
+            gte: startDate
+          };
+          console.log(`[${requestId}] Filtering by start date >= ${startDate.toISOString()}`);
+        } else {
+          console.warn(`[${requestId}] Invalid start date: ${req.query.startDate}`);
+          warnings.push(`Invalid start date format: ${req.query.startDate} was ignored`);
+        }
+      } catch (error) {
+        console.warn(`[${requestId}] Error parsing start date: ${req.query.startDate}`, error);
+        warnings.push(`Invalid start date: ${req.query.startDate} was ignored`);
+      }
     }
 
     if (req.query.endDate) {
-      whereConditions.endDate = {
-        lte: new Date(req.query.endDate as string)
-      };
+      try {
+        const endDate = new Date(req.query.endDate as string);
+        if (!isNaN(endDate.getTime())) {
+          whereConditions.endDate = {
+            lte: endDate
+          };
+          console.log(`[${requestId}] Filtering by end date <= ${endDate.toISOString()}`);
+        } else {
+          console.warn(`[${requestId}] Invalid end date: ${req.query.endDate}`);
+          warnings.push(`Invalid end date format: ${req.query.endDate} was ignored`);
+        }
+      } catch (error) {
+        console.warn(`[${requestId}] Error parsing end date: ${req.query.endDate}`, error);
+        warnings.push(`Invalid end date: ${req.query.endDate} was ignored`);
+      }
     }
+    
+    // Add customer filter if provided
+    if (req.query.customerId) {
+      whereConditions.customerId = req.query.customerId as string;
+      console.log(`[${requestId}] Filtering by customer ID: ${req.query.customerId}`);
+    }
+    
+    // Add pet filter if provided
+    if (req.query.petId) {
+      whereConditions.petId = req.query.petId as string;
+      console.log(`[${requestId}] Filtering by pet ID: ${req.query.petId}`);
+    }
+    
+    // Add resource filter if provided
+    if (req.query.resourceId) {
+      whereConditions.resourceId = req.query.resourceId as string;
+      console.log(`[${requestId}] Filtering by resource ID: ${req.query.resourceId}`);
+    }
+    
+    // Add suite type filter if provided
+    if (req.query.suiteType) {
+      // Use type assertion to handle potential schema mismatches
+      (whereConditions as any).suiteType = req.query.suiteType as string;
+      console.log(`[${requestId}] Filtering by suite type: ${req.query.suiteType}`);
+    }
+
+    console.log(`[${requestId}] Executing reservation query with filters:`, JSON.stringify(whereConditions));
 
     // Get reservations with safe execution
     const reservations = await safeExecutePrismaQuery(
       async () => {
         return await prisma.reservation.findMany({
-          where: whereConditions as ExtendedReservationWhereInput,
+          where: whereConditions,
           skip,
           take: limit,
           orderBy: {
@@ -85,6 +204,7 @@ export const getAllReservations = async (
           include: {
             customer: {
               select: {
+                id: true,
                 firstName: true,
                 lastName: true,
                 email: true,
@@ -93,41 +213,104 @@ export const getAllReservations = async (
             },
             pet: {
               select: {
+                id: true,
                 name: true,
-                breed: true
+                breed: true,
+                age: true
               }
             },
             resource: {
               select: {
+                id: true,
                 name: true,
-                type: true
+                type: true,
+                location: true
+              }
+            },
+            addOns: {
+              include: {
+                addOn: true
               }
             }
           } as unknown as ExtendedReservationInclude
         });
       },
       [], // Empty array fallback if there's an error
-      'Error fetching reservations'
+      `[${requestId}] Error fetching reservations`
     );
+
+    console.log(`[${requestId}] Retrieved ${reservations.length} reservations`);
 
     // Get total count with safe execution
     const totalCount = await safeExecutePrismaQuery(
       async () => {
         return await prisma.reservation.count({
-          where: whereConditions as any // Type assertion to handle organizationId
+          where: whereConditions
         });
       },
       0, // Zero fallback if there's an error
-      'Error counting reservations'
+      `[${requestId}] Error counting reservations`
     );
+
+    console.log(`[${requestId}] Total reservation count: ${totalCount}`);
 
     // Calculate pagination metadata
     const totalPages = Math.ceil(totalCount / limit);
+    
+    // Check for data integrity issues
+    let dataIntegrityIssues = false;
+    const processedReservations = reservations.map(reservation => {
+      const processed = { ...reservation };
+      
+      // Handle potential date formatting issues defensively
+      try {
+        if (reservation.startDate) {
+          processed.startDate = new Date(reservation.startDate);
+        }
+        if (reservation.endDate) {
+          processed.endDate = new Date(reservation.endDate);
+        }
+        if (reservation.createdAt) {
+          processed.createdAt = new Date(reservation.createdAt);
+        }
+        if (reservation.updatedAt) {
+          processed.updatedAt = new Date(reservation.updatedAt);
+        }
+      } catch (error) {
+        console.warn(`[${requestId}] Error formatting dates for reservation ${reservation.id}:`, error);
+        dataIntegrityIssues = true;
+      }
+      
+      // Check for missing related data
+      if (reservation.customerId && !reservation.customer) {
+        console.warn(`[${requestId}] Data integrity issue: Reservation ${reservation.id} has customerId but no customer data`);
+        dataIntegrityIssues = true;
+      }
+      
+      if (reservation.petId && !reservation.pet) {
+        console.warn(`[${requestId}] Data integrity issue: Reservation ${reservation.id} has petId but no pet data`);
+        dataIntegrityIssues = true;
+      }
+      
+      if (reservation.resourceId && !reservation.resource) {
+        console.warn(`[${requestId}] Data integrity issue: Reservation ${reservation.id} has resourceId but no resource data`);
+        dataIntegrityIssues = true;
+      }
+      
+      return processed;
+    });
+    
+    if (dataIntegrityIssues) {
+      warnings.push('Some reservations have data integrity issues. Related data may be missing or incomplete.');
+    }
 
-    res.status(200).json({
+    console.log(`[${requestId}] Successfully completed get all reservations request`);
+    
+    // Prepare response with warnings if any
+    const responseData: any = {
       status: 'success',
       data: {
-        reservations,
+        reservations: processedReservations,
         pagination: {
           page,
           limit,
@@ -135,9 +318,15 @@ export const getAllReservations = async (
           totalPages
         }
       }
-    });
+    };
+    
+    if (warnings.length > 0) {
+      responseData.warnings = warnings;
+    }
+
+    res.status(200).json(responseData);
   } catch (error) {
-    console.error('Error fetching reservations:', error);
+    console.error(`[${requestId}] Error fetching reservations:`, error);
     // More graceful error handling - return empty results instead of error
     return res.status(200).json({
       status: 'success',
@@ -148,9 +337,9 @@ export const getAllReservations = async (
           limit: 10,
           totalCount: 0,
           totalPages: 0
-        },
-        message: 'Reservations retrieved with limited data'
-      }
+        }
+      },
+      warnings: ['An error occurred while fetching reservations. Returning empty results.']
     });
   }
 };
@@ -168,14 +357,25 @@ export const getReservationById = async (
   res: Response,
   next: NextFunction
 ) => {
+  // Generate a unique request ID for logging
+  const requestId = `get-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+  console.log(`[${requestId}] Processing get reservation request for ID: ${req.params.id}`);
+  
   try {
     // Get tenant ID from request - added by tenant middleware
     const tenantId = req.tenantId;
     if (!tenantId) {
+      console.warn(`[${requestId}] Missing tenant ID in request`);
       return next(new AppError('Tenant ID is required', 401));
     }
 
     const { id } = req.params;
+    if (!id) {
+      console.warn(`[${requestId}] Missing reservation ID in request`);
+      return next(new AppError('Reservation ID is required', 400));
+    }
+
+    console.log(`[${requestId}] Fetching reservation with ID: ${id} for tenant: ${tenantId}`);
 
     // Get reservation with safe execution
     const reservation = await safeExecutePrismaQuery(
@@ -184,26 +384,39 @@ export const getReservationById = async (
           where: {
             id,
             organizationId: tenantId
-          } as any, // Type assertion to handle organizationId
+          } as ExtendedReservationWhereInput,
           include: {
             customer: {
               select: {
+                id: true,
                 firstName: true,
                 lastName: true,
                 email: true,
-                phone: true
+                phone: true,
+                address: true,
+                city: true,
+                state: true,
+                zipCode: true
               }
             },
             pet: {
               select: {
+                id: true,
                 name: true,
-                breed: true
+                breed: true,
+                age: true,
+                weight: true,
+                gender: true,
+                notes: true
               }
             },
             resource: {
               select: {
+                id: true,
                 name: true,
-                type: true
+                type: true,
+                location: true,
+                status: true
               }
             },
             addOns: {
@@ -215,21 +428,71 @@ export const getReservationById = async (
         });
       },
       null, // Null fallback if there's an error
-      `Error fetching reservation with ID ${id}`
+      `[${requestId}] Error fetching reservation with ID ${id}`
     );
 
     if (!reservation) {
+      console.warn(`[${requestId}] Reservation not found: ${id} for tenant: ${tenantId}`);
       return next(new AppError('Reservation not found', 404));
     }
 
-    res.status(200).json({
+    // Check for potential data integrity issues and log warnings
+    const warnings = [];
+    
+    if (reservation.customerId && !reservation.customer) {
+      console.warn(`[${requestId}] Data integrity issue: Reservation ${id} has customerId but no customer data`);
+      warnings.push('Customer data missing');
+    }
+    
+    if (reservation.petId && !reservation.pet) {
+      console.warn(`[${requestId}] Data integrity issue: Reservation ${id} has petId but no pet data`);
+      warnings.push('Pet data missing');
+    }
+    
+    if (reservation.resourceId && !reservation.resource) {
+      console.warn(`[${requestId}] Data integrity issue: Reservation ${id} has resourceId but no resource data`);
+      warnings.push('Resource data missing');
+    }
+    
+    // Format dates for consistent output
+    let formattedReservation = { ...reservation };
+    
+    // Handle potential date formatting issues defensively
+    try {
+      if (reservation.startDate) {
+        formattedReservation.startDate = new Date(reservation.startDate);
+      }
+      if (reservation.endDate) {
+        formattedReservation.endDate = new Date(reservation.endDate);
+      }
+      if (reservation.createdAt) {
+        formattedReservation.createdAt = new Date(reservation.createdAt);
+      }
+      if (reservation.updatedAt) {
+        formattedReservation.updatedAt = new Date(reservation.updatedAt);
+      }
+    } catch (error) {
+      console.warn(`[${requestId}] Error formatting dates for reservation ${id}:`, error);
+      warnings.push('Date formatting issue detected');
+    }
+
+    console.log(`[${requestId}] Successfully retrieved reservation: ${id}`);
+    
+    // Add warnings to response if any were detected
+    const responseData: any = {
       status: 'success',
       data: {
-        reservation
+        reservation: formattedReservation
       }
-    });
+    };
+    
+    if (warnings.length > 0) {
+      responseData.warnings = warnings;
+    }
+
+    res.status(200).json(responseData);
   } catch (error) {
-    console.error(`Error fetching reservation with ID ${req.params.id}:`, error);
+    console.error(`[${requestId}] Error fetching reservation with ID ${req.params.id}:`, error);
     // More graceful error handling - return not found instead of error
     return next(new AppError('Reservation not found', 404));
   }
@@ -246,7 +509,12 @@ export const getReservationById = async (
  * @param {string} req.body.startDate - Start date
  * @param {string} req.body.endDate - End date
  * @param {string} req.body.suiteType - Suite type
+ * @param {string} req.body.serviceType - Service type (optional)
  * @param {string} req.body.status - Reservation status
+ * @param {string} req.body.price - Price (optional)
+ * @param {string} req.body.deposit - Deposit amount (optional)
+ * @param {string} req.body.notes - Customer notes (optional)
+ * @param {string} req.body.staffNotes - Staff notes (optional)
  * @param {string} req.tenantId - The tenant ID (provided by middleware)
  */
 export const createReservation = async (
@@ -254,10 +522,15 @@ export const createReservation = async (
   res: Response,
   next: NextFunction
 ) => {
+  // Enhanced logging for request tracking
+  const requestId = `req-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  console.log(`[${requestId}] Processing reservation creation request`);
+  
   try {
     // Get tenant ID from request - added by tenant middleware
     const tenantId = req.tenantId;
     if (!tenantId) {
+      console.error(`[${requestId}] Missing tenant ID`);
       return next(new AppError('Tenant ID is required', 401));
     }
 
@@ -269,53 +542,206 @@ export const createReservation = async (
       startDate,
       endDate,
       suiteType,
+      serviceType,
       status,
       price,
       deposit,
       notes,
-      staffNotes
+      staffNotes,
+      addOnServices
     } = req.body;
 
-    // Validate required fields
+    // Validate required fields with detailed error messages
     if (!customerId) {
+      console.warn(`[${requestId}] Missing customer ID`);
       return next(new AppError('Customer ID is required', 400));
     }
 
     if (!petId) {
+      console.warn(`[${requestId}] Missing pet ID`);
       return next(new AppError('Pet ID is required', 400));
     }
 
     if (!startDate || !endDate) {
+      console.warn(`[${requestId}] Missing date range`);
       return next(new AppError('Start date and end date are required', 400));
     }
 
-    // Validate suite type
-    if (!suiteType || !['VIP_SUITE', 'STANDARD_PLUS_SUITE', 'STANDARD_SUITE'].includes(suiteType)) {
-      return next(new AppError('suiteType is required and must be one of VIP_SUITE, STANDARD_PLUS_SUITE, STANDARD_SUITE', 400));
-    }
-
-    // Parse dates
+    // Parse dates with enhanced validation
     const parsedStartDate = new Date(startDate);
     const parsedEndDate = new Date(endDate);
 
     if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
-      return next(new AppError('Invalid date format', 400));
+      console.warn(`[${requestId}] Invalid date format: start=${startDate}, end=${endDate}`);
+      return next(new AppError('Invalid date format. Please use YYYY-MM-DD format.', 400));
     }
 
-    // Generate a unique order number
-    const orderNumber = `RES-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    // Validate date range logic
+    if (parsedStartDate >= parsedEndDate) {
+      console.warn(`[${requestId}] Invalid date range: start date must be before end date`);
+      return next(new AppError('Start date must be before end date', 400));
+    }
 
-    // Create reservation with safe execution
+    // Validate dates are not in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (parsedStartDate < today) {
+      console.warn(`[${requestId}] Start date is in the past`);
+      return next(new AppError('Start date cannot be in the past', 400));
+    }
+
+    // Contextual suite type validation based on service type
+    const validSuiteTypes = ['VIP_SUITE', 'STANDARD_PLUS_SUITE', 'STANDARD_SUITE'];
+    let determinedSuiteType = suiteType;
+    
+    if (!determinedSuiteType) {
+      // Default suite type based on service type if not provided
+      if (serviceType === 'PREMIUM') {
+        determinedSuiteType = 'VIP_SUITE';
+        console.log(`[${requestId}] Auto-assigned VIP_SUITE based on PREMIUM service type`);
+      } else if (serviceType === 'ENHANCED') {
+        determinedSuiteType = 'STANDARD_PLUS_SUITE';
+        console.log(`[${requestId}] Auto-assigned STANDARD_PLUS_SUITE based on ENHANCED service type`);
+      } else {
+        determinedSuiteType = 'STANDARD_SUITE'; // Default
+        console.log(`[${requestId}] Auto-assigned default STANDARD_SUITE`);
+      }
+    } else if (!validSuiteTypes.includes(determinedSuiteType)) {
+      console.warn(`[${requestId}] Invalid suite type: ${determinedSuiteType}`);
+      return next(new AppError(`Suite type must be one of: ${validSuiteTypes.join(', ')}`, 400));
+    }
+
+    // Generate a unique order number with better uniqueness
+    const orderNumber = `RES-${Date.now()}-${Math.floor(Math.random() * 10000)}-${tenantId.substring(0, 4)}`;
+    console.log(`[${requestId}] Generated order number: ${orderNumber}`);
+
+    // Resource assignment with validation
+    let assignedResourceId = resourceId;
+    
+    // If resourceId is provided, validate it exists and is available
+    if (resourceId) {
+      console.log(`[${requestId}] Validating requested resource: ${resourceId}`);
+      
+      // Check if resource exists and belongs to tenant
+      const resourceExists = await safeExecutePrismaQuery(
+        async () => {
+          return await prisma.resource.findFirst({
+            where: {
+              id: resourceId,
+              organizationId: tenantId
+            } as ExtendedResourceWhereInput
+          });
+        },
+        null,
+        `[${requestId}] Error checking resource existence`
+      );
+      
+      if (!resourceExists) {
+        console.warn(`[${requestId}] Requested resource not found: ${resourceId}`);
+        return next(new AppError('Requested resource not found or not available', 404));
+      }
+      
+      // Check if resource is available for the requested dates
+      const overlappingReservations = await safeExecutePrismaQuery(
+        async () => {
+          return await prisma.reservation.findMany({
+            where: {
+              organizationId: tenantId,
+              resourceId: resourceId,
+              AND: [
+                { startDate: { lte: parsedEndDate } },
+                { endDate: { gte: parsedStartDate } }
+              ],
+              status: {
+                in: [
+                  ExtendedReservationStatus.CONFIRMED, 
+                  ExtendedReservationStatus.CHECKED_IN, 
+                  ExtendedReservationStatus.PENDING_PAYMENT, 
+                  ExtendedReservationStatus.PARTIALLY_PAID
+                ] as any
+              }
+            } as ExtendedReservationWhereInput
+          });
+        },
+        [],
+        `[${requestId}] Error checking resource availability`
+      );
+      
+      if (overlappingReservations.length > 0) {
+        console.warn(`[${requestId}] Resource ${resourceId} has overlapping reservations for the requested dates`);
+        return next(new AppError('Resource is not available for the requested dates', 409));
+      }
+    } else {
+      // Auto-assign a resource based on suite type if none provided
+      console.log(`[${requestId}] No resource specified, attempting auto-assignment for suite type: ${determinedSuiteType}`);
+      
+      // Find available resources matching the suite type
+      const availableResources = await safeExecutePrismaQuery(
+        async () => {
+          // First get all resources matching the suite type
+          const resources = await prisma.resource.findMany({
+            where: {
+              organizationId: tenantId,
+              type: determinedSuiteType
+            } as ExtendedResourceWhereInput
+          });
+          
+          // Then filter out resources with overlapping reservations
+          const availableResourceIds = [];
+          
+          for (const resource of resources) {
+            const overlappingReservations = await prisma.reservation.findMany({
+              where: {
+                organizationId: tenantId,
+                resourceId: resource.id,
+                AND: [
+                  { startDate: { lte: parsedEndDate } },
+                  { endDate: { gte: parsedStartDate } }
+                ],
+                status: {
+                  in: [
+                    ExtendedReservationStatus.CONFIRMED, 
+                    ExtendedReservationStatus.CHECKED_IN, 
+                    ExtendedReservationStatus.PENDING_PAYMENT, 
+                    ExtendedReservationStatus.PARTIALLY_PAID
+                  ] as any
+                }
+              } as ExtendedReservationWhereInput
+            });
+            
+            if (overlappingReservations.length === 0) {
+              availableResourceIds.push(resource.id);
+            }
+          }
+          
+          return availableResourceIds;
+        },
+        [],
+        `[${requestId}] Error finding available resources`
+      );
+      
+      if (availableResources.length > 0) {
+        // Assign the first available resource
+        assignedResourceId = availableResources[0];
+        console.log(`[${requestId}] Auto-assigned resource: ${assignedResourceId}`);
+      } else {
+        console.warn(`[${requestId}] No available resources found for suite type: ${determinedSuiteType}`);
+        // We'll proceed without a resource, but log a warning
+      }
+    }
+
+    // Create reservation with safe execution and enhanced error handling
+    console.log(`[${requestId}] Creating reservation with determined values`);
     const newReservation = await safeExecutePrismaQuery(
       async () => {
         // Use type assertion to handle fields not in the base Prisma schema
         const data: any = {
           customerId,
           petId,
-          resourceId: resourceId || undefined,
+          resourceId: assignedResourceId || undefined,
           startDate: parsedStartDate,
           endDate: parsedEndDate,
-          status: status || 'CONFIRMED',
+          status: status || ExtendedReservationStatus.CONFIRMED,
           price: price ? parseFloat(price) : undefined,
           deposit: deposit ? parseFloat(deposit) : undefined,
           notes,
@@ -325,8 +751,11 @@ export const createReservation = async (
         };
         
         // Add suiteType which may not be in all schema versions
-        if (suiteType) {
-          data.suiteType = suiteType;
+        data.suiteType = determinedSuiteType;
+        
+        // Add serviceType if provided
+        if (serviceType) {
+          data.serviceType = serviceType;
         }
         
         return await prisma.reservation.create({
@@ -335,12 +764,16 @@ export const createReservation = async (
             customer: {
               select: {
                 firstName: true,
-                lastName: true
+                lastName: true,
+                email: true,
+                phone: true
               }
             },
             pet: {
               select: {
-                name: true
+                name: true,
+                breed: true,
+                size: true
               }
             },
             resource: {
@@ -353,22 +786,55 @@ export const createReservation = async (
         });
       },
       null, // Null fallback if there's an error
-      'Error creating reservation'
+      `[${requestId}] Error creating reservation`
     );
 
     if (!newReservation) {
-      return next(new AppError('Failed to create reservation', 500));
+      console.error(`[${requestId}] Failed to create reservation after all validations passed`);
+      return next(new AppError('Failed to create reservation due to database error', 500));
     }
 
+    // Handle add-on services if provided and the schema supports them
+    if (addOnServices && Array.isArray(addOnServices) && addOnServices.length > 0) {
+      console.log(`[${requestId}] Processing ${addOnServices.length} add-on services`);
+      
+      try {
+        // Attempt to add reservation add-ons
+        for (const addOnId of addOnServices) {
+          await safeExecutePrismaQuery(
+            async () => {
+              return await prisma.reservationAddOn.create({
+                data: {
+                  reservationId: newReservation.id,
+                  addOnId: addOnId,
+                  organizationId: tenantId
+                } as any // Type assertion for organizationId
+              });
+            },
+            null,
+            `[${requestId}] Error adding add-on service ${addOnId}`
+          );
+        }
+      } catch (addOnError) {
+        // Log error but don't fail the reservation creation
+        console.error(`[${requestId}] Error adding add-on services:`, addOnError);
+        console.warn(`[${requestId}] Reservation created but add-on services could not be added`);
+      }
+    }
+
+    console.log(`[${requestId}] Reservation created successfully with ID: ${newReservation.id}`);
     res.status(201).json({
       status: 'success',
       data: {
-        reservation: newReservation
+        reservation: newReservation,
+        message: !assignedResourceId ? 
+          'Reservation created without a specific resource assignment. Please assign a resource when available.' : 
+          undefined
       }
     });
   } catch (error) {
-    console.error('Error creating reservation:', error);
-    return next(new AppError('Failed to create reservation', 500));
+    console.error(`[${requestId}] Unhandled error creating reservation:`, error);
+    return next(new AppError('Failed to create reservation due to an unexpected error', 500));
   }
 };
 
@@ -385,70 +851,49 @@ export const updateReservation = async (
   res: Response,
   next: NextFunction
 ) => {
+  // Generate a unique request ID for logging
+  const requestId = `update-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+  console.log(`[${requestId}] Processing update reservation request for ID: ${req.params.id}`);
+  
   try {
     // Get tenant ID from request - added by tenant middleware
     const tenantId = req.tenantId;
     if (!tenantId) {
+      console.warn(`[${requestId}] Missing tenant ID in request`);
       return next(new AppError('Tenant ID is required', 401));
     }
 
     const { id } = req.params;
+    if (!id) {
+      console.warn(`[${requestId}] Missing reservation ID in request`);
+      return next(new AppError('Reservation ID is required', 400));
+    }
     
-    // Extract fields to update
-    const {
-      resourceId,
-      startDate,
-      endDate,
-      suiteType,
-      status,
-      price,
-      deposit,
-      notes,
-      staffNotes
-    } = req.body;
-
-    // Prepare update data
-    const updateData: any = {};
-
-    // Only include fields that are provided
-    if (resourceId !== undefined) updateData.resourceId = resourceId;
-    if (startDate) updateData.startDate = new Date(startDate);
-    if (endDate) updateData.endDate = new Date(endDate);
-    if (suiteType) updateData.suiteType = suiteType;
-    if (status) updateData.status = status;
-    if (price !== undefined) updateData.price = parseFloat(price);
-    if (deposit !== undefined) updateData.deposit = parseFloat(deposit);
-    if (notes !== undefined) updateData.notes = notes;
-    if (staffNotes !== undefined) updateData.staffNotes = staffNotes;
-
-    // Update reservation with safe execution
-    const updatedReservation = await safeExecutePrismaQuery(
+    // First, check if the reservation exists and belongs to this tenant
+    const existingReservation = await safeExecutePrismaQuery(
       async () => {
-        // Use type assertion for where clause to handle organizationId
-        const whereClause: any = {
-          id
-        };
-        
-        // Add organizationId for tenant isolation
-        whereClause.organizationId = tenantId;
-        
-        return await prisma.reservation.update({
-          where: whereClause,
-          data: updateData,
+        return await prisma.reservation.findFirst({
+          where: {
+            id,
+            organizationId: tenantId
+          } as ExtendedReservationWhereInput,
           include: {
             customer: {
               select: {
+                id: true,
                 firstName: true,
                 lastName: true
               }
             },
             pet: {
               select: {
+                id: true,
                 name: true
               }
             },
             resource: {
               select: {
+                id: true,
                 name: true,
                 type: true
               }
@@ -456,22 +901,416 @@ export const updateReservation = async (
           } as unknown as ExtendedReservationInclude
         });
       },
-      null, // Null fallback if there's an error
-      `Error updating reservation with ID ${id}`
+      null,
+      `[${requestId}] Error finding reservation with ID ${id}`
     );
 
-    if (!updatedReservation) {
+    if (!existingReservation) {
+      console.warn(`[${requestId}] Reservation not found or does not belong to tenant: ${tenantId}`);
       return next(new AppError('Reservation not found', 404));
     }
 
+    console.log(`[${requestId}] Found existing reservation: ${id}`);
+    
+    // Extract fields to update
+    const {
+      customerId,
+      petId,
+      resourceId,
+      startDate,
+      endDate,
+      suiteType,
+      serviceType,
+      status,
+      price,
+      deposit,
+      notes,
+      staffNotes,
+      addOnServices
+    } = req.body;
+
+    // Prepare update data
+    const updateData: any = {};
+    const warnings: string[] = [];
+    
+    // Validate customerId if provided
+    if (customerId !== undefined) {
+      if (!customerId) {
+        console.warn(`[${requestId}] Invalid customer ID provided`);
+        return next(new AppError('Valid customer ID is required', 400));
+      }
+      
+      // Verify customer exists and belongs to tenant
+      const customerExists = await safeExecutePrismaQuery(
+        async () => {
+          return await prisma.customer.findFirst({
+            where: {
+              id: customerId,
+              organizationId: tenantId
+            } as ExtendedCustomerWhereInput
+          });
+        },
+        null,
+        `[${requestId}] Error verifying customer with ID ${customerId}`
+      );
+      
+      if (!customerExists) {
+        console.warn(`[${requestId}] Customer not found: ${customerId}`);
+        return next(new AppError('Customer not found', 404));
+      }
+      
+      updateData.customerId = customerId;
+    }
+    
+    // Validate petId if provided
+    if (petId !== undefined) {
+      if (!petId) {
+        console.warn(`[${requestId}] Invalid pet ID provided`);
+        return next(new AppError('Valid pet ID is required', 400));
+      }
+      
+      // Verify pet exists and belongs to tenant
+      const petExists = await safeExecutePrismaQuery(
+        async () => {
+          return await prisma.pet.findFirst({
+            where: {
+              id: petId,
+              organizationId: tenantId
+            } as ExtendedPetWhereInput
+          });
+        },
+        null,
+        `[${requestId}] Error verifying pet with ID ${petId}`
+      );
+      
+      if (!petExists) {
+        console.warn(`[${requestId}] Pet not found: ${petId}`);
+        return next(new AppError('Pet not found', 404));
+      }
+      
+      updateData.petId = petId;
+    }
+    
+    // Process dates if provided
+    let parsedStartDate: Date | undefined;
+    let parsedEndDate: Date | undefined;
+    
+    if (startDate) {
+      try {
+        parsedStartDate = new Date(startDate);
+        if (isNaN(parsedStartDate.getTime())) {
+          console.warn(`[${requestId}] Invalid start date format: ${startDate}`);
+          return next(new AppError('Invalid start date format. Use YYYY-MM-DD', 400));
+        }
+        updateData.startDate = parsedStartDate;
+      } catch (error) {
+        console.warn(`[${requestId}] Error parsing start date: ${startDate}`, error);
+        return next(new AppError('Invalid start date format. Use YYYY-MM-DD', 400));
+      }
+    } else if (existingReservation.startDate) {
+      parsedStartDate = new Date(existingReservation.startDate);
+    }
+    
+    if (endDate) {
+      try {
+        parsedEndDate = new Date(endDate);
+        if (isNaN(parsedEndDate.getTime())) {
+          console.warn(`[${requestId}] Invalid end date format: ${endDate}`);
+          return next(new AppError('Invalid end date format. Use YYYY-MM-DD', 400));
+        }
+        updateData.endDate = parsedEndDate;
+      } catch (error) {
+        console.warn(`[${requestId}] Error parsing end date: ${endDate}`, error);
+        return next(new AppError('Invalid end date format. Use YYYY-MM-DD', 400));
+      }
+    } else if (existingReservation.endDate) {
+      parsedEndDate = new Date(existingReservation.endDate);
+    }
+    
+    // Validate date logic if both dates are provided
+    if (parsedStartDate && parsedEndDate) {
+      // Check if start date is before end date
+      if (parsedStartDate >= parsedEndDate) {
+        console.warn(`[${requestId}] Start date must be before end date: ${startDate} - ${endDate}`);
+        return next(new AppError('Start date must be before end date', 400));
+      }
+      
+      // Check if start date is in the past
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0); // Reset time to start of day
+      
+      if (parsedStartDate < currentDate) {
+        console.warn(`[${requestId}] Start date is in the past: ${startDate}`);
+        warnings.push('Start date is in the past. This is allowed but may indicate an error.');
+      }
+    }
+    
+    // Determine suite type based on service type if provided
+    let determinedSuiteType = suiteType;
+    
+    if (!determinedSuiteType && serviceType) {
+      // Set suite type based on service type
+      const suiteTypeFromService = determineSuiteType(serviceType);
+      if (suiteTypeFromService) {
+        determinedSuiteType = suiteTypeFromService;
+        console.log(`[${requestId}] Set suite type to ${determinedSuiteType} based on service type ${serviceType}`);
+      } else {
+        console.warn(`[${requestId}] Could not determine suite type from service type ${serviceType}`);
+        warnings.push(`Could not determine suite type from service type ${serviceType}`);
+      }
+    }
+    
+    if (determinedSuiteType) {
+      // Use type assertion to handle potential schema mismatches
+      (updateData as any).suiteType = determinedSuiteType;
+    }
+    
+    // Handle resource assignment
+    let assignedResourceId = resourceId;
+    
+    if (assignedResourceId) {
+      // Check if resource exists and belongs to tenant
+      const resourceExists = await safeExecutePrismaQuery(
+        async () => {
+          return await prisma.resource.findFirst({
+            where: {
+              id: assignedResourceId,
+              organizationId: tenantId
+            } as ExtendedResourceWhereInput
+          });
+        },
+        null,
+        `[${requestId}] Error verifying resource with ID ${assignedResourceId}`
+      );
+      
+      if (!resourceExists) {
+        console.warn(`[${requestId}] Resource not found: ${assignedResourceId}`);
+        return next(new AppError('Resource not found', 404));
+      }
+      
+      // Check if resource is available for the requested dates
+      if (parsedStartDate && parsedEndDate) {
+        const overlappingReservations = await safeExecutePrismaQuery(
+          async () => {
+            return await prisma.reservation.findMany({
+              where: {
+                organizationId: tenantId,
+                resourceId: assignedResourceId,
+                id: { not: id }, // Exclude current reservation
+                AND: [
+                  { startDate: { lte: parsedEndDate } },
+                  { endDate: { gte: parsedStartDate } }
+                ],
+                status: {
+                  in: [
+                    ExtendedReservationStatus.CONFIRMED, 
+                    ExtendedReservationStatus.CHECKED_IN, 
+                    ExtendedReservationStatus.PENDING_PAYMENT, 
+                    ExtendedReservationStatus.PARTIALLY_PAID
+                  ] as any
+                }
+              } as ExtendedReservationWhereInput
+            });
+          },
+          [],
+          `[${requestId}] Error checking resource availability for ${assignedResourceId}`
+        );
+        
+        if (overlappingReservations.length > 0) {
+          console.warn(`[${requestId}] Resource ${assignedResourceId} is not available for the requested dates`);
+          warnings.push(`The requested resource is not available for the selected dates. There are ${overlappingReservations.length} overlapping reservations.`);
+        }
+      }
+      
+      updateData.resourceId = assignedResourceId;
+    } else if (determinedSuiteType && !existingReservation.resourceId && parsedStartDate && parsedEndDate) {
+      // Try to auto-assign a resource if none was specified but we have a suite type
+      console.log(`[${requestId}] Attempting to auto-assign a resource for suite type: ${determinedSuiteType}`);
+      
+      try {
+        // First get all resources matching the suite type
+        const resources = await prisma.resource.findMany({
+          where: {
+            organizationId: tenantId,
+            type: determinedSuiteType
+          } as ExtendedResourceWhereInput
+        });
+        
+        // Then filter out resources with overlapping reservations
+        const availableResources = [];
+        
+        for (const resource of resources) {
+          try {
+            const overlappingReservations = await prisma.reservation.findMany({
+              where: {
+                organizationId: tenantId,
+                resourceId: resource.id,
+                id: { not: id }, // Exclude current reservation
+                AND: [
+                  { startDate: { lte: parsedEndDate } },
+                  { endDate: { gte: parsedStartDate } }
+                ],
+                status: {
+                  in: [
+                    ExtendedReservationStatus.CONFIRMED, 
+                    ExtendedReservationStatus.CHECKED_IN, 
+                    ExtendedReservationStatus.PENDING_PAYMENT, 
+                    ExtendedReservationStatus.PARTIALLY_PAID
+                  ] as any
+                }
+              } as ExtendedReservationWhereInput
+            });
+            
+            if (overlappingReservations.length === 0) {
+              availableResources.push(resource);
+            }
+          } catch (error) {
+            console.warn(`[${requestId}] Error checking availability for resource ${resource.id}:`, error);
+          }
+        }
+        
+        if (availableResources.length > 0) {
+          // Assign the first available resource
+          assignedResourceId = availableResources[0].id;
+          updateData.resourceId = assignedResourceId;
+          console.log(`[${requestId}] Auto-assigned resource: ${assignedResourceId}`);
+        } else {
+          console.warn(`[${requestId}] No available resources found for suite type: ${determinedSuiteType}`);
+          warnings.push(`No available resources found for suite type: ${determinedSuiteType}. The reservation will be updated without a resource assignment.`);
+        }
+      } catch (error) {
+        console.warn(`[${requestId}] Error auto-assigning resource:`, error);
+        warnings.push('Failed to auto-assign a resource. The reservation will be updated without a resource assignment.');
+      }
+    }
+    
+    // Handle other fields
+    if (status) updateData.status = status;
+    if (price !== undefined) updateData.price = parseFloat(String(price));
+    if (deposit !== undefined) updateData.deposit = parseFloat(String(deposit));
+    if (notes !== undefined) updateData.notes = notes;
+    if (staffNotes !== undefined) updateData.staffNotes = staffNotes;
+    
+    console.log(`[${requestId}] Updating reservation with data:`, JSON.stringify(updateData));
+    
+    // Update reservation with safe execution
+    const updatedReservation = await safeExecutePrismaQuery(
+      async () => {
+        // For update operations, we need to handle the extended where input differently
+        // First verify the reservation exists and belongs to this tenant
+        const reservationToUpdate = await prisma.reservation.findFirst({
+          where: {
+            id,
+            organizationId: tenantId
+          } as ExtendedReservationWhereInput,
+          select: { id: true }
+        });
+        
+        if (!reservationToUpdate) {
+          throw new Error(`Reservation ${id} not found or does not belong to organization ${tenantId}`);
+        }
+        
+        // Then use only the ID for the update operation which accepts a WhereUniqueInput
+        return await prisma.reservation.update({
+          where: { id },
+          data: updateData,
+          include: {
+            customer: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true
+              }
+            },
+            pet: {
+              select: {
+                name: true,
+                breed: true,
+                age: true
+              }
+            },
+            resource: {
+              select: {
+                name: true,
+                type: true,
+                location: true
+              }
+            }
+          } as unknown as ExtendedReservationInclude
+        });
+      },
+      null, // Null fallback if there's an error
+      `[${requestId}] Error updating reservation with ID ${id}`
+    );
+
+    if (!updatedReservation) {
+      console.error(`[${requestId}] Failed to update reservation: ${id}`);
+      return next(new AppError('Failed to update reservation', 500));
+    }
+    
+    // Process add-on services if provided
+    if (addOnServices && Array.isArray(addOnServices)) {
+      try {
+        console.log(`[${requestId}] Processing ${addOnServices.length} add-on services`);
+        
+        // First remove existing add-on services
+        await safeExecutePrismaQuery(
+          async () => {
+            return await prisma.reservationAddOn.deleteMany({
+              where: {
+                reservationId: id,
+                organizationId: tenantId
+              } as any
+            });
+          },
+          null,
+          `[${requestId}] Error removing existing add-on services for reservation ${id}`
+        );
+        
+        // Then add new ones
+        for (const addOn of addOnServices) {
+          if (addOn.serviceId) {
+            await safeExecutePrismaQuery(
+              async () => {
+                return await prisma.reservationAddOn.create({
+                  data: {
+                    reservationId: id,
+                    serviceId: addOn.serviceId,
+                    quantity: addOn.quantity || 1,
+                    notes: addOn.notes || '',
+                    organizationId: tenantId
+                  } as any
+                });
+              },
+              null,
+              `[${requestId}] Error adding add-on service ${addOn.serviceId} to reservation ${id}`
+            );
+          }
+        }
+      } catch (error) {
+        console.warn(`[${requestId}] Error processing add-on services:`, error);
+        warnings.push('There was an issue processing add-on services, but the reservation was updated successfully.');
+      }
+    }
+
+    console.log(`[${requestId}] Successfully updated reservation: ${id}`);
+    
+    // Prepare response message
+    let message = 'Reservation updated successfully';
+    if (warnings.length > 0) {
+      message += ` with warnings: ${warnings.join(' ')}`;  
+    }
+    
     res.status(200).json({
       status: 'success',
+      message,
       data: {
         reservation: updatedReservation
       }
     });
   } catch (error) {
-    console.error(`Error updating reservation with ID ${req.params.id}:`, error);
+    console.error(`[${requestId}] Error updating reservation with ID ${req.params.id}:`, error);
     // More graceful error handling
     return next(new AppError('Failed to update reservation', 500));
   }
@@ -490,44 +1329,128 @@ export const deleteReservation = async (
   res: Response,
   next: NextFunction
 ) => {
+  // Generate a unique request ID for logging
+  const requestId = `delete-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+  console.log(`[${requestId}] Processing delete reservation request for ID: ${req.params.id}`);
+  
   try {
     // Get tenant ID from request - added by tenant middleware
     const tenantId = req.tenantId;
     if (!tenantId) {
+      console.warn(`[${requestId}] Missing tenant ID in request`);
       return next(new AppError('Tenant ID is required', 401));
     }
 
     const { id } = req.params;
+    if (!id) {
+      console.warn(`[${requestId}] Missing reservation ID in request`);
+      return next(new AppError('Reservation ID is required', 400));
+    }
+    
+    // First, check if the reservation exists and belongs to this tenant
+    const existingReservation = await safeExecutePrismaQuery(
+      async () => {
+        return await prisma.reservation.findFirst({
+          where: {
+            id,
+            organizationId: tenantId
+          } as ExtendedReservationWhereInput,
+          select: {
+            id: true,
+            status: true,
+            startDate: true,
+            endDate: true,
+            customerId: true,
+            petId: true,
+            resourceId: true
+          }
+        });
+      },
+      null,
+      `[${requestId}] Error finding reservation with ID ${id}`
+    );
+
+    if (!existingReservation) {
+      console.warn(`[${requestId}] Reservation not found or does not belong to tenant: ${tenantId}`);
+      return next(new AppError('Reservation not found', 404));
+    }
+    
+    console.log(`[${requestId}] Found existing reservation: ${id}`);
+    
+    // Check if the reservation has already started or is in progress
+    const currentDate = new Date();
+    const startDate = existingReservation.startDate ? new Date(existingReservation.startDate) : null;
+    const endDate = existingReservation.endDate ? new Date(existingReservation.endDate) : null;
+    
+    let warnings = [];
+    
+    if (startDate && startDate <= currentDate) {
+      if (endDate && endDate >= currentDate) {
+        console.warn(`[${requestId}] Attempting to delete an active reservation: ${id}`);
+        warnings.push('Deleting an active reservation that is currently in progress.');
+      } else {
+        console.warn(`[${requestId}] Attempting to delete a past reservation: ${id}`);
+        warnings.push('Deleting a reservation that has already occurred.');
+      }
+    }
+    
+    // Check if the reservation has any related records that need to be cleaned up
+    try {
+      // First clean up any add-on services
+      await safeExecutePrismaQuery(
+        async () => {
+          return await prisma.reservationAddOn.deleteMany({
+            where: {
+              reservationId: id,
+              organizationId: tenantId
+            } as any
+          });
+        },
+        null,
+        `[${requestId}] Error deleting add-on services for reservation ${id}`
+      );
+      
+      console.log(`[${requestId}] Successfully cleaned up related add-on services for reservation: ${id}`);
+    } catch (error) {
+      console.warn(`[${requestId}] Error cleaning up related records for reservation ${id}:`, error);
+      warnings.push('There was an issue cleaning up related records, but the reservation will still be deleted.');
+    }
 
     // Delete reservation with safe execution
     const deletedReservation = await safeExecutePrismaQuery(
       async () => {
-        // Use type assertion for where clause to handle organizationId
-        const whereClause: any = {
-          id
-        };
-        
-        // Add organizationId for tenant isolation
-        whereClause.organizationId = tenantId;
-        
+        // For delete operations, we need to use a WhereUniqueInput which only allows unique identifiers
+        // Since we've already verified the reservation exists and belongs to this tenant, we can safely delete by ID
         return await prisma.reservation.delete({
-          where: whereClause
+          where: {
+            id
+          }
         });
       },
       null, // Null fallback if there's an error
-      `Error deleting reservation with ID ${id}`
+      `[${requestId}] Error deleting reservation with ID ${id}`
     );
 
     if (!deletedReservation) {
-      return next(new AppError('Reservation not found', 404));
+      console.error(`[${requestId}] Failed to delete reservation: ${id}`);
+      return next(new AppError('Failed to delete reservation', 500));
+    }
+    
+    console.log(`[${requestId}] Successfully deleted reservation: ${id}`);
+    
+    // Prepare response message
+    let message = 'Reservation deleted successfully';
+    if (warnings.length > 0) {
+      message += ` with warnings: ${warnings.join(' ')}`;  
     }
 
     res.status(200).json({
       status: 'success',
+      message,
       data: null
     });
   } catch (error) {
-    console.error(`Error deleting reservation with ID ${req.params.id}:`, error);
+    console.error(`[${requestId}] Error deleting reservation with ID ${req.params.id}:`, error);
     // More graceful error handling
     return next(new AppError('Failed to delete reservation', 500));
   }
@@ -539,6 +1462,9 @@ export const deleteReservation = async (
  * 
  * @route GET /api/v1/reservations/customer/:customerId
  * @param {string} req.params.customerId - Customer ID
+ * @param {string} req.query.status - Optional filter by reservation status
+ * @param {string} req.query.startDate - Optional filter by start date
+ * @param {string} req.query.endDate - Optional filter by end date
  * @param {string} req.tenantId - The tenant ID (provided by middleware)
  */
 export const getCustomerReservations = async (
@@ -546,64 +1472,216 @@ export const getCustomerReservations = async (
   res: Response,
   next: NextFunction
 ) => {
+  // Generate a unique request ID for logging
+  const requestId = `getCustomer-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+  console.log(`[${requestId}] Processing get customer reservations request for customer: ${req.params.customerId}`);
+  
   try {
     // Get tenant ID from request - added by tenant middleware
     const tenantId = req.tenantId;
     if (!tenantId) {
+      console.warn(`[${requestId}] Missing tenant ID in request`);
       return next(new AppError('Tenant ID is required', 401));
     }
 
     const { customerId } = req.params;
+    if (!customerId) {
+      console.warn(`[${requestId}] Missing customer ID in request params`);
+      return next(new AppError('Customer ID is required', 400));
+    }
+
+    console.log(`[${requestId}] Fetching reservations for customer ${customerId} in organization ${tenantId}`);
+    
+    // Check if customer exists and belongs to this tenant
+    const customerExists = await safeExecutePrismaQuery(
+      async () => {
+        return await prisma.customer.findFirst({
+          where: {
+            id: customerId,
+            organizationId: tenantId
+          } as ExtendedCustomerWhereInput,
+          select: { id: true }
+        });
+      },
+      null,
+      `[${requestId}] Error checking if customer exists`
+    );
+
+    if (!customerExists) {
+      console.warn(`[${requestId}] Customer ${customerId} not found or does not belong to organization ${tenantId}`);
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Customer not found'
+      });
+    }
+
+    // Build filter conditions
+    const whereConditions: ExtendedReservationWhereInput = {
+      customerId,
+      organizationId: tenantId
+    };
+    const warnings: string[] = [];
+
+    // Add status filter if provided
+    if (req.query.status) {
+      // Validate status against known values
+      const status = req.query.status as string;
+      const validStatuses = Object.values(ExtendedReservationStatus);
+      
+      if (validStatuses.includes(status as any)) {
+        whereConditions.status = status as any;
+        console.log(`[${requestId}] Filtering by status: ${status}`);
+      } else {
+        console.warn(`[${requestId}] Invalid status filter: ${status}`);
+        warnings.push(`Invalid status filter: ${status} was ignored`);
+      }
+    }
+
+    // Add date range filters if provided with validation
+    if (req.query.startDate) {
+      try {
+        const startDate = new Date(req.query.startDate as string);
+        if (!isNaN(startDate.getTime())) {
+          whereConditions.startDate = {
+            gte: startDate
+          };
+          console.log(`[${requestId}] Filtering by start date >= ${startDate.toISOString()}`);
+        } else {
+          console.warn(`[${requestId}] Invalid start date: ${req.query.startDate}`);
+          warnings.push(`Invalid start date format: ${req.query.startDate} was ignored`);
+        }
+      } catch (error) {
+        console.warn(`[${requestId}] Error parsing start date: ${req.query.startDate}`, error);
+        warnings.push(`Invalid start date: ${req.query.startDate} was ignored`);
+      }
+    }
+
+    if (req.query.endDate) {
+      try {
+        const endDate = new Date(req.query.endDate as string);
+        if (!isNaN(endDate.getTime())) {
+          whereConditions.endDate = {
+            lte: endDate
+          };
+          console.log(`[${requestId}] Filtering by end date <= ${endDate.toISOString()}`);
+        } else {
+          console.warn(`[${requestId}] Invalid end date: ${req.query.endDate}`);
+          warnings.push(`Invalid end date format: ${req.query.endDate} was ignored`);
+        }
+      } catch (error) {
+        console.warn(`[${requestId}] Error parsing end date: ${req.query.endDate}`, error);
+        warnings.push(`Invalid end date: ${req.query.endDate} was ignored`);
+      }
+    }
+
+    console.log(`[${requestId}] Executing customer reservations query with filters:`, JSON.stringify(whereConditions));
 
     // Get customer reservations with safe execution
     const reservations = await safeExecutePrismaQuery(
       async () => {
-        // Use type assertion for where clause to handle organizationId
-        const whereClause: ExtendedReservationWhereInput = {
-          customerId,
-          organizationId: tenantId
-        };
-        
         return await prisma.reservation.findMany({
-          where: whereClause,
+          where: whereConditions,
           orderBy: {
             startDate: 'desc'
           },
           include: {
             pet: {
               select: {
+                id: true,
                 name: true,
-                breed: true
+                breed: true,
+                age: true,
+                species: true
               }
             },
             resource: {
               select: {
+                id: true,
                 name: true,
-                type: true
+                type: true,
+                location: true
+              }
+            },
+            addOns: {
+              include: {
+                addOn: true
               }
             }
           } as unknown as ExtendedReservationInclude
         });
       },
       [], // Empty array fallback if there's an error
-      `Error fetching reservations for customer ${customerId}`
+      `[${requestId}] Error fetching reservations for customer ${customerId}`
     );
 
-    res.status(200).json({
+    console.log(`[${requestId}] Retrieved ${reservations.length} reservations for customer ${customerId}`);
+
+    // Check for data integrity issues
+    let dataIntegrityIssues = false;
+    const processedReservations = reservations.map(reservation => {
+      const processed = { ...reservation };
+      
+      // Handle potential date formatting issues defensively
+      try {
+        if (reservation.startDate) {
+          processed.startDate = new Date(reservation.startDate);
+        }
+        if (reservation.endDate) {
+          processed.endDate = new Date(reservation.endDate);
+        }
+        if (reservation.createdAt) {
+          processed.createdAt = new Date(reservation.createdAt);
+        }
+        if (reservation.updatedAt) {
+          processed.updatedAt = new Date(reservation.updatedAt);
+        }
+      } catch (error) {
+        console.warn(`[${requestId}] Error formatting dates for reservation ${reservation.id}:`, error);
+        dataIntegrityIssues = true;
+      }
+      
+      // Check for missing related data
+      if (reservation.petId && !reservation.pet) {
+        console.warn(`[${requestId}] Data integrity issue: Reservation ${reservation.id} has petId but no pet data`);
+        dataIntegrityIssues = true;
+      }
+      
+      if (reservation.resourceId && !reservation.resource) {
+        console.warn(`[${requestId}] Data integrity issue: Reservation ${reservation.id} has resourceId but no resource data`);
+        dataIntegrityIssues = true;
+      }
+      
+      return processed;
+    });
+    
+    if (dataIntegrityIssues) {
+      warnings.push('Some reservations have data integrity issues. Related data may be missing or incomplete.');
+    }
+
+    console.log(`[${requestId}] Successfully completed get customer reservations request`);
+    
+    // Prepare response with warnings if any
+    const responseData: any = {
       status: 'success',
       data: {
-        reservations
+        reservations: processedReservations
       }
-    });
+    };
+    
+    if (warnings.length > 0) {
+      responseData.warnings = warnings;
+    }
+
+    res.status(200).json(responseData);
   } catch (error) {
-    console.error(`Error fetching reservations for customer ${req.params.customerId}:`, error);
+    console.error(`[${requestId}] Error fetching reservations for customer ${req.params.customerId}:`, error);
     // More graceful error handling - return empty results instead of error
     return res.status(200).json({
       status: 'success',
       data: {
-        reservations: [],
-        message: 'Customer reservations retrieved with limited data'
-      }
+        reservations: []
+      },
+      warnings: ['An error occurred while fetching customer reservations. Returning empty results.']
     });
   }
 };

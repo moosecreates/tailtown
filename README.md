@@ -92,14 +92,30 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ## Development Guidelines
 
-### Schema Alignment
-We've implemented a robust approach to handle Prisma schema mismatches:
+### Schema Alignment and Database Migration
+We've implemented a comprehensive approach to handle Prisma schema mismatches and database migrations:
+
+#### Schema Alignment Strategy
 - Backend controllers use defensive programming to handle missing tables/fields
 - Raw SQL queries with try/catch blocks for tables that may not exist in all environments
 - Graceful fallbacks to empty arrays or default values when schema elements are missing
 - TypeScript type safety with explicit typing for raw query results
+- Runtime schema validation to detect and report missing tables and columns
+- Two-step approach for Prisma operations with type compatibility issues (see TypeScript Improvements)
 
-This approach ensures the API remains stable even when the schema evolves or differs between environments.
+#### Database Migration Tools
+- Raw SQL migration scripts for creating critical tables and columns
+- Migration runner script with error handling and transaction support
+- Database connection test utility to diagnose connectivity issues
+
+#### TypeScript Improvements
+- Enhanced module resolution configuration for better import handling
+- Fixed type compatibility issues between extended and standard Prisma input types
+- Implemented defensive programming patterns for TypeScript type safety
+- Detailed documentation in `services/reservation-service/docs/TYPESCRIPT-FIXES.md`
+- Detailed schema validation reporting on service startup
+
+This approach ensures the API remains stable even when the schema evolves or differs between environments. For detailed migration instructions, see our [Database Migration Guide](./services/reservation-service/DATABASE-MIGRATION.md).
 
 ### API Service Layer
 We've implemented a shared API service layer to ensure consistency across all microservices as we transition to a domain-driven architecture. The API layer provides:
