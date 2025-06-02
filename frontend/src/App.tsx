@@ -26,6 +26,7 @@ import ReservationEdit from './pages/reservations/ReservationEdit';
 import CalendarPage from './pages/calendar/CalendarPage';
 import GroomingCalendarPage from './pages/calendar/GroomingCalendarPage';
 import TrainingCalendarPage from './pages/calendar/TrainingCalendarPage';
+
 import Services from './pages/services/Services';
 import ServiceDetails from './pages/services/ServiceDetails';
 import Resources from './pages/resources/Resources';
@@ -114,6 +115,8 @@ const AppRoutes = () => {
         
         {/* Add any test routes here if needed */}
       </Route>
+
+      {/* Test Routes - removed during cleanup */}
 
       {/* 404 Route */}
       <Route path="*" element={<NotFound />} />
