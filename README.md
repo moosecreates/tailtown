@@ -86,6 +86,16 @@ See [Navigation Documentation](./docs/development/Navigation.md) for details on 
 
 ## Development Guidelines
 
+### API Service Layer
+We've implemented a shared API service layer to ensure consistency across all microservices as we transition to a domain-driven architecture. The API layer provides:
+- Standardized API response formats
+- Multi-tenancy support via middleware
+- Consistent error handling
+- Request validation with Zod
+- Service factory for quick bootstrapping
+
+See [API Service Layer Documentation](./docs/architecture/API-SERVICE-LAYER.md) for implementation details and migration guidelines.
+
 ### Form Standards
 To ensure consistency across the application, we've established guidelines for creating forms. These guidelines cover:
 - Material UI component usage
