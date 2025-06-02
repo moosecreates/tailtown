@@ -1,0 +1,137 @@
+// Enhanced Reservation System - Data Schema Extensions
+// This file contains Prisma schema extensions for the enhanced reservation system
+
+// PetFeedingPreference model to store detailed feeding information
+model PetFeedingPreference {
+  id                String        @id @default(uuid())
+  petId             String
+  reservationId     String?       // Optional - can be null for default preferences
+  feedingSchedule   FeedingTime[] // Array of feeding times (AM, LUNCH, PM, SNACK)
+  useHouseFood      Boolean       @default(false) 
+  allowAddIns       Boolean       @default(false) // Permission for staff to add toppings when not eating
+  probioticDetails  Json?         // Structured data for probiotic administration
+  specialInstructions String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  // Relations
+  pet               Pet           @relation(fields: [petId], references: [id])
+  reservation       Reservation?  @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  
+  @@map("pet_feeding_preferences")
+  @@index([petId], name: "feeding_pet_idx")
+  @@index([reservationId], name: "feeding_reservation_idx")
+}
+
+// Medication model to store detailed medication information
+model PetMedication {
+  id                String        @id @default(uuid())
+  petId             String
+  reservationId     String?       // Optional - can be null for permanent medications
+  name              String
+  dosage            String
+  frequency         MedicationFrequency
+  timingSchedule    MedicationTiming[]
+  administrationMethod String?    // Oral, injection, topical, etc.
+  specialInstructions String?
+  startDate         DateTime?
+  endDate           DateTime?
+  isActive          Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  // Relations
+  pet               Pet           @relation(fields: [petId], references: [id])
+  reservation       Reservation?  @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  
+  @@map("pet_medications")
+  @@index([petId], name: "medication_pet_idx")
+  @@index([reservationId], name: "medication_reservation_idx")
+}
+
+// RecurringPattern model to store detailed recurrence information
+model RecurringReservationPattern {
+  id                String        @id @default(uuid())
+  parentReservationId String      // The original reservation that created this pattern
+  frequency         RecurrenceFrequency
+  daysOfWeek        Int[]         // Array of days (0-6, Sunday to Saturday)
+  interval          Int           @default(1) // Every X days/weeks/months
+  endDate           DateTime
+  maxOccurrences    Int?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  // Relations
+  parentReservation Reservation   @relation("RecurrencePattern", fields: [parentReservationId], references: [id], onDelete: Cascade)
+  childReservations Reservation[] @relation("RecurrenceSeries")
+  
+  @@map("recurring_reservation_patterns")
+}
+
+// ===== ENUMS =====
+
+enum FeedingTime {
+  AM
+  LUNCH
+  PM
+  SNACK
+}
+
+enum MedicationFrequency {
+  ONCE_DAILY
+  TWICE_DAILY
+  THREE_TIMES_DAILY
+  FOUR_TIMES_DAILY
+  AS_NEEDED
+  CUSTOM
+}
+
+enum MedicationTiming {
+  MORNING
+  MIDDAY
+  EVENING
+  NIGHT
+  WITH_FOOD
+  BEFORE_FOOD
+  AFTER_FOOD
+  CUSTOM
+}
+
+enum RecurrenceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  CUSTOM
+}
+
+// ===== EXTENSIONS TO EXISTING MODELS =====
+
+// Extensions to the Reservation model
+model Reservation {
+  // Existing fields...
+  
+  // New relation fields
+  feedingPreferences PetFeedingPreference[]
+  medications        PetMedication[]
+  lodgingPreference  LodgingPreference @default(STANDARD)
+  
+  // Recurring reservation relations
+  recurringPattern   RecurringReservationPattern? @relation("RecurrencePattern")
+  partOfSeries       RecurringReservationPattern? @relation("RecurrenceSeries")
+}
+
+// Extensions to the Pet model
+model Pet {
+  // Existing fields...
+  
+  // New relation fields
+  defaultFeedingPreferences PetFeedingPreference[]
+  medications               PetMedication[]
+}
+
+// Additional enums
+enum LodgingPreference {
+  STANDARD           // Default single pet lodging
+  SHARED_WITH_SIBLING // Lodged with another pet from same owner
+  SEPARATE_FROM_SIBLING // Explicitly separate from sibling
+}
