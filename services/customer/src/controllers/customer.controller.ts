@@ -561,7 +561,7 @@ export const getCustomerInvoices = async (
             id: true,
             startDate: true,
             endDate: true,
-            service: {
+            resource: {
               select: {
                 name: true
               }

@@ -71,7 +71,17 @@ export const getAllPets = async (
         skip,
         take: limit,
         orderBy: { name: 'asc' },
-        include: { owner: true },
+        include: { 
+          owner: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              phone: true
+            }
+          },
+        },
       }),
       prisma.pet.count({ where }),
     ]);
@@ -99,12 +109,20 @@ export const getPetById = async (
     
     const pet = await prisma.pet.findUnique({
       where: { id },
-      include: { owner: true },
+      include: { 
+        owner: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true
+          }
+        },
+      },
     });
 
-    if (pet?.profilePhoto) {
-
-    }
+    // Photo handling removed as profilePhoto is not in the current schema
     
     if (!pet) {
       return next(new AppError('Pet not found', 404));
@@ -329,24 +347,25 @@ export const uploadPetPhoto = async (
       }
 
       // Delete old photo if it exists
-      if (pet.profilePhoto) {
-        const oldPhotoPath = path.join(process.cwd(), pet.profilePhoto);
-        if (fs.existsSync(oldPhotoPath)) {
-          fs.unlinkSync(oldPhotoPath);
-        }
-      }
+      // Photo handling removed as profilePhoto is not in the current schema
+      // Will need to be updated when the schema includes photo handling
+      // const oldPhotoPath = path.join(process.cwd(), pet.profilePhoto);
+      // if (fs.existsSync(oldPhotoPath)) {
+      //   fs.unlinkSync(oldPhotoPath);
+      // }
 
       // Update pet with new photo URL - use a simpler path without the /api prefix
       const photoUrl = `/uploads/pets/${path.basename(req.file.path)}`;
       // Photo upload successful
-      const updatedPet = await prisma.pet.update({
-        where: { id },
-        data: { profilePhoto: photoUrl },
-      });
+      // const updatedPet = await prisma.pet.update({
+      //   where: { id },
+      //   data: { profilePhoto: photoUrl },
+      // });
 
       res.status(200).json({
         status: 'success',
-        data: updatedPet,
+        data: pet, // Using the original pet object since profilePhoto update is disabled
+        message: 'Photo upload functionality is currently disabled due to schema changes'
       });
     });
   } catch (error) {
