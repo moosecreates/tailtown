@@ -32,6 +32,19 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - Customer account balance management
 - Invoice status tracking (draft, sent, paid, etc.)
 
+### Environment Setup
+- Each service has its own `.env` file in its respective directory
+- Frontend environment file: `/frontend/.env`
+- Reservation service environment file: `/services/reservation-service/.env`
+  - **Critical**: `DATABASE_URL` must be properly set for the reservation service to connect to PostgreSQL
+- Customer service environment file: `/services/customer/.env`
+- Key environment variables:
+  - `DATABASE_URL`: PostgreSQL connection string (format: `postgresql://username:password@localhost:5432/tailtown?schema=public`)
+  - `PORT`: Service port number (default: 3002 for customer service, can be changed to avoid port conflicts)
+  - `NODE_ENV`: Environment mode (development, test, production)
+  - `JWT_SECRET`: Secret key for authentication
+- For a complete list of all environment variables and their descriptions, see our detailed [Environment Variables Documentation](./docs/Environment-Variables.md)
+
 ### Service Management
 - Customizable service catalog
 - Service duration and capacity settings
@@ -75,8 +88,18 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - PostgreSQL database
 - RESTful API architecture
 - JWT-based authentication
+- Graceful error handling for schema mismatches
 
 ## Development Guidelines
+
+### Schema Alignment
+We've implemented a robust approach to handle Prisma schema mismatches:
+- Backend controllers use defensive programming to handle missing tables/fields
+- Raw SQL queries with try/catch blocks for tables that may not exist in all environments
+- Graceful fallbacks to empty arrays or default values when schema elements are missing
+- TypeScript type safety with explicit typing for raw query results
+
+This approach ensures the API remains stable even when the schema evolves or differs between environments.
 
 ### API Service Layer
 We've implemented a shared API service layer to ensure consistency across all microservices as we transition to a domain-driven architecture. The API layer provides:
@@ -197,7 +220,8 @@ See [Form Guidelines](./docs/development/FormGuidelines.md) for detailed informa
 
 ### Available URLs
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:3003
+- Customer Service API: http://localhost:3002 (or alternative port if specified)
+- Other Backend Services: See service-specific documentation
 
 ## API Documentation
 
