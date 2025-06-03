@@ -26,7 +26,15 @@
    - Service duration-based reservation end time calculation
    - Kennel calendar implementation
 
-3. **Recent Fixes**
+## Documentation
+- We follow a standardized documentation structure:
+  - Project-wide documentation in `/docs` with subdirectories for architecture, development, features, operations, and changelog
+  - Service-specific documentation in `/services/{service-name}/docs`
+- For a complete overview of available documentation, see the [Documentation section in README.md](../README.md#documentation)
+- Swagger documentation is planned but not yet implemented
+- Each service has its own README.md with service-specific setup instructions
+
+## Recent Fixes
    - Fixed suite status display between main kennel board and suite details modal
    - Implemented proper status determination for kennels
    - Added status field to reservation edit modal

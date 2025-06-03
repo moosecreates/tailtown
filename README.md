@@ -144,38 +144,52 @@ We've adopted a balanced approach to data modeling that maintains domain boundar
 - Partitioning approach for time-series data like reservations
 
 See [Data Modeling Strategy](./docs/architecture/DATA-MODELING-STRATEGY.md) for the complete approach and implementation guidelines.
-### Form Standards
-To ensure consistency across the application, we've established guidelines for creating forms. These guidelines cover:
-- Material UI component usage
-- Label positioning and behavior
-- Accessibility requirements
-- Error handling
-- Form validation
-
-See [Form Guidelines](./docs/development/FormGuidelines.md) for detailed information.
 
 ## Documentation
 
-### Architecture Documents
-- [API Service Layer](./docs/architecture/API-SERVICE-LAYER.md) - Shared API abstraction layer for microservices
-- [Data Modeling Strategy](./docs/architecture/DATA-MODELING-STRATEGY.md) - Database design principles and optimization approaches
-- [SaaS Scaling Assessment](./docs/architecture/SaaS-Scaling-Assessment.md) - Analysis and roadmap for scaling to multi-tenant SaaS
-- [Financial Data Architecture](./docs/architecture/financial-data-architecture.md) - Financial data management and calculations
+We follow a standardized documentation structure to ensure consistency and ease of navigation:
 
-### Feature Documentation
-- [Calendar Components](./docs/features/CalendarComponents.md) - Calendar design and implementation
-- [Kennel Calendar](./docs/features/KennelCalendar.md) - Kennel-specific calendar functionality
-- [Checkout Process](./docs/features/CheckoutProcess.md) - End-to-end checkout workflow
-- [Reservation System](./docs/features/Reservations.md) - Reservation booking and management
-- [Add-On System](./docs/features/AddOnSystem.md) - Service add-on implementation
+### Project-wide Documentation
 
-### Development Guides
-- [Navigation Structure](./docs/development/Navigation.md) - Application navigation design
-- [Form Guidelines](./docs/development/FormGuidelines.md) - UI form standards and patterns
-- [Staff Scheduling Implementation](./docs/development/StaffSchedulingImplementation.md) - Staff scheduling features
+- **Main Documentation**
+  - [Current State](./docs/CURRENT_STATE.md) - Overview of the current system state and features
+  - [Roadmap](./docs/ROADMAP.md) - Future development plans
 
-### Changelogs
-- [Recent Updates](./docs/changelog/) - Directory containing all change history
+- **Architecture Documentation** (`/docs/architecture/`)
+  - [Architecture Overview](./docs/architecture/Architecture.md) - System architecture overview
+  - [API Service Layer](./docs/architecture/API-SERVICE-LAYER.md) - API service layer design
+  - [SaaS Implementation Progress](./docs/architecture/SaaS-Implementation-Progress.md) - Progress on SaaS implementation
+  - [Service Architecture](./docs/architecture/SERVICE-ARCHITECTURE.md) - Microservice architecture documentation
+  - [Data Modeling Strategy](./docs/architecture/DATA-MODELING-STRATEGY.md) - Database design principles
+
+- **Development Guidelines** (`/docs/development/`)
+  - [Form Guidelines](./docs/development/FormGuidelines.md) - UI form standards and patterns
+  - [Schema Alignment Strategy](./docs/development/SchemaAlignmentStrategy.md) - Database schema management
+  - [Express Route Ordering](./docs/development/ExpressRouteOrderingBestPractices.md) - Best practices for Express.js routes
+  - [Staff Scheduling Implementation](./docs/development/StaffSchedulingImplementation.md) - Staff scheduling features
+
+- **Feature Documentation** (`/docs/features/`)
+  - [Kennel Calendar](./docs/features/KennelCalendar.md) - Kennel calendar implementation
+  - [Reservations](./docs/features/Reservations.md) - Reservation system details
+  - [Add-On System](./docs/features/AddOnSystem.md) - Service add-on implementation
+  - [Checkout Process](./docs/features/CheckoutProcess.md) - End-to-end checkout workflow
+
+- **Operations** (`/docs/operations/`)
+  - [Environment Variables](./docs/operations/Environment-Variables.md) - Documentation of environment variables
+  - [DevOps](./docs/operations/DevOps.md) - Deployment and operations guide
+
+- **Changelog** (`/docs/changelog/`)
+  - Release notes and change history organized by date
+
+### Service-specific Documentation
+
+- **Reservation Service** (`/services/reservation-service/docs/`)
+  - [Testing Guide](./services/reservation-service/docs/TESTING-GUIDE.md) - Testing patterns and best practices
+  - [TypeScript Fixes](./services/reservation-service/docs/TYPESCRIPT-FIXES.md) - TypeScript improvements
+  - [Date Conflict Validation](./services/reservation-service/docs/DATE-CONFLICT-VALIDATION.md) - Reservation conflict detection
+  - [Database Migration](./services/reservation-service/docs/DATABASE-MIGRATION.md) - Database migration procedures
+  - [Schema Alignment](./services/reservation-service/docs/README-SCHEMA-ALIGNMENT.md) - Schema alignment for reservation service
+  - [Refactoring Roadmap](./services/reservation-service/docs/REFACTORING-ROADMAP.md) - Planned refactoring work
 
 ## Project Structure
 
