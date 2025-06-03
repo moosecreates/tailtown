@@ -125,23 +125,102 @@ export function tenantMiddleware(options: {
 }
 
 /**
- * Error class for application-specific errors
+ * Enhanced Error class for application-specific errors
+ * Includes factory methods for creating standardized error instances
  */
 export class AppError extends Error {
   type: string;
+  statusCode: number;
+  isOperational: boolean;
   details?: any;
   
-  constructor(message: string, statusCode: number = 500, details?: any) {
+  constructor(message: string, statusCode: number = 500, details?: any, isOperational = true) {
     super(message);
     this.name = 'AppError';
+    this.statusCode = statusCode;
+    this.isOperational = isOperational;
     
     // Map status code to error type
     if (statusCode === 400) this.type = 'VALIDATION_ERROR';
     else if (statusCode === 401) this.type = 'UNAUTHORIZED_ERROR';
     else if (statusCode === 403) this.type = 'FORBIDDEN_ERROR';
     else if (statusCode === 404) this.type = 'NOT_FOUND_ERROR';
+    else if (statusCode === 409) this.type = 'CONFLICT_ERROR';
+    else if (statusCode === 422) this.type = 'UNPROCESSABLE_ENTITY';
     else this.type = 'SERVER_ERROR';
     
     this.details = details;
+    
+    // Capture stack trace
+    Error.captureStackTrace(this, this.constructor);
+  }
+  
+  /**
+   * Create a validation error (400)
+   * @param message - Error message
+   * @param details - Additional error details
+   */
+  static validationError(message: string, details?: any): AppError {
+    return new AppError(message, 400, details, true);
+  }
+  
+  /**
+   * Create an authorization error (401)
+   * @param message - Error message
+   * @param details - Additional error details
+   */
+  static authorizationError(message: string, details?: any): AppError {
+    return new AppError(message, 401, details, true);
+  }
+  
+  /**
+   * Create a forbidden error (403)
+   * @param message - Error message
+   * @param details - Additional error details
+   */
+  static forbiddenError(message: string, details?: any): AppError {
+    return new AppError(message, 403, details, true);
+  }
+  
+  /**
+   * Create a not found error (404)
+   * @param resource - Resource type that wasn't found
+   * @param id - ID of the resource that wasn't found
+   * @param details - Additional error details
+   */
+  static notFoundError(resource: string, id?: string | number, details?: any): AppError {
+    const message = id 
+      ? `${resource} with ID ${id} not found` 
+      : `${resource} not found`;
+    return new AppError(message, 404, details, true);
+  }
+  
+  /**
+   * Create a conflict error (409)
+   * @param message - Error message
+   * @param details - Additional error details
+   */
+  static conflictError(message: string, details?: any): AppError {
+    return new AppError(message, 409, details, true);
+  }
+  
+  /**
+   * Create a database error (500)
+   * @param message - Error message
+   * @param details - Additional error details
+   * @param isOperational - Whether this is an operational error
+   */
+  static databaseError(message: string, details?: any, isOperational = true): AppError {
+    return new AppError(message, 500, details, isOperational);
+  }
+  
+  /**
+   * Create a server error (500)
+   * @param message - Error message
+   * @param details - Additional error details
+   * @param isOperational - Whether this is an operational error
+   */
+  static serverError(message: string, details?: any, isOperational = true): AppError {
+    return new AppError(message, 500, details, isOperational);
   }
 }

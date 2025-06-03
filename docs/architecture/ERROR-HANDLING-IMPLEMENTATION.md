@@ -7,7 +7,7 @@ This document tracks the progress of implementing the standardized error handlin
 | Service | AppError Class | Error Handler Middleware | Async Error Handling | Logger Integration | Controller Examples |
 |---------|---------------|-------------------------|---------------------|-------------------|-------------------|
 | Shared Module | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Reservation Service | ✅ | ✅ | ✅ | ⚠️ (Using existing logger) | ⚠️ (Needs updating) |
+| Reservation Service | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Customer Service | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Frontend | ❌ | ❌ | ❌ | ❌ | ❌ |
 
@@ -24,6 +24,9 @@ This document tracks the progress of implementing the standardized error handlin
 - Updated error handler middleware with improved error handling and context
 - Added JWT error handling
 - Added request context to errors
+- Updated logger module to match standardized pattern
+- Refactored resource controller to use standardized error handling
+- Implemented `catchAsync` wrapper for all controller methods
 
 ### Customer Service
 - Implemented standardized `AppError` class with factory methods
@@ -33,21 +36,24 @@ This document tracks the progress of implementing the standardized error handlin
 
 ## Next Steps
 
-1. **Update Existing Controllers**:
-   - Update all controllers in the Reservation Service to use the new error handling pattern
-   - Update all controllers in the Customer Service to use the new error handling pattern
+1. **Update Remaining Controllers**:
+   - Update reservation controller in the Reservation Service to use the new error handling pattern
+   - Update any remaining controllers in the Customer Service to use the new error handling pattern
 
 2. **Linting and Testing**:
    - Address any ESLint issues in the implementation
    - Add tests for error handling scenarios
+   - Verify error handling in different environments (dev, test, prod)
 
 3. **Frontend Integration**:
    - Implement consistent error handling in the frontend
    - Create standardized error response parsing
+   - Add error handling utilities for API requests
 
 4. **Documentation**:
    - Update API documentation to reflect standardized error responses
    - Add examples of error responses to API documentation
+   - Create error handling guidelines for developers
 
 ## Known Issues
 
