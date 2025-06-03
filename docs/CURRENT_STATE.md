@@ -54,11 +54,19 @@
 - Grid-based kennel calendar for efficient boarding and daycare management
 
 ## Configuration Notes
-- Backend runs on port 3003
-- Frontend connects to backend via the API service (api.ts) which uses port 3003
-- The frontend .env file contains REACT_APP_API_URL=http://localhost:3002, but this is not currently used by the application
+- Customer Service runs on port 3003
+- Reservation Service runs on port 4003
+- Frontend connects to services via the API service layer:
+  - Customer Service: http://localhost:3003
+  - Reservation Service: http://localhost:4003
+- The frontend .env file should be updated to use the correct service URLs:
+  ```
+  REACT_APP_API_URL=http://localhost:3003
+  REACT_APP_RESERVATION_API_URL=http://localhost:4003
+  ```
 - PostgreSQL database runs on port 5433 with credentials postgres:postgres
 - Database name: 'customer'
+- See [Service Architecture Documentation](./architecture/SERVICE-ARCHITECTURE.md) for complete details on service boundaries and communication patterns
 
 ## Startup Process
 1. Start PostgreSQL (if not already running):

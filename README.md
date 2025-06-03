@@ -39,11 +39,12 @@ A modern, full-featured management system for pet resorts, providing comprehensi
   - **Critical**: `DATABASE_URL` must be properly set for the reservation service to connect to PostgreSQL
 - Customer service environment file: `/services/customer/.env`
 - Key environment variables:
-  - `DATABASE_URL`: PostgreSQL connection string (format: `postgresql://username:password@localhost:5432/tailtown?schema=public`)
-  - `PORT`: Service port number (default: 3002 for customer service, can be changed to avoid port conflicts)
+  - `DATABASE_URL`: PostgreSQL connection string (format: `postgresql://username:password@localhost:5433/customer?schema=public`)
+  - `PORT`: Service port number (3003 for customer service, 4003 for reservation service)
   - `NODE_ENV`: Environment mode (development, test, production)
   - `JWT_SECRET`: Secret key for authentication
 - For a complete list of all environment variables and their descriptions, see our detailed [Environment Variables Documentation](./docs/Environment-Variables.md)
+- For service architecture and port assignments, see our [Service Architecture Documentation](./docs/architecture/SERVICE-ARCHITECTURE.md)
 
 ### Service Management
 - Customizable service catalog
@@ -187,13 +188,28 @@ See [Form Guidelines](./docs/development/FormGuidelines.md) for detailed informa
 │   │   ├── types/          # TypeScript interfaces
 │   │   └── contexts/       # React contexts
 │   
-└── services/
-    └── customer/           # Customer service
-        ├── src/
-        │   ├── controllers/  # Route handlers
-        │   ├── routes/       # API routes
-        │   ├── middleware/   # Express middleware
-        │   └── prisma/       # Database schema
+├── services/
+│   ├── customer/           # Customer service (port 3003)
+│   │   ├── src/
+│   │   │   ├── controllers/  # Route handlers
+│   │   │   ├── routes/       # API routes
+│   │   │   ├── middleware/   # Express middleware
+│   │   │   └── prisma/       # Database schema
+│   │
+│   └── reservation-service/ # Reservation service (port 4003)
+│       ├── src/
+│       │   ├── controllers/  # Route handlers
+│       │   ├── routes/       # API routes
+│       │   ├── middleware/   # Express middleware
+│       │   ├── utils/        # Utility functions
+│       │   └── prisma/       # Database schema
+│       ├── docs/            # Service documentation
+│       └── tests/           # Test files
+│
+└── docs/                   # Project documentation
+    ├── architecture/       # Architecture documentation
+    ├── features/           # Feature documentation
+    └── development/        # Development guides
 ```
 
 ## Development Setup
@@ -243,8 +259,11 @@ See [Form Guidelines](./docs/development/FormGuidelines.md) for detailed informa
 
 ### Available URLs
 - Frontend: http://localhost:3000
-- Customer Service API: http://localhost:3002 (or alternative port if specified)
-- Other Backend Services: See service-specific documentation
+- Customer Service API: http://localhost:3003
+- Reservation Service API: http://localhost:4003
+- Health Check Endpoints:
+  - Customer Service: http://localhost:3003/health
+  - Reservation Service: http://localhost:4003/health
 
 ## API Documentation
 
