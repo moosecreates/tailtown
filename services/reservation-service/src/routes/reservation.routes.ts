@@ -9,7 +9,7 @@
  */
 
 import { Router } from 'express';
-// Import controller functions with explicit path
+// Import controller functions from the new modular structure
 import {
   getAllReservations,
   getReservationById,
@@ -17,7 +17,7 @@ import {
   updateReservation,
   deleteReservation,
   getCustomerReservations
-} from '../controllers/reservation/reservation.controller';
+} from '../controllers/reservation';
 
 const router = Router();
 
