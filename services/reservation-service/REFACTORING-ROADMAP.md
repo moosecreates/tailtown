@@ -30,19 +30,17 @@ This document outlines the completed work and next stages of the reservation ser
 - Successfully tested both single and batch resource availability endpoints
 - Documented best practices in API-SERVICE-LAYER.md
 
-## Next Stages
+### 4. Reservation Controller Refactoring 
 
-### 4. Reservation Controller Refactoring 🔄
-
-**Objective:** Enhance the reservation creation and management functionality
+**Objective:** Enhance the reservation controller with improved validation, error handling, and resource assignment
 
 **Tasks:**
-- Refactor reservation creation controller for better error handling
+- Fix TypeScript errors in reservation controller
 - Implement contextual validation for reservation fields
-- Add robust resource assignment with fallbacks
-- Enhance logging for better debugging
-- Implement suite type handling for different service types
-- Add comprehensive validation for reservation dates and conflicts
+- Add robust resource assignment with conflict detection
+- Enhance logging and error messages
+- Ensure suite type is correctly handled based on service context
+- Implement comprehensive date conflict validation
 
 **Success Criteria:**
 - Reservation creation works consistently across all service types

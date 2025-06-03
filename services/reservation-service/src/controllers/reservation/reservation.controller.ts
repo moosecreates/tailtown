@@ -9,6 +9,7 @@ import {
   ExtendedCustomerWhereInput,
   ExtendedPetWhereInput
 } from '../../types/prisma-extensions';
+import { detectReservationConflicts } from '../../utils/reservation-conflicts';
 
 /**
  * Helper function to determine suite type based on service type
@@ -526,6 +527,9 @@ export const createReservation = async (
   const requestId = `req-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   console.log(`[${requestId}] Processing reservation creation request`);
   
+  // Initialize warnings array for tracking non-blocking issues
+  const warnings: string[] = [];
+  
   try {
     // Get tenant ID from request - added by tenant middleware
     const tenantId = req.tenantId;
@@ -641,41 +645,29 @@ export const createReservation = async (
         return next(new AppError('Requested resource not found or not available', 404));
       }
       
-      // Check if resource is available for the requested dates
-      const overlappingReservations = await safeExecutePrismaQuery(
-        async () => {
-          return await prisma.reservation.findMany({
-            where: {
-              organizationId: tenantId,
-              resourceId: resourceId,
-              AND: [
-                { startDate: { lte: parsedEndDate } },
-                { endDate: { gte: parsedStartDate } }
-              ],
-              status: {
-                in: [
-                  ExtendedReservationStatus.CONFIRMED, 
-                  ExtendedReservationStatus.CHECKED_IN, 
-                  ExtendedReservationStatus.PENDING_PAYMENT, 
-                  ExtendedReservationStatus.PARTIALLY_PAID
-                ] as any
-              }
-            } as ExtendedReservationWhereInput
-          });
-        },
-        [],
-        `[${requestId}] Error checking resource availability`
-      );
+      // Use the conflict detection utility to check for conflicts
+      const conflictResult = await detectReservationConflicts({
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
+        resourceId,
+        tenantId,
+        petId
+      });
       
-      if (overlappingReservations.length > 0) {
-        console.warn(`[${requestId}] Resource ${resourceId} has overlapping reservations for the requested dates`);
-        return next(new AppError('Resource is not available for the requested dates', 409));
+      if (conflictResult.hasConflicts) {
+        console.warn(`[${requestId}] Resource ${resourceId} has conflicts for the requested dates`);
+        return next(new AppError(
+          conflictResult.warnings.length > 0 
+            ? conflictResult.warnings[0] 
+            : 'Resource is not available for the requested dates', 
+          409
+        ));
       }
     } else {
       // Auto-assign a resource based on suite type if none provided
       console.log(`[${requestId}] No resource specified, attempting auto-assignment for suite type: ${determinedSuiteType}`);
       
-      // Find available resources matching the suite type
+      // Find available resources matching the suite type using the conflict detection utility
       const availableResources = await safeExecutePrismaQuery(
         async () => {
           // First get all resources matching the suite type
@@ -690,26 +682,16 @@ export const createReservation = async (
           const availableResourceIds = [];
           
           for (const resource of resources) {
-            const overlappingReservations = await prisma.reservation.findMany({
-              where: {
-                organizationId: tenantId,
-                resourceId: resource.id,
-                AND: [
-                  { startDate: { lte: parsedEndDate } },
-                  { endDate: { gte: parsedStartDate } }
-                ],
-                status: {
-                  in: [
-                    ExtendedReservationStatus.CONFIRMED, 
-                    ExtendedReservationStatus.CHECKED_IN, 
-                    ExtendedReservationStatus.PENDING_PAYMENT, 
-                    ExtendedReservationStatus.PARTIALLY_PAID
-                  ] as any
-                }
-              } as ExtendedReservationWhereInput
+            // Use our conflict detection utility to check each resource
+            const resourceConflict = await detectReservationConflicts({
+              startDate: parsedStartDate,
+              endDate: parsedEndDate,
+              resourceId: resource.id,
+              tenantId,
+              petId
             });
             
-            if (overlappingReservations.length === 0) {
+            if (!resourceConflict.hasConflicts) {
               availableResourceIds.push(resource.id);
             }
           }
@@ -725,8 +707,22 @@ export const createReservation = async (
         assignedResourceId = availableResources[0];
         console.log(`[${requestId}] Auto-assigned resource: ${assignedResourceId}`);
       } else {
+        // Check if the pet already has a reservation during this time
+        const petConflictResult = await detectReservationConflicts({
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
+          tenantId,
+          petId,
+          suiteType: determinedSuiteType
+        });
+        
+        if (petConflictResult.hasConflicts && petConflictResult.warnings.some(w => w.includes('Pet already has'))) {
+          console.warn(`[${requestId}] Pet already has a reservation during this time`);
+          return next(new AppError(petConflictResult.warnings[0], 409));
+        }
+        
         console.warn(`[${requestId}] No available resources found for suite type: ${determinedSuiteType}`);
-        // We'll proceed without a resource, but log a warning
+        warnings.push(`No available resources found for suite type: ${determinedSuiteType}. The reservation will be created without a resource assignment.`);
       }
     }
 
@@ -1088,37 +1084,21 @@ export const updateReservation = async (
         return next(new AppError('Resource not found', 404));
       }
       
-      // Check if resource is available for the requested dates
+      // Check if resource is available for the requested dates using the conflict detection utility
       if (parsedStartDate && parsedEndDate) {
-        const overlappingReservations = await safeExecutePrismaQuery(
-          async () => {
-            return await prisma.reservation.findMany({
-              where: {
-                organizationId: tenantId,
-                resourceId: assignedResourceId,
-                id: { not: id }, // Exclude current reservation
-                AND: [
-                  { startDate: { lte: parsedEndDate } },
-                  { endDate: { gte: parsedStartDate } }
-                ],
-                status: {
-                  in: [
-                    ExtendedReservationStatus.CONFIRMED, 
-                    ExtendedReservationStatus.CHECKED_IN, 
-                    ExtendedReservationStatus.PENDING_PAYMENT, 
-                    ExtendedReservationStatus.PARTIALLY_PAID
-                  ] as any
-                }
-              } as ExtendedReservationWhereInput
-            });
-          },
-          [],
-          `[${requestId}] Error checking resource availability for ${assignedResourceId}`
-        );
+        const conflictResult = await detectReservationConflicts({
+          startDate: parsedStartDate,
+          endDate: parsedEndDate,
+          resourceId: assignedResourceId,
+          reservationId: id, // Exclude current reservation
+          tenantId,
+          petId
+        });
         
-        if (overlappingReservations.length > 0) {
-          console.warn(`[${requestId}] Resource ${assignedResourceId} is not available for the requested dates`);
-          warnings.push(`The requested resource is not available for the selected dates. There are ${overlappingReservations.length} overlapping reservations.`);
+        if (conflictResult.hasConflicts) {
+          console.warn(`[${requestId}] Resource ${assignedResourceId} has conflicts for the requested dates`);
+          // Add all warnings to our warnings array
+          warnings.push(...conflictResult.warnings);
         }
       }
       
@@ -1136,45 +1116,49 @@ export const updateReservation = async (
           } as ExtendedResourceWhereInput
         });
         
-        // Then filter out resources with overlapping reservations
+        // Then filter out resources with overlapping reservations using the conflict detection utility
         const availableResources = [];
         
         for (const resource of resources) {
           try {
-            const overlappingReservations = await prisma.reservation.findMany({
-              where: {
-                organizationId: tenantId,
-                resourceId: resource.id,
-                id: { not: id }, // Exclude current reservation
-                AND: [
-                  { startDate: { lte: parsedEndDate } },
-                  { endDate: { gte: parsedStartDate } }
-                ],
-                status: {
-                  in: [
-                    ExtendedReservationStatus.CONFIRMED, 
-                    ExtendedReservationStatus.CHECKED_IN, 
-                    ExtendedReservationStatus.PENDING_PAYMENT, 
-                    ExtendedReservationStatus.PARTIALLY_PAID
-                  ] as any
-                }
-              } as ExtendedReservationWhereInput
+            const conflictResult = await detectReservationConflicts({
+              startDate: parsedStartDate,
+              endDate: parsedEndDate,
+              resourceId: resource.id,
+              reservationId: id, // Exclude current reservation
+              tenantId,
+              petId
             });
             
-            if (overlappingReservations.length === 0) {
-              availableResources.push(resource);
+            if (!conflictResult.hasConflicts) {
+              availableResources.push(resource.id);
             }
           } catch (error) {
-            console.warn(`[${requestId}] Error checking availability for resource ${resource.id}:`, error);
+            console.error(`[${requestId}] Error checking availability for resource ${resource.id}:`, error);
           }
         }
         
         if (availableResources.length > 0) {
           // Assign the first available resource
-          assignedResourceId = availableResources[0].id;
-          updateData.resourceId = assignedResourceId;
-          console.log(`[${requestId}] Auto-assigned resource: ${assignedResourceId}`);
+          updateData.resourceId = availableResources[0];
+          console.log(`[${requestId}] Auto-assigned resource: ${availableResources[0]}`);
         } else {
+          // Check if the pet already has a reservation during this time (excluding this reservation)
+          const petConflictResult = await detectReservationConflicts({
+            startDate: parsedStartDate,
+            endDate: parsedEndDate,
+            tenantId,
+            petId,
+            reservationId: id,
+            suiteType: determinedSuiteType
+          });
+          
+          if (petConflictResult.hasConflicts && petConflictResult.warnings.some(w => w.includes('Pet already has'))) {
+            console.warn(`[${requestId}] Pet already has another reservation during this time`);
+            warnings.push(petConflictResult.warnings.find(w => w.includes('Pet already has')) || 
+              'Pet already has another reservation during this time');
+          }
+          
           console.warn(`[${requestId}] No available resources found for suite type: ${determinedSuiteType}`);
           warnings.push(`No available resources found for suite type: ${determinedSuiteType}. The reservation will be updated without a resource assignment.`);
         }
