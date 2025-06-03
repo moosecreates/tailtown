@@ -19,6 +19,10 @@ export const logger = {
     console.warn(`[WARN] ${new Date().toISOString()}: ${message}`);
   },
   
+  success: (message: string) => {
+    console.log(`[SUCCESS] ${new Date().toISOString()}: ${message}`);
+  },
+  
   debug: (message: string) => {
     if (process.env.NODE_ENV !== 'production') {
       console.debug(`[DEBUG] ${new Date().toISOString()}: ${message}`);

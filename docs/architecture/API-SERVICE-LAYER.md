@@ -186,6 +186,12 @@ When migrating existing services to use the API service layer:
 5. Implement schema validation and defensive programming
 6. Update response formats to match the standard
 
-## Database Migration
+## Database Interaction and Migration
 
-For database schema changes and migrations, refer to the [Database Migration Guide](../../services/reservation-service/docs/DATABASE-MIGRATION.md) and the [Schema Alignment Strategy](../development/SchemaAlignmentStrategy.md).
+Each service manages its own database interactions using Prisma ORM. For database schema changes, migrations, and validation, refer to:
+
+- [Database Migration Guide](../../services/reservation-service/docs/DATABASE-MIGRATION.md)
+- [Schema Alignment Strategy](../development/SchemaAlignmentStrategy.md)
+- [Schema Validation System](/services/reservation-service/docs/SCHEMA-VALIDATION.md)
+
+The Schema Validation System provides comprehensive validation of database schemas, detailed reporting of issues, and automatic migration capabilities to ensure consistency across environments.

@@ -101,7 +101,13 @@ We've implemented a comprehensive approach to handle Prisma schema mismatches an
 - Raw SQL queries with try/catch blocks for tables that may not exist in all environments
 - Graceful fallbacks to empty arrays or default values when schema elements are missing
 - TypeScript type safety with explicit typing for raw query results
-- Runtime schema validation to detect and report missing tables and columns
+
+#### Schema Validation System
+- Comprehensive schema validation on service startup
+- Detailed reporting of missing tables, columns, indexes, and relationships
+- Automatic generation of SQL migration scripts to fix schema issues
+- Optional automatic migration capability for development environments
+- Clear guidance and recommendations for resolving schema mismatches
 - Two-step approach for Prisma operations with type compatibility issues (see TypeScript Improvements)
 
 #### Database Migration Tools

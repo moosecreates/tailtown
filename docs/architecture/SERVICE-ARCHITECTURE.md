@@ -64,6 +64,14 @@ To avoid confusion and port conflicts, we've standardized the port assignments:
 - Reservation Service: Port 4003
 - PostgreSQL Database: Port 5433
 
+### Database
+
+- PostgreSQL database for persistent storage
+- Prisma ORM for database access
+- Migrations managed through Prisma
+- Comprehensive schema validation system for ensuring database consistency across environments
+- Automatic schema validation on service startup with detailed reporting
+
 ### Configuration Files
 - Frontend: `.env` in `/frontend`
 - Customer Service: `.env` in `/services/customer`
