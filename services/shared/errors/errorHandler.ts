@@ -1,174 +1,16 @@
 /**
- * Enhanced Error Handling Middleware
+ * Shared Error Handler Middleware
  * 
- * This middleware provides consistent error handling across the application.
+ * This middleware provides consistent error handling across all services.
  * It handles different types of errors, formats responses appropriately,
  * and provides detailed logging with proper context.
  */
 
 import { Request, Response, NextFunction } from 'express';
+import { AppError, ErrorType } from './AppError';
 
-/**
- * Standardized error types
- */
-export enum ErrorType {
-  // Client errors (4xx)
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  AUTHENTICATION_ERROR = 'AUTHENTICATION_ERROR',
-  AUTHORIZATION_ERROR = 'AUTHORIZATION_ERROR',
-  RESOURCE_NOT_FOUND = 'RESOURCE_NOT_FOUND',
-  RESOURCE_CONFLICT = 'RESOURCE_CONFLICT',
-  BAD_REQUEST = 'BAD_REQUEST',
-  RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
-  
-  // Server errors (5xx)
-  SERVER_ERROR = 'SERVER_ERROR',
-  DATABASE_ERROR = 'DATABASE_ERROR',
-  EXTERNAL_SERVICE_ERROR = 'EXTERNAL_SERVICE_ERROR',
-  SCHEMA_ERROR = 'SCHEMA_ERROR',
-  
-  // Special cases
-  SCHEMA_ALIGNMENT_ERROR = 'SCHEMA_ALIGNMENT_ERROR',
-  MULTI_TENANT_ERROR = 'MULTI_TENANT_ERROR'
-}
-
-/**
- * Interface for error context
- */
-export interface ErrorContext {
-  [key: string]: any;
-}
-
-/**
- * AppError class for standardized error handling
- */
-export class AppError extends Error {
-  statusCode: number;
-  status: string;
-  isOperational: boolean;
-  type: ErrorType;
-  details?: any;
-  context?: ErrorContext;
-  
-  /**
-   * Create a new AppError
-   * 
-   * @param message - Error message
-   * @param statusCode - HTTP status code
-   * @param type - Error type from ErrorType enum
-   * @param isOperational - Whether this is an operational error (true) or programming error (false)
-   * @param details - Additional error details
-   * @param context - Contextual information for debugging
-   */
-  constructor(
-    message: string,
-    statusCode: number = 500,
-    type: ErrorType = ErrorType.SERVER_ERROR,
-    isOperational: boolean = true,
-    details?: any,
-    context?: ErrorContext
-  ) {
-    super(message);
-    this.statusCode = statusCode;
-    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
-    this.isOperational = isOperational;
-    this.type = type;
-    this.details = details;
-    this.context = context;
-    
-    Error.captureStackTrace(this, this.constructor);
-  }
-  
-  /**
-   * Create a validation error
-   */
-  static validationError(message: string, details?: any, context?: ErrorContext): AppError {
-    return new AppError(
-      message,
-      400,
-      ErrorType.VALIDATION_ERROR,
-      true,
-      details,
-      context
-    );
-  }
-  
-  /**
-   * Create an authentication error
-   */
-  static authenticationError(message: string = 'Authentication required', context?: ErrorContext): AppError {
-    return new AppError(
-      message,
-      401,
-      ErrorType.AUTHENTICATION_ERROR,
-      true,
-      undefined,
-      context
-    );
-  }
-  
-  /**
-   * Create an authorization error
-   */
-  static authorizationError(message: string = 'Not authorized', context?: ErrorContext): AppError {
-    return new AppError(
-      message,
-      403,
-      ErrorType.AUTHORIZATION_ERROR,
-      true,
-      undefined,
-      context
-    );
-  }
-  
-  /**
-   * Create a not found error
-   */
-  static notFoundError(resource: string, id?: string | number, context?: ErrorContext): AppError {
-    const message = id 
-      ? `${resource} with ID ${id} not found`
-      : `${resource} not found`;
-      
-    return new AppError(
-      message,
-      404,
-      ErrorType.RESOURCE_NOT_FOUND,
-      true,
-      { resource, id },
-      context
-    );
-  }
-  
-  /**
-   * Create a conflict error
-   */
-  static conflictError(message: string, details?: any, context?: ErrorContext): AppError {
-    return new AppError(
-      message,
-      409,
-      ErrorType.RESOURCE_CONFLICT,
-      true,
-      details,
-      context
-    );
-  }
-  
-  /**
-   * Create a database error
-   */
-  static databaseError(message: string, details?: any, isOperational: boolean = true, context?: ErrorContext): AppError {
-    return new AppError(
-      message,
-      500,
-      ErrorType.DATABASE_ERROR,
-      isOperational,
-      details,
-      context
-    );
-  }
-}
-
-// Simple logger for the error handler
+// Simple console logger for the error handler
+// Services should replace this with their own logger implementation
 const logger = {
   error: (message: string, ...args: any[]) => console.error(`[ERROR] ${message}`, ...args),
   warn: (message: string, ...args: any[]) => console.warn(`[WARN] ${message}`, ...args),
@@ -179,12 +21,17 @@ const logger = {
 
 /**
  * Handle Prisma-specific errors
+ * 
+ * @param err - The error object
+ * @returns Transformed AppError
  */
 export const handlePrismaError = (err: any): AppError => {
+  // Extract useful information from Prisma error
   const errorCode = err.code;
   const meta = err.meta || {};
   const target = meta.target || [];
   
+  // Map Prisma error codes to our standardized errors
   switch (errorCode) {
     case 'P2002': // Unique constraint failed
       return AppError.conflictError(
@@ -199,6 +46,19 @@ export const handlePrismaError = (err: any): AppError => {
         { prismaError: errorCode }
       );
       
+    case 'P2003': // Foreign key constraint failed
+      return AppError.validationError(
+        'Foreign key constraint failed',
+        { prismaError: errorCode, field: meta.field_name },
+      );
+      
+    case 'P2010': // Raw query failed
+      return AppError.databaseError(
+        'Database query failed',
+        { prismaError: errorCode, query: meta.query },
+        true
+      );
+      
     default:
       return AppError.databaseError(
         'Database operation failed',
@@ -210,16 +70,22 @@ export const handlePrismaError = (err: any): AppError => {
 
 /**
  * Format error for development environment
+ * 
+ * @param err - The error object
+ * @param req - Express request object
+ * @param res - Express response object
  */
 export const sendErrorDev = (err: any, req: Request, res: Response): void => {
   const statusCode = err.statusCode || 500;
   
+  // Log detailed error information
   logger.error(`[${req.method}] ${req.path} - ${err.message}`);
   
   if (err.context) {
     logger.debug(`Error context: ${JSON.stringify(err.context)}`);
   }
   
+  // Send detailed error response
   res.status(statusCode).json({
     success: false,
     status: err.status || 'error',
@@ -237,12 +103,18 @@ export const sendErrorDev = (err: any, req: Request, res: Response): void => {
 
 /**
  * Format error for production environment
+ * 
+ * @param err - The error object
+ * @param req - Express request object
+ * @param res - Express response object
  */
 export const sendErrorProd = (err: any, req: Request, res: Response): void => {
   const statusCode = err.statusCode || 500;
   
+  // Log error with request information
   logger.error(`[${req.method}] ${req.path} - ${err.type || 'ERROR'}: ${err.message}`);
   
+  // For operational errors, send message to client
   if (err.isOperational) {
     res.status(statusCode).json({
       success: false,
@@ -254,11 +126,15 @@ export const sendErrorProd = (err: any, req: Request, res: Response): void => {
       requestId: req.headers['x-request-id'] || null,
       timestamp: new Date().toISOString()
     });
-  } else {
+  } 
+  // For programming or unknown errors, send generic message
+  else {
+    // Log full error details for debugging
     logger.error(`Unexpected error: ${JSON.stringify({
       message: err.message,
       stack: err.stack,
-      details: err.details || null
+      details: err.details || null,
+      context: err.context || null
     })}`);
     
     res.status(500).json({
@@ -276,6 +152,11 @@ export const sendErrorProd = (err: any, req: Request, res: Response): void => {
 
 /**
  * Main error handler middleware
+ * 
+ * @param err - The error object
+ * @param req - Express request object
+ * @param res - Express response object
+ * @param next - Express next function
  */
 export const errorHandler = (
   err: any,
@@ -283,17 +164,21 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
+  // Skip if headers already sent
   if (res.headersSent) {
     return next(err);
   }
   
+  // Set default error properties
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
   
+  // Add request context to error
   if (!err.context) {
     err.context = {};
   }
   
+  // Add request information to context
   err.context.requestInfo = {
     method: req.method,
     path: req.path,
@@ -305,10 +190,12 @@ export const errorHandler = (
     }
   };
   
+  // Handle Prisma database errors
   if (err.code && err.code.startsWith('P')) {
     err = handlePrismaError(err);
   }
   
+  // Handle JSON parsing errors
   if (err.type === 'entity.parse.failed') {
     err = AppError.validationError(
       'Invalid JSON in request body',
@@ -316,6 +203,7 @@ export const errorHandler = (
     );
   }
   
+  // Handle validation errors
   if (err.name === 'ValidationError') {
     err = AppError.validationError(
       err.message,
@@ -323,6 +211,16 @@ export const errorHandler = (
     );
   }
   
+  // Handle JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    err = AppError.authenticationError('Invalid token');
+  }
+  
+  if (err.name === 'TokenExpiredError') {
+    err = AppError.authenticationError('Token expired');
+  }
+  
+  // Different error handling based on environment
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, req, res);
   } else {
@@ -332,6 +230,11 @@ export const errorHandler = (
 
 /**
  * Async error handler wrapper
+ * 
+ * Wraps async controller functions to catch errors and pass them to the error handler
+ * 
+ * @param fn - Async controller function
+ * @returns Express middleware function
  */
 export const catchAsync = (fn: Function) => {
   return (req: Request, res: Response, next: NextFunction) => {

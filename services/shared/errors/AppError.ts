@@ -1,8 +1,8 @@
 /**
- * Enhanced AppError Class
+ * Shared AppError Class
  * 
  * This class extends the built-in Error class to provide a standardized
- * error handling mechanism with additional properties:
+ * error handling mechanism across all services. It includes:
  * - HTTP status codes
  * - Error types for categorization
  * - Operational flag to distinguish between operational and programming errors
@@ -10,7 +10,7 @@
  */
 
 /**
- * Standardized error types
+ * Standardized error types across all services
  */
 export enum ErrorType {
   // Client errors (4xx)

@@ -104,6 +104,17 @@ Each service provides a health check endpoint at `/health`:
 - Customer Service: `http://localhost:3003/health`
 - Reservation Service: `http://localhost:4003/health`
 
+## Error Handling
+
+- Standardized error handling system across all services
+- Shared `AppError` class with consistent error types and status codes
+- Operational vs Programming error distinction
+- Detailed error logging with proper context
+- Consistent error middleware with environment-specific responses
+- Type-safe async error handling with `catchAsync` wrapper
+- Integration with schema alignment strategy for graceful error handling
+- See [ERROR-HANDLING.md](./ERROR-HANDLING.md) for detailed documentation
+
 ## Future Service Expansion
 
 As we continue to implement the SaaS architecture, we plan to add the following services:
