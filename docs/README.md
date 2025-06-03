@@ -32,9 +32,11 @@ This directory contains all project-wide documentation for the Tailtown Pet Reso
 - **Operations** (`/docs/operations/`)
   - [Environment Variables](./operations/Environment-Variables.md) - Documentation of environment variables
   - [DevOps](./operations/DevOps.md) - Deployment and operations guide
+  - [Setup Guide](./operations/SETUP.md) - Comprehensive setup instructions for development
 
 - **Changelog** (`/docs/changelog/`)
-  - Release notes and change history organized by date
+  - [Changelog](./changelog/CHANGELOG.md) - Comprehensive release notes and change history
+  - [Kennel Selection Fix](./changelog/2025-05-11-kennel-selection-fix.md) - Specific fix documentation
 
 ### Service-specific Documentation
 

@@ -154,6 +154,7 @@ We follow a standardized documentation structure to ensure consistency and ease 
 - **Main Documentation**
   - [Current State](./docs/CURRENT_STATE.md) - Overview of the current system state and features
   - [Roadmap](./docs/ROADMAP.md) - Future development plans
+  - [Documentation Guide](./docs/README.md) - Guide to all project documentation
 
 - **Architecture Documentation** (`/docs/architecture/`)
   - [Architecture Overview](./docs/architecture/Architecture.md) - System architecture overview
@@ -177,9 +178,11 @@ We follow a standardized documentation structure to ensure consistency and ease 
 - **Operations** (`/docs/operations/`)
   - [Environment Variables](./docs/operations/Environment-Variables.md) - Documentation of environment variables
   - [DevOps](./docs/operations/DevOps.md) - Deployment and operations guide
+  - [Setup Guide](./docs/operations/SETUP.md) - Comprehensive setup instructions for development
 
 - **Changelog** (`/docs/changelog/`)
-  - Release notes and change history organized by date
+  - [Changelog](./docs/changelog/CHANGELOG.md) - Comprehensive release notes and change history
+  - [Kennel Selection Fix](./docs/changelog/2025-05-11-kennel-selection-fix.md) - Specific fix documentation
 
 ### Service-specific Documentation
 
