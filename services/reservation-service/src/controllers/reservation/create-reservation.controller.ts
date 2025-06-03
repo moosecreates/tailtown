@@ -391,7 +391,8 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
     }
   }
 
-  logger.success(`Reservation created successfully`, { requestId, reservationId: newReservation.id });
+  // Add null check for newReservation before accessing id
+  logger.success(`Reservation created successfully`, { requestId, reservationId: newReservation?.id || 'unknown' });
   
   // Prepare response with warnings if any
   const responseData: any = {

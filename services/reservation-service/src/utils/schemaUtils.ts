@@ -13,12 +13,12 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { logger } from './logger';
+import { logger as appLogger } from './logger';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Simple logger implementation
-const logger = {
+// Simple logger implementation for schema utilities
+const schemaLogger = {
   info: (message: string) => console.log(`[INFO] ${message}`),
   error: (message: string) => console.error(`[ERROR] ${message}`),
   warn: (message: string) => console.warn(`[WARN] ${message}`),
@@ -45,8 +45,8 @@ export async function safeExecutePrismaQuery<T>(
   try {
     return await queryFn();
   } catch (error) {
-    logger.error(`${errorMessage}: ${error instanceof Error ? error.message : String(error)}`);
-    logger.debug('This error might be due to schema mismatches between environments');
+    schemaLogger.error(`${errorMessage}: ${error instanceof Error ? error.message : String(error)}`);
+    schemaLogger.debug('This error might be due to schema mismatches between environments');
     return fallbackValue;
   }
 }
@@ -75,7 +75,7 @@ export async function tableExists(prisma: PrismaClient, tableName: string): Prom
     // The result is an array with a single object containing the EXISTS result
     return result[0].exists;
   } catch (error) {
-    logger.error(`Error checking if table ${tableName} exists: ${error instanceof Error ? error.message : String(error)}`);
+    schemaLogger.error(`Error checking if table ${tableName} exists: ${error instanceof Error ? error.message : String(error)}`);
     return false;
   }
 }
@@ -110,7 +110,7 @@ export async function columnExists(
     // The result is an array with a single object containing the EXISTS result
     return result[0].exists;
   } catch (error) {
-    logger.error(`Error checking if column ${columnName} in table ${tableName} exists: ${error instanceof Error ? error.message : String(error)}`);
+    schemaLogger.error(`Error checking if column ${columnName} in table ${tableName} exists: ${error instanceof Error ? error.message : String(error)}`);
     return false;
   }
 }
@@ -600,7 +600,7 @@ async function indexExists(prisma: PrismaClient, tableName: string, indexName: s
     
     return result[0].exists;
   } catch (error) {
-    logger.error(`Error checking if index ${indexName} on table ${tableName} exists: ${error instanceof Error ? error.message : String(error)}`);
+    schemaLogger.error(`Error checking if index ${indexName} on table ${tableName} exists: ${error instanceof Error ? error.message : String(error)}`);
     return false;
   }
 }
@@ -626,7 +626,7 @@ async function relationshipExists(prisma: PrismaClient, tableName: string, const
     
     return result[0].exists;
   } catch (error) {
-    logger.error(`Error checking if constraint ${constraintName} on table ${tableName} exists: ${error instanceof Error ? error.message : String(error)}`);
+    schemaLogger.error(`Error checking if constraint ${constraintName} on table ${tableName} exists: ${error instanceof Error ? error.message : String(error)}`);
     return false;
   }
 }
@@ -667,7 +667,7 @@ export async function validateSchema(
   };
   
   try {
-    logger.info('Starting comprehensive schema validation...');
+    schemaLogger.info('Starting comprehensive schema validation...');
     
     // Check for critical tables
     const criticalTables = getCriticalTables();
@@ -677,7 +677,7 @@ export async function validateSchema(
       
       if (!exists) {
         const message = `Critical table '${table}' does not exist in the database schema`;
-        logger.warn(message);
+        schemaLogger.warn(message);
         report.criticalIssues.push(message);
         missingTables.push(table);
         isValid = false;
@@ -693,7 +693,7 @@ export async function validateSchema(
           
           if (!exists) {
             const message = `Critical column '${column}' does not exist in table '${table}'`;
-            logger.warn(message);
+            schemaLogger.warn(message);
             report.criticalIssues.push(message);
             missingColumnsForTable.push(column);
             isValid = false;
@@ -709,7 +709,7 @@ export async function validateSchema(
           
           if (!exists) {
             const message = `Optional column '${column}' does not exist in table '${table}'`;
-            logger.info(message);
+            schemaLogger.info(message);
             report.warnings.push(message);
             if (!missingColumnsForTable.includes(column)) {
               missingColumnsForTable.push(column);
@@ -732,7 +732,7 @@ export async function validateSchema(
             
             if (!exists) {
               const message = `Index '${index.name}' does not exist on table '${table}'`;
-              logger.info(message);
+              schemaLogger.info(message);
               report.warnings.push(message);
               missingIndexesForTable.push(index.name);
             }
@@ -753,7 +753,7 @@ export async function validateSchema(
             
             if (!exists) {
               const message = `Relationship '${relationship.name}' does not exist on table '${table}'`;
-              logger.info(message);
+              schemaLogger.info(message);
               report.warnings.push(message);
               missingRelationshipsForTable.push(relationship.name);
             }
@@ -774,7 +774,7 @@ export async function validateSchema(
       
       if (!exists) {
         const message = `Optional table '${table}' does not exist in the database schema`;
-        logger.warn(message);
+        schemaLogger.warn(message);
         report.warnings.push(message);
         missingTables.push(table);
       } else {
@@ -788,7 +788,7 @@ export async function validateSchema(
           
           if (!exists) {
             const message = `Critical column '${column}' does not exist in optional table '${table}'`;
-            logger.warn(message);
+            schemaLogger.warn(message);
             report.warnings.push(message);
             missingColumnsForTable.push(column);
           }
@@ -842,12 +842,12 @@ export async function validateSchema(
           }
           
           fs.writeFileSync(migrationFilePath, migrationScript);
-          logger.info(`Migration script saved to ${migrationFilePath}`);
+          schemaLogger.info(`Migration script saved to ${migrationFilePath}`);
           report.recommendations.push(`Migration script saved to ${migrationFilePath}`);
           
           // Auto-apply migration if requested
           if (autoMigrate) {
-            logger.info('Attempting to automatically apply migration...');
+            schemaLogger.info('Attempting to automatically apply migration...');
             
             try {
               // Split the SQL into individual statements (split by semicolon)
@@ -856,25 +856,25 @@ export async function validateSchema(
                 .map(statement => statement.trim())
                 .filter(statement => statement.length > 0 && !statement.startsWith('--'));
               
-              logger.info(`Found ${statements.length} SQL statements to execute`);
+              schemaLogger.info(`Found ${statements.length} SQL statements to execute`);
               
               // Execute each statement
               for (let i = 0; i < statements.length; i++) {
                 const statement = statements[i];
                 try {
                   await prisma.$executeRawUnsafe(`${statement};`);
-                  logger.info(`Executed statement ${i + 1}/${statements.length}`);
+                  schemaLogger.info(`Executed statement ${i + 1}/${statements.length}`);
                 } catch (error) {
-                  logger.error(`Error executing statement ${i + 1}: ${error instanceof Error ? error.message : String(error)}`);
+                  schemaLogger.error(`Error executing statement ${i + 1}: ${error instanceof Error ? error.message : String(error)}`);
                   report.recommendations.push(`Manual intervention required for statement: ${statement}`);
                   // Continue with next statement even if this one fails
                 }
               }
               
-              logger.success('Migration completed successfully');
+              schemaLogger.success('Migration completed successfully');
               report.recommendations.push('Migration was automatically applied. Please restart the service to ensure all schema changes are recognized.');
             } catch (error) {
-              logger.error(`Error during auto-migration: ${error instanceof Error ? error.message : String(error)}`);
+              schemaLogger.error(`Error during auto-migration: ${error instanceof Error ? error.message : String(error)}`);
               report.recommendations.push('Automatic migration failed. Please apply the migration script manually.');
             }
           } else {
@@ -883,7 +883,7 @@ export async function validateSchema(
             );
           }
         } catch (error) {
-          logger.error(`Error saving migration script: ${error instanceof Error ? error.message : String(error)}`);
+          schemaLogger.error(`Error saving migration script: ${error instanceof Error ? error.message : String(error)}`);
           report.recommendations.push('Could not save migration script. Please check logs for details.');
         }
       }
@@ -903,8 +903,8 @@ export async function validateSchema(
       report.summary += ' See detailed report for more information.';
     }
     
-    logger.info('Schema validation completed');
-    logger.info(report.summary);
+    schemaLogger.info('Schema validation completed');
+    schemaLogger.info(report.summary);
     
     return { 
       isValid, 
@@ -917,7 +917,7 @@ export async function validateSchema(
     };
   } catch (error) {
     const errorMessage = `Error during schema validation: ${error instanceof Error ? error.message : String(error)}`;
-    logger.error(errorMessage);
+    schemaLogger.error(errorMessage);
     
     report.summary = 'Schema validation failed due to an unexpected error.';
     report.criticalIssues.push(errorMessage);
