@@ -2,7 +2,9 @@
 
 ## System Overview
 - **Frontend**: React with Material-UI running on port 3000
-- **Backend**: Express.js with Prisma ORM running on port 3003
+- **Backend Services**: 
+  - Customer Service: Express.js with Prisma ORM running on port 3003
+  - Reservation Service: Express.js with Prisma ORM running on port 4003
 - **Database**: PostgreSQL running in Docker on port 5433
 
 ## Key Features Implemented
@@ -64,13 +66,20 @@
    docker run -d --name tailtown-postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=customer -p 5433:5432 postgres:14
    ```
 
-2. Start backend server:
+2. Start customer service:
    ```bash
    cd services/customer
    source ~/.nvm/nvm.sh && npm run dev
    ```
 
-3. Start frontend server:
+3. Start reservation service:
+   ```bash
+   cd services/reservation-service
+   source ~/.nvm/nvm.sh && npm run dev
+   ```
+   Note: The reservation service will run schema validation on startup to ensure database compatibility.
+
+4. Start frontend server:
    ```bash
    cd frontend
    source ~/.nvm/nvm.sh && npm start
@@ -79,3 +88,18 @@
 ## Known Issues
 - There's a discrepancy between the frontend .env configuration (port 3002) and the actual backend port (3003), but this doesn't affect functionality as the application uses a hardcoded port in api.ts
 - Some TypeScript linting warnings remain to be addressed
+
+## Recent Test Improvements
+
+### Reservation Controller Tests
+- Created a new, robust test file `reservation.controller.final.test.ts` with comprehensive coverage
+- Implemented proper mocking strategy to avoid circular dependencies
+- Fixed test reliability issues with consistent mocking and assertions
+- Added tests for all CRUD operations and error handling scenarios
+- Documented test patterns in a new [Testing Guide](../services/reservation-service/docs/TESTING-GUIDE.md)
+
+### Schema Alignment and Defensive Programming
+- Enhanced schema validation on service startup
+- Implemented defensive programming patterns in controllers
+- Added graceful fallbacks for missing tables or columns
+- Created comprehensive documentation for schema alignment strategy
