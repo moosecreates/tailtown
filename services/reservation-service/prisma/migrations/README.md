@@ -61,4 +61,4 @@ If you encounter database connection issues:
 2. Ensure PostgreSQL is running and accessible
 3. Check that the database user has sufficient privileges
 
-For schema-related issues, refer to our [Schema Alignment Strategy](../../README-SCHEMA-ALIGNMENT.md) documentation.
+For schema-related issues, refer to our [Schema Alignment Strategy](../../docs/README-SCHEMA-ALIGNMENT.md) and the project-wide [Schema Alignment Strategy](../../../../docs/development/SchemaAlignmentStrategy.md) documentation.
