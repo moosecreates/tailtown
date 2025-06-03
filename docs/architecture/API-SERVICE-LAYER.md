@@ -188,4 +188,4 @@ When migrating existing services to use the API service layer:
 
 ## Database Migration
 
-For database schema changes and migrations, refer to the [Database Migration Guide](../../services/reservation-service/DATABASE-MIGRATION.md).
+For database schema changes and migrations, refer to the [Database Migration Guide](../../services/reservation-service/docs/DATABASE-MIGRATION.md) and the [Schema Alignment Strategy](../development/SchemaAlignmentStrategy.md).

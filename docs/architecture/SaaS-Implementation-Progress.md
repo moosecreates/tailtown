@@ -1,6 +1,6 @@
 # Tailtown SaaS Implementation Progress
 
-This document tracks the implementation progress of the SaaS architecture recommendations outlined in the [SaaS Scaling Assessment](./SaaS-Scaling-Assessment.md).
+This document tracks the implementation progress of the SaaS architecture recommendations outlined in our SaaS scaling assessment.
 
 ## Completed Items
 
