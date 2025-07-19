@@ -72,7 +72,7 @@ export const getAllPets = async (
         take: limit,
         orderBy: { name: 'asc' },
         include: { 
-          owner: {
+          customer: {
             select: {
               id: true,
               firstName: true,
@@ -110,7 +110,7 @@ export const getPetById = async (
     const pet = await prisma.pet.findUnique({
       where: { id },
       include: { 
-        owner: {
+        customer: {
           select: {
             id: true,
             firstName: true,

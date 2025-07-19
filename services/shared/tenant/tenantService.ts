@@ -35,36 +35,48 @@ export class TenantService {
   async validateTenant(tenantId: string): Promise<TenantDetails> {
     try {
       if (this.prisma) {
-        // Try to get tenant from database
-        const tenant = await this.prisma.organization.findUnique({
-          where: { id: tenantId },
-          select: {
-            id: true,
-            name: true,
-            active: true,
-            subscriptionTier: true,
-            settings: true
+        try {
+          // Try to get tenant from database
+          // Check if the organization model exists first
+          if (!this.prisma.organization) {
+            logger.warn('Organization model not available in Prisma client, falling back to API validation');
+            return await this.validateTenantViaAPI(tenantId);
           }
-        });
 
-        if (!tenant) {
-          throw new Error(`Tenant not found: ${tenantId}`);
+          const tenant = await this.prisma.organization.findUnique({
+            where: { id: tenantId },
+            select: {
+              id: true,
+              name: true,
+              active: true,
+              subscriptionTier: true,
+              settings: true
+            }
+          });
+
+          if (!tenant) {
+            logger.info(`Tenant not found in database: ${tenantId}, falling back to API validation`);
+            return await this.validateTenantViaAPI(tenantId);
+          }
+
+          // Parse tenant configuration
+          const config = this.parseTenantConfig(tenant.settings as any || {});
+          
+          // Cache the config
+          this.configCache.set(tenantId, config);
+          this.lastCacheRefresh.set(tenantId, Date.now());
+
+          return {
+            id: tenant.id,
+            name: tenant.name,
+            active: tenant.active,
+            tier: tenant.subscriptionTier,
+            config
+          };
+        } catch (dbError) {
+          logger.warn(`Database validation failed for tenant ${tenantId}, falling back to API validation: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
+          return await this.validateTenantViaAPI(tenantId);
         }
-
-        // Parse tenant configuration
-        const config = this.parseTenantConfig(tenant.settings as any || {});
-        
-        // Cache the config
-        this.configCache.set(tenantId, config);
-        this.lastCacheRefresh.set(tenantId, Date.now());
-
-        return {
-          id: tenant.id,
-          name: tenant.name,
-          active: tenant.active,
-          tier: tenant.subscriptionTier,
-          config
-        };
       } else {
         // Fallback to API validation if database is unavailable
         return await this.validateTenantViaAPI(tenantId);

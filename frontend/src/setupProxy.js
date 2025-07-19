@@ -1,5 +1,14 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
+// Default tenant ID for development - must be longer than 5 characters for API validation
+const DEFAULT_TENANT_ID = 'organization-123456';
+
+// Helper function to add tenant ID to requests
+const addTenantIdToRequest = (proxyReq, req, res) => {
+  // Add tenant ID header to all proxied requests
+  proxyReq.setHeader('X-Tenant-ID', DEFAULT_TENANT_ID);
+};
+
 module.exports = function(app) {
   // Proxy customer service requests
   app.use(
@@ -11,6 +20,7 @@ module.exports = function(app) {
         '^/api': '', // remove /api prefix when forwarding to target
       },
       logLevel: 'debug',
+      onProxyReq: addTenantIdToRequest,
       onError: (err, req, res) => {
         console.error('Customer Service Proxy Error:', err);
         res.status(500).json({ error: 'Proxy Error', details: err.message });
@@ -18,7 +28,7 @@ module.exports = function(app) {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-ID'
       }
     })
   );
@@ -33,6 +43,7 @@ module.exports = function(app) {
         '^/api': '', // remove /api prefix when forwarding to target
       },
       logLevel: 'debug',
+      onProxyReq: addTenantIdToRequest,
       onError: (err, req, res) => {
         console.error('Reservation Service Proxy Error:', err);
         res.status(500).json({ error: 'Proxy Error', details: err.message });
@@ -40,7 +51,7 @@ module.exports = function(app) {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-ID'
       }
     })
   );
@@ -55,6 +66,7 @@ module.exports = function(app) {
         '^/api': '', // remove /api prefix when forwarding to target
       },
       logLevel: 'debug',
+      onProxyReq: addTenantIdToRequest,
       onError: (err, req, res) => {
         console.error('Default Proxy Error:', err);
         res.status(500).json({ error: 'Proxy Error', details: err.message });
@@ -62,7 +74,7 @@ module.exports = function(app) {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-ID'
       }
     })
   );

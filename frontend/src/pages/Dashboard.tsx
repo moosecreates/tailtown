@@ -51,9 +51,9 @@ const loadData = async () => {
       
       setCustomerCount(customers.data?.length || 0);
       setPetCount(pets.results);
-      setReservationCount(todayReservations.results || todayReservations.data?.length || 0);
-      setUpcomingReservations(upcoming.data || []);
-      setTodayRevenue(revenue.revenue);
+      setReservationCount(todayReservations.results || todayReservations.data?.reservations?.length || 0);
+      setUpcomingReservations(upcoming.data?.reservations || []);
+      setTodayRevenue(revenue.data?.revenue);
     } catch (err) {
       console.error('Error loading dashboard data:', err);
       setError('Failed to load dashboard data');
