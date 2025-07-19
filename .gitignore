@@ -23,6 +23,12 @@ dist
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
+customer-service.log
+frontend/frontend.log
+services/customer/customer-service.log
+services/reservation-service/reservation-service.log
+services/reservation-service/reservation.log
 
 # IDE
 .idea
