@@ -79,7 +79,36 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
   
   // Add optional filters if provided
   if (req.query.status) {
-    filter.status = req.query.status;
+    // Handle comma-separated status values
+    const statusString = req.query.status as string;
+    
+    // Map frontend status values to database enum values
+    const statusMap: { [key: string]: string } = {
+      'PENDING': 'PENDING_PAYMENT',
+      'CONFIRMED': 'CONFIRMED',
+      'CHECKED_IN': 'CHECKED_IN',
+      'CHECKED_OUT': 'CHECKED_OUT',
+      'COMPLETED': 'COMPLETED',
+      'NO_SHOW': 'NO_SHOW',
+      'CANCELLED': 'CANCELLED',
+      'DRAFT': 'DRAFT',
+      'PARTIALLY_PAID': 'PARTIALLY_PAID'
+    };
+    
+    if (statusString.includes(',')) {
+      // Multiple statuses - use IN operator
+      const mappedStatuses = statusString.split(',').map(s => {
+        const trimmed = s.trim();
+        return statusMap[trimmed] || trimmed; // Use mapping or original if not found
+      });
+      filter.status = {
+        in: mappedStatuses
+      };
+    } else {
+      // Single status
+      const trimmed = statusString.trim();
+      filter.status = statusMap[trimmed] || trimmed;
+    }
   }
   
   if (req.query.customerId) {
@@ -167,15 +196,13 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
           pet: {
             select: {
               name: true,
-              breed: true,
-              age: true
+              breed: true
             }
           },
           resource: {
             select: {
               name: true,
-              type: true,
-              location: true
+              type: true
             }
           }
         } as unknown as ExtendedReservationInclude
@@ -270,30 +297,21 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
           pet: {
             select: {
               name: true,
-              breed: true,
-              age: true
+              breed: true
             }
           },
           resource: {
             select: {
               name: true,
-              type: true,
-              location: true
+              type: true
             }
           },
-          addOnServices: {
+          addOns: {
             select: {
               id: true,
-              serviceId: true,
-              quantity: true,
-              notes: true,
-              service: {
-                select: {
-                  name: true,
-                  price: true,
-                  description: true
-                }
-              }
+              addOnId: true,
+              price: true,
+              notes: true
             }
           }
         } as unknown as ExtendedReservationInclude
@@ -315,6 +333,39 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
     status: 'success',
     data: {
       reservation
+    }
+  });
+});
+
+/**
+ * Get today's revenue from reservations
+ * Simple implementation that returns 0 for now
+ * 
+ * @route GET /api/v1/reservations/revenue/today
+ * @param {string} req.tenantId - The tenant ID (provided by middleware)
+ */
+export const getTodayRevenue = catchAsync(async (req: Request, res: Response) => {
+  // Generate a unique request ID for logging
+  const requestId = `revenue-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+  logger.info(`Processing today revenue request`, { requestId });
+  
+  // Get tenant ID from request - added by tenant middleware
+  const tenantId = req.tenantId;
+  if (!tenantId) {
+    logger.warn(`Missing tenant ID in request`, { requestId });
+    throw AppError.authorizationError('Tenant ID is required');
+  }
+
+  // For now, return a simple response
+  // This can be enhanced later to calculate actual revenue
+  const revenue = 0;
+  
+  logger.info(`Today revenue calculated`, { requestId, revenue });
+  
+  res.status(200).json({
+    status: 'success',
+    data: {
+      revenue
     }
   });
 });

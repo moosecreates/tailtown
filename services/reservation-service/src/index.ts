@@ -3,7 +3,15 @@ import { reservationTenantMiddleware } from './middleware/enhancedTenantMiddlewa
 import reservationRoutes from './routes/reservation.routes';
 import resourceRoutes from './routes/resourceRoutes';
 import { PrismaClient } from '@prisma/client';
-import { validateSchema } from './utils/schemaUtils';
+import * as http from 'http';
+import { logger } from './utils/logger';
+import { 
+  performRobustStartup, 
+  setupGracefulShutdown 
+} from './utils/startupUtils';
+
+// Initialize Prisma client
+const prisma = new PrismaClient();
 
 // Create and configure the reservation service
 const app = createService({
@@ -21,57 +29,57 @@ app.use('/api/v1/resources', resourceRoutes);
 // Register error handlers (must be last)
 app.registerErrorHandlers();
 
-// Initialize Prisma client
-const prisma = new PrismaClient();
+// Define the port for the service
+const PORT = parseInt(process.env.PORT || '4003', 10); // Use environment variable or default to 4003
 
-// Start the service
-const PORT = 4003; // Explicitly using port 4003 to avoid conflicts with customer service
-app.listen(PORT, async () => {
-  console.log(`Reservation service running on port ${PORT}`);
-  console.log(`Health check available at http://localhost:${PORT}/health`);
-  
-  // Validate schema on startup
+// Create HTTP server
+const server = http.createServer(app);
+
+// Setup graceful shutdown handlers
+setupGracefulShutdown(server, prisma);
+
+// Start the service with robust startup process
+(async () => {
   try {
-    console.log('Validating database schema...');
-    const { isValid, missingTables, missingColumns, validationMap } = await validateSchema(prisma);
-    
-    if (isValid) {
-      console.log('✅ Schema validation successful - all critical tables and columns exist');
-    } else {
-      console.warn('⚠️ Schema validation detected issues:');
-      
-      if (missingTables.length > 0) {
-        console.warn(`  Missing critical tables: ${missingTables.join(', ')}`);
-        console.warn('  To fix this, run the database migration script:');
-        console.warn('  node prisma/migrations/apply_migrations.js');
+    // Define dependency services to check
+    const dependencies = [
+      {
+        name: 'Customer Service',
+        url: process.env.CUSTOMER_SERVICE_URL || 'http://localhost:3003/health',
+        required: false,
+        timeout: 3000
       }
+    ];
+
+    // Perform robust startup with all checks
+    const startupResult = await performRobustStartup(prisma, {
+      requiredEnvVars: ['DATABASE_URL'],
+      port: PORT,
+      autoMigrate: process.env.AUTO_MIGRATE === 'true',
+      dependencies,
+      exitOnFailure: process.env.EXIT_ON_STARTUP_FAILURE === 'true'
+    });
+
+    // Start the server if startup was successful or we're continuing despite issues
+    server.listen(PORT, () => {
+      logger.info(`Reservation service running on port ${PORT}`);
+      logger.info(`Health check available at http://localhost:${PORT}/health`);
       
-      if (Object.keys(missingColumns).length > 0) {
-        console.warn('  Missing critical columns:');
-        for (const [table, columns] of Object.entries(missingColumns)) {
-          console.warn(`    ${table}: ${columns.join(', ')}`);
+      if (!startupResult.success) {
+        logger.warn('Service started with issues - some functionality may be limited');
+        
+        if (startupResult.recommendations.length > 0) {
+          logger.info('Recommendations to resolve startup issues:');
+          startupResult.recommendations.forEach((rec, i) => {
+            logger.info(`  ${i + 1}. ${rec}`);
+          });
         }
-        console.warn('  To fix this, run the database migration script:');
-        console.warn('  node prisma/migrations/apply_migrations.js');
       }
-      
-      console.warn('⚠️ The service will continue to run with defensive programming,');
-      console.warn('  but some functionality may be limited until the schema is fixed.');
-    }
-    
-    // Log optional tables status
-    const optionalTables = ['Service', 'AddOnService', 'ReservationAddOn'];
-    const missingOptionalTables = optionalTables.filter(table => !validationMap.get(table));
-    
-    if (missingOptionalTables.length > 0) {
-      console.info(`ℹ️ Missing optional tables: ${missingOptionalTables.join(', ')}`);
-      console.info('  These tables are not critical but may limit some functionality.');
-    }
+    });
   } catch (error) {
-    console.error('❌ Schema validation failed:', error);
-    console.warn('  Service may encounter errors due to schema mismatches');
-    console.warn('  To fix this, check database connection and run migrations');
+    logger.error(`Fatal error during startup: ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
   }
-});
+})();
 
 export default app;

@@ -8,5 +8,5 @@
 export { createReservation } from './create-reservation.controller';
 export { updateReservation } from './update-reservation.controller';
 export { deleteReservation } from './delete-reservation.controller';
-export { getAllReservations, getReservationById } from './get-reservation.controller';
+export { getAllReservations, getReservationById, getTodayRevenue } from './get-reservation.controller';
 export { getCustomerReservations } from './customer-reservation.controller';

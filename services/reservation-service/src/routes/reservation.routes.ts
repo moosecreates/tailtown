@@ -16,7 +16,8 @@ import {
   createReservation,
   updateReservation,
   deleteReservation,
-  getCustomerReservations
+  getCustomerReservations,
+  getTodayRevenue
 } from '../controllers/reservation';
 
 const router = Router();
@@ -30,6 +31,9 @@ router.get('/health', (req, res) => {
 
 // Customer-specific reservation endpoints
 router.get('/customer/:customerId', getCustomerReservations);
+
+// Revenue endpoints
+router.get('/revenue/today', getTodayRevenue);
 
 // Core reservation endpoints
 router.get('/', getAllReservations);
