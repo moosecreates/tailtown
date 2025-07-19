@@ -10,3 +10,8 @@ export * from './errors/errorHandler';
 
 // Export logger
 export * from './logger';
+
+// Export tenant middleware and service
+export * from './tenant/tenantMiddleware';
+export * from './tenant/tenantService';
+export * from './tenant/types';

@@ -1,10 +1,3 @@
-// Type definitions to extend Express Request
-import { Request } from 'express';
-
-declare global {
-  namespace Express {
-    interface Request {
-      tenantId?: string;
-    }
-  }
-}
+// This file is intentionally left blank.
+// Express.Request augmentations are now handled by the shared types
+// in /services/shared/tenant/types.ts to ensure consistency.

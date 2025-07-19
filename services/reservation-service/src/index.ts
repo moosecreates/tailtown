@@ -1,4 +1,5 @@
-import { createService, tenantMiddleware } from './utils/service';
+import { createService } from './utils/service';
+import { reservationTenantMiddleware } from './middleware/enhancedTenantMiddleware';
 import reservationRoutes from './routes/reservation.routes';
 import resourceRoutes from './routes/resourceRoutes';
 import { PrismaClient } from '@prisma/client';
@@ -10,12 +11,8 @@ const app = createService({
   version: 'v1'
 });
 
-// Apply tenant middleware to ensure all requests include tenant ID
-app.use(tenantMiddleware({
-  required: true,
-  // In production, this would validate against a tenant service
-  validateTenant: async (tenantId) => true
-}));
+// Apply enhanced tenant middleware
+app.use(reservationTenantMiddleware);
 
 // Register routes
 app.use('/api/v1/reservations', reservationRoutes);
@@ -28,7 +25,7 @@ app.registerErrorHandlers();
 const prisma = new PrismaClient();
 
 // Start the service
-const PORT = process.env.PORT || 4002; // Updated to use port 4002 to avoid conflicts
+const PORT = 4003; // Explicitly using port 4003 to avoid conflicts with customer service
 app.listen(PORT, async () => {
   console.log(`Reservation service running on port ${PORT}`);
   console.log(`Health check available at http://localhost:${PORT}/health`);

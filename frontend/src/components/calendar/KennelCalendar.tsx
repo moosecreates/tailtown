@@ -186,10 +186,10 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
     try {
       setLoading(true);
       
-      // Get all kennels (suites)
+      // Get all kennels (suites) - using specific suite types instead of generic 'suite'
       const response = await api.get('/api/resources/availability', {
         params: {
-          resourceType: 'suite',
+          resourceType: ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'].join(','),
           date: formatDateToYYYYMMDD(currentDate),
         }
       });

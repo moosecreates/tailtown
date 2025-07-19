@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # Customer Service Database
+  customer-db:
+    image: postgres:14
+    ports:
+      - "5435:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=customer
+    volumes:
+      - customer-db-data:/var/lib/postgresql/data
+    networks:
+      - tailtown-network
+
+  # Reservation Service Database
+  reservation-db:
+    image: postgres:14
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=reservation
+    volumes:
+      - reservation-db-data:/var/lib/postgresql/data
+    networks:
+      - tailtown-network
+
+networks:
+  tailtown-network:
+    driver: bridge
+
+volumes:
+  customer-db-data:
+  reservation-db-data:

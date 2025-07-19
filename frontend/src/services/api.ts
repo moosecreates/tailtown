@@ -29,7 +29,10 @@ const customerApi = axios.create({
  */
 const reservationApi = axios.create({
   baseURL: process.env.REACT_APP_RESERVATION_API_URL || 'http://localhost:4003',
-  headers: defaultHeaders,
+  headers: {
+    ...defaultHeaders,
+    'X-Tenant-ID': 'tailtown' // Add tenant ID header required by reservation service
+  },
   validateStatus: defaultValidateStatus
 });
 

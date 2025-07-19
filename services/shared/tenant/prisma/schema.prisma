@@ -1,0 +1,44 @@
+// Tenant Service Prisma Schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Organization represents a tenant in the system
+model Organization {
+  id               String   @id @default(uuid())
+  name             String
+  active           Boolean  @default(true)
+  subscriptionTier String   @default("standard")
+  settings         Json?    @default("{}")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  // Relationships
+  usageRecords     TenantUsage[]
+}
+
+// TenantUsage tracks resource usage for billing and monitoring
+model TenantUsage {
+  id         String   @id @default(uuid())
+  tenantId   String
+  endpoint   String
+  method     String
+  duration   Int      // in milliseconds
+  statusCode Int
+  timestamp  DateTime @default(now())
+  
+  // Relationships
+  tenant     Organization @relation(fields: [tenantId], references: [id])
+  
+  // Indexes for efficient querying
+  @@index([tenantId])
+  @@index([timestamp])
+  @@index([tenantId, timestamp])
+}
