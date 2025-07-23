@@ -65,8 +65,9 @@ const Reservations = () => {
         getFormattedDateString(selectedDate) // date filter using formatted string
       );
       console.log('Reservations response:', response);
-      if (response?.status === 'success' && Array.isArray(response?.data)) {
-        setReservations(response.data);
+      if (response?.status === 'success' && response?.data?.reservations) {
+        // Extract the reservations array from the nested data object
+        setReservations(response.data.reservations);
         setTotalPages(response.totalPages || 1);
       } else {
         console.error('Invalid reservations response format:', response);
@@ -78,7 +79,7 @@ const Reservations = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, selectedDate]);
+  }, [page, selectedDate, getFormattedDateString]);
 
   useEffect(() => {
     loadReservations();

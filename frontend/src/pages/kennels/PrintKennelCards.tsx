@@ -100,18 +100,21 @@ const PrintKennelCards: React.FC = () => {
         formattedDate
       );
       
-      const reservationsData = response.data || [];
-      console.log(`Loaded ${reservationsData.length} reservations from API`);
+      // Ensure we're working with an array of reservations
+      const reservationsArray = Array.isArray(response.data) ? response.data : 
+                              (response.data && typeof response.data === 'object' && 'reservations' in response.data ? response.data.reservations as any[] : []);
+      
+      console.log(`Loaded ${reservationsArray.length} reservations from API`);
       
       // Log the first few reservations for debugging
-      if (reservationsData.length > 0) {
-        console.log('Sample reservation data:', reservationsData[0]);
+      if (reservationsArray.length > 0) {
+        console.log('Sample reservation data:', reservationsArray[0]);
       }
       
-      setReservations(reservationsData);
+      setReservations(reservationsArray);
       
       // Fetch additional data for each reservation
-      await fetchAdditionalData(reservationsData);
+      await fetchAdditionalData(reservationsArray);
       
       // Apply filters
       filterReservations();
