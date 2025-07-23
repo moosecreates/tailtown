@@ -6,7 +6,7 @@ import {
   updateStaffSchedule,
   deleteStaffSchedule,
   bulkCreateSchedules
-} from '../controllers/staff.controller';
+} from '../controllers/schedule.controller';
 
 const router = Router();
 
