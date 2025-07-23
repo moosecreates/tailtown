@@ -7,9 +7,8 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { EventInput, DateSelectArg, EventClickArg } from '@fullcalendar/core';
 
 import { Box, Paper, Dialog, DialogTitle, DialogContent } from '@mui/material';
-import { reservationService } from '../../services/reservationService';
+import { reservationService, Reservation } from '../../services/reservationService';
 import ReservationForm from '../reservations/ReservationForm';
-import { Reservation } from '../../services/reservationService';
 import { ServiceCategory } from '../../types/service';
 
 /**
@@ -48,6 +47,24 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
   const [selectedDate, setSelectedDate] = useState<{ start: Date; end: Date } | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Reservation | null>(null);
 
+  // Get the color for a reservation status
+  const getStatusColor = (status: string): string => {
+    switch (status) {
+      case 'CONFIRMED':
+        return '#4caf50'; // Green
+      case 'PENDING':
+        return '#ff9800'; // Orange
+      case 'CHECKED_IN':
+        return '#2196f3'; // Blue
+      case 'COMPLETED':
+        return '#9e9e9e'; // Gray
+      case 'CANCELLED':
+        return '#f44336'; // Red
+      default:
+        return '#4c8bf5'; // Default blue
+    }
+  };
+
   const loadReservations = useCallback(async () => {
     try {
       console.log('SpecializedCalendar: Loading reservations...');
@@ -64,70 +81,65 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
       );
       
       console.log('SpecializedCalendar: Got response:', response);
-      if (response?.status === 'success' && Array.isArray(response?.data)) {
-        // Filter reservations by service category if specified
-        let filteredReservations = response.data;
-        if (serviceCategories && serviceCategories.length > 0) {
-          filteredReservations = response.data.filter(reservation => {
-            // Check if the reservation's service category matches any of the specified categories
-            if (!reservation.service || typeof reservation.service !== 'object') {
-              return false;
-            }
-            
-            // Safely access the serviceCategory property
-            const serviceObj = reservation.service as any;
-            if (!serviceObj.serviceCategory) {
-              console.log('SpecializedCalendar: No serviceCategory found for reservation:', reservation.id);
-              return false;
-            }
-            
-            const serviceCategory = serviceObj.serviceCategory;
-            console.log('SpecializedCalendar: Checking service category:', serviceCategory, 'against:', serviceCategories);
-            
-            return serviceCategories.some(category => {
-              const match = serviceCategory === category;
-              console.log('SpecializedCalendar: Category match?', category, match);
-              return match;
-            });
-          });
-          console.log('SpecializedCalendar: Filtered reservations by service category:', filteredReservations.length);
-        }
-        
-        const calendarEvents = filteredReservations.map(reservation => ({
-          id: reservation.id,
-          title: `${reservation.pet?.name || 'Pet'} - ${reservation.service?.name || 'Service'}`,
-          start: reservation.startDate,
-          end: reservation.endDate,
-          backgroundColor: getStatusColor(reservation.status),
-          extendedProps: {
-            reservation
+      // Ensure we're working with an array of reservations
+      const reservationsArray = Array.isArray(response?.data) ? response.data : 
+                              (response?.data && typeof response.data === 'object' && 'reservations' in response.data ? response.data.reservations as any[] : []);
+      
+      // Filter reservations by service category if specified
+      let filteredReservations = reservationsArray;
+      if (serviceCategories && serviceCategories.length > 0) {
+        filteredReservations = reservationsArray.filter((reservation: any) => {
+          // Check if the reservation's service category matches any of the specified categories
+          if (!reservation.service || typeof reservation.service !== 'object') {
+            return false;
           }
-        }));
-        
-        console.log('SpecializedCalendar: Created calendar events:', calendarEvents.length);
-        setEvents(calendarEvents);
-        return calendarEvents;
-      } else {
-        console.warn('SpecializedCalendar: Invalid response format or no reservations found');
-        setEvents([]);
-        return [];
+          
+          // Safely access the serviceCategory property
+          const serviceObj = reservation.service as any;
+          if (!serviceObj.serviceCategory) {
+            console.log('SpecializedCalendar: No serviceCategory found for reservation:', reservation.id);
+            return false;
+          }
+          
+          const serviceCategory = serviceObj.serviceCategory;
+          console.log('SpecializedCalendar: Checking service category:', serviceCategory, 'against:', serviceCategories);
+          
+          return serviceCategories.some(category => {
+            const match = serviceCategory === category;
+            console.log('SpecializedCalendar: Category match?', category, match);
+            return match;
+          });
+        });
+        console.log('SpecializedCalendar: Filtered reservations by service category:', filteredReservations.length);
       }
+      
+      const calendarEvents = filteredReservations.map(reservation => ({
+        id: reservation.id,
+        title: `${reservation.pet?.name || 'Pet'} - ${reservation.service?.name || 'Service'}`,
+        start: reservation.startDate,
+        end: reservation.endDate,
+        backgroundColor: getStatusColor(reservation.status),
+        extendedProps: {
+          reservation
+        }
+      }));
+      
+      console.log('SpecializedCalendar: Created calendar events:', calendarEvents.length);
+      setEvents(calendarEvents);
+      return calendarEvents;
     } catch (error) {
       console.error('SpecializedCalendar: Error loading reservations:', error);
       setEvents([]);
       return [];
     }
-  }, [serviceCategories]);
+  }, [serviceCategories, getStatusColor]);
 
-  // Load reservations when the component mounts or when serviceCategories changes
   useEffect(() => {
     loadReservations();
-  }, [loadReservations, serviceCategories]);
+  }, [loadReservations]);
   
   /**
    * Event listener to handle reservation completion
-   * This is triggered when add-ons are added to a reservation
-   * It closes the form dialog and refreshes the calendar
    */
   useEffect(() => {
     const handleReservationComplete = (event: Event) => {
@@ -143,34 +155,15 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
     // Add the event listener for the custom event
     document.addEventListener('reservationComplete', handleReservationComplete);
     
-    // Clean up the event listener when the component unmounts to prevent memory leaks
+    // Clean up the event listener when the component unmounts
     return () => {
       document.removeEventListener('reservationComplete', handleReservationComplete);
     };
   }, [loadReservations]);
 
-  // Get the color for a reservation status
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case 'CONFIRMED':
-        return '#4caf50'; // Green
-      case 'PENDING':
-        return '#ff9800'; // Orange
-      case 'CHECKED_IN':
-        return '#2196f3'; // Blue
-      case 'CHECKED_OUT':
-        return '#9e9e9e'; // Gray
-      case 'CANCELLED':
-        return '#f44336'; // Red
-      default:
-        return '#9e9e9e'; // Gray
-    }
-  };
-
   // Handle date selection in the calendar
   const handleDateSelect = (selectInfo: DateSelectArg) => {
-    const start = selectInfo.start;
-    const end = selectInfo.end;
+    const { start, end } = selectInfo;
     
     // Set the selected date range
     setSelectedDate({ start, end });
@@ -194,7 +187,7 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
   };
 
   // Handle form submission for creating or updating a reservation
-  const handleFormSubmit = async (formData: any) => {
+  const handleFormSubmit = async (formData: any): Promise<void | { reservationId?: string }> => {
     console.log('SpecializedCalendar: handleFormSubmit called with data:', formData);
     try {
       let updatedReservation;
@@ -270,6 +263,7 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
       } else {
         console.warn('SpecializedCalendar: No reservation returned from server');
         // Do NOT close the dialog if reservation failed
+        return;
       }
     } catch (error) {
       console.error('SpecializedCalendar: Error saving reservation:', error);

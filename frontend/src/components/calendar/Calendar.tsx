@@ -90,22 +90,22 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
       
       console.log('Calendar: Got response:', response);
       if (response?.status === 'success' && Array.isArray(response?.data)) {
+        // Ensure we're working with an array of reservations
+        const reservationsArray = Array.isArray(response?.data) ? response.data : 
+                                (response?.data && typeof response.data === 'object' && 'reservations' in (response.data as Record<string, any>) ? (response.data as Record<string, any>).reservations as any[] : []);
+        
         // Filter reservations by service category if specified
-        let filteredReservations = response.data;
+        let filteredReservations = reservationsArray;
         if (serviceCategories && serviceCategories.length > 0) {
-          // First, log all reservations to see what we're working with
-          console.log('Calendar: All reservations:', response.data);
-          
-          // If we have reservations, log the first one's service details to debug
-          if (response.data.length > 0) {
+          if (reservationsArray.length > 0) {
             console.log('Calendar: First reservation service details:', {
-              service: response.data[0].service,
-              serviceId: response.data[0].serviceId
+              service: reservationsArray[0].service,
+              serviceId: reservationsArray[0].serviceId
             });
           }
           
           // Filter reservations by service category
-          filteredReservations = response.data.filter(reservation => {
+          filteredReservations = reservationsArray.filter((reservation: any) => {
             // If we don't have service categories to filter by, include all reservations
             if (!serviceCategories || serviceCategories.length === 0) {
               return true;
@@ -120,18 +120,18 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
                 return serviceCategories.includes(reservation.service.serviceCategory as ServiceCategory);
               }
               
-              // For boarding and daycare, we might need to check the service name
-              const serviceName = reservation.service.name?.toUpperCase();
-              if (serviceName) {
-                // Check if the service name contains any of our categories
-                return serviceCategories.some(category => {
-                  const categoryStr = String(category).toUpperCase();
-                  return serviceName.includes(categoryStr);
-                });
+              // If the service has a category property
+              if ('category' in reservation.service) {
+                return serviceCategories.includes(reservation.service.category as ServiceCategory);
               }
             }
             
-            // If we can't determine the service category, exclude the reservation
+            // If the reservation has a serviceCategory property directly
+            if (reservation.serviceCategory) {
+              return serviceCategories.includes(reservation.serviceCategory as ServiceCategory);
+            }
+            
+            // If we can't determine the service category, don't include it
             return false;
           });
           
