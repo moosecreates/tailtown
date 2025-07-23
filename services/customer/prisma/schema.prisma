@@ -8,43 +8,435 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Customer {
-  id               String                  @id @default(uuid())
-  email            String                  @unique
-  firstName        String
-  lastName         String
-  phone            String?
-  alternatePhone   String?
-  address          String?
-  city             String?
-  state            String?
-  zipCode          String?
-  notes            String?
-  portalEnabled    Boolean                 @default(true)
-  preferredContact ContactMethod           @default(EMAIL)
-  emergencyContact String?
-  emergencyPhone   String?
-  vatTaxId         String?
-  referralSource   String?
-  tags             String[]                @default([])
-  isActive         Boolean                 @default(true)
-  createdAt        DateTime                @default(now())
-  updatedAt        DateTime                @updatedAt
-  documents        Document[]
-  invoices         Invoice[]
-  notifications    NotificationPreference?
-  payments         Payment[]
-  pets             Pet[]
-  reservations     Reservation[]
+model AddOnService {
+  id               String             @id
+  name             String
+  description      String?
+  price            Float
+  duration         Int?
+  serviceId        String
+  isActive         Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  organizationId   String
+  ReservationAddOn ReservationAddOn[]
 
-  @@index([firstName, lastName], map: "customers_name_search_idx")
-  @@index([email], map: "customers_email_search_idx")
-  @@index([phone], map: "customers_phone_search_idx")
-  @@map("customers")
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+  @@index([serviceId])
+}
+
+model Customer {
+  id             String        @id
+  firstName      String
+  lastName       String
+  email          String
+  phone          String?
+  address        String?
+  city           String?
+  state          String?
+  zipCode        String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  organizationId String
+  Pet            Pet[]
+  Reservation    Reservation[]
+
+  @@index([organizationId, email])
+  @@index([organizationId])
+  @@index([organizationId, lastName, firstName])
 }
 
 model Pet {
-  id                 String          @id @default(uuid())
+  id             String        @id
+  name           String
+  breed          String?
+  size           String?
+  weight         Float?
+  birthDate      DateTime?
+  notes          String?
+  customerId     String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  organizationId String
+  Customer       Customer      @relation(fields: [customerId], references: [id])
+  Reservation    Reservation[]
+
+  @@index([customerId])
+  @@index([organizationId, customerId])
+  @@index([organizationId])
+}
+
+model Reservation {
+  id               String             @id
+  orderNumber      String?
+  customerId       String
+  petId            String
+  resourceId       String?
+  startDate        DateTime
+  endDate          DateTime
+  status           String             @default("CONFIRMED")
+  suiteType        String
+  price            Float?
+  deposit          Float?
+  balance          Float?
+  notes            String?
+  staffNotes       String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  organizationId   String
+  Customer         Customer           @relation(fields: [customerId], references: [id])
+  Pet              Pet                @relation(fields: [petId], references: [id])
+  Resource         Resource?          @relation(fields: [resourceId], references: [id])
+  ReservationAddOn ReservationAddOn[]
+
+  @@unique([orderNumber, organizationId])
+  @@index([customerId])
+  @@index([orderNumber])
+  @@index([organizationId, customerId])
+  @@index([organizationId])
+  @@index([organizationId, startDate, endDate])
+  @@index([organizationId, status])
+  @@index([petId])
+  @@index([resourceId])
+}
+
+model ReservationAddOn {
+  id             String       @id
+  reservationId  String
+  addOnId        String
+  price          Float
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime
+  organizationId String
+  AddOnService   AddOnService @relation(fields: [addOnId], references: [id])
+  Reservation    Reservation  @relation(fields: [reservationId], references: [id])
+
+  @@index([addOnId])
+  @@index([organizationId])
+  @@index([reservationId])
+}
+
+model Resource {
+  id             String        @id
+  name           String
+  type           String
+  description    String?
+  capacity       Int           @default(1)
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  organizationId String
+  Reservation    Reservation[]
+
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+  @@index([organizationId, type])
+}
+
+model Service {
+  id             String   @id
+  name           String
+  description    String?
+  price          Float
+  duration       Int?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  organizationId String
+
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+}
+
+model activities {
+  id           String    @id
+  checkInId    String
+  activityType String
+  notes        String?
+  timestamp    DateTime  @default(now())
+  recordedBy   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+  check_ins    check_ins @relation(fields: [checkInId], references: [id], onDelete: Cascade)
+}
+
+model addon_services {
+  id                 String               @id
+  name               String
+  description        String?
+  price              Float
+  duration           Int?
+  serviceId          String
+  isActive           Boolean              @default(true)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+  services           services             @relation(fields: [serviceId], references: [id])
+  reservation_addons reservation_addons[]
+}
+
+model check_ins {
+  id                  String        @id
+  petId               String
+  reservationId       String?
+  checkInTime         DateTime      @default(now())
+  checkOutTime        DateTime?
+  checkInNotes        String?
+  checkOutNotes       String?
+  checkInBy           String?
+  checkOutBy          String?
+  belongingsChecklist Json?
+  foodProvided        Boolean       @default(false)
+  medicationGiven     Boolean       @default(false)
+  medicationNotes     String?
+  behaviorDuringStay  String?
+  photosTaken         Boolean       @default(false)
+  photosShared        Boolean       @default(false)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime
+  activities          activities[]
+  pets                pets          @relation(fields: [petId], references: [id])
+  reservations        reservations? @relation(fields: [reservationId], references: [id])
+
+  @@index([petId, checkInTime], map: "check_ins_pet_time_idx")
+  @@index([checkInTime], map: "check_ins_time_idx")
+}
+
+model customers {
+  id                           String                    @id
+  email                        String                    @unique
+  firstName                    String
+  lastName                     String
+  phone                        String?
+  alternatePhone               String?
+  address                      String?
+  city                         String?
+  state                        String?
+  zipCode                      String?
+  notes                        String?
+  portalEnabled                Boolean                   @default(true)
+  preferredContact             ContactMethod             @default(EMAIL)
+  emergencyContact             String?
+  emergencyPhone               String?
+  vatTaxId                     String?
+  referralSource               String?
+  tags                         String[]                  @default([])
+  isActive                     Boolean                   @default(true)
+  createdAt                    DateTime                  @default(now())
+  updatedAt                    DateTime
+  emergencyContactEmail        String?
+  emergencyContactNotes        String?
+  emergencyContactRelationship String?
+  documents                    documents[]
+  financial_accounts           financial_accounts[]
+  financial_transactions       financial_transactions[]
+  invoices                     invoices[]
+  notification_preferences     notification_preferences?
+  payments                     payments[]
+  pets                         pets[]
+  reservations                 reservations[]
+
+  @@index([email], map: "customers_email_search_idx")
+  @@index([firstName, lastName], map: "customers_name_search_idx")
+  @@index([phone], map: "customers_phone_search_idx")
+}
+
+model documents {
+  id          String    @id
+  customerId  String
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  tags        String[]  @default([])
+  uploaded    DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  customers   customers @relation(fields: [customerId], references: [id])
+}
+
+model financial_accounts {
+  id               String           @id
+  accountNumber    String           @unique
+  customerId       String
+  currentBalance   Float            @default(0)
+  availableBalance Float            @default(0)
+  lastTransaction  DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime
+  customers        customers        @relation(fields: [customerId], references: [id])
+  ledger_entries   ledger_entries[]
+
+  @@index([customerId], map: "financial_accounts_customer_idx")
+}
+
+model financial_reconciliations {
+  id                 String               @id
+  reconciliationDate DateTime
+  startDate          DateTime
+  endDate            DateTime
+  reconciliationType ReconciliationType
+  status             ReconciliationStatus @default(IN_PROGRESS)
+  discrepancies      Json?
+  notes              String?
+  performedById      String?
+  verifiedById       String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+
+  @@index([reconciliationDate], map: "financial_reconciliations_date_idx")
+  @@index([status])
+}
+
+model financial_transactions {
+  id                           String                   @id
+  transactionNumber            String                   @unique
+  type                         TransactionType
+  amount                       Float
+  relatedAmount                Float?
+  status                       TransactionStatus        @default(PENDING)
+  paymentMethod                PaymentMethod?
+  notes                        String?
+  metadata                     Json?
+  timestamp                    DateTime                 @default(now())
+  createdAt                    DateTime                 @default(now())
+  updatedAt                    DateTime
+  customerId                   String?
+  invoiceId                    String?
+  paymentId                    String?
+  reservationId                String?
+  createdById                  String?
+  processedById                String?
+  processedAt                  DateTime?
+  relatedTransactionId         String?
+  invoiceLineItemId            String?
+  customers                    customers?               @relation(fields: [customerId], references: [id])
+  invoices                     invoices?                @relation(fields: [invoiceId], references: [id])
+  invoice_line_items           invoice_line_items?      @relation(fields: [invoiceLineItemId], references: [id])
+  payments                     payments?                @relation(fields: [paymentId], references: [id])
+  financial_transactions       financial_transactions?  @relation("financial_transactionsTofinancial_transactions", fields: [relatedTransactionId], references: [id])
+  other_financial_transactions financial_transactions[] @relation("financial_transactionsTofinancial_transactions")
+  reservations                 reservations?            @relation(fields: [reservationId], references: [id])
+  transaction_items            transaction_items[]
+
+  @@index([customerId, timestamp], map: "financial_transactions_customer_date_idx")
+  @@index([invoiceId], map: "financial_transactions_invoice_idx")
+  @@index([transactionNumber], map: "financial_transactions_number_idx")
+  @@index([type, status])
+}
+
+model invoice_line_items {
+  id                     String                   @id
+  invoiceId              String
+  description            String
+  quantity               Int                      @default(1)
+  unitPrice              Float
+  amount                 Float
+  taxable                Boolean                  @default(true)
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  financial_transactions financial_transactions[]
+  invoices               invoices                 @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model invoices {
+  id                     String                   @id
+  invoiceNumber          String                   @unique
+  customerId             String
+  reservationId          String?                  @unique
+  issueDate              DateTime                 @default(now())
+  dueDate                DateTime
+  status                 InvoiceStatus            @default(DRAFT)
+  subtotal               Float
+  taxRate                Float                    @default(7.44)
+  taxAmount              Float                    @default(0)
+  discount               Float                    @default(0)
+  total                  Float
+  notes                  String?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  financial_transactions financial_transactions[]
+  invoice_line_items     invoice_line_items[]
+  customers              customers                @relation(fields: [customerId], references: [id])
+  reservations           reservations?            @relation(fields: [reservationId], references: [id])
+  payments               payments[]
+}
+
+model ledger_entries {
+  id                 String             @id
+  accountId          String
+  transactionId      String?
+  entryType          LedgerEntryType
+  amount             Float
+  balanceAfter       Float
+  description        String
+  timestamp          DateTime           @default(now())
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime
+  financial_accounts financial_accounts @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, timestamp], map: "ledger_entries_account_date_idx")
+}
+
+model medical_records {
+  id             String    @id
+  petId          String
+  recordType     String
+  recordDate     DateTime
+  expirationDate DateTime?
+  description    String
+  veterinarian   String?
+  fileUrl        String?
+  verified       Boolean   @default(false)
+  verifiedBy     String?
+  verifiedDate   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime
+  pets           pets      @relation(fields: [petId], references: [id], onDelete: Cascade)
+}
+
+model notification_preferences {
+  id                   String    @id
+  customerId           String    @unique
+  emailNotifications   Boolean   @default(true)
+  smsNotifications     Boolean   @default(false)
+  pushNotifications    Boolean   @default(false)
+  marketingEmails      Boolean   @default(true)
+  appointmentReminders Boolean   @default(true)
+  checkinNotifications Boolean   @default(true)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime
+  customers            customers @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model payments {
+  id                     String                   @id
+  invoiceId              String
+  customerId             String
+  amount                 Float
+  method                 PaymentMethod
+  status                 PaymentStatus            @default(PENDING)
+  transactionId          String?
+  paymentDate            DateTime                 @default(now())
+  gatewayResponse        Json?
+  refundedAmount         Float                    @default(0)
+  refundReason           String?
+  notes                  String?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  financial_transactions financial_transactions[]
+  customers              customers                @relation(fields: [customerId], references: [id])
+  invoices               invoices                 @relation(fields: [invoiceId], references: [id])
+
+  @@index([customerId, paymentDate], map: "payments_customer_date_idx")
+  @@index([status, paymentDate], map: "payments_status_date_idx")
+}
+
+model pets {
+  id                 String            @id
   name               String
   type               PetType
   breed              String?
@@ -52,7 +444,7 @@ model Pet {
   birthdate          DateTime?
   weight             Float?
   gender             Gender?
-  isNeutered         Boolean         @default(false)
+  isNeutered         Boolean           @default(false)
   microchipNumber    String?
   rabiesTagNumber    String?
   specialNeeds       String?
@@ -66,185 +458,234 @@ model Pet {
   vetName            String?
   vetPhone           String?
   profilePhoto       String?
-  isActive           Boolean         @default(true)
+  isActive           Boolean           @default(true)
   lastCheckIn        DateTime?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime
   customerId         String
-  checkIns           CheckIn[]
-  medicalRecords     MedicalRecord[]
-  owner              Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  reservations       Reservation[]
+  check_ins          check_ins[]
+  medical_records    medical_records[]
+  customers          customers         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  reservations       reservations[]
 
-  @@index([customerId], map: "pets_customer_id_idx")
   @@index([isActive, type], map: "pets_active_type_idx")
+  @@index([customerId], map: "pets_customer_id_idx")
   @@index([lastCheckIn], map: "pets_last_checkin_idx")
-  @@map("pets")
 }
 
-model Reservation {
-  id                 String             @id @default(uuid())
-  orderNumber        String?            @unique
-  startDate          DateTime
-  endDate            DateTime
-  status             ReservationStatus  @default(PENDING)
-  notes              String?
-  staffNotes         String?
-  checkInWindow      Int?
-  isRecurring        Boolean            @default(false)
-  recurringPattern   String?
-  preChecked         Boolean            @default(false)
-  checkInDate        DateTime?
-  checkOutDate       DateTime?
-  earlyDropOff       Boolean            @default(false)
-  latePickup         Boolean            @default(false)
-  customPickupPerson String?
-  confirmedBy        String?
-  cancelReason       String?
-  cancelDate         DateTime?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  customerId         String
-  petId              String
-  serviceId          String
-  resourceId         String?
-  staffAssignedId    String?
-  checkIns           CheckIn[]
-  invoice            Invoice?
-  addOnServices      ReservationAddOn[]
-  customer           Customer           @relation(fields: [customerId], references: [id])
-  pet                Pet                @relation(fields: [petId], references: [id])
-  resource           Resource?          @relation(fields: [resourceId], references: [id])
-  service            Service            @relation(fields: [serviceId], references: [id])
-  staffAssigned      Staff?             @relation(fields: [staffAssignedId], references: [id])
+model price_rule_service_categories {
+  id              String          @id
+  priceRuleId     String
+  serviceCategory ServiceCategory
+  price_rules     price_rules     @relation(fields: [priceRuleId], references: [id], onDelete: Cascade)
 
+  @@unique([priceRuleId, serviceCategory])
+}
+
+model price_rule_services {
+  id          String      @id
+  priceRuleId String
+  serviceId   String
+  price_rules price_rules @relation(fields: [priceRuleId], references: [id], onDelete: Cascade)
+  services    services    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([priceRuleId, serviceId])
+}
+
+model price_rules {
+  id                            String                          @id
+  name                          String
+  description                   String?
+  ruleType                      PriceRuleType
+  discountType                  DiscountType
+  discountValue                 Float
+  minQuantity                   Int?
+  maxQuantity                   Int?
+  startDate                     DateTime?
+  endDate                       DateTime?
+  daysOfWeek                    String?
+  isActive                      Boolean                         @default(true)
+  priority                      Int                             @default(10)
+  createdAt                     DateTime                        @default(now())
+  updatedAt                     DateTime
+  price_rule_service_categories price_rule_service_categories[]
+  price_rule_services           price_rule_services[]
+
+  @@index([ruleType, isActive], map: "price_rules_type_active_idx")
+}
+
+model reconciliation_notifications {
+  id               String   @id
+  reconciliationId String
+  notificationType String
+  message          String
+  recipientIds     String[]
+  readBy           String[]
+  sentAt           DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime
+}
+
+model reconciliation_resolutions {
+  id               String   @id
+  reconciliationId String
+  discrepancyIndex Int
+  resolution       String
+  actionTaken      String
+  resolvedById     String
+  resolvedAt       DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime
+}
+
+model reconciliation_schedules {
+  id                 String                  @id
+  frequency          ReconciliationFrequency
+  reconciliationType ReconciliationType
+  isActive           Boolean                 @default(true)
+  lastRun            DateTime?
+  nextRun            DateTime
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime
+}
+
+model reservation_addons {
+  id             String         @id
+  reservationId  String
+  addOnId        String
+  price          Float
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime
+  addon_services addon_services @relation(fields: [addOnId], references: [id])
+  reservations   reservations   @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+}
+
+model reservations {
+  id                     String                   @id
+  startDate              DateTime
+  endDate                DateTime
+  status                 ReservationStatus        @default(PENDING)
+  notes                  String?
+  staffNotes             String?
+  checkInWindow          Int?
+  isRecurring            Boolean                  @default(false)
+  recurringPattern       String?
+  preChecked             Boolean                  @default(false)
+  checkInDate            DateTime?
+  checkOutDate           DateTime?
+  earlyDropOff           Boolean                  @default(false)
+  latePickup             Boolean                  @default(false)
+  customPickupPerson     String?
+  confirmedBy            String?
+  cancelReason           String?
+  cancelDate             DateTime?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  customerId             String
+  petId                  String
+  serviceId              String
+  resourceId             String?
+  staffAssignedId        String?
+  orderNumber            String?                  @unique
+  check_ins              check_ins[]
+  financial_transactions financial_transactions[]
+  invoices               invoices?
+  reservation_addons     reservation_addons[]
+  customers              customers                @relation(fields: [customerId], references: [id])
+  pets                   pets                     @relation(fields: [petId], references: [id])
+  resources              resources?               @relation(fields: [resourceId], references: [id])
+  services               services                 @relation(fields: [serviceId], references: [id])
+  staff                  staff?                   @relation(fields: [staffAssignedId], references: [id])
+
+  @@index([customerId, status], map: "reservations_customer_status_idx")
   @@index([startDate, endDate], map: "reservations_date_range_idx")
   @@index([status, startDate], map: "reservations_status_date_idx")
-  @@index([customerId, status], map: "reservations_customer_status_idx")
-  @@map("reservations")
 }
 
-model Service {
-  id              String             @id @default(uuid())
-  name            String
-  description     String?
-  duration        Int
-  price           Float
-  color           String?
-  serviceCategory ServiceCategory
-  isActive        Boolean            @default(true)
-  requiresStaff   Boolean            @default(false)
-  notes           String?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  capacityLimit   Int                @default(0)
-  availableAddOns AddOnService[]
-  priceRules      PriceRuleService[]
-  reservations    Reservation[]
-
-  @@map("services")
-}
-
-model AddOnService {
-  id                String             @id @default(uuid())
-  name              String
-  description       String?
-  price             Float
-  duration          Int?
-  serviceId         String
-  isActive          Boolean            @default(true)
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  service           Service            @relation(fields: [serviceId], references: [id])
-  reservationAddOns ReservationAddOn[]
-
-  @@map("addon_services")
-}
-
-model ReservationAddOn {
-  id            String       @id @default(uuid())
-  reservationId String
-  addOnId       String
-  price         Float
-  notes         String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  addOn         AddOnService @relation(fields: [addOnId], references: [id])
-  reservation   Reservation  @relation(fields: [reservationId], references: [id], onDelete: Cascade)
-
-  @@map("reservation_addons")
-}
-
-model Resource {
-  id                  String                 @id @default(uuid())
-  name                String
-  type                ResourceType
-  description         String?
-  capacity            Int                    @default(1)
-  isActive            Boolean                @default(true)
-  notes               String?
-  createdAt           DateTime               @default(now())
-  updatedAt           DateTime               @updatedAt
-  attributes          Json?
-  availability        String?
-  location            String?
-  maintenanceSchedule String?
-  lastCleanedAt       DateTime?
-  maintenanceStatus   String?
-  suiteNumber         Int?
-  reservations        Reservation[]
-  availabilitySlots   ResourceAvailability[]
-
-  @@map("resources")
-}
-
-model ResourceAvailability {
-  id         String             @id @default(uuid())
+model resource_availability {
+  id         String             @id
   resourceId String
   startTime  DateTime
   endTime    DateTime
   status     AvailabilityStatus
   reason     String?
   createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
-  resource   Resource           @relation(fields: [resourceId], references: [id])
-
-  @@map("resource_availability")
+  updatedAt  DateTime
+  resources  resources          @relation(fields: [resourceId], references: [id])
 }
 
-model Staff {
-  id                   String              @id @default(uuid())
-  firstName            String
-  lastName             String
-  email                String              @unique
-  phone                String?
-  role                 String
-  workSchedule         Json?
-  specialties          String[]            @default([])
-  isActive             Boolean             @default(true)
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
-  department           String?
-  hireDate             DateTime?
-  lastLogin            DateTime?
-  password             String
-  position             String?
-  resetToken           String?
-  resetTokenExpiry     DateTime?
-  address              String?
-  city                 String?
-  state                String?
-  zipCode              String?
-  assignedReservations Reservation[]
-  availability         StaffAvailability[]
-  schedules            StaffSchedule[]
-  timeOff              StaffTimeOff[]
-
-  @@map("staff")
+model resources {
+  id                    String                  @id
+  name                  String
+  type                  ResourceType
+  description           String?
+  capacity              Int                     @default(1)
+  isActive              Boolean                 @default(true)
+  notes                 String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime
+  attributes            Json?
+  availability          String?
+  location              String?
+  maintenanceSchedule   String?
+  lastCleanedAt         DateTime?
+  maintenanceStatus     String?
+  suiteNumber           Int?
+  reservations          reservations[]
+  resource_availability resource_availability[]
 }
 
-model StaffAvailability {
-  id             String    @id @default(uuid())
+model services {
+  id                  String                @id
+  name                String
+  description         String?
+  duration            Int
+  price               Float
+  color               String?
+  serviceCategory     ServiceCategory
+  isActive            Boolean               @default(true)
+  requiresStaff       Boolean               @default(false)
+  notes               String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime
+  capacityLimit       Int                   @default(0)
+  addon_services      addon_services[]
+  price_rule_services price_rule_services[]
+  reservations        reservations[]
+}
+
+model staff {
+  id                 String               @id
+  firstName          String
+  lastName           String
+  email              String               @unique
+  phone              String?
+  role               String
+  workSchedule       Json?
+  specialties        String[]             @default([])
+  isActive           Boolean              @default(true)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime
+  department         String?
+  hireDate           DateTime?
+  lastLogin          DateTime?
+  password           String
+  position           String?
+  resetToken         String?
+  resetTokenExpiry   DateTime?
+  address            String?
+  city               String?
+  state              String?
+  zipCode            String?
+  reservations       reservations[]
+  staff_availability staff_availability[]
+  staff_schedules    staff_schedules[]
+  staff_time_off     staff_time_off[]
+}
+
+model staff_availability {
+  id             String    @id
   staffId        String
   dayOfWeek      Int
   startTime      String
@@ -254,16 +695,36 @@ model StaffAvailability {
   effectiveUntil DateTime?
   isAvailable    Boolean   @default(true)
   createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  staff          Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  updatedAt      DateTime
+  staff          staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
-  @@index([staffId, dayOfWeek], map: "staff_availability_staff_day_idx")
   @@index([dayOfWeek, isAvailable], map: "staff_availability_day_status_idx")
-  @@map("staff_availability")
+  @@index([staffId, dayOfWeek], map: "staff_availability_staff_day_idx")
 }
 
-model StaffTimeOff {
-  id           String        @id @default(uuid())
+model staff_schedules {
+  id               String         @id
+  staffId          String
+  date             DateTime
+  startTime        String
+  endTime          String
+  status           ScheduleStatus @default(SCHEDULED)
+  notes            String?
+  location         String?
+  role             String?
+  createdById      String?
+  updatedById      String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime
+  startingLocation String?
+  staff            staff          @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@index([date, status])
+  @@index([staffId, date], map: "staff_schedules_staff_date_idx")
+}
+
+model staff_time_off {
+  id           String        @id
   staffId      String
   startDate    DateTime
   endDate      DateTime
@@ -274,243 +735,54 @@ model StaffTimeOff {
   approvedById String?
   approvedDate DateTime?
   createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  staff        Staff         @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  updatedAt    DateTime
+  staff        staff         @relation(fields: [staffId], references: [id], onDelete: Cascade)
 
-  @@index([staffId, status], map: "staff_time_off_staff_status_idx")
   @@index([startDate, endDate], map: "staff_time_off_date_range_idx")
-  @@map("staff_time_off")
+  @@index([staffId, status], map: "staff_time_off_staff_status_idx")
 }
 
-model StaffSchedule {
-  id               String         @id @default(uuid())
-  staffId          String
-  date             DateTime
-  startTime        String
-  endTime          String
-  status           ScheduleStatus @default(SCHEDULED)
-  notes            String?
-  location         String?
-  startingLocation String?
-  role             String?
-  createdById      String?
-  updatedById      String?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  staff            Staff          @relation(fields: [staffId], references: [id], onDelete: Cascade)
+model transaction_items {
+  id                     String                 @id
+  transactionId          String
+  description            String
+  amount                 Float
+  quantity               Int                    @default(1)
+  unitPrice              Float
+  taxable                Boolean                @default(true)
+  taxRate                Float?
+  taxAmount              Float?
+  discountAmount         Float?
+  discountType           DiscountType?
+  discountRuleId         String?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime
+  invoiceLineItemId      String?
+  serviceId              String?
+  addOnServiceId         String?
+  reservationId          String?
+  financial_transactions financial_transactions @relation(fields: [transactionId], references: [id], onDelete: Cascade)
 
-  @@index([staffId, date], map: "staff_schedules_staff_date_idx")
-  @@index([date, status])
-  @@map("staff_schedules")
+  @@index([transactionId], map: "transaction_items_transaction_idx")
 }
 
-model Invoice {
-  id            String            @id @default(uuid())
-  invoiceNumber String            @unique
-  customerId    String
-  reservationId String?           @unique
-  issueDate     DateTime          @default(now())
-  dueDate       DateTime
-  status        InvoiceStatus     @default(DRAFT)
-  subtotal      Float
-  taxRate       Float             @default(0)
-  taxAmount     Float             @default(0)
-  discount      Float             @default(0)
-  total         Float
-  notes         String?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-  lineItems     InvoiceLineItem[]
-  customer      Customer          @relation(fields: [customerId], references: [id])
-  reservation   Reservation?      @relation(fields: [reservationId], references: [id])
-  payments      Payment[]
-
-  @@map("invoices")
+enum AvailabilityStatus {
+  AVAILABLE
+  RESERVED
+  MAINTENANCE
+  OUT_OF_SERVICE
 }
 
-model InvoiceLineItem {
-  id          String   @id @default(uuid())
-  invoiceId   String
-  description String
-  quantity    Int      @default(1)
-  unitPrice   Float
-  amount      Float
-  taxable     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-
-  @@map("invoice_line_items")
+enum ContactMethod {
+  EMAIL
+  SMS
+  BOTH
+  NONE
 }
 
-model Payment {
-  id              String        @id @default(uuid())
-  invoiceId       String
-  customerId      String
-  amount          Float
-  method          PaymentMethod
-  status          PaymentStatus @default(PENDING)
-  transactionId   String?
-  paymentDate     DateTime      @default(now())
-  gatewayResponse Json?
-  refundedAmount  Float         @default(0)
-  refundReason    String?
-  notes           String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  customer        Customer      @relation(fields: [customerId], references: [id])
-  invoice         Invoice       @relation(fields: [invoiceId], references: [id])
-
-  @@index([customerId, paymentDate], map: "payments_customer_date_idx")
-  @@index([status, paymentDate], map: "payments_status_date_idx")
-  @@map("payments")
-}
-
-model Document {
-  id          String   @id @default(uuid())
-  customerId  String
-  title       String
-  description String?
-  fileUrl     String
-  fileType    String
-  fileSize    Int
-  tags        String[] @default([])
-  uploaded    DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  customer    Customer @relation(fields: [customerId], references: [id])
-
-  @@map("documents")
-}
-
-model NotificationPreference {
-  id                   String   @id @default(uuid())
-  customerId           String   @unique
-  emailNotifications   Boolean  @default(true)
-  smsNotifications     Boolean  @default(false)
-  pushNotifications    Boolean  @default(false)
-  marketingEmails      Boolean  @default(true)
-  appointmentReminders Boolean  @default(true)
-  checkinNotifications Boolean  @default(true)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  customer             Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-
-  @@map("notification_preferences")
-}
-
-model CheckIn {
-  id                  String       @id @default(uuid())
-  petId               String
-  reservationId       String?
-  checkInTime         DateTime     @default(now())
-  checkOutTime        DateTime?
-  checkInNotes        String?
-  checkOutNotes       String?
-  checkInBy           String?
-  checkOutBy          String?
-  belongingsChecklist Json?
-  foodProvided        Boolean      @default(false)
-  medicationGiven     Boolean      @default(false)
-  medicationNotes     String?
-  behaviorDuringStay  String?
-  photosTaken         Boolean      @default(false)
-  photosShared        Boolean      @default(false)
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
-  activities          Activity[]
-  pet                 Pet          @relation(fields: [petId], references: [id])
-  reservation         Reservation? @relation(fields: [reservationId], references: [id])
-
-  @@index([checkInTime], map: "check_ins_time_idx")
-  @@index([petId, checkInTime], map: "check_ins_pet_time_idx")
-  @@map("check_ins")
-}
-
-model Activity {
-  id           String   @id @default(uuid())
-  checkInId    String
-  activityType String
-  notes        String?
-  timestamp    DateTime @default(now())
-  recordedBy   String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  checkIn      CheckIn  @relation(fields: [checkInId], references: [id], onDelete: Cascade)
-
-  @@map("activities")
-}
-
-model MedicalRecord {
-  id             String    @id @default(uuid())
-  petId          String
-  recordType     String
-  recordDate     DateTime
-  expirationDate DateTime?
-  description    String
-  veterinarian   String?
-  fileUrl        String?
-  verified       Boolean   @default(false)
-  verifiedBy     String?
-  verifiedDate   DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  pet            Pet       @relation(fields: [petId], references: [id], onDelete: Cascade)
-
-  @@map("medical_records")
-}
-
-model PriceRule {
-  id                String                     @id @default(uuid())
-  name              String
-  description       String?
-  ruleType          PriceRuleType
-  discountType      DiscountType
-  discountValue     Float
-  minQuantity       Int?
-  maxQuantity       Int?
-  startDate         DateTime?
-  endDate           DateTime?
-  daysOfWeek        String?
-  isActive          Boolean                    @default(true)
-  priority          Int                        @default(10)
-  createdAt         DateTime                   @default(now())
-  updatedAt         DateTime                   @updatedAt
-  serviceCategories PriceRuleServiceCategory[]
-  services          PriceRuleService[]
-
-  @@index([ruleType, isActive], map: "price_rules_type_active_idx")
-  @@map("price_rules")
-}
-
-model PriceRuleServiceCategory {
-  id              String          @id @default(uuid())
-  priceRuleId     String
-  serviceCategory ServiceCategory
-  priceRule       PriceRule       @relation(fields: [priceRuleId], references: [id], onDelete: Cascade)
-
-  @@unique([priceRuleId, serviceCategory])
-  @@map("price_rule_service_categories")
-}
-
-model PriceRuleService {
-  id          String    @id @default(uuid())
-  priceRuleId String
-  serviceId   String
-  priceRule   PriceRule @relation(fields: [priceRuleId], references: [id], onDelete: Cascade)
-  service     Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-
-  @@unique([priceRuleId, serviceId])
-  @@map("price_rule_services")
-}
-
-enum PetType {
-  DOG
-  CAT
-  BIRD
-  RABBIT
-  REPTILE
-  OTHER
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
 }
 
 enum Gender {
@@ -519,32 +791,24 @@ enum Gender {
   UNKNOWN
 }
 
-enum ReservationStatus {
-  PENDING
-  CONFIRMED
-  CHECKED_IN
-  CHECKED_OUT
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
   CANCELLED
-  NO_SHOW
-  COMPLETED
+  REFUNDED
+  PARTIALLY_PAID
 }
 
-enum PlayGroupType {
-  SMALL_DOGS
-  MEDIUM_DOGS
-  LARGE_DOGS
-  HIGH_ENERGY
-  LOW_ENERGY
-  PUPPIES
-  SENIORS
-  SPECIAL_NEEDS
-}
-
-enum ContactMethod {
-  EMAIL
-  SMS
-  BOTH
-  NONE
+enum LedgerEntryType {
+  DEPOSIT
+  WITHDRAWAL
+  ADJUSTMENT
+  FEE
+  INTEREST
+  REFUND
+  PAYMENT
 }
 
 enum PaymentMethod {
@@ -565,13 +829,65 @@ enum PaymentStatus {
   PARTIALLY_REFUNDED
 }
 
-enum InvoiceStatus {
-  DRAFT
-  SENT
-  PAID
-  OVERDUE
+enum PetType {
+  DOG
+  CAT
+  BIRD
+  RABBIT
+  REPTILE
+  OTHER
+}
+
+enum PlayGroupType {
+  SMALL_DOGS
+  MEDIUM_DOGS
+  LARGE_DOGS
+  HIGH_ENERGY
+  LOW_ENERGY
+  PUPPIES
+  SENIORS
+  SPECIAL_NEEDS
+}
+
+enum PriceRuleType {
+  DAY_OF_WEEK
+  MULTI_DAY
+  MULTI_PET
+  SEASONAL
+  PROMOTIONAL
+  CUSTOM
+}
+
+enum ReconciliationFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ReconciliationStatus {
+  IN_PROGRESS
+  COMPLETED
+  DISCREPANCIES_FOUND
+  VERIFIED
   CANCELLED
-  REFUNDED
+}
+
+enum ReconciliationType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  MANUAL
+  SYSTEM
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+  COMPLETED
 }
 
 enum ResourceType {
@@ -596,29 +912,6 @@ enum ResourceType {
   OTHER
 }
 
-enum AvailabilityStatus {
-  AVAILABLE
-  RESERVED
-  MAINTENANCE
-  OUT_OF_SERVICE
-}
-
-enum TimeOffType {
-  VACATION
-  SICK
-  PERSONAL
-  BEREAVEMENT
-  JURY_DUTY
-  OTHER
-}
-
-enum TimeOffStatus {
-  PENDING
-  APPROVED
-  DENIED
-  CANCELLED
-}
-
 enum ScheduleStatus {
   SCHEDULED
   CONFIRMED
@@ -636,16 +929,39 @@ enum ServiceCategory {
   OTHER
 }
 
-enum PriceRuleType {
-  DAY_OF_WEEK
-  MULTI_DAY
-  MULTI_PET
-  SEASONAL
-  PROMOTIONAL
-  CUSTOM
+enum TimeOffStatus {
+  PENDING
+  APPROVED
+  DENIED
+  CANCELLED
 }
 
-enum DiscountType {
-  PERCENTAGE
-  FIXED_AMOUNT
+enum TimeOffType {
+  VACATION
+  SICK
+  PERSONAL
+  BEREAVEMENT
+  JURY_DUTY
+  OTHER
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  VOIDED
+  RECONCILED
+  DISPUTED
+}
+
+enum TransactionType {
+  PAYMENT
+  REFUND
+  ADJUSTMENT
+  CREDIT
+  DEBIT
+  VOID
+  FEE
+  TAX
+  DISCOUNT
 }

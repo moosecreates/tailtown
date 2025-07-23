@@ -10,6 +10,7 @@ import { petRoutes } from './routes/pet.routes';
 import { reservationRoutes } from './routes/reservation.routes';
 import { serviceRoutes } from './routes/service.routes';
 import { resourceRoutes } from './routes/resource.routes';
+import { resourceAvailabilityRoutes } from './routes/resourceAvailability.routes';
 import { suiteRoutes } from './routes/suite.routes';
 import { staffRoutes } from './routes/staff.routes';
 import { scheduleRoutes } from './routes/schedule.routes';
@@ -25,7 +26,7 @@ dotenv.config();
 
 // Initialize the Express application
 const app = express();
-const PORT = process.env.PORT || 3002; // Using port 3002 as standard for backend
+const PORT = process.env.PORT || 3003; // Using port 3003 as specified in .env
 
 // Increase HTTP header limits to prevent 431 errors
 app.set('etag', false); // Disable ETag generation to reduce header size
@@ -195,6 +196,7 @@ app.use('/api/pets', petRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/resources/availability', resourceAvailabilityRoutes);
 app.use('/api/suites', suiteRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/price-rules', priceRuleRoutes);

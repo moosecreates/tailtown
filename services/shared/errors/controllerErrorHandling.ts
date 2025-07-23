@@ -1,74 +1,84 @@
-/**
- * Controller Error Handling Examples
- * 
- * This file provides examples of how to use the standardized error handling
- * in controllers across all services.
- */
-
 import { Request, Response, NextFunction } from 'express';
+import { AppError } from '../../reservation-service/src/utils/service';
+import { catchAsync } from '../../reservation-service/src/middleware/catchAsync';
+import { logger } from '../../reservation-service/src/utils/logger';
 
-// Extend Express Request to include user property
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        role: string;
-        [key: string]: any;
-      };
-    }
-  }
+// Type for Prisma errors
+interface PrismaError {
+  code: string;
+  message: string;
+  meta?: any;
 }
-import { AppError, ErrorType } from './AppError';
-import { catchAsync } from './errorHandler';
 
-/**
- * Example controller using the catchAsync wrapper and AppError
- */
-export const exampleController = {
+// Function to check if an error is a Prisma error
+function isPrismaError(error: unknown): error is PrismaError {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    typeof (error as any).code === 'string' &&
+    (error as any).code.startsWith('P')
+  );
+}
+
+// Function to check if an error has a message property
+function hasErrorMessage(error: unknown): error is { message: string } {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error &&
+    typeof (error as any).message === 'string'
+  );
+}
+
+export const controllerErrorHandling = {
   /**
    * Get a resource by ID
    */
   getById: catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
-    const organizationId = req.headers['x-organization-id'] as string;
+    const organizationId = req.tenantId;
     
-    // Validate input
     if (!id) {
+      logger.warn('Missing ID parameter in getById request');
       throw AppError.validationError('ID is required');
     }
     
-    // Example database operation with error handling
+    if (!organizationId) {
+      logger.warn('Missing tenant ID in getById request');
+      throw AppError.authorizationError('Tenant ID is required');
+    }
+    
     try {
-      // Simulated database query
-      const resource = await findResourceById(id, organizationId);
+      // This would be customized per resource type
+      const resource = { id, name: 'Example resource' };
       
       if (!resource) {
-        throw AppError.notFoundError('Resource', id, { organizationId });
+        throw AppError.notFoundError('Resource not found');
       }
       
-      // Success response
       res.status(200).json({
-        success: true,
-        data: resource
+        status: 'success',
+        data: {
+          resource
+        }
       });
-    } catch (error) {
-      // If it's already an AppError, pass it along
-      if (error instanceof AppError) {
-        throw error;
-      }
+    } catch (error: unknown) {
       
       // Handle database-specific errors
-      if (error.code && error.code.startsWith('P')) {
+      if (isPrismaError(error)) {
         // Let the middleware handle Prisma errors
         throw error;
       }
       
-      // For unexpected errors, create a server error
+      // For unexpected errors, create a server error with details
       throw AppError.serverError(
         'Failed to retrieve resource',
-        { originalError: error.message },
-        { resourceId: id, organizationId }
+        hasErrorMessage(error) ? { 
+          originalError: error.message,
+          resourceId: id, 
+          organizationId 
+        } : { resourceId: id, organizationId }
       );
     }
   }),
@@ -78,99 +88,129 @@ export const exampleController = {
    */
   create: catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { name, description } = req.body;
-    const organizationId = req.headers['x-organization-id'] as string;
+    const organizationId = req.tenantId;
     
-    // Validate required fields
     if (!name) {
-      throw AppError.validationError(
-        'Name is required',
-        { invalidFields: ['name'] }
-      );
+      logger.warn('Missing name parameter in create request');
+      throw AppError.validationError('Name is required');
     }
     
-    // Example of multi-field validation
-    const validationErrors: Record<string, string> = {};
-    
-    if (name.length < 3) {
-      validationErrors.name = 'Name must be at least 3 characters';
-    }
-    
-    if (description && description.length > 500) {
-      validationErrors.description = 'Description must be less than 500 characters';
-    }
-    
-    if (Object.keys(validationErrors).length > 0) {
-      throw AppError.validationError(
-        'Validation failed',
-        validationErrors
-      );
+    if (!organizationId) {
+      logger.warn('Missing tenant ID in create request');
+      throw AppError.authorizationError('Tenant ID is required');
     }
     
     try {
-      // Simulated database operation
-      const newResource = await createResource({ name, description, organizationId });
+      // This would be customized per resource type
+      const resource = { id: 'new-id', name, description, organizationId };
       
-      // Success response
       res.status(201).json({
-        success: true,
-        data: newResource
+        status: 'success',
+        data: {
+          resource
+        }
       });
-    } catch (error) {
-      // Handle specific error cases
-      if (error.code === 'P2002') {
-        throw AppError.conflictError(
-          'A resource with this name already exists',
-          { field: 'name' }
+    } catch (error: unknown) {
+      // Handle specific Prisma errors
+      if (isPrismaError(error)) {
+        if (error.code === 'P2002') {
+          // Unique constraint violation
+          logger.warn('Unique constraint violation in create operation', {
+            error: error.message,
+            meta: error.meta
+          });
+          
+          throw AppError.validationError(
+            'This resource already exists',
+            { field: error.meta?.target || 'unknown field' }
+          );
+        }
+        
+        // Re-throw other Prisma errors for the global handler
+        throw error;
+      }
+      
+      // For other error types, we might need specialized handling
+      if (hasErrorMessage(error) && error.message.includes('column does not exist')) {
+        logger.error('Schema mismatch error in create operation', {
+          errorDetails: error.message,
+          body: req.body
+        });
+        
+        throw AppError.serverError(
+          'Database schema mismatch',
+          { hint: 'The server expected a different data structure' }
         );
       }
       
-      // Pass other errors to the error handler
-      throw error;
+      // For unexpected errors, create a server error
+      throw AppError.serverError(
+        'Failed to create resource',
+        hasErrorMessage(error) ? { 
+          originalError: error.message,
+          name, 
+          organizationId 
+        } : { name, organizationId }
+      );
     }
   }),
   
   /**
-   * Update a resource
+   * Update an existing resource
    */
   update: catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
-    const updates = req.body;
-    const organizationId = req.headers['x-organization-id'] as string;
+    const organizationId = req.tenantId;
     
-    // Check if resource exists
-    const existingResource = await findResourceById(id, organizationId);
-    
-    if (!existingResource) {
-      throw AppError.notFoundError('Resource', id, { organizationId });
+    if (!id) {
+      logger.warn('Missing ID parameter in update request');
+      throw AppError.validationError('ID is required');
     }
     
-    // Check authorization
-    if (!canUserUpdateResource(req.user, existingResource)) {
-      throw AppError.authorizationError(
-        'You do not have permission to update this resource',
-        { resourceId: id, userId: req.user?.id }
-      );
+    if (!organizationId) {
+      logger.warn('Missing tenant ID in update request');
+      throw AppError.authorizationError('Tenant ID is required');
     }
     
     try {
-      // Update resource
-      const updatedResource = await updateResource(id, updates, organizationId);
+      // This would be customized per resource type
+      const resource = { id, ...req.body, organizationId };
       
       res.status(200).json({
-        success: true,
-        data: updatedResource
+        status: 'success',
+        data: {
+          resource
+        }
       });
-    } catch (error) {
-      // Handle schema alignment errors
-      if (error.message.includes('column does not exist')) {
-        throw AppError.schemaAlignmentError(
-          'Schema mismatch detected',
-          { errorDetails: error.message },
-          { resourceId: id, updates }
-        );
+    } catch (error: unknown) {
+      // Handle specific Prisma errors
+      if (isPrismaError(error)) {
+        if (error.code === 'P2003') {
+          // Foreign key constraint violation
+          logger.warn('Foreign key constraint violation in update operation', {
+            error: error.message,
+            meta: error.meta
+          });
+          
+          throw AppError.validationError(
+            'Related resource not found',
+            { field: error.meta?.target || 'unknown field' }
+          );
+        }
+        
+        // Re-throw other Prisma errors for the global handler
+        throw error;
       }
       
-      throw error;
+      // For unexpected errors, create a server error
+      throw AppError.serverError(
+        'Failed to update resource',
+        hasErrorMessage(error) ? { 
+          originalError: error.message,
+          resourceId: id, 
+          organizationId 
+        } : { resourceId: id, organizationId }
+      );
     }
   }),
   
@@ -179,58 +219,37 @@ export const exampleController = {
    */
   delete: catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
-    const organizationId = req.headers['x-organization-id'] as string;
+    const organizationId = req.tenantId;
+    
+    if (!id) {
+      logger.warn('Missing ID parameter in delete request');
+      throw AppError.validationError('ID is required');
+    }
+    
+    if (!organizationId) {
+      logger.warn('Missing tenant ID in delete request');
+      throw AppError.authorizationError('Tenant ID is required');
+    }
     
     try {
-      // Check if resource exists
-      const resource = await findResourceById(id, organizationId);
+      // This would be customized per resource type
+      // Simulate deletion
+      const deleted = true;
       
-      if (!resource) {
-        throw AppError.notFoundError('Resource', id, { organizationId });
-      }
-      
-      // Delete resource
-      await deleteResource(id, organizationId);
-      
-      // Return success with no content
-      res.status(204).send();
-    } catch (error) {
-      // Handle foreign key constraint errors
-      if (error.code === 'P2003') {
-        throw AppError.validationError(
-          'Cannot delete this resource because it is referenced by other records',
-          { resourceId: id }
-        );
-      }
-      
-      throw error;
+      res.status(204).json({
+        status: 'success',
+        data: null
+      });
+    } catch (error: unknown) {
+      // For unexpected errors, create a server error
+      throw AppError.serverError(
+        'Failed to delete resource',
+        hasErrorMessage(error) ? { 
+          originalError: error.message,
+          resourceId: id, 
+          organizationId 
+        } : { resourceId: id, organizationId }
+      );
     }
   })
 };
-
-// Simulated database functions
-async function findResourceById(id: string, organizationId: string) {
-  // This would be a real database query in actual code
-  return { id, name: 'Example Resource', organizationId };
-}
-
-async function createResource(data: any) {
-  // This would be a real database query in actual code
-  return { id: '123', ...data };
-}
-
-async function updateResource(id: string, updates: any, organizationId: string) {
-  // This would be a real database query in actual code
-  return { id, ...updates, organizationId };
-}
-
-async function deleteResource(id: string, organizationId: string) {
-  // This would be a real database query in actual code
-  return true;
-}
-
-// Simulated authorization function
-function canUserUpdateResource(user: any, resource: any) {
-  // This would be a real authorization check in actual code
-  return true;
-}
