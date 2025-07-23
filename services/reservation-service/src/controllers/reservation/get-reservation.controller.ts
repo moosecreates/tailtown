@@ -162,7 +162,7 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
     }
   }
   
-  // Get total count for pagination
+  // Count total number of reservations matching filter
   const totalCount = await safeExecutePrismaQuery(
     async () => {
       return await prisma.reservation.count({
@@ -184,13 +184,22 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
         orderBy: {
           startDate: 'desc'
         },
-        include: {
+        select: {
+          id: true,
+          customerId: true,
+          petId: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          price: true,
+          suiteType: true,
+          resourceId: true,
+          createdAt: true,
+          updatedAt: true,
           customer: {
             select: {
               firstName: true,
-              lastName: true,
-              email: true,
-              phone: true
+              lastName: true
             }
           },
           pet: {
@@ -205,11 +214,11 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
               type: true
             }
           }
-        } as unknown as ExtendedReservationInclude
+        }
       });
     },
     [], // Default to empty array if there's an error
-    `Error fetching reservations with filter`,
+    `Error fetching reservations with pagination and filter`,
     true // Enable throwError flag
   );
   
@@ -227,17 +236,16 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
   // Prepare response
   const responseData: any = {
     status: 'success',
-    results: reservations ? reservations.length : 0,
-    pagination: {
-      totalCount,
-      totalPages,
-      currentPage: page,
-      limit,
-      hasNextPage,
-      hasPrevPage
-    },
     data: {
-      reservations: reservations || []
+      reservations,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasNextPage,
+        hasPrevPage
+      }
     }
   };
   
@@ -285,8 +293,21 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
           id,
           organizationId: tenantId
         } as ExtendedReservationWhereInput,
-        include: {
-          customer: {
+        select: {
+          id: true,
+          customerId: true,
+          petId: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          price: true,
+          suiteType: true,
+          resourceId: true,
+          createdAt: true,
+          updatedAt: true,
+          notes: true,
+          organizationId: true,
+          Customer: {
             select: {
               firstName: true,
               lastName: true,
@@ -294,19 +315,22 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
               phone: true
             }
           },
-          pet: {
+          Pet: {
             select: {
               name: true,
-              breed: true
+              breed: true,
+              size: true,
+              weight: true,
+              birthDate: true,
             }
           },
-          resource: {
+          Resource: {
             select: {
               name: true,
               type: true
             }
           },
-          addOns: {
+          ReservationAddOn: {
             select: {
               id: true,
               addOnId: true,
@@ -314,7 +338,7 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
               notes: true
             }
           }
-        } as unknown as ExtendedReservationInclude
+        }
       });
     },
     null, // Default to null if there's an error

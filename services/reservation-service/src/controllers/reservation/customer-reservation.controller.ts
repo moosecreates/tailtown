@@ -161,37 +161,40 @@ export const getCustomerReservations = catchAsync(async (req: Request, res: Resp
         orderBy: {
           startDate: 'desc'
         },
-        include: {
+        select: {
+          id: true,
+          customerId: true,
+          petId: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          price: true,
+          suiteType: true,
+          resourceId: true,
+          createdAt: true,
+          updatedAt: true,
+          notes: true,
           pet: {
             select: {
               name: true,
-              breed: true,
-              age: true
+              breed: true
             }
           },
           resource: {
             select: {
               name: true,
-              type: true,
-              location: true
+              type: true
             }
           },
-          addOnServices: {
+          addOns: {
             select: {
               id: true,
-              serviceId: true,
-              quantity: true,
-              notes: true,
-              service: {
-                select: {
-                  name: true,
-                  price: true,
-                  description: true
-                }
-              }
+              addOnId: true,
+              price: true,
+              notes: true
             }
           }
-        } as unknown as ExtendedReservationInclude
+        }
       });
     },
     [], // Default to empty array if there's an error

@@ -30,7 +30,7 @@ app.use('/api/v1/resources', resourceRoutes);
 app.registerErrorHandlers();
 
 // Define the port for the service
-const PORT = parseInt(process.env.PORT || '4003', 10); // Use environment variable or default to 4003
+const PORT = parseInt(process.env.PORT || '4004', 10); // Use environment variable or default to 4004
 
 // Create HTTP server
 const server = http.createServer(app);
