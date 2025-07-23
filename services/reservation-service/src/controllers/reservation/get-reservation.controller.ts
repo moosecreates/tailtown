@@ -307,7 +307,7 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
           updatedAt: true,
           notes: true,
           organizationId: true,
-          Customer: {
+          customer: {
             select: {
               firstName: true,
               lastName: true,
@@ -315,7 +315,7 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
               phone: true
             }
           },
-          Pet: {
+          pet: {
             select: {
               name: true,
               breed: true,
@@ -324,13 +324,13 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
               birthDate: true,
             }
           },
-          Resource: {
+          resource: {
             select: {
               name: true,
               type: true
             }
           },
-          ReservationAddOn: {
+          addOns: {
             select: {
               id: true,
               addOnId: true,

@@ -1,58 +1,33 @@
 import React from 'react';
-import { Container, Typography, Box, Button, Paper, Stack } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Container, Typography, Box } from '@mui/material';
+import SpecializedCalendar from '../../components/calendar/SpecializedCalendar';
+import { ServiceCategory } from '../../types/service';
 
 /**
- * Grooming Calendar Page Component - Placeholder
+ * Grooming Calendar Page Component
  * 
- * This is a temporary placeholder for the grooming calendar page
- * to avoid the FullCalendar error: "context.cmdFormatter is not a function"
+ * Uses the SpecializedCalendar component to properly render grooming appointments
+ * with fixed time formatting to avoid the "context.cmdFormatter is not a function" error.
  */
 const GroomingCalendarPage: React.FC = () => {
+  // Filter for grooming services only
+  const serviceCategories = [ServiceCategory.GROOMING];
+  
   return (
     <Container maxWidth="xl">
       <Box sx={{ mt: 4, mb: 2 }}>
         <Typography variant="h4" gutterBottom>
           Grooming Calendar
         </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          View and manage grooming appointments
+        </Typography>
       </Box>
       
-      <Paper elevation={3} sx={{ p: 4, textAlign: 'center' }}>
-        <Typography variant="h6" gutterBottom>
-          Grooming Calendar - Coming Soon
-        </Typography>
-        <Typography variant="body1" paragraph sx={{ mb: 3 }}>
-          We're currently working on improving the grooming calendar functionality.
-          In the meantime, you can use the following options to navigate to other areas of the application.
-        </Typography>
-        
-        <Stack direction="row" spacing={2} justifyContent="center">
-          <Button 
-            variant="contained" 
-            component={Link} 
-            to="/calendar"
-            color="primary"
-          >
-            Main Calendar
-          </Button>
-          <Button 
-            variant="outlined" 
-            component={Link} 
-            to="/reservations"
-            color="primary"
-          >
-            Reservations
-          </Button>
-          <Button 
-            variant="outlined" 
-            component={Link} 
-            to="/customers"
-            color="primary"
-          >
-            Customers
-          </Button>
-        </Stack>
-      </Paper>
+      <SpecializedCalendar 
+        serviceCategories={serviceCategories}
+        calendarTitle="Grooming Schedule"
+      />
     </Container>
   );
 };
