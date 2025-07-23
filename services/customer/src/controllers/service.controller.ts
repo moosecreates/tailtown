@@ -39,41 +39,12 @@ export const getAllServices = async (
       take: limit,
       orderBy: {
         name: 'asc'
-      },
-      include: {
-        availableAddOns: true,
-        reservations: {
-          select: {
-            id: true,
-            status: true
-          },
-          where: {
-            status: {
-              notIn: ['CANCELLED', 'COMPLETED']
-            }
-          },
-          take: 1 // We only need to know if there are any active reservations
-        },
-        _count: {
-          select: {
-            reservations: true
-          }
-        }
       }
+      // Removed invalid include statements that were causing 500 error
     });
     
-    // Add a softDeleted flag to services that have been deactivated due to having reservations
-    const servicesWithMetadata = services.map(service => {
-      // If the service is inactive and has reservations, mark it as soft deleted
-      const isSoftDeleted = !service.isActive && service._count.reservations > 0;
-      
-      // Filter out services that have been soft deleted
-      if (isSoftDeleted) {
-        return null; // We'll filter these out below
-      }
-      
-      return service;
-    }).filter(Boolean); // Remove null entries (soft deleted services)
+    // Simplified metadata handling since we don't have _count anymore
+    const servicesWithMetadata = services.filter(service => service.isActive);
     
     const total = await prisma.service.count({ where });
     
@@ -106,15 +77,8 @@ export const getServiceById = async (
     }
     
     const service = await prisma.service.findFirst({
-      where,
-      include: {
-        availableAddOns: true,
-        _count: {
-          select: {
-            reservations: true
-          }
-        }
-      }
+      where
+      // Removed invalid include statements that were causing errors
     });
     
     if (!service) {

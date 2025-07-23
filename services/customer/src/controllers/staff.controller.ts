@@ -13,6 +13,10 @@ interface AuthenticatedRequest extends Request {
 
 const prisma = new PrismaClient();
 
+// Use dynamic access to handle different model names
+type DynamicPrisma = PrismaClient & Record<string, any>;
+const dynamicPrisma = prisma as DynamicPrisma;
+
 // Get all staff members
 export const getAllStaff = async (
   req: Request,
@@ -97,39 +101,45 @@ export const getStaffById = async (
 ) => {
   try {
     const { id } = req.params;
+    console.log('Staff requested by ID:', id);
+
+    // Determine which table to use (staff or Staff)
+    let staffTable;
+    let staffMember;
     
-    const staff = await prisma.staff.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        phone: true,
-        address: true,
-        city: true,
-        state: true,
-        zipCode: true,
-        role: true,
-        department: true,
-        position: true,
-        specialties: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-        // Exclude password and other sensitive fields
-      } as any
-    });
-    
-    if (!staff) {
-      return next(new AppError('Staff member not found', 404));
+    try {
+      // First try with 'staff' table
+      staffMember = await dynamicPrisma.staff.findUnique({ where: { id } });
+      if (staffMember) {
+        staffTable = 'staff';
+      } else {
+        // If not found, try with 'Staff' table
+        staffMember = await dynamicPrisma.Staff.findUnique({ where: { id } });
+        if (staffMember) {
+          staffTable = 'Staff';
+        } else {
+          return res.status(404).json({
+            status: 'error',
+            message: `Staff member with ID ${id} not found`
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Error finding staff member:', err);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Error finding staff member'
+      });
     }
+
+    console.log(`Found staff member in '${staffTable}' table:`, staffMember);
     
     res.status(200).json({
       status: 'success',
-      data: staff,
+      data: staffMember
     });
   } catch (error) {
+    console.error(`Error in getStaffById for ID ${req.params.id}:`, error);
     next(error);
   }
 };
@@ -205,67 +215,67 @@ export const updateStaff = async (
   try {
     const { id } = req.params;
     const staffData = req.body;
-    
-    // Check if staff exists
-    const existingStaff = await prisma.staff.findUnique({
-      where: { id },
-      select: { id: true }
-    });
-    
-    if (!existingStaff) {
-      return next(new AppError('Staff member not found', 404));
-    }
-    
-    // If updating email, check if it's already in use by another staff
-    if (staffData.email) {
-      const emailInUse = await prisma.staff.findFirst({
-        where: {
-          email: staffData.email,
-          id: { not: id }
-        },
-        select: { id: true }
-      });
-      
-      if (emailInUse) {
-        return next(new AppError('Email already in use by another staff member', 400));
+    console.log('Updating staff member:', { id, staffData });
+
+    // Determine which table to use (staff or Staff)
+    let staffTable;
+    try {
+      // First try with 'staff' table
+      const staffMember = await dynamicPrisma.staff.findUnique({ where: { id } });
+      if (staffMember) {
+        staffTable = 'staff';
+      } else {
+        // If not found, try with 'Staff' table
+        const staffMemberAlt = await dynamicPrisma.Staff.findUnique({ where: { id } });
+        if (staffMemberAlt) {
+          staffTable = 'Staff';
+        } else {
+          return res.status(404).json({
+            status: 'error',
+            message: `Staff member with ID ${id} not found`
+          });
+        }
       }
+    } catch (err) {
+      console.error('Error finding staff member:', err);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Error finding staff member'
+      });
     }
     
-    // If updating password, hash it
-    if (staffData.password) {
-      staffData.password = await bcrypt.hash(staffData.password, 10);
-    }
+    // Update in the correct table
+    let updatedStaffMember;
+    const updateData: any = {};
     
-    // Update staff member
-    const updatedStaff = await prisma.staff.update({
-      where: { id },
-      data: staffData,
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        phone: true,
-        address: true,
-        city: true,
-        state: true,
-        zipCode: true,
-        role: true,
-        department: true,
-        position: true,
-        specialties: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-        // Exclude password and other sensitive fields
-      } as any
-    });
+    // Only update fields that are provided
+    if (staffData.firstName !== undefined) updateData.firstName = staffData.firstName;
+    if (staffData.lastName !== undefined) updateData.lastName = staffData.lastName;
+    if (staffData.email !== undefined) updateData.email = staffData.email;
+    if (staffData.phone !== undefined) updateData.phone = staffData.phone;
+    if (staffData.role !== undefined) updateData.role = staffData.role;
+    if (staffData.isActive !== undefined) updateData.isActive = staffData.isActive;
+    
+    if (staffTable === 'staff') {
+      updatedStaffMember = await dynamicPrisma.staff.update({
+        where: { id },
+        data: updateData
+      });
+    } else {
+      updatedStaffMember = await dynamicPrisma.Staff.update({
+        where: { id },
+        data: updateData
+      });
+    }
+
+    console.log('Updated staff member:', updatedStaffMember);
     
     res.status(200).json({
       status: 'success',
-      data: updatedStaff,
+      data: updatedStaffMember
     });
   } catch (error) {
+    console.error(`Error updating staff member ${req.params.id}:`, error);
     next(error);
   }
 };

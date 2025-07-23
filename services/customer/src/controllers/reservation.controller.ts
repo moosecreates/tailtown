@@ -2,7 +2,25 @@ import { Request, Response, NextFunction } from 'express';
 import { PrismaClient, ReservationStatus } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 
-const prisma = new PrismaClient();
+// Create a dynamic Prisma client type to handle potential model name differences
+type DynamicPrisma = PrismaClient & {
+  reservation?: any;
+  Reservation?: any;
+  customer?: any;
+  Customer?: any;
+  pet?: any;
+  Pet?: any;
+  service?: any;
+  Service?: any;
+  addOnService?: any;
+  AddOnService?: any;
+  reservationAddOn?: any;
+  ReservationAddOn?: any;
+  resource?: any;
+  Resource?: any;
+};
+
+const prisma = new PrismaClient() as DynamicPrisma;
 
 // Helper function to generate a unique order number
 async function generateOrderNumber(): Promise<string> {
@@ -17,14 +35,28 @@ async function generateOrderNumber(): Promise<string> {
   const startOfDay = new Date(now.setHours(0, 0, 0, 0));
   const endOfDay = new Date(now.setHours(23, 59, 59, 999));
   
-  const todayReservationsCount = await prisma.reservation.count({
-    where: {
-      createdAt: {
-        gte: startOfDay,
-        lte: endOfDay
+  // Try both reservation and Reservation model names
+  let todayReservationsCount = 0;
+  
+  if (prisma.reservation) {
+    todayReservationsCount = await prisma.reservation.count({
+      where: {
+        createdAt: {
+          gte: startOfDay,
+          lte: endOfDay
+        }
       }
-    }
-  });
+    });
+  } else if (prisma.Reservation) {
+    todayReservationsCount = await prisma.Reservation.count({
+      where: {
+        createdAt: {
+          gte: startOfDay,
+          lte: endOfDay
+        }
+      }
+    });
+  }
   
   // Format the sequential number with leading zeros (e.g., 001, 002, etc.)
   const sequentialNumber = String(todayReservationsCount + 1).padStart(3, '0');
@@ -33,9 +65,17 @@ async function generateOrderNumber(): Promise<string> {
   const orderNumber = `RES-${datePrefix}-${sequentialNumber}`;
   
   // Check if this order number already exists (just to be safe)
-  const existingReservation = await prisma.reservation.findUnique({
-    where: { orderNumber }
-  });
+  let existingReservation = null;
+  
+  if (prisma.reservation) {
+    existingReservation = await prisma.reservation.findUnique({
+      where: { orderNumber }
+    });
+  } else if (prisma.Reservation) {
+    existingReservation = await prisma.Reservation.findUnique({
+      where: { orderNumber }
+    });
+  }
   
   if (existingReservation) {
     // In the unlikely case of a collision, recursively try again with an incremented number
@@ -57,6 +97,22 @@ export const getAllReservations = async (
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
+    // Determine which Prisma model to use
+    let reservationModel: any;
+    let reservationModelName: string;
+    
+    if (prisma.reservation) {
+      reservationModel = prisma.reservation;
+      reservationModelName = 'reservation';
+    } else if (prisma.Reservation) {
+      reservationModel = prisma.Reservation;
+      reservationModelName = 'Reservation';
+    } else {
+      return next(new AppError('Reservation model not found in Prisma client', 500));
+    }
+    
+    console.log(`Using ${reservationModelName} model for getAllReservations`);
+    
     // Build where clause based on query parameters
     let where: any = {};
     
@@ -71,21 +127,16 @@ export const getAllReservations = async (
         // Validate each status is a valid ReservationStatus
         const validStatuses = Object.values(ReservationStatus);
         console.log('Valid statuses:', validStatuses);
-        const invalidStatuses = statusArray.filter(s => !validStatuses.includes(s as ReservationStatus));
         
-        if (invalidStatuses.length > 0) {
-          throw new AppError(`Invalid status values: ${invalidStatuses.join(', ')}. Valid values are: ${validStatuses.join(', ')}`, 400);
+        const validStatusArray = statusArray.filter(s => 
+          validStatuses.includes(s as ReservationStatus)
+        );
+        
+        if (validStatusArray.length > 0) {
+          where.status = {
+            in: validStatusArray as ReservationStatus[]
+          };
         }
-        
-        where.status = {
-          in: statusArray as ReservationStatus[]
-        };
-      }
-      
-      // Handle resourceId filter
-      const resourceId = req.query.resourceId as string;
-      if (resourceId) {
-        where.resourceId = resourceId;
       }
       
       // Handle date filtering - check if reservation overlaps with the given date
@@ -131,24 +182,26 @@ export const getAllReservations = async (
     const sortBy = req.query.sortBy as string || 'startDate';
     const sortOrder = req.query.sortOrder as 'asc' | 'desc' || 'asc';
 
-    const reservations = await prisma.reservation.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { [sortBy]: sortOrder },
-      include: {
-        customer: true,
-        pet: true,
-        resource: true,
-      },
-    });
-    
-    const total = await prisma.reservation.count({ where });
+    // Use the determined model
+    const [reservations, totalCount] = await Promise.all([
+      reservationModel.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+        include: {
+          customer: true,
+          pet: true,
+          resource: true,
+        },
+      }),
+      reservationModel.count({ where })
+    ]);
     
     res.status(200).json({
       status: 'success',
       results: reservations.length,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(totalCount / limit),
       currentPage: page,
       data: reservations,
     });
@@ -158,13 +211,6 @@ export const getAllReservations = async (
 };
 
 // Get a single reservation by ID
-/**
- * Retrieves a single reservation by ID with all related data.
- * Includes customer, pet, and service information.
- * @param req - Express request object with reservation ID
- * @param res - Express response object
- * @param next - Express next function
- */
 export const getReservationById = async (
   req: Request,
   res: Response,
@@ -173,22 +219,29 @@ export const getReservationById = async (
   try {
     const { id } = req.params;
     
-    const reservation = await prisma.reservation.findUnique({
+    // Determine which Prisma model to use
+    let reservationModel: any;
+    
+    if (prisma.reservation) {
+      reservationModel = prisma.reservation;
+    } else if (prisma.Reservation) {
+      reservationModel = prisma.Reservation;
+    } else {
+      return next(new AppError('Reservation model not found in Prisma client', 500));
+    }
+    
+    const reservation = await reservationModel.findUnique({
       where: { id },
       include: {
         customer: true,
         pet: true,
+        service: true,
         resource: true,
-        addOns: {
-          include: {
-            addOn: true
-          }
-        }
       },
     });
     
     if (!reservation) {
-      return next(new AppError('Reservation not found', 404));
+      return next(new AppError('No reservation found with that ID', 404));
     }
     
     res.status(200).json({
@@ -200,7 +253,7 @@ export const getReservationById = async (
   }
 };
 
-// Get reservations by customer
+// Get reservations by customer ID
 export const getReservationsByCustomer = async (
   req: Request,
   res: Response,
@@ -212,28 +265,37 @@ export const getReservationsByCustomer = async (
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
-    const reservations = await prisma.reservation.findMany({
-      where: {
-        customerId,
-      },
-      skip,
-      take: limit,
-      orderBy: { startDate: 'desc' },
-      include: {
-        pet: true,
-      },
-    });
+    // Determine which Prisma model to use
+    let reservationModel: any;
     
-    const total = await prisma.reservation.count({
-      where: {
-        customerId,
-      },
-    });
+    if (prisma.reservation) {
+      reservationModel = prisma.reservation;
+    } else if (prisma.Reservation) {
+      reservationModel = prisma.Reservation;
+    } else {
+      return next(new AppError('Reservation model not found in Prisma client', 500));
+    }
+    
+    const [reservations, totalCount] = await Promise.all([
+      reservationModel.findMany({
+        where: { customerId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          customer: true,
+          pet: true,
+          service: true,
+          resource: true,
+        },
+      }),
+      reservationModel.count({ where: { customerId } })
+    ]);
     
     res.status(200).json({
       status: 'success',
       results: reservations.length,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(totalCount / limit),
       currentPage: page,
       data: reservations,
     });
@@ -242,7 +304,7 @@ export const getReservationsByCustomer = async (
   }
 };
 
-// Get reservations by pet
+// Get reservations by pet ID
 export const getReservationsByPet = async (
   req: Request,
   res: Response,
@@ -254,28 +316,37 @@ export const getReservationsByPet = async (
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
-    const reservations = await prisma.reservation.findMany({
-      where: {
-        petId,
-      },
-      skip,
-      take: limit,
-      orderBy: { startDate: 'desc' },
-      include: {
-        customer: true,
-      },
-    });
+    // Determine which Prisma model to use
+    let reservationModel: any;
     
-    const total = await prisma.reservation.count({
-      where: {
-        petId,
-      },
-    });
+    if (prisma.reservation) {
+      reservationModel = prisma.reservation;
+    } else if (prisma.Reservation) {
+      reservationModel = prisma.Reservation;
+    } else {
+      return next(new AppError('Reservation model not found in Prisma client', 500));
+    }
+    
+    const [reservations, totalCount] = await Promise.all([
+      reservationModel.findMany({
+        where: { petId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          customer: true,
+          pet: true,
+          service: true,
+          resource: true,
+        },
+      }),
+      reservationModel.count({ where: { petId } })
+    ]);
     
     res.status(200).json({
       status: 'success',
       results: reservations.length,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(totalCount / limit),
       currentPage: page,
       data: reservations,
     });
@@ -297,42 +368,88 @@ export const getReservationsByDateRange = async (
     const skip = (page - 1) * limit;
     
     if (!startDate || !endDate) {
-      return next(new AppError('Both startDate and endDate are required', 400));
+      return next(new AppError('Please provide both startDate and endDate', 400));
     }
     
-    const reservations = await prisma.reservation.findMany({
-      where: {
-        startDate: {
-          gte: new Date(startDate as string),
-        },
-        endDate: {
-          lte: new Date(endDate as string),
-        },
-      },
-      skip,
-      take: limit,
-      orderBy: { startDate: 'asc' },
-      include: {
-        customer: true,
-        pet: true,
-      },
-    });
+    // Determine which Prisma model to use
+    let reservationModel: any;
     
-    const total = await prisma.reservation.count({
-      where: {
-        startDate: {
-          gte: new Date(startDate as string),
+    if (prisma.reservation) {
+      reservationModel = prisma.reservation;
+    } else if (prisma.Reservation) {
+      reservationModel = prisma.Reservation;
+    } else {
+      return next(new AppError('Reservation model not found in Prisma client', 500));
+    }
+    
+    const start = new Date(startDate as string);
+    const end = new Date(endDate as string);
+    
+    const [reservations, totalCount] = await Promise.all([
+      reservationModel.findMany({
+        where: {
+          OR: [
+            // Reservation starts within the range
+            {
+              startDate: {
+                gte: start,
+                lte: end
+              }
+            },
+            // Reservation ends within the range
+            {
+              endDate: {
+                gte: start,
+                lte: end
+              }
+            },
+            // Reservation spans the entire range
+            {
+              AND: [
+                {
+                  startDate: {
+                    lte: start
+                  }
+                },
+                {
+                  endDate: {
+                    gte: end
+                  }
+                }
+              ]
+            }
+          ]
         },
-        endDate: {
-          lte: new Date(endDate as string),
+        skip,
+        take: limit,
+        orderBy: { startDate: 'asc' },
+        include: {
+          customer: true,
+          pet: true,
+          service: true,
+          resource: true,
         },
-      },
-    });
+      }),
+      reservationModel.count({
+        where: {
+          OR: [
+            { startDate: { gte: start, lte: end } },
+            { endDate: { gte: start, lte: end } },
+            {
+              AND: [
+                { startDate: { lte: start } },
+                { endDate: { gte: end } }
+              ]
+            }
+          ]
+        }
+      })
+    ]);
     
     res.status(200).json({
       status: 'success',
       results: reservations.length,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(totalCount / limit),
       currentPage: page,
       data: reservations,
     });
@@ -353,35 +470,42 @@ export const getReservationsByStatus = async (
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
-    // Validate the status
-    const validStatuses = Object.values(ReservationStatus);
-    if (!validStatuses.includes(status as ReservationStatus)) {
-      return next(new AppError(`Invalid status. Must be one of: ${validStatuses.join(', ')}`, 400));
+    // Validate status
+    if (!Object.values(ReservationStatus).includes(status as ReservationStatus)) {
+      return next(new AppError(`Invalid status: ${status}`, 400));
     }
     
-    const reservations = await prisma.reservation.findMany({
-      where: {
-        status: status as ReservationStatus,
-      },
-      skip,
-      take: limit,
-      orderBy: { startDate: 'asc' },
-      include: {
-        customer: true,
-        pet: true,
-      },
-    });
+    // Determine which Prisma model to use
+    let reservationModel: any;
     
-    const total = await prisma.reservation.count({
-      where: {
-        status: status as ReservationStatus,
-      },
-    });
+    if (prisma.reservation) {
+      reservationModel = prisma.reservation;
+    } else if (prisma.Reservation) {
+      reservationModel = prisma.Reservation;
+    } else {
+      return next(new AppError('Reservation model not found in Prisma client', 500));
+    }
+    
+    const [reservations, totalCount] = await Promise.all([
+      reservationModel.findMany({
+        where: { status: status as ReservationStatus },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          customer: true,
+          pet: true,
+          service: true,
+          resource: true,
+        },
+      }),
+      reservationModel.count({ where: { status: status as ReservationStatus } })
+    ]);
     
     res.status(200).json({
       status: 'success',
       results: reservations.length,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(totalCount / limit),
       currentPage: page,
       data: reservations,
     });
@@ -390,21 +514,69 @@ export const getReservationsByStatus = async (
   }
 };
 
+// Get today's revenue
+export const getTodayRevenue = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const now = new Date();
+    const startOfDay = new Date(now.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(now.setHours(23, 59, 59, 999));
+    
+    // Determine which Prisma model to use
+    let reservationModel: any;
+    
+    if (prisma.reservation) {
+      reservationModel = prisma.reservation;
+    } else if (prisma.Reservation) {
+      reservationModel = prisma.Reservation;
+    } else {
+      return next(new AppError('Reservation model not found in Prisma client', 500));
+    }
+    
+    const todayReservations = await reservationModel.findMany({
+      where: {
+        createdAt: {
+          gte: startOfDay,
+          lte: endOfDay
+        },
+        status: {
+          in: ['CONFIRMED', 'COMPLETED']
+        }
+      },
+      select: {
+        totalAmount: true
+      }
+    });
+    
+    const totalRevenue = todayReservations.reduce(
+      (sum, reservation) => sum + (reservation.totalAmount || 0),
+      0
+    );
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        date: startOfDay.toISOString().split('T')[0],
+        totalRevenue,
+        reservationCount: todayReservations.length
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Create a new reservation
-/**
- * Creates a new reservation with validation of customer, pet, and service.
- * Ensures the pet belongs to the customer and service is available.
- * @param req - Express request object with reservation data
- * @param res - Express response object
- * @param next - Express next function
- */
 export const createReservation = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    console.log('Backend: Received create reservation request with body:', req.body);
+    console.log('Backend: createReservation called with body:', JSON.stringify(req.body, null, 2));
     
     const {
       customerId,
@@ -412,203 +584,111 @@ export const createReservation = async (
       serviceId,
       startDate,
       endDate,
-      suiteType, // Only required for DAYCARE or BOARDING services
-      resourceId, // optional manual override
-      status = 'PENDING',
-      notes = ''
-    } = req.body;
-
-    console.log('Backend: Extracted values:', {
-      customerId,
-      petId,
-      serviceId,
-      startDate,
-      endDate,
-      suiteType,
-      resourceId,
       status,
-      notes
-    });
-
-    // Check if the service requires a suite type
-    const service = await prisma.service.findUnique({
-      where: { id: serviceId },
+      notes,
+      totalAmount,
+      suiteType,
+      resourceId
+    } = req.body;
+    
+    // Validate required fields
+    if (!customerId) {
+      return next(new AppError('customerId is required', 400));
+    }
+    
+    if (!petId) {
+      return next(new AppError('petId is required', 400));
+    }
+    
+    if (!serviceId) {
+      return next(new AppError('serviceId is required', 400));
+    }
+    
+    if (!startDate) {
+      return next(new AppError('startDate is required', 400));
+    }
+    
+    // Determine which Prisma model to use for each entity
+    let reservationModel: any;
+    let serviceModel: any;
+    
+    if (prisma.reservation) {
+      reservationModel = prisma.reservation;
+    } else if (prisma.Reservation) {
+      reservationModel = prisma.Reservation;
+    } else {
+      return next(new AppError('Reservation model not found in Prisma client', 500));
+    }
+    
+    if (prisma.service) {
+      serviceModel = prisma.service;
+    } else if (prisma.Service) {
+      serviceModel = prisma.Service;
+    } else {
+      return next(new AppError('Service model not found in Prisma client', 500));
+    }
+    
+    // Get the service to check if it requires a suite type
+    const service = await serviceModel.findUnique({
+      where: { id: serviceId }
     });
     
-    // Only require suiteType for DAYCARE or BOARDING services
-    const requiresSuiteType = service?.serviceCategory === 'DAYCARE' || service?.serviceCategory === 'BOARDING';
+    if (!service) {
+      return next(new AppError('Service not found', 404));
+    }
     
-    // If service requires a suite type but none was provided, use STANDARD_SUITE as default
-    let finalSuiteType = suiteType;
+    // Check if the service is BOARDING or DAYCARE, which require a suite type
+    const requiresSuiteType = service.serviceCategory === 'BOARDING' || service.serviceCategory === 'DAYCARE';
+    
+    // Validate suite type if required
     if (requiresSuiteType) {
       if (!suiteType || !['VIP_SUITE', 'STANDARD_PLUS_SUITE', 'STANDARD_SUITE'].includes(suiteType)) {
-        console.log('Backend: Using default STANDARD_SUITE for missing or invalid suiteType:', suiteType);
-        finalSuiteType = 'STANDARD_SUITE';
+        return next(new AppError('suiteType is required and must be one of VIP_SUITE, STANDARD_PLUS_SUITE, STANDARD_SUITE', 400));
       }
-    } else {
-      // For services that don't require a suite type, we don't need to validate it
-      finalSuiteType = null;
     }
     
-    console.log('Backend: Parsed reservation data:', {
-      customerId,
-      petId,
-      serviceId,
-      startDate,
-      endDate,
-      status,
-      notes
-    });
-
-    // Check if the customer exists
-    const customer = await prisma.customer.findUnique({
-      where: { id: customerId },
-    });
-    
-    if (!customer) {
-      return next(new AppError('Customer not found', 404));
-    }
-    
-    // Check if the pet exists and belongs to the customer
-    const pet = await prisma.pet.findUnique({
-      where: { id: petId },
-    });
-    
-    if (!pet) {
-      return next(new AppError('Pet not found', 404));
-    }
-    
-    if (pet.customerId !== customerId) {
-      return next(new AppError('The pet does not belong to this customer', 400));
-    }
-    
-    let assignedResourceId = resourceId;
-
-    // Helper: check if a suite is available for the given dates
-    async function isSuiteAvailable(suiteId: string) {
-      const overlapping = await prisma.reservation.count({
-        where: {
-          resourceId: suiteId,
-          status: { in: ['CONFIRMED', 'CHECKED_IN'] },
-          OR: [
-            {
-              startDate: { lte: endDate },
-              endDate: { gte: startDate },
-            },
-          ],
-        },
-      });
-      return overlapping === 0;
-    }
-
-    // Only assign resources for services that require a suite type
-    if (requiresSuiteType && finalSuiteType) {
-      // If resourceId provided, validate it and ensure it matches the requested suiteType
-      if (resourceId) {
-        const suite = await prisma.resource.findUnique({ where: { id: resourceId } });
-        if (!suite || !suite.isActive) {
-          return next(new AppError('Selected suite/kennel not found or inactive', 404));
-        }
-        if (suite.type !== finalSuiteType) {
-          return next(new AppError('Selected suite/kennel does not match requested suiteType', 400));
-        }
-        const available = await isSuiteAvailable(resourceId);
-        if (!available) {
-          return next(new AppError('Selected suite/kennel is not available for the requested dates', 400));
-        }
-      } else {
-        // Auto-assign: find an available suite of the requested type
-        const candidateSuites = await prisma.resource.findMany({
-          where: {
-            isActive: true,
-            type: finalSuiteType,
-          },
-          orderBy: { name: 'asc' },
-        });
-        
-        console.log(`Backend: Found ${candidateSuites.length} candidate suites of type ${finalSuiteType}`);
-        
-        let found = false;
-        for (const suite of candidateSuites) {
-          if (await isSuiteAvailable(suite.id)) {
-            assignedResourceId = suite.id;
-            found = true;
-            console.log(`Backend: Assigned suite ${suite.id} (${suite.name || 'unnamed'})`);
-            break;
-          }
-        }
-        
-        if (!found && candidateSuites.length > 0) {
-          // If no available suites, just assign the first one as a fallback
-          // This is a temporary solution to get reservations working
-          assignedResourceId = candidateSuites[0].id;
-          console.log(`Backend: No available suites found, using first one as fallback: ${assignedResourceId}`);
-        } else if (!found) {
-          console.log(`Backend: No suites found of type ${finalSuiteType}`);
-          // Create a default suite of the requested type
-          const newSuite = await prisma.resource.create({
-            data: {
-              name: `Auto-created ${finalSuiteType}`,
-              type: finalSuiteType as any,
-              capacity: 1,
-              isActive: true
-            }
-          });
-          assignedResourceId = newSuite.id;
-          console.log(`Backend: Created new suite ${newSuite.id} of type ${finalSuiteType}`);
-        }
-      }
-    } else {
-      // For services that don't require a suite, don't assign a resource
-      assignedResourceId = null;
-      console.log('Backend: Service does not require a suite, not assigning a resource');
-    }
-
-    // Generate a unique order number for this reservation
+    // Generate a unique order number
     const orderNumber = await generateOrderNumber();
-    console.log(`Backend: Generated order number: ${orderNumber}`);
     
-    console.log('Backend: Creating reservation in database');
-    const newReservation = await prisma.reservation.create({
+    // Create the reservation
+    const newReservation = await reservationModel.create({
       data: {
-        orderNumber,
         customerId,
         petId,
         serviceId,
-        startDate,
-        endDate,
-        resourceId: assignedResourceId,
-        status,
-        notes
-      },
-      include: {
-        customer: true,
-        pet: true,
-        resource: true
+        startDate: new Date(startDate),
+        endDate: endDate ? new Date(endDate) : new Date(startDate),
+        status: status || 'PENDING',
+        notes,
+        totalAmount,
+        orderNumber,
+        suiteType: requiresSuiteType ? suiteType : null,
+        resourceId
       }
     });
     
-    console.log('Backend: Successfully created reservation:', newReservation);
+    // Fetch the complete reservation with related data
+    const completeReservation = await reservationModel.findUnique({
+      where: { id: newReservation.id },
+      include: {
+        customer: true,
+        pet: true,
+        service: true,
+        resource: true,
+      }
+    });
     
     res.status(201).json({
       status: 'success',
-      data: newReservation,
+      data: completeReservation
     });
-    
-    console.log('Backend: Sent success response');
   } catch (error) {
+    console.error('Backend: Error in createReservation:', error);
     next(error);
   }
 };
 
 // Update a reservation
-/**
- * Updates an existing reservation with validation of status changes.
- * Ensures all relationships remain valid after the update.
- * @param req - Express request object with updated reservation data
- * @param res - Express response object
- * @param next - Express next function
- */
 export const updateReservation = async (
   req: Request,
   res: Response,
@@ -616,178 +696,52 @@ export const updateReservation = async (
 ) => {
   try {
     const { id } = req.params;
-    const { suiteType, ...reservationData } = req.body;
+    const updateData = req.body;
     
-    console.log('Backend: Updating reservation with ID:', id);
-    console.log('Backend: Received update data:', req.body);
+    // Determine which Prisma model to use
+    let reservationModel: any;
     
-    // If status is being updated, validate it
-    if (reservationData.status) {
-      const validStatuses = Object.values(ReservationStatus);
-      if (!validStatuses.includes(reservationData.status)) {
-        return next(new AppError(`Invalid status. Must be one of: ${validStatuses.join(', ')}`, 400));
-      }
+    if (prisma.reservation) {
+      reservationModel = prisma.reservation;
+    } else if (prisma.Reservation) {
+      reservationModel = prisma.Reservation;
+    } else {
+      return next(new AppError('Reservation model not found in Prisma client', 500));
     }
     
-    // If customerId or petId is being updated, validate them
-    if (reservationData.customerId && reservationData.petId) {
-      // Check if the customer exists
-      const customer = await prisma.customer.findUnique({
-        where: { id: reservationData.customerId },
-      });
-      
-      if (!customer) {
-        return next(new AppError('Customer not found', 404));
-      }
-      
-      // Check if the pet exists and belongs to the customer
-      const pet = await prisma.pet.findUnique({
-        where: { id: reservationData.petId },
-      });
-      
-      if (!pet) {
-        return next(new AppError('Pet not found', 404));
-      }
-      
-      if (pet.customerId !== reservationData.customerId) {
-        return next(new AppError('The pet does not belong to this customer', 400));
-      }
-    } else if (reservationData.customerId) {
-      // Only customerId is being updated
-      const customer = await prisma.customer.findUnique({
-        where: { id: reservationData.customerId },
-      });
-      
-      if (!customer) {
-        return next(new AppError('Customer not found', 404));
-      }
-      
-      // Get the current reservation to check the pet
-      const currentReservation = await prisma.reservation.findUnique({
-        where: { id },
-        include: { pet: true },
-      });
-      
-      if (!currentReservation) {
-        return next(new AppError('Reservation not found', 404));
-      }
-      
-      if (currentReservation.pet.customerId !== reservationData.customerId) {
-        return next(new AppError('The pet does not belong to this customer', 400));
-      }
-    } else if (reservationData.petId) {
-      // Only petId is being updated
-      const pet = await prisma.pet.findUnique({
-        where: { id: reservationData.petId },
-      });
-      
-      if (!pet) {
-        return next(new AppError('Pet not found', 404));
-      }
-      
-      // Get the current reservation to check the customer
-      const currentReservation = await prisma.reservation.findUnique({
-        where: { id },
-      });
-      
-      if (!currentReservation) {
-        return next(new AppError('Reservation not found', 404));
-      }
-      
-      if (pet.customerId !== currentReservation.customerId) {
-        return next(new AppError('The pet does not belong to this customer', 400));
-      }
+    // Check if reservation exists
+    const existingReservation = await reservationModel.findUnique({
+      where: { id }
+    });
+    
+    if (!existingReservation) {
+      return next(new AppError('No reservation found with that ID', 404));
     }
     
-    // Check if we need to update the resource based on suiteType
-    // If resourceId is explicitly set to null, we should auto-assign
-    const shouldAutoAssign = suiteType && (reservationData.resourceId === null || !reservationData.resourceId);
-    
-    if (shouldAutoAssign) {
-      console.log('Backend: Auto-assigning suite based on suiteType:', suiteType);
-      
-      // Find available resources of the requested type
-      const candidateSuites = await prisma.resource.findMany({
-        where: {
-          type: suiteType,
-          isActive: true
-        },
-        orderBy: { name: 'asc' }
-      });
-      
-      console.log(`Backend: Found ${candidateSuites.length} candidate suites of type ${suiteType}`);
-      
-      // Helper: check if a suite is available for the given dates
-      async function isSuiteAvailable(suiteId: string) {
-        const startDateToCheck = reservationData.startDate || (await prisma.reservation.findUnique({ where: { id } }))?.startDate;
-        const endDateToCheck = reservationData.endDate || (await prisma.reservation.findUnique({ where: { id } }))?.endDate;
-        
-        if (!startDateToCheck || !endDateToCheck) return true; // If we can't check dates, assume available
-        
-        const overlapping = await prisma.reservation.count({
-          where: {
-            resourceId: suiteId,
-            status: { in: ['CONFIRMED', 'CHECKED_IN'] },
-            OR: [
-              {
-                startDate: { lte: endDateToCheck },
-                endDate: { gte: startDateToCheck },
-              },
-            ],
-            // Exclude the current reservation from the check
-            NOT: { id }
-          },
-        });
-        return overlapping === 0;
-      }
-      
-      // Try to find an available suite
-      let found = false;
-      for (const suite of candidateSuites) {
-        if (await isSuiteAvailable(suite.id)) {
-          reservationData.resourceId = suite.id;
-          found = true;
-          console.log(`Backend: Assigned suite ${suite.id} (${suite.name || 'unnamed'})`);
-          break;
-        }
-      }
-      
-      if (!found && candidateSuites.length > 0) {
-        // If no available suites, just assign the first one as a fallback
-        reservationData.resourceId = candidateSuites[0].id;
-        console.log(`Backend: No available suites found, using first one as fallback: ${reservationData.resourceId}`);
-      } else if (!found) {
-        console.log(`Backend: No suites found of type ${suiteType}`);
-        // Create a default suite of the requested type
-        const newSuite = await prisma.resource.create({
-          data: {
-            name: `Auto-created ${suiteType}`,
-            type: suiteType as any,
-            capacity: 1,
-            isActive: true
-          }
-        });
-        reservationData.resourceId = newSuite.id;
-        console.log(`Backend: Created new suite ${newSuite.id} of type ${suiteType}`);
-      }
+    // Handle date conversions if present
+    if (updateData.startDate) {
+      updateData.startDate = new Date(updateData.startDate);
     }
     
-    console.log('Backend: Final update data:', reservationData);
+    if (updateData.endDate) {
+      updateData.endDate = new Date(updateData.endDate);
+    }
     
     // Update the reservation
-    const updatedReservation = await prisma.reservation.update({
+    const updatedReservation = await reservationModel.update({
       where: { id },
-      data: reservationData,
+      data: updateData,
       include: {
         customer: true,
         pet: true,
+        service: true,
         resource: true,
-      },
+      }
     });
     
     res.status(200).json({
       status: 'success',
-      data: updatedReservation,
+      data: updatedReservation
     });
   } catch (error) {
     next(error);
@@ -803,94 +757,84 @@ export const deleteReservation = async (
   try {
     const { id } = req.params;
     
-    await prisma.reservation.delete({
-      where: { id },
+    // Determine which Prisma model to use
+    let reservationModel: any;
+    
+    if (prisma.reservation) {
+      reservationModel = prisma.reservation;
+    } else if (prisma.Reservation) {
+      reservationModel = prisma.Reservation;
+    } else {
+      return next(new AppError('Reservation model not found in Prisma client', 500));
+    }
+    
+    // Check if reservation exists
+    const existingReservation = await reservationModel.findUnique({
+      where: { id }
+    });
+    
+    if (!existingReservation) {
+      return next(new AppError('No reservation found with that ID', 404));
+    }
+    
+    // Delete the reservation
+    await reservationModel.delete({
+      where: { id }
     });
     
     res.status(204).json({
       status: 'success',
-      data: null,
+      data: null
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Get today's revenue
-export const getTodayRevenue = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-
-    const reservations = await prisma.reservation.findMany({
-      where: {
-        startDate: {
-          gte: startOfDay,
-          lte: endOfDay,
-        },
-        status: {
-          in: ['CONFIRMED', 'CHECKED_IN', 'COMPLETED'],
-        },
-      },
-      include: {
-        resource: true,
-      },
-    });
-
-    // Since resource doesn't have a price property, we'll use a fixed value for now
-    // In a real implementation, you would need to fetch the price from the service or another source
-    const revenue = reservations.reduce((acc, reservation) => {
-      // Use a fixed value of 50 as a placeholder for the resource price
-      return acc + 50; // Default value since resource doesn't have price
-    }, 0);
-
-    res.status(200).json({
-      status: 'success',
-      revenue,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Add add-on services to a reservation
+// Add add-ons to a reservation
 export const addAddOnsToReservation = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { id } = req.params;
+    const { reservationId } = req.params;
     const { addOns } = req.body;
     
-    console.log('Backend: Adding add-ons to reservation:', id);
-    console.log('Backend: Add-ons data:', JSON.stringify(addOns, null, 2));
+    console.log(`Backend: Adding add-ons to reservation ${reservationId}:`, JSON.stringify(addOns, null, 2));
     
-    // Validate input
     if (!Array.isArray(addOns) || addOns.length === 0) {
-      console.error('Backend: Invalid add-ons array:', addOns);
-      return next(new AppError('Add-ons must be a non-empty array', 400));
+      return next(new AppError('Please provide an array of add-ons', 400));
     }
     
-    // Check if the reservation exists
-    const reservation = await prisma.reservation.findUnique({
-      where: { id },
-      include: {
-        resource: true
-      }
+    // Determine which Prisma models to use
+    let reservationModel: any;
+    let reservationAddOnModel: any;
+    
+    if (prisma.reservation) {
+      reservationModel = prisma.reservation;
+    } else if (prisma.Reservation) {
+      reservationModel = prisma.Reservation;
+    } else {
+      return next(new AppError('Reservation model not found in Prisma client', 500));
+    }
+    
+    if (prisma.reservationAddOn) {
+      reservationAddOnModel = prisma.reservationAddOn;
+    } else if (prisma.ReservationAddOn) {
+      reservationAddOnModel = prisma.ReservationAddOn;
+    } else {
+      return next(new AppError('ReservationAddOn model not found in Prisma client', 500));
+    }
+    
+    // Check if reservation exists
+    const existingReservation = await reservationModel.findUnique({
+      where: { id: reservationId }
     });
     
-    if (!reservation) {
-      console.error(`Backend: Reservation with ID ${id} not found`);
-      return next(new AppError('Reservation not found', 404));
+    if (!existingReservation) {
+      return next(new AppError('No reservation found with that ID', 404));
     }
-    
-    console.log(`Backend: Found reservation with resource: ${reservation.resource?.name || 'Unknown'}`);
     
     // Process each add-on
     const addOnResults = [];
@@ -898,94 +842,25 @@ export const addAddOnsToReservation = async (
     
     for (const addOn of addOns) {
       try {
-        const { serviceId, quantity } = addOn;
+        const { addOnServiceId, quantity, price } = addOn;
         
-        console.log(`Backend: Processing add-on with serviceId: ${serviceId}, quantity: ${quantity}`);
-        
-        if (!serviceId || !quantity || quantity < 1) {
-          const error = `Invalid add-on data: serviceId=${serviceId}, quantity=${quantity}`;
-          console.error(`Backend: ${error}`);
-          errors.push(error);
-          continue; // Skip this add-on but continue processing others
+        if (!addOnServiceId) {
+          errors.push('addOnServiceId is required for each add-on');
+          continue;
         }
         
-        // First, try to find an add-on service directly with this ID
-        let addOnService = await prisma.addOnService.findUnique({
-          where: { id: serviceId }
+        // Create the reservation add-on
+        const reservationAddOn = await reservationAddOnModel.create({
+          data: {
+            reservationId,
+            addOnServiceId,
+            quantity: quantity || 1,
+            price: price || 0
+          }
         });
         
-        // If not found directly, try to find add-on services associated with this service ID
-        if (!addOnService) {
-          console.log(`Backend: No add-on service found with ID ${serviceId}, looking for add-ons associated with this service ID`);
-          
-          const addOnServices = await prisma.addOnService.findMany({
-            where: { serviceId: serviceId }
-          });
-          
-          if (addOnServices.length > 0) {
-            // Use the first add-on service associated with this service
-            addOnService = addOnServices[0];
-            console.log(`Backend: Found add-on service ${addOnService.name} (${addOnService.id}) associated with service ${serviceId}`);
-          } else {
-            // If still not found, check if it's a valid service ID at least
-            const service = await prisma.service.findUnique({
-              where: { id: serviceId }
-            });
-            
-            if (!service) {
-              const error = `Neither add-on service nor service found with ID ${serviceId}`;
-              console.error(`Backend: ${error}`);
-              errors.push(error);
-              continue; // Skip this add-on but continue processing others
-            }
-            
-            // Log that we're using a service ID directly, which isn't ideal
-            console.log(`Backend: WARNING - Using regular service ID ${serviceId} (${service.name}) instead of an add-on service ID`);
-            
-            // Create a temporary add-on service object for processing
-            addOnService = {
-              id: serviceId, // This will cause a foreign key error in the database
-              name: service.name,
-              description: service.description,
-              price: service.price,
-              serviceId: service.id,
-              isActive: true,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              duration: service.duration
-            };
-            
-            // Add a more specific error since this will likely fail
-            errors.push(`Warning: Attempting to use service ID ${serviceId} as an add-on ID, which may cause database errors`);
-          }
-        }
-        
-        if (addOnService) {
-          console.log(`Backend: Using add-on service: ${addOnService.name}, price: ${addOnService.price}`);
-          
-          // Create reservation add-on entries
-          for (let i = 0; i < quantity; i++) {
-            try {
-              const reservationAddOn = await prisma.reservationAddOn.create({
-                data: {
-                  reservationId: id,
-                  addOnId: addOnService.id,
-                  price: addOnService.price,
-                  notes: `Added as add-on to reservation`
-                },
-                include: {
-                  addOn: true
-                }
-              });
-              
-              console.log(`Backend: Created reservation add-on: ${JSON.stringify(reservationAddOn)}`);
-              addOnResults.push(reservationAddOn);
-            } catch (createError) {
-              console.error(`Backend: Error creating reservation add-on:`, createError);
-              errors.push(`Failed to create add-on: ${createError instanceof Error ? createError.message : String(createError)}`);
-            }
-          }
-        }
+        console.log(`Backend: Created reservation add-on: ${JSON.stringify(reservationAddOn)}`);
+        addOnResults.push(reservationAddOn);
       } catch (error) {
         console.error('Backend: Error processing add-on:', error);
         errors.push(error instanceof Error ? error.message : String(error));

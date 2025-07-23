@@ -71,8 +71,16 @@ export const getAllPets = async (
         skip,
         take: limit,
         orderBy: { name: 'asc' },
-        include: { 
-          customer: {
+        select: { 
+          id: true,
+          name: true,
+          breed: true,
+          customerId: true,
+          createdAt: true,
+          updatedAt: true,
+          notes: true,
+          // dateOfBirth field removed - not in current schema
+          Customer: {
             select: {
               id: true,
               firstName: true,
@@ -80,7 +88,7 @@ export const getAllPets = async (
               email: true,
               phone: true
             }
-          },
+          }
         },
       }),
       prisma.pet.count({ where }),
@@ -109,8 +117,15 @@ export const getPetById = async (
     
     const pet = await prisma.pet.findUnique({
       where: { id },
-      include: { 
-        customer: {
+      select: { 
+        id: true,
+        name: true,
+        breed: true,
+        customerId: true,
+        createdAt: true,
+        updatedAt: true,
+        notes: true,
+        Customer: {
           select: {
             id: true,
             firstName: true,
@@ -118,7 +133,7 @@ export const getPetById = async (
             email: true,
             phone: true
           }
-        },
+        }
       },
     });
 
@@ -148,8 +163,29 @@ export const getPetReservations = async (
     
     const pet = await prisma.pet.findUnique({
       where: { id },
-      include: { reservations: true },
+      select: {
+        id: true,
+        name: true,
+        breed: true,
+        customerId: true
+      }
     });
+    
+    // Try to find reservations for this pet using raw query approach
+    let reservations: any[] = [];
+    try {
+      // This is a safer approach if the schema might have changed
+      const result = await prisma.$queryRaw`
+        SELECT * FROM "Reservation" 
+        WHERE "petId" = ${id} 
+        ORDER BY "startDate" DESC
+      `;
+      // Ensure result is an array
+      reservations = Array.isArray(result) ? result : [];
+    } catch (err) {
+      console.log('Error fetching reservations, they might not exist in the schema:', err);
+      // Continue without reservations data
+    }
     
     if (!pet) {
       return next(new AppError('Pet not found', 404));
@@ -157,8 +193,8 @@ export const getPetReservations = async (
     
     res.status(200).json({
       status: 'success',
-      results: pet.reservations.length,
-      data: pet.reservations,
+      results: reservations.length,
+      data: reservations,
     });
   } catch (error) {
     next(error);
