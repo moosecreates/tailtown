@@ -3,17 +3,17 @@
  * 
  * This file contains the controller methods for retrieving reservations.
  * It implements schema alignment strategy with defensive programming.
+ * Optimized with caching and query performance monitoring.
  */
 
 import { Request, Response } from 'express';
 import { AppError } from '../../utils/service';
 import { catchAsync } from '../../middleware/catchAsync';
 import { logger } from '../../utils/logger';
-import { 
-  ExtendedReservationWhereInput,
-  ExtendedReservationInclude
-} from '../../types/prisma-extensions';
+import { ExtendedReservationWhereInput } from '../../types/prisma-extensions';
 import { safeExecutePrismaQuery, prisma } from './utils/prisma-helpers';
+import { reservationCache } from '../../utils/cache';
+import { performance } from 'perf_hooks';
 
 /**
  * Get all reservations with pagination and filtering
@@ -33,6 +33,9 @@ import { safeExecutePrismaQuery, prisma } from './utils/prisma-helpers';
  * @param {string} req.tenantId - The tenant ID (provided by middleware)
  */
 export const getAllReservations = catchAsync(async (req: Request, res: Response) => {
+  // Start performance tracking
+  const startTime = performance.now();
+  
   // Generate a unique request ID for logging
   const requestId = `getAll-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
   logger.info(`Processing get all reservations request`, { requestId, query: req.query });
@@ -136,8 +139,8 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
           gte: startDate
         };
       } else {
-        logger.warn(`Invalid startDate filter`, { requestId, startDate: req.query.startDate });
-        warnings.push(`Invalid startDate filter: ${req.query.startDate}, ignoring this filter`);
+        logger.warn(`Invalid startDate parameter`, { requestId, startDate: req.query.startDate });
+        warnings.push(`Invalid startDate parameter: ${req.query.startDate}, ignoring this filter`);
       }
     } catch (error) {
       logger.warn(`Error parsing startDate filter`, { requestId, startDate: req.query.startDate, error });
@@ -153,8 +156,8 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
           lte: endDate
         };
       } else {
-        logger.warn(`Invalid endDate filter`, { requestId, endDate: req.query.endDate });
-        warnings.push(`Invalid endDate filter: ${req.query.endDate}, ignoring this filter`);
+        logger.warn(`Invalid endDate parameter`, { requestId, endDate: req.query.endDate });
+        warnings.push(`Invalid endDate parameter: ${req.query.endDate}, ignoring this filter`);
       }
     } catch (error) {
       logger.warn(`Error parsing endDate filter`, { requestId, endDate: req.query.endDate, error });
@@ -162,92 +165,166 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
     }
   }
   
-  // Count total number of reservations matching filter
-  const totalCount = await safeExecutePrismaQuery(
-    async () => {
-      return await prisma.reservation.count({
-        where: filter as ExtendedReservationWhereInput
-      });
-    },
-    0, // Default to 0 if there's an error
-    `Error counting reservations with filter`,
-    true // Enable throwError flag
-  );
+  // Generate cache key for this specific query
+  // Only cache simple queries without complex filters
+  let useCache = true;
+  let cacheKey = ``;
   
-  // Get reservations with pagination
-  const reservations = await safeExecutePrismaQuery(
-    async () => {
-      return await prisma.reservation.findMany({
-        where: filter as ExtendedReservationWhereInput,
-        skip,
-        take: limit,
-        orderBy: {
-          startDate: 'desc'
-        },
-        select: {
-          id: true,
-          customerId: true,
-          petId: true,
-          startDate: true,
-          endDate: true,
-          status: true,
-          price: true,
-          suiteType: true,
-          resourceId: true,
-          createdAt: true,
-          updatedAt: true,
-          customer: {
-            select: {
-              firstName: true,
-              lastName: true
-            }
+  // Only use cache for simple pagination of recent reservations
+  // Don't cache heavily filtered queries
+  if (
+    Object.keys(filter).length <= 2 && // Only organizationId and maybe status
+    (!req.query.startDate && !req.query.endDate) && // No date filters
+    (!req.query.customerId && !req.query.petId && !req.query.resourceId) // No specific ID filters
+  ) {
+    cacheKey = `reservations:${tenantId}:page${page}:limit${limit}`;
+    
+    if (req.query.status) {
+      cacheKey += `:status${req.query.status}`;
+    }
+    
+    logger.debug(`Query eligible for caching`, { requestId, cacheKey });
+  } else {
+    useCache = false;
+    logger.debug(`Complex query not using cache`, { requestId });
+  }
+  
+  let reservations: any[] = [];
+  let totalCount = 0;
+  let cachedData: { reservations: any[], totalCount: number } | null = null;
+  
+  // Try to get from cache if applicable
+  if (useCache) {
+    cachedData = reservationCache.get(cacheKey);
+  }
+  
+  if (cachedData) {
+    // Use cached data
+    reservations = cachedData.reservations;
+    totalCount = cachedData.totalCount;
+    logger.info(`Cache hit for reservations list`, { 
+      requestId, 
+      cacheTime: performance.now() - startTime,
+      resultCount: reservations.length
+    });
+  } else {
+    // Fetch from database
+    // Optimize query: Use two separate queries instead of one with count
+    // This improves performance for large datasets
+    
+    // 1. Get total count (faster separate query)
+    const countResult = await safeExecutePrismaQuery(
+      async () => {
+        return await prisma.reservation.count({
+          where: filter as ExtendedReservationWhereInput
+        });
+      },
+      0, // Default to 0 if there's an error
+      `Error counting reservations with filter`,
+      true // Enable throwError flag
+    );
+    
+    // Ensure count is a number
+    totalCount = typeof countResult === 'number' ? countResult : 0;
+    
+    // 2. Get paginated results with optimized select
+    const dbReservations = await safeExecutePrismaQuery(
+      async () => {
+        return await prisma.reservation.findMany({
+          where: filter as ExtendedReservationWhereInput,
+          skip,
+          take: limit,
+          orderBy: {
+            startDate: 'desc'
           },
-          pet: {
-            select: {
-              name: true,
-              breed: true
-            }
-          },
-          resource: {
-            select: {
-              name: true,
-              type: true
+          select: { // Use select instead of include for better performance
+            id: true,
+            customerId: true,
+            petId: true,
+            startDate: true,
+            endDate: true,
+            status: true,
+            price: true,
+            suiteType: true,
+            resourceId: true,
+            customer: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true
+              }
+            },
+            pet: {
+              select: {
+                name: true,
+                breed: true
+              }
+            },
+            resource: {
+              select: {
+                name: true,
+                type: true
+              }
             }
           }
-        }
-      });
-    },
-    [], // Default to empty array if there's an error
-    `Error fetching reservations with pagination and filter`,
-    true // Enable throwError flag
-  );
+        });
+      },
+      [], // Default to empty array if there's an error
+      `Error fetching reservations with pagination`,
+      true // Enable throwError flag
+    );
+    
+    // Ensure we have an array even if query returns null
+    reservations = dbReservations || [];
+    
+    // Cache results if appropriate (including empty results)
+    if (useCache) {
+      reservationCache.set(cacheKey, { reservations, totalCount });
+      logger.debug(`Cached reservation list results`, { requestId, cacheKey, resultCount: reservations.length });
+    }
+  }
   
-  // Calculate pagination metadata
-  const totalPages = Math.ceil((totalCount || 0) / limit);
+  // Calculate pagination metadata with safety checks
+  const safeCount = totalCount || 0;
+  const totalPages = Math.ceil(safeCount / limit);
   const hasNextPage = page < totalPages;
   const hasPrevPage = page > 1;
   
-  logger.info(`Found ${reservations ? reservations.length : 0} reservations (page ${page}/${totalPages})`, { 
+  // Calculate total execution time
+  const executionTime = performance.now() - startTime;
+  
+  logger.info(`Found ${reservations.length} reservations (page ${page}/${totalPages})`, { 
     requestId,
-    totalCount,
-    pageSize: limit
+    totalCount: safeCount,
+    pageSize: limit,
+    executionTimeMs: executionTime.toFixed(2)
   });
+  
+  // Include execution time in response headers for monitoring
+  res.set('X-Execution-Time', executionTime.toFixed(2));
   
   // Prepare response
   const responseData: any = {
     status: 'success',
     data: {
-      reservations,
+      results: reservations,
       pagination: {
-        page,
-        limit,
         totalCount,
         totalPages,
+        currentPage: page,
         hasNextPage,
         hasPrevPage
       }
     }
   };
+  
+  // Add cache info to response for debugging in development
+  if (process.env.NODE_ENV === 'development') {
+    responseData.debug = {
+      cacheUsed: !!cachedData,
+      executionTime: executionTime.toFixed(2)
+    };
+  }
   
   // Add warnings if any
   if (warnings.length > 0) {
@@ -268,6 +345,9 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
  * @param {string} req.tenantId - The tenant ID (provided by middleware)
  */
 export const getReservationById = catchAsync(async (req: Request, res: Response) => {
+  // Start performance tracking
+  const startTime = performance.now();
+  
   // Generate a unique request ID for logging
   const requestId = `getById-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
   logger.info(`Processing get reservation by ID request for ID: ${req.params.id}`, { requestId });
@@ -285,73 +365,98 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
     throw AppError.validationError('Reservation ID is required');
   }
   
-  // Get reservation by ID
-  const reservation = await safeExecutePrismaQuery(
-    async () => {
-      return await prisma.reservation.findFirst({
-        where: {
-          id,
-          organizationId: tenantId
-        } as ExtendedReservationWhereInput,
-        select: {
-          id: true,
-          customerId: true,
-          petId: true,
-          startDate: true,
-          endDate: true,
-          status: true,
-          price: true,
-          suiteType: true,
-          resourceId: true,
-          createdAt: true,
-          updatedAt: true,
-          notes: true,
-          organizationId: true,
-          customer: {
-            select: {
-              firstName: true,
-              lastName: true,
-              email: true,
-              phone: true
-            }
-          },
-          pet: {
-            select: {
-              name: true,
-              breed: true,
-              size: true,
-              weight: true,
-              birthDate: true,
-            }
-          },
-          resource: {
-            select: {
-              name: true,
-              type: true
-            }
-          },
-          addOns: {
-            select: {
-              id: true,
-              addOnId: true,
-              price: true,
-              notes: true
+  // Generate cache key based on tenant and reservation ID
+  const cacheKey = `reservation:${tenantId}:${id}`;
+  
+  // Check if data is in cache first
+  const cachedReservation = reservationCache.get(cacheKey);
+  let reservation;
+  
+  if (cachedReservation) {
+    reservation = cachedReservation;
+    logger.info(`Cache hit for reservation: ${id}`, { requestId, cacheTime: performance.now() - startTime });
+  } else {
+    // Not in cache, fetch from database
+    logger.debug(`Cache miss for reservation: ${id}, fetching from database`, { requestId });
+    
+    // Get reservation by ID
+    reservation = await safeExecutePrismaQuery(
+      async () => {
+        return await prisma.reservation.findFirst({
+          where: {
+            id,
+            organizationId: tenantId
+          } as ExtendedReservationWhereInput,
+          select: {
+            id: true,
+            customerId: true,
+            petId: true,
+            startDate: true,
+            endDate: true,
+            status: true,
+            price: true,
+            suiteType: true,
+            resourceId: true,
+            createdAt: true,
+            updatedAt: true,
+            notes: true,
+            organizationId: true,
+            customer: {
+              select: {
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true
+              }
+            },
+            pet: {
+              select: {
+                name: true,
+                breed: true,
+                size: true,
+                weight: true,
+                birthDate: true,
+              }
+            },
+            resource: {
+              select: {
+                name: true,
+                type: true
+              }
+            },
+            addOns: {
+              select: {
+                id: true,
+                addOnId: true,
+                price: true,
+                notes: true
+              }
             }
           }
-        }
-      });
-    },
-    null, // Default to null if there's an error
-    `Error fetching reservation with ID ${id}`,
-    true // Enable throwError flag
-  );
+        });
+      },
+      null, // Default to null if there's an error
+      `Error fetching reservation with ID ${id}`,
+      true // Enable throwError flag
+    );
+    
+    // Store in cache if found
+    if (reservation) {
+      reservationCache.set(cacheKey, reservation);
+    }
+  }
   
   if (!reservation) {
     logger.warn(`Reservation not found or does not belong to tenant: ${tenantId}`, { requestId });
     throw AppError.notFoundError('Reservation not found');
   }
   
-  logger.info(`Found reservation: ${id}`, { requestId });
+  // Calculate total execution time
+  const executionTime = performance.now() - startTime;
+  logger.info(`Found reservation: ${id}`, { requestId, executionTimeMs: executionTime.toFixed(2) });
+  
+  // Include execution time in response headers for monitoring
+  res.set('X-Execution-Time', executionTime.toFixed(2));
   
   res.status(200).json({
     status: 'success',

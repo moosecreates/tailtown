@@ -13,6 +13,7 @@ import {
   ExtendedReservationWhereInput
 } from '../../types/prisma-extensions';
 import { safeExecutePrismaQuery, prisma } from './utils/prisma-helpers';
+import { invalidateReservationCaches } from '../../utils/cache';
 
 /**
  * Delete a reservation
@@ -131,6 +132,10 @@ export const deleteReservation = catchAsync(async (
   );
   
   logger.success(`Successfully deleted reservation: ${id}`, { requestId });
+  
+  // Invalidate the cache to ensure consistent data
+  invalidateReservationCaches(tenantId, id);
+  logger.info(`Cache invalidated for deleted reservation`, { requestId, reservationId: id });
   
   // Prepare response message
   let message = 'Reservation deleted successfully';

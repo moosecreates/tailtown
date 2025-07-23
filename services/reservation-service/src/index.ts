@@ -23,6 +23,10 @@ const app = createService({
 app.use(reservationTenantMiddleware);
 
 // Register routes
+app.use('/api/reservations', reservationRoutes);
+app.use('/api/resources', resourceRoutes);
+
+// Keep v1 routes for backward compatibility
 app.use('/api/v1/reservations', reservationRoutes);
 app.use('/api/v1/resources', resourceRoutes);
 

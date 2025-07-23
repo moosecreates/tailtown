@@ -18,6 +18,7 @@ import {
   ExtendedReservationInclude
 } from '../../types/prisma-extensions';
 import { safeExecutePrismaQuery, prisma } from './utils/prisma-helpers';
+import { invalidateReservationCaches } from '../../utils/cache';
 
 /**
  * Helper function to determine suite type based on service type
@@ -312,7 +313,6 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
     petId,
     startDate: parsedStartDate,
     endDate: parsedEndDate,
-    serviceType,
     suiteType: determinedSuiteType,
     organizationId: tenantId,
     status: status || 'PENDING'
@@ -342,15 +342,13 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
           pet: {
             select: {
               name: true,
-              breed: true,
-              age: true
+              breed: true
             }
           },
           resource: {
             select: {
               name: true,
-              type: true,
-              location: true
+              type: true
             }
           }
         } as unknown as ExtendedReservationInclude
@@ -393,6 +391,12 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
 
   // Add null check for newReservation before accessing id
   logger.success(`Reservation created successfully`, { requestId, reservationId: newReservation?.id || 'unknown' });
+  
+  // Invalidate the cache to ensure consistent data
+  if (newReservation?.id) {
+    invalidateReservationCaches(tenantId, newReservation.id);
+    logger.info(`Cache invalidated for new reservation`, { requestId, reservationId: newReservation.id });
+  }
   
   // Prepare response with warnings if any
   const responseData: any = {
