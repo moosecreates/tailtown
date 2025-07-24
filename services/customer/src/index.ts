@@ -26,7 +26,7 @@ dotenv.config();
 
 // Initialize the Express application
 const app = express();
-const PORT = process.env.PORT || 3003; // Using port 3003 as specified in .env
+const PORT = 4004; // Explicitly using port 4004 to avoid conflicts with reservation service
 
 // Increase HTTP header limits to prevent 431 errors
 app.set('etag', false); // Disable ETag generation to reduce header size

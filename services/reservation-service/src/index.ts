@@ -34,7 +34,7 @@ app.use('/api/v1/resources', resourceRoutes);
 app.registerErrorHandlers();
 
 // Define the port for the service
-const PORT = parseInt(process.env.PORT || '4004', 10); // Use environment variable or default to 4004
+const PORT = parseInt(process.env.PORT || '4003', 10); // Use environment variable or default to 4003
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -49,7 +49,7 @@ setupGracefulShutdown(server, prisma);
     const dependencies = [
       {
         name: 'Customer Service',
-        url: process.env.CUSTOMER_SERVICE_URL || 'http://localhost:3003/health',
+        url: process.env.CUSTOMER_SERVICE_URL || 'http://localhost:4004/health',
         required: false,
         timeout: 3000
       }
