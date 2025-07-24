@@ -60,7 +60,7 @@ export const resourceService = {
     type?: string
   ): Promise<{ status: string; data: Resource[]; totalPages?: number; currentPage?: number; results?: number }> => {
     try {
-      const response: AxiosResponse = await api.get('/api/resources', {
+      const response: AxiosResponse = await api.get('/api/v1/resources', {
         params: { 
           page, 
           limit,
@@ -128,7 +128,7 @@ export const resourceService = {
 
   createResource: async (resource: Omit<Resource, 'id' | 'createdAt' | 'updatedAt'>): Promise<{ status: string; data: Resource }> => {
     try {
-      const response: AxiosResponse = await api.post('/api/resources', resource);
+      const response: AxiosResponse = await api.post('/api/v1/resources', resource);
       return response.data;
     } catch (error: any) {
       console.error('Error in createResource:', error);
@@ -227,7 +227,7 @@ export const resourceService = {
     serviceId?: string
   ): Promise<{ status: string; data: Resource[] }> => {
     try {
-      const response: AxiosResponse = await api.get('/api/resources/available', {
+      const response: AxiosResponse = await api.get('/api/v1/resources/available', {
         params: {
           startDate,
           endDate,

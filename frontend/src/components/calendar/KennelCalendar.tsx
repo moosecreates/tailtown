@@ -187,7 +187,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
       setLoading(true);
       
       // Get all kennels (suites) - using specific suite types instead of generic 'suite'
-      const response = await api.get('/api/resources/availability', {
+      const response = await api.get('/api/v1/resources/availability', {
         params: {
           resourceType: ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'].join(','),
           date: formatDateToYYYYMMDD(currentDate),
@@ -270,7 +270,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
           setAvailabilityError(null);
           
           // Call the new batch availability API
-          const availabilityResponse = await api.post('/api/resources/availability/batch', {
+          const availabilityResponse = await api.post('/api/v1/resources/availability/batch', {
             resourceIds: kennelIds,
             startDate: startDate,
             endDate: endDate

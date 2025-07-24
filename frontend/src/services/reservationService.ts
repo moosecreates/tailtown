@@ -89,7 +89,7 @@ export const reservationService = {
   }> => {
     try {
       console.log('reservationService: Getting all reservations with date filter:', date);
-      const response: AxiosResponse = await reservationApi.get('/api/reservations', {
+      const response: AxiosResponse = await reservationApi.get('/api/v1/reservations', {
         params: { 
           page, 
           limit,
@@ -118,7 +118,7 @@ export const reservationService = {
 
   createReservation: async (reservation: Omit<Reservation, 'id'>): Promise<Reservation> => {
     try {
-      const response: AxiosResponse = await reservationApi.post('/api/reservations', reservation);
+      const response: AxiosResponse = await reservationApi.post('/api/v1/reservations', reservation);
       return response.data.data;
     } catch (error: any) {
       console.error('Error in createReservation:', error);
@@ -174,7 +174,7 @@ export const reservationService = {
   getTodayRevenue: async (): Promise<{ status: string; data: { revenue: number } }> => {
     try {
       const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-      const response: AxiosResponse = await reservationApi.get('/api/reservations/revenue/today');
+      const response: AxiosResponse = await reservationApi.get('/api/v1/reservations/revenue/today');
       return response.data;
     } catch (error: any) {
       console.error('Error in getTodayRevenue:', error);
