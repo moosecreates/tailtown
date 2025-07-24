@@ -80,7 +80,7 @@ export const getAllPets = async (
           updatedAt: true,
           notes: true,
           // dateOfBirth field removed - not in current schema
-          Customer: {
+          customer: {
             select: {
               id: true,
               firstName: true,
@@ -125,7 +125,7 @@ export const getPetById = async (
         createdAt: true,
         updatedAt: true,
         notes: true,
-        Customer: {
+        customer: {
           select: {
             id: true,
             firstName: true,
@@ -459,6 +459,34 @@ export const deletePet = async (
     res.status(204).json({
       status: 'success',
       data: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Check both Pet and pets models for data
+export const checkAllPets = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Check uppercase Pet model
+    const upperPets = await prisma.pet.findMany({
+      take: 10,
+      orderBy: { name: 'asc' },
+    });
+    
+    // Check lowercase pets model using raw query to avoid model conflicts
+    const lowerPets = await prisma.$queryRaw`SELECT * FROM pets LIMIT 10`;
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        upperPets,
+        lowerPets,
+      },
     });
   } catch (error) {
     next(error);

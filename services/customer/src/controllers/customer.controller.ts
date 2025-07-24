@@ -55,7 +55,7 @@ export const getAllCustomers = async (
         createdAt: true,
         updatedAt: true,
         // tags field removed - not in current schema
-        Pet: {
+        pets: {
           select: {
             id: true,
             name: true,
@@ -92,7 +92,7 @@ export const getCustomerById = async (
     const customer = await prisma.customer.findUnique({
       where: { id },
       include: {
-        Pet: true
+        pets: true
       }
     });
     
@@ -203,7 +203,7 @@ export const createCustomer = async (
       const customerWithRelations = await prismaClient.customer.findUnique({
         where: { id: customer.id },
         include: {
-          Pet: true
+          pets: true
         }
       });
       
@@ -243,7 +243,7 @@ export const updateCustomer = async (
     const customerExists = await prisma.customer.findUnique({
       where: { id },
       include: {
-        Pet: true
+        pets: true
       }
     });
     
@@ -288,7 +288,7 @@ export const updateCustomer = async (
       return prismaClient.customer.findUnique({
         where: { id },
         include: {
-          Pet: true
+          pets: true
         }
       });
     });

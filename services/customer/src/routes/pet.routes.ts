@@ -7,7 +7,8 @@ import {
   deletePet,
   getPetReservations,
   uploadPetPhoto,
-  getPetsByCustomer
+  getPetsByCustomer,
+  checkAllPets
 } from '../controllers/pet.controller';
 
 const router = Router();
@@ -35,5 +36,8 @@ router.post('/:id/photo', uploadPetPhoto);
 
 // DELETE a pet
 router.delete('/:id', deletePet);
+
+// GET check all pets from both models
+router.get('/debug/check-all-pets', checkAllPets);
 
 export { router as petRoutes };
