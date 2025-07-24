@@ -70,10 +70,26 @@ export const reservationService = {
     sortOrder: 'asc' | 'desc' = 'asc',
     status?: string,
     date?: string
-  ): Promise<{ status: string; data: { reservations: Reservation[] }; totalPages: number; currentPage: number; results: number }> => {
+  ): Promise<{ 
+    status: string; 
+    data: { 
+      results: Reservation[], 
+      pagination: {
+        totalCount: number,
+        totalPages: number,
+        currentPage: number,
+        hasNextPage: boolean,
+        hasPrevPage: boolean
+      } 
+    };
+    debug?: {
+      cacheUsed: boolean,
+      executionTime: string
+    };
+  }> => {
     try {
       console.log('reservationService: Getting all reservations with date filter:', date);
-      const response: AxiosResponse = await reservationApi.get('/api/v1/reservations', {
+      const response: AxiosResponse = await reservationApi.get('/api/reservations', {
         params: { 
           page, 
           limit,
@@ -92,7 +108,7 @@ export const reservationService = {
 
   getReservationById: async (id: string): Promise<Reservation> => {
     try {
-      const response: AxiosResponse = await reservationApi.get(`/api/v1/reservations/${id}`);
+      const response: AxiosResponse = await reservationApi.get(`/api/reservations/${id}`);
       return response.data.data;
     } catch (error: any) {
       console.error('Error in getReservationById:', error);
@@ -102,7 +118,7 @@ export const reservationService = {
 
   createReservation: async (reservation: Omit<Reservation, 'id'>): Promise<Reservation> => {
     try {
-      const response: AxiosResponse = await reservationApi.post('/api/v1/reservations', reservation);
+      const response: AxiosResponse = await reservationApi.post('/api/reservations', reservation);
       return response.data.data;
     } catch (error: any) {
       console.error('Error in createReservation:', error);
@@ -113,7 +129,7 @@ export const reservationService = {
   updateReservation: async (id: string, reservation: Partial<Reservation>): Promise<Reservation> => {
     try {
       console.log('Sending update request:', { id, data: reservation });
-      const response: AxiosResponse = await reservationApi.put(`/api/v1/reservations/${id}`, reservation);
+      const response: AxiosResponse = await reservationApi.put(`/api/reservations/${id}`, reservation);
       console.log('Update response:', response.data);
       return response.data.data;
     } catch (error: any) {
@@ -124,7 +140,7 @@ export const reservationService = {
 
   deleteReservation: async (id: string): Promise<void> => {
     try {
-      await reservationApi.delete(`/api/v1/reservations/${id}`);
+      await reservationApi.delete(`/api/reservations/${id}`);
     } catch (error: any) {
       console.error('Error in deleteReservation:', error);
       throw error;
@@ -133,7 +149,7 @@ export const reservationService = {
 
   getReservationsByCustomer: async (customerId: string, page = 1, limit = 10): Promise<PaginatedResponse<Reservation>> => {
     try {
-      const response: AxiosResponse = await reservationApi.get(`/api/v1/reservations/customer/${customerId}`, {
+      const response: AxiosResponse = await reservationApi.get(`/api/reservations/customer/${customerId}`, {
         params: { page, limit }
       });
       return response.data;
@@ -145,7 +161,7 @@ export const reservationService = {
 
   getReservationsByPet: async (petId: string, page = 1, limit = 10): Promise<PaginatedResponse<Reservation>> => {
     try {
-      const response: AxiosResponse = await reservationApi.get(`/api/v1/reservations/pet/${petId}`, {
+      const response: AxiosResponse = await reservationApi.get(`/api/reservations/pet/${petId}`, {
         params: { page, limit }
       });
       return response.data;
@@ -158,7 +174,7 @@ export const reservationService = {
   getTodayRevenue: async (): Promise<{ status: string; data: { revenue: number } }> => {
     try {
       const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-      const response: AxiosResponse = await reservationApi.get('/api/v1/reservations/revenue/today');
+      const response: AxiosResponse = await reservationApi.get('/api/reservations/revenue/today');
       return response.data;
     } catch (error: any) {
       console.error('Error in getTodayRevenue:', error);
@@ -170,7 +186,7 @@ export const reservationService = {
   addAddOnsToReservation: async (reservationId: string, addOns: Array<{ serviceId: string; quantity: number }>): Promise<any> => {
     try {
       console.log('Adding add-ons to reservation:', { reservationId, addOns });
-      const response: AxiosResponse = await reservationApi.post(`/api/v1/reservations/${reservationId}/add-ons`, { addOns });
+      const response: AxiosResponse = await reservationApi.post(`/api/reservations/${reservationId}/add-ons`, { addOns });
       console.log('Add-ons response:', response.data);
       return response.data;
     } catch (error: any) {

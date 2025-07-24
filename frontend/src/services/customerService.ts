@@ -1,19 +1,26 @@
 import { PaginatedResponse } from '../types/common';
 import { Customer } from '../types/customer';
-import api from './api';
+import api, { customerApi } from './api';
 
 export type { Customer };
 
 export const customerService = {
   getAllCustomers: async (page = 1, limit = 10): Promise<PaginatedResponse<Customer>> => {
-    const response = await api.get('/api/customers', {
-      params: { page, limit }
-    });
-    return response.data;
+    try {
+      console.log('Fetching all customers from API...');
+      const response = await customerApi.get('/api/customers', {
+        params: { page, limit }
+      });
+      console.log('Customers API response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+      throw error;
+    }
   },
   
   searchCustomers: async (query: string, page = 1, limit = 10): Promise<PaginatedResponse<Customer>> => {
-    const response = await api.get('/api/customers', {
+    const response = await customerApi.get('/api/customers', {
       params: { 
         search: query,
         page,
@@ -24,7 +31,7 @@ export const customerService = {
   },
 
   getCustomerById: async (id: string): Promise<Customer> => {
-    const response = await api.get(`/api/customers/${id}`);
+    const response = await customerApi.get(`/api/customers/${id}`);
     return response.data.data;
   },
 
@@ -32,7 +39,7 @@ export const customerService = {
     try {
       console.log('Making POST request to: /api/customers');
       console.log('With data:', customer);
-      const response = await api.post('/api/customers', customer);
+      const response = await customerApi.post('/api/customers', customer);
       console.log('Response:', response);
       if (!response.data?.data) {
         throw new Error('No data in response');
@@ -49,7 +56,7 @@ export const customerService = {
     try {
       console.log('Making PUT request to: /api/customers/' + id);
       console.log('With data:', customer);
-      const response = await api.put(`/api/customers/${id}`, customer);
+      const response = await customerApi.put(`/api/customers/${id}`, customer);
       console.log('Response:', response);
       if (!response.data?.data) {
         throw new Error('No data in response');
@@ -64,8 +71,7 @@ export const customerService = {
 
   deleteCustomer: async (id: string): Promise<void> => {
     try {
-      console.log('Making DELETE request to: /api/customers/' + id + '?permanent=true');
-      await api.delete(`/api/customers/${id}?permanent=true`);
+      await customerApi.delete(`/api/customers/${id}`);
     } catch (error: any) {
       console.error('Error in deleteCustomer:', error);
       console.error('Response:', error.response);

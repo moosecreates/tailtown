@@ -18,7 +18,7 @@ const defaultValidateStatus = (status: number) => status < 500;
  * Handles customer and pet data operations
  */
 const customerApi = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3003',
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:4004',
   headers: defaultHeaders,
   validateStatus: defaultValidateStatus
 });
@@ -28,7 +28,7 @@ const customerApi = axios.create({
  * Handles reservation and resource operations
  */
 const reservationApi = axios.create({
-  baseURL: process.env.REACT_APP_RESERVATION_API_URL || 'http://localhost:4004',
+  baseURL: process.env.REACT_APP_RESERVATION_API_URL || 'http://localhost:4003',
   headers: {
     ...defaultHeaders,
     'X-Tenant-ID': 'tailtown' // Add tenant ID header required by reservation service

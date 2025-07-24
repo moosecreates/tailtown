@@ -1,17 +1,24 @@
 import { Service } from '../types/service';
-import api from './api';
+import api, { reservationApi, customerApi } from './api';
 
 export const serviceManagement = {
   // Get all services
   getAllServices: async () => {
-    const response = await api.get('/api/services');
-    return response.data;
+    try {
+      console.log('Fetching services from customer API');
+      const response = await customerApi.get('/api/v1/services');
+      console.log('Services response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      throw error;
+    }
   },
 
   // Get a single service by ID
   getServiceById: async (id: string, includeDeleted: boolean = false) => {
     try {
-      const response = await api.get(`/api/services/${id}`, {
+      const response = await customerApi.get(`/api/v1/services/${id}`, {
         params: { includeDeleted }
       });
       return response.data;
@@ -26,7 +33,7 @@ export const serviceManagement = {
 
   // Create a new service
   createService: async (serviceData: Omit<Service, 'id'>) => {
-    const response = await api.post('/api/services', serviceData);
+    const response = await customerApi.post('/api/v1/services', serviceData);
     return response.data;
   },
 
@@ -66,7 +73,7 @@ export const serviceManagement = {
 
       console.log('Updating service with data:', updatedData);
       
-      const response = await api.put(`/api/services/${id}`, updatedData);
+      const response = await customerApi.put(`/api/v1/services/${id}`, updatedData);
       return response.data;
     } catch (error: any) {
       // Handle specific error cases
@@ -82,29 +89,13 @@ export const serviceManagement = {
     }
   },
 
-  // Delete a service
-  deleteService: async (id: string, force: boolean = false) => {
+  // Soft delete a service (mark as inactive)
+  deleteService: async (id: string) => {
     try {
-      const response = await api.delete(`/api/services/${id}`, {
-        params: { force }
-      });
+      const response = await customerApi.delete(`/api/v1/services/${id}`);
       return response.data;
     } catch (error: any) {
-      // If there's a 400 error about reservations, it means we need to deactivate instead
-      // But we should handle this gracefully for the user
-      if (error.response && error.response.status === 400) {
-        // Try to deactivate the service instead
-        console.log('Service could not be deleted, attempting to deactivate instead');
-        const deactivateResponse = await api.patch(`/api/services/${id}/deactivate`);
-        
-        // Return a modified response that indicates what happened
-        return {
-          ...deactivateResponse.data,
-          message: 'Service has been deactivated instead of deleted because it has reservations'
-        };
-      }
-      
-      // Handle other error cases
+      // Handle error cases
       let errorMessage = 'Failed to delete service';
       
       if (error.response && error.response.data && error.response.data.message) {
@@ -117,10 +108,24 @@ export const serviceManagement = {
     }
   },
 
-  // Deactivate a service (soft delete)
+  // Deactivate a service (mark as inactive)
   deactivateService: async (id: string) => {
-    const response = await api.patch(`/api/services/${id}/deactivate`);
-    return response.data;
+    try {
+      // This sends a PATCH with isActive: false to deactivate instead of delete
+      const response = await customerApi.patch(`/api/v1/services/${id}`, { isActive: false });
+      return response.data;
+    } catch (error: any) {
+      // Handle error cases
+      let errorMessage = 'Failed to deactivate service';
+      
+      if (error.response && error.response.data && error.response.data.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
   },
 
   // Get add-ons for a service
@@ -129,7 +134,7 @@ export const serviceManagement = {
     
     try {
       // First, get the service details to check its category
-      const serviceDetails = await api.get(`/api/services/${id}`);
+      const serviceDetails = await customerApi.get(`/api/v1/services/${id}`);
       console.log('serviceManagement: Service details:', serviceDetails.data);
       
       // Extract service category
@@ -145,36 +150,36 @@ export const serviceManagement = {
       console.log(`serviceManagement: Service ${id} has category: ${serviceCategory}`);
       
       // Get the add-ons for this service
-      const response = await api.get(`/api/services/${id}/add-ons`);
-      console.log('serviceManagement: Raw add-ons response:', response);
+      const addOnsResponse = await customerApi.get(`/api/v1/services/${id}/add-ons`);
+      console.log('serviceManagement: Raw add-ons response:', addOnsResponse);
       
       // If this is a grooming service, we should have add-ons
       if (serviceCategory === 'GROOMING') {
-        console.log('serviceManagement: This is a GROOMING service, should have add-ons');
+        console.log('This is a grooming service, processing add-ons');
       }
       
       // Handle different response formats
-      if (response && response.data) {
+      if (addOnsResponse && addOnsResponse.data) {
         // If the response is an array, return it directly
-        if (Array.isArray(response.data)) {
-          console.log(`serviceManagement: Found ${response.data.length} add-ons in array format`);
-          return response.data;
+        if (Array.isArray(addOnsResponse.data)) {
+          console.log(`serviceManagement: Found ${addOnsResponse.data.length} add-ons in array format`);
+          return addOnsResponse.data;
         }
         
         // If the response has a data property that's an array, return that
-        if (response.data.data && Array.isArray(response.data.data)) {
-          console.log(`serviceManagement: Found ${response.data.data.length} add-ons in nested data format`);
-          return response.data.data;
+        if (addOnsResponse.data.data && Array.isArray(addOnsResponse.data.data)) {
+          console.log(`serviceManagement: Found ${addOnsResponse.data.data.length} add-ons in nested data format`);
+          return addOnsResponse.data.data;
         }
         
         // If the response has an addOns property that's an array, return that
-        if (response.data.addOns && Array.isArray(response.data.addOns)) {
-          console.log(`serviceManagement: Found ${response.data.addOns.length} add-ons in addOns property`);
-          return response.data.addOns;
+        if (addOnsResponse.data.addOns && Array.isArray(addOnsResponse.data.addOns)) {
+          console.log(`serviceManagement: Found ${addOnsResponse.data.addOns.length} add-ons in addOns property`);
+          return addOnsResponse.data.addOns;
         }
         
         // Otherwise, return the response data as is
-        return response.data;
+        return addOnsResponse.data;
       }
       
       console.warn('serviceManagement: No add-ons data found in response');
@@ -198,7 +203,7 @@ export const serviceManagement = {
     startDate?: string;
     endDate?: string;
   }) => {
-    const response = await api.get(`/api/services/${id}/reservations`, { params });
+    const response = await api.get(`/api/v1/services/${id}/reservations`, { params });
     return response.data;
   }
 };
