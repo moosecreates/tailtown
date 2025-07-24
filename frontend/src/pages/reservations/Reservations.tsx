@@ -65,10 +65,19 @@ const Reservations = () => {
         getFormattedDateString(selectedDate) // date filter using formatted string
       );
       console.log('Reservations response:', response);
-      if (response?.status === 'success' && response?.data?.reservations) {
-        // Extract the reservations array from the nested data object
-        setReservations(response.data.reservations);
-        setTotalPages(response.totalPages || 1);
+      
+      // Handle the backend response format which is:
+      // { status: 'success', data: { results: [...], pagination: {...} } }
+      if (response?.status === 'success' && response?.data?.results) {
+        setReservations(response.data.results);
+        
+        // Extract pagination data
+        const pagination = response.data.pagination;
+        if (pagination) {
+          setTotalPages(pagination.totalPages || 1);
+        } else {
+          setTotalPages(1);
+        }
       } else {
         console.error('Invalid reservations response format:', response);
         setReservations([]);
@@ -96,26 +105,7 @@ const Reservations = () => {
     }
   };
 
-  const reservationsData = [
-    { 
-      id: '1', 
-      pet: { id: '1', name: 'Buddy', type: 'DOG' },
-      customer: { id: '101', firstName: 'John', lastName: 'Doe' },
-      service: { name: 'Boarding' },
-      startDate: '2025-04-14T09:00:00',
-      endDate: '2025-04-16T17:00:00',
-      status: 'CONFIRMED'
-    },
-    { 
-      id: '2', 
-      pet: { id: '2', name: 'Whiskers', type: 'CAT' },
-      customer: { id: '102', firstName: 'Jane', lastName: 'Smith' },
-      service: { name: 'Grooming' },
-      startDate: '2025-04-15T13:00:00',
-      endDate: '2025-04-15T14:30:00',
-      status: 'CONFIRMED'
-    }
-  ];
+  // Removed mock reservations data - using real data from API
 
   const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);

@@ -50,9 +50,9 @@ const loadData = async () => {
       ]);
       
       setCustomerCount(customers.data?.length || 0);
-      setPetCount(pets.results);
-      setReservationCount(todayReservations.results || todayReservations.data?.reservations?.length || 0);
-      setUpcomingReservations(upcoming.data?.reservations || []);
+      setPetCount(pets.data?.length || pets.results || 0);
+      setReservationCount(todayReservations.data?.results?.length || 0);
+      setUpcomingReservations(upcoming.data?.results || []);
       setTodayRevenue(revenue.data?.revenue);
     } catch (err) {
       console.error('Error loading dashboard data:', err);
