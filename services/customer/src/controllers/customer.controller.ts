@@ -41,21 +41,8 @@ export const getAllCustomers = async (
       where,
       skip,
       take: limit,
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        phone: true,
-        address: true,
-        city: true,
-        state: true,
-        zipCode: true,
-        // isActive field removed - not in current schema
-        createdAt: true,
-        updatedAt: true,
-        // tags field removed - not in current schema
-        pets: {
+      include: {
+        Pet: {
           select: {
             id: true,
             name: true,
