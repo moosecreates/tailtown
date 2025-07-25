@@ -5,7 +5,7 @@ import api from './api';
 export const getAllResources = async () => {
   try {
     console.log('Getting all resources...');
-    const response = await api.get('/api/v1/resources');
+    const response = await api.get('/api/resources', {});
     console.log('Response status:', response.status);
     console.log('Response data:', response.data);
     
@@ -40,7 +40,7 @@ export const getResourceById = async (id: string) => {
 export const createResource = async (resourceData: Omit<Resource, 'id' | 'createdAt' | 'updatedAt'>) => {
   try {
     console.log('Creating resource:', resourceData);
-    const response = await api.post('/api/v1/resources', {
+    const response = await api.post('/api/resources', {
       ...resourceData,
       isActive: true,
       attributes: resourceData.attributes || {}

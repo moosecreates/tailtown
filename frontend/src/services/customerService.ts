@@ -54,7 +54,7 @@ export const customerService = {
 
   updateCustomer: async (id: string, customer: Partial<Customer>): Promise<Customer> => {
     try {
-      console.log('Making PUT request to: /api/customers/' + id);
+      console.log('Making PUT request to: /customers/' + id);
       console.log('With data:', customer);
       const response = await customerApi.put(`/api/customers/${id}`, customer);
       console.log('Response:', response);

@@ -30,13 +30,13 @@ export function applyTenantMiddleware(app: any) {
   logger.info('Applying enhanced tenant middleware to reservation service');
   
   // Apply to all reservation endpoints
-  app.use('/api/v1/reservations', reservationTenantMiddleware);
+  app.use('/api/reservations', reservationTenantMiddleware);
   
   // Apply to all resource endpoints
-  app.use('/api/v1/resources', reservationTenantMiddleware);
+  app.use('/api/resources', reservationTenantMiddleware);
   
   // Apply to all availability endpoints
-  app.use('/api/v1/availability', reservationTenantMiddleware);
+  app.use('/api/availability', reservationTenantMiddleware);
   
   // Skip tenant middleware for health check and public endpoints
   // These routes will not require tenant authentication

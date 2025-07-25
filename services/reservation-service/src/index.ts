@@ -19,16 +19,15 @@ const app = createService({
   version: 'v1'
 });
 
-// Apply enhanced tenant middleware
+// Apply enhanced tenant middleware to all routes
 app.use(reservationTenantMiddleware);
 
-// Register routes
+// Register routes with standardized API paths
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/resources', resourceRoutes);
 
-// Keep v1 routes for backward compatibility
-app.use('/api/v1/reservations', reservationRoutes);
-app.use('/api/v1/resources', resourceRoutes);
+// Note: v1 routes removed for consistency
+// All frontend calls now use '/api/reservations' without v1 prefix
 
 // Register error handlers (must be last)
 app.registerErrorHandlers();

@@ -312,7 +312,7 @@ export async function performRobustStartup(
 }> {
   const {
     requiredEnvVars = ['DATABASE_URL'],
-    port = 4003,
+    port = parseInt(process.env.PORT || '4003', 10), // Always use PORT from env or 4003 as default
     autoMigrate = false,
     migrationPath = path.join(process.cwd(), 'prisma/migrations'),
     dependencies = [],
@@ -378,6 +378,7 @@ export async function performRobustStartup(
   }
   
   // Step 4: Check port availability
+  // Use the port parameter which now correctly comes from environment variable
   const portAvailable = await isPortAvailable(port);
   if (!portAvailable) {
     success = false;

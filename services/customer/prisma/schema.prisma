@@ -766,6 +766,46 @@ model transaction_items {
   @@index([transactionId], map: "transaction_items_transaction_idx")
 }
 
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+  COMPLETED
+}
+
+enum ResourceType {
+  KENNEL
+  RUN
+  SUITE
+  STANDARD_SUITE
+  STANDARD_PLUS_SUITE
+  VIP_SUITE
+  PLAY_AREA
+  OUTDOOR_PLAY_YARD
+  PRIVATE_PLAY_AREA
+  GROOMING_TABLE
+  BATHING_STATION
+  DRYING_STATION
+  TRAINING_ROOM
+  AGILITY_COURSE
+  GROOMER
+  TRAINER
+  ATTENDANT
+  BATHER
+  OTHER
+}
+
+enum ServiceCategory {
+  DAYCARE
+  BOARDING
+  GROOMING
+  TRAINING
+  OTHER
+}
+
 enum AvailabilityStatus {
   AVAILABLE
   RESERVED
@@ -880,38 +920,6 @@ enum ReconciliationType {
   SYSTEM
 }
 
-enum ReservationStatus {
-  PENDING
-  CONFIRMED
-  CHECKED_IN
-  CHECKED_OUT
-  CANCELLED
-  NO_SHOW
-  COMPLETED
-}
-
-enum ResourceType {
-  KENNEL
-  RUN
-  SUITE
-  STANDARD_SUITE
-  STANDARD_PLUS_SUITE
-  VIP_SUITE
-  PLAY_AREA
-  OUTDOOR_PLAY_YARD
-  PRIVATE_PLAY_AREA
-  GROOMING_TABLE
-  BATHING_STATION
-  DRYING_STATION
-  TRAINING_ROOM
-  AGILITY_COURSE
-  GROOMER
-  TRAINER
-  ATTENDANT
-  BATHER
-  OTHER
-}
-
 enum ScheduleStatus {
   SCHEDULED
   CONFIRMED
@@ -919,14 +927,6 @@ enum ScheduleStatus {
   COMPLETED
   CANCELLED
   NO_SHOW
-}
-
-enum ServiceCategory {
-  DAYCARE
-  BOARDING
-  GROOMING
-  TRAINING
-  OTHER
 }
 
 enum TimeOffStatus {

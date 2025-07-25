@@ -1,3 +1,7 @@
+// =====================================================================
+// TEST USE ONLY - THIS SCRIPT IS ONLY FOR TEST ENVIRONMENT USAGE
+// DO NOT USE IN DEV OR PRODUCTION ENVIRONMENTS
+// =====================================================================
 import { PrismaClient, ContactMethod } from '@prisma/client';
 import customerData from '../data/customer-test-data.json';
 

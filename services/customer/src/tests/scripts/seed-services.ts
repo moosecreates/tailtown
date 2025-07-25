@@ -1,3 +1,7 @@
+// =====================================================================
+// TEST USE ONLY - THIS SCRIPT IS ONLY FOR TEST ENVIRONMENT USAGE
+// DO NOT USE IN DEV OR PRODUCTION ENVIRONMENTS
+// =====================================================================
 import { PrismaClient, ServiceCategory } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';

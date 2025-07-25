@@ -6,7 +6,7 @@ export const serviceManagement = {
   getAllServices: async () => {
     try {
       console.log('Fetching services from customer API');
-      const response = await customerApi.get('/api/v1/services');
+      const response = await customerApi.get('/services');
       console.log('Services response:', response.data);
       return response.data;
     } catch (error) {
@@ -18,7 +18,7 @@ export const serviceManagement = {
   // Get a single service by ID
   getServiceById: async (id: string, includeDeleted: boolean = false) => {
     try {
-      const response = await customerApi.get(`/api/v1/services/${id}`, {
+      const response = await customerApi.get(`/services/${id}`, {
         params: { includeDeleted }
       });
       return response.data;
@@ -33,7 +33,7 @@ export const serviceManagement = {
 
   // Create a new service
   createService: async (serviceData: Omit<Service, 'id'>) => {
-    const response = await customerApi.post('/api/v1/services', serviceData);
+    const response = await customerApi.post('/api/services', serviceData);
     return response.data;
   },
 
@@ -73,7 +73,7 @@ export const serviceManagement = {
 
       console.log('Updating service with data:', updatedData);
       
-      const response = await customerApi.put(`/api/v1/services/${id}`, updatedData);
+      const response = await customerApi.put(`/api/services/${id}`, updatedData);
       return response.data;
     } catch (error: any) {
       // Handle specific error cases
@@ -92,7 +92,7 @@ export const serviceManagement = {
   // Soft delete a service (mark as inactive)
   deleteService: async (id: string) => {
     try {
-      const response = await customerApi.delete(`/api/v1/services/${id}`);
+      const response = await customerApi.delete(`/api/services/${id}`);
       return response.data;
     } catch (error: any) {
       // Handle error cases
@@ -112,7 +112,7 @@ export const serviceManagement = {
   deactivateService: async (id: string) => {
     try {
       // This sends a PATCH with isActive: false to deactivate instead of delete
-      const response = await customerApi.patch(`/api/v1/services/${id}`, { isActive: false });
+      const response = await customerApi.patch(`/api/services/${id}`, { isActive: false });
       return response.data;
     } catch (error: any) {
       // Handle error cases
@@ -134,7 +134,7 @@ export const serviceManagement = {
     
     try {
       // First, get the service details to check its category
-      const serviceDetails = await customerApi.get(`/api/v1/services/${id}`);
+      const serviceDetails = await customerApi.get(`/api/services/${id}`);
       console.log('serviceManagement: Service details:', serviceDetails.data);
       
       // Extract service category
@@ -150,7 +150,7 @@ export const serviceManagement = {
       console.log(`serviceManagement: Service ${id} has category: ${serviceCategory}`);
       
       // Get the add-ons for this service
-      const addOnsResponse = await customerApi.get(`/api/v1/services/${id}/add-ons`);
+      const addOnsResponse = await customerApi.get(`/api/services/${id}/add-ons`);
       console.log('serviceManagement: Raw add-ons response:', addOnsResponse);
       
       // If this is a grooming service, we should have add-ons
@@ -203,7 +203,7 @@ export const serviceManagement = {
     startDate?: string;
     endDate?: string;
   }) => {
-    const response = await api.get(`/api/v1/services/${id}/reservations`, { params });
+    const response = await api.get(`/api/services/${id}/reservations`, { params });
     return response.data;
   }
 };

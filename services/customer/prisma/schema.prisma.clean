@@ -1,0 +1,192 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AddOnService {
+  id               String             @id
+  name             String
+  description      String?
+  price            Float
+  duration         Int?
+  serviceId        String
+  isActive         Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  organizationId   String
+  ReservationAddOn ReservationAddOn[]
+
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+  @@index([serviceId])
+}
+
+model Customer {
+  id             String        @id
+  firstName      String
+  lastName       String
+  email          String
+  phone          String?
+  address        String?
+  city           String?
+  state          String?
+  zipCode        String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  organizationId String
+  Pet            Pet[]
+  Reservation    Reservation[]
+
+  @@index([organizationId, email])
+  @@index([organizationId])
+  @@index([organizationId, lastName, firstName])
+}
+
+model Pet {
+  id             String        @id
+  name           String
+  breed          String?
+  size           String?
+  weight         Float?
+  birthDate      DateTime?
+  notes          String?
+  customerId     String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  organizationId String
+  Customer       Customer      @relation(fields: [customerId], references: [id])
+  Reservation    Reservation[]
+
+  @@index([customerId])
+  @@index([organizationId, customerId])
+  @@index([organizationId])
+}
+
+model Reservation {
+  id               String             @id
+  orderNumber      String?
+  customerId       String
+  petId            String
+  resourceId       String?
+  startDate        DateTime
+  endDate          DateTime
+  status           String             @default("CONFIRMED")
+  suiteType        String
+  price            Float?
+  deposit          Float?
+  balance          Float?
+  notes            String?
+  staffNotes       String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  organizationId   String
+  Customer         Customer           @relation(fields: [customerId], references: [id])
+  Pet              Pet                @relation(fields: [petId], references: [id])
+  Resource         Resource?          @relation(fields: [resourceId], references: [id])
+  ReservationAddOn ReservationAddOn[]
+
+  @@unique([orderNumber, organizationId])
+  @@index([customerId])
+  @@index([orderNumber])
+  @@index([organizationId, customerId])
+  @@index([organizationId])
+  @@index([organizationId, startDate, endDate])
+  @@index([organizationId, status])
+  @@index([petId])
+  @@index([resourceId])
+}
+
+model ReservationAddOn {
+  id             String       @id
+  reservationId  String
+  addOnId        String
+  price          Float
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime
+  organizationId String
+  AddOnService   AddOnService @relation(fields: [addOnId], references: [id])
+  Reservation    Reservation  @relation(fields: [reservationId], references: [id])
+
+  @@index([addOnId])
+  @@index([organizationId])
+  @@index([reservationId])
+}
+
+model Resource {
+  id             String        @id
+  name           String
+  type           String
+  description    String?
+  capacity       Int           @default(1)
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  organizationId String
+  Reservation    Reservation[]
+
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+  @@index([organizationId, type])
+}
+
+model Service {
+  id             String   @id
+  name           String
+  description    String?
+  price          Float
+  duration       Int?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+  organizationId String
+
+  @@index([organizationId])
+  @@index([organizationId, isActive])
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+  COMPLETED
+}
+
+enum ResourceType {
+  KENNEL
+  RUN
+  SUITE
+  STANDARD_SUITE
+  STANDARD_PLUS_SUITE
+  VIP_SUITE
+  PLAY_AREA
+  OUTDOOR_PLAY_YARD
+  PRIVATE_PLAY_AREA
+  GROOMING_TABLE
+  BATHING_STATION
+  DRYING_STATION
+  TRAINING_ROOM
+  AGILITY_COURSE
+  GROOMER
+  TRAINER
+  ATTENDANT
+  BATHER
+  OTHER
+}
+
+enum ServiceCategory {
+  DAYCARE
+  BOARDING
+  GROOMING
+  TRAINING
+  OTHER
+}

@@ -14,11 +14,8 @@ async function checkPets() {
     
     console.log('\nChecking for specific pets by name...');
     const specificPets = await prisma.pet.findMany({
-      where: {
-        name: {
-          in: ['Moose', 'Bunny', 'Cheeto']
-        }
-      }
+      take: 10,
+      orderBy: { name: 'asc' }
     });
     console.log(`Found ${specificPets.length} specific pets:`);
     specificPets.forEach(pet => console.log(`- ${pet.name} (${pet.id})`));
@@ -30,7 +27,7 @@ async function checkPets() {
       lowerPets.forEach(pet => console.log(`- ${pet.name} (${pet.id || pet.pet_id})`));
       
       console.log('\nChecking for specific pets in pets table...');
-      const specificLowerPets = await prisma.$queryRaw`SELECT * FROM pets WHERE name IN ('Moose', 'Bunny', 'Cheeto')`;
+      const specificLowerPets = await prisma.$queryRaw`SELECT * FROM pets LIMIT 10`;
       console.log(`Found ${specificLowerPets.length} specific pets in pets table:`);
       specificLowerPets.forEach(pet => console.log(`- ${pet.name} (${pet.id || pet.pet_id})`));
     } catch (e) {
