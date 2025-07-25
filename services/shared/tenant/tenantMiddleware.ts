@@ -37,10 +37,25 @@ export const tenantMiddleware = (options: {
     try {
       // Extract tenant ID from headers
       const tenantId = req.headers['x-tenant-id'] as string;
+      const isDev = process.env.NODE_ENV === 'development';
       
       if (!tenantId) {
-        logger.error('Request missing required x-tenant-id header');
-        return next(new AppError('Tenant ID is required', 400));
+        if (isDev) {
+          // In development mode, use a default tenant ID
+          logger.warn('No tenant ID provided, using default development tenant');
+          req.tenantId = 'default-dev-tenant';
+          // Skip validation in dev mode when using default tenant
+          if (config.validateTenant) {
+            // Skip remaining validation logic by setting basic tenant config
+            req.tenantConfig = { apiRateLimit: 1000 } as any;
+            req.tenantTier = 'development';
+            // Skip to next middleware
+            return next();
+          }
+        } else {
+          logger.error('Request missing required x-tenant-id header');
+          return next(new AppError('Tenant ID is required', 400));
+        }
       }
 
       // Validate tenant if enabled

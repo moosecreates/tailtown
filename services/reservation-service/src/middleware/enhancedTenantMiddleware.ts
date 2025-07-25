@@ -1,25 +1,28 @@
 /**
- * Enhanced Tenant Middleware Integration
+ * Enhanced Tenant Middleware - DEVELOPMENT FRIENDLY
  * 
- * This file demonstrates how to integrate the shared tenant middleware
- * into the reservation service, replacing the existing implementation
- * with the enhanced SaaS-ready version.
+ * This middleware uses the shared tenant middleware but configures it
+ * to be development-friendly by disabling validation in development mode.
  */
 
-import { Request, Response, NextFunction } from 'express';
 import { tenantMiddleware } from '../../../shared/tenant/tenantMiddleware';
 import { logger } from '../utils/logger';
 
+// Configure the tenant middleware based on environment
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+if (isDevelopment) {
+  logger.warn('🔓 DEVELOPMENT MODE: Tenant validation disabled');
+}
+
 // Configure the tenant middleware with appropriate options for this service
 export const reservationTenantMiddleware = tenantMiddleware({
-  // Enable tenant validation to ensure only valid tenants can access the service
-  validateTenant: true,
-  
-  // Enable quota enforcement to prevent abuse and ensure fair resource allocation
-  enforceQuotas: true,
-  
-  // Enable usage tracking for billing and monitoring
-  trackUsage: true
+  // Disable tenant validation in development mode
+  validateTenant: !isDevelopment,
+  // Disable quota enforcement in development mode
+  enforceQuotas: !isDevelopment,
+  // Disable usage tracking in development mode
+  trackUsage: !isDevelopment
 });
 
 /**

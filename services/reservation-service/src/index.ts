@@ -19,8 +19,20 @@ const app = createService({
   version: 'v1'
 });
 
-// Apply enhanced tenant middleware to all routes
-app.use(reservationTenantMiddleware);
+// Import the development tenant utility middleware
+import { devTenantMiddleware } from './utils/devTenantUtil';
+
+// Always apply the development tenant middleware first
+// This will add the tenant ID in development mode
+app.use(devTenantMiddleware);
+
+// Skip the original tenant middleware in development mode
+if (process.env.NODE_ENV !== 'development') {
+  app.use(reservationTenantMiddleware);
+  logger.info('Tenant middleware enabled - tenant isolation enforced');
+} else {
+  logger.warn('⚠️ DEVELOPMENT MODE: Running without tenant isolation');
+}
 
 // Register routes with standardized API paths
 app.use('/api/reservations', reservationRoutes);

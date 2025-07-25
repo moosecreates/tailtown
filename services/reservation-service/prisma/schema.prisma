@@ -18,6 +18,7 @@ datasource db {
 
 // Core domain models
 model Customer {
+  @@map("customer")
   id             String        @id @default(uuid())
   firstName      String
   lastName       String
@@ -42,6 +43,7 @@ model Customer {
 }
 
 model Pet {
+  @@map("pet")
   id             String        @id @default(uuid())
   name           String
   breed          String?
@@ -65,6 +67,7 @@ model Pet {
 
 // Resource represents a kennel or other facility resource
 model Resource {
+  @@map("resource")
   id             String        @id @default(uuid())
   name           String
   type           String        // VIP_SUITE, STANDARD_PLUS_SUITE, STANDARD_SUITE, etc.
@@ -86,6 +89,7 @@ model Resource {
 // Reservation model with partitioning strategy
 // Note: Actual table partitioning would be implemented at the database level
 model Reservation {
+  @@map("reservation")
   id              String            @id @default(uuid())
   orderNumber     String?
   customerId      String
@@ -129,6 +133,7 @@ model Reservation {
 
 // Add-on services that can be added to reservations
 model AddOnService {
+  @@map("add_on_service")
   id              String            @id @default(uuid())
   name            String
   description     String?
@@ -150,6 +155,7 @@ model AddOnService {
 
 // Junction table for reservation add-ons
 model ReservationAddOn {
+  @@map("reservation_add_on")
   id              String        @id @default(uuid())
   reservationId   String
   addOnId         String
@@ -170,6 +176,7 @@ model ReservationAddOn {
 
 // Service model (e.g., boarding, daycare, grooming)
 model Service {
+  @@map("service")
   id              String        @id @default(uuid())
   name            String
   description     String?
@@ -201,6 +208,7 @@ enum ReservationStatus {
 
 // Organization model for multi-tenant support
 model Organization {
+  @@map("organization")
   id          String   @id @default(uuid())
   name        String
   subdomain   String   @unique
