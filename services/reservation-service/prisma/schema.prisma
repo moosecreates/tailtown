@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64"]
 }
 
 datasource db {
@@ -10,187 +8,189 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Multi-tenant isolation enforced via organizationId
-// Implementing the balanced data modeling approach:
-// - Maintaining domain boundaries
-// - Strategic indexing for common queries
-// - Partition strategies for time-series data
+model AddOnService {
+  id               String             @id
+  name             String
+  description      String?
+  price            Float
+  duration         Int?
+  serviceId        String
+  isActive         Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  organizationId   String
+  ReservationAddOn ReservationAddOn[]
 
-// Core domain models
-model Customer {
-  @@map("customer")
-  id             String        @id @default(uuid())
-  firstName      String
-  lastName       String
-  email          String
-  phone          String?
-  address        String?
-  city           String?
-  state          String?
-  zipCode        String?
-  notes          String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  organizationId String        // Tenant isolation
-  pets           Pet[]
-  reservations   Reservation[]
-
-  // Multi-tenant indexing strategy
   @@index([organizationId])
-  // Common query patterns
-  @@index([organizationId, email])
-  @@index([organizationId, lastName, firstName])
+  @@index([organizationId, isActive])
+  @@index([serviceId])
+  @@map("addon_services")
+}
+
+model Customer {
+  id                 String        @id
+  firstName          String
+  lastName           String
+  email              String
+  phone              String?
+  address            String?
+  city               String?
+  state              String?
+  zipCode            String?
+  notes              String?
+  isActive           Boolean       @default(true)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime
+  Pet                Pet[]         @relation("CustomerToPet")
+  Reservation        Reservation[]
+
+  @@index([email], map: "customers_email_idx")
+  @@index([phone], map: "customers_phone_idx")
+  @@index([lastName, firstName], map: "customers_name_idx")
+  @@map("customers")
 }
 
 model Pet {
-  @@map("pet")
-  id             String        @id @default(uuid())
-  name           String
-  breed          String?
-  size           String?
-  weight         Float?
-  birthDate      DateTime?
-  notes          String?
-  customerId     String
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  organizationId String        // Tenant isolation
-  customer       Customer      @relation(fields: [customerId], references: [id])
-  reservations   Reservation[]
-
-  // Multi-tenant indexing strategy
-  @@index([organizationId])
-  // Common query patterns
-  @@index([customerId])
-  @@index([organizationId, customerId])
-}
-
-// Resource represents a kennel or other facility resource
-model Resource {
-  @@map("resource")
-  id             String        @id @default(uuid())
-  name           String
-  type           String        // VIP_SUITE, STANDARD_PLUS_SUITE, STANDARD_SUITE, etc.
-  description    String?
-  capacity       Int           @default(1)
-  isActive       Boolean       @default(true)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  organizationId String        // Tenant isolation
-  reservations   Reservation[]
-
-  // Multi-tenant indexing strategy
-  @@index([organizationId])
-  // Common query patterns
-  @@index([organizationId, type])
-  @@index([organizationId, isActive])
-}
-
-// Reservation model with partitioning strategy
-// Note: Actual table partitioning would be implemented at the database level
-model Reservation {
-  id                 String            @id
-  orderNumber        String?
-  customerId         String
-  petId              String
-  resourceId         String?
-  startDate          DateTime
-  endDate            DateTime
-  status             ReservationStatus @default(PENDING)
-  notes              String?
-  staffNotes         String?
-  checkInWindow      Int?
-  isRecurring        Boolean           @default(false)
-  recurringPattern   String?
-  preChecked         Boolean           @default(false)
-  checkInDate        DateTime?
-  checkOutDate       DateTime?
-  earlyDropOff       Boolean           @default(false)
-  latePickup         Boolean           @default(false)
-  customPickupPerson String?
-  confirmedBy        String?
-  cancelReason       String?
-  cancelDate         DateTime?
-  createdAt          DateTime          @default(now())
+  id                 String        @id
+  name               String
+  type               PetType
+  breed              String?
+  color              String?
+  birthdate          DateTime?
+  weight             Float?
+  gender             Gender?
+  isNeutered         Boolean       @default(false)
+  microchipNumber    String?
+  rabiesTagNumber    String?
+  specialNeeds       String?
+  foodNotes          String?
+  medicationNotes    String?
+  behaviorNotes      String?
+  allergies          String?
+  idealPlayGroup     PlayGroupType?
+  vaccinationStatus  Json?
+  vaccineExpirations Json?
+  vetName            String?
+  vetPhone           String?
+  profilePhoto       String?
+  isActive           Boolean       @default(true)
+  lastCheckIn        DateTime?
+  createdAt          DateTime      @default(now())
   updatedAt          DateTime
-  serviceId          String
-  staffAssignedId    String?
-  customer           Customer          @relation(fields: [customerId], references: [id])
-  pet                Pet               @relation(fields: [petId], references: [id])
-  resource           Resource?         @relation(fields: [resourceId], references: [id])
-  service            Service           @relation(fields: [serviceId], references: [id])
-  // staff relationship removed - Staff model not defined
-  addOns             ReservationAddOn[]
+  customerId         String
+  Customer           Customer     @relation("CustomerToPet", fields: [customerId], references: [id], onDelete: Cascade)
+  Reservation        Reservation[]
 
-  @@index([customerId])
-  @@index([petId])
-  @@index([resourceId])
-  @@index([orderNumber])
-  @@index([customerId, status])
-  @@index([startDate, endDate])
-  @@index([status, startDate])
-  @@map("reservations")
+  @@index([isActive, type], map: "pets_active_type_idx")
+  @@index([customerId], map: "pets_customer_id_idx")
+  @@index([lastCheckIn], map: "pets_last_checkin_idx")
+  @@map("pets")
+}
 
-  // Unique constraint for order numbers
+model Reservation {
+  id               String             @id
+  orderNumber      String?
+  customerId       String
+  petId            String
+  resourceId       String?
+  startDate        DateTime
+  endDate          DateTime
+  status           ReservationStatus  @default(CONFIRMED)
+  suiteType        String?
+  price            Float?
+  deposit          Float?
+  balance          Float?
+  notes            String?
+  staffNotes       String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  Customer         Customer           @relation(fields: [customerId], references: [id])
+  Pet              Pet                @relation(fields: [petId], references: [id])
+  Resource         Resource?          @relation(fields: [resourceId], references: [id])
+  ReservationAddOn ReservationAddOn[]
+
   @@unique([orderNumber])
+  @@index([customerId])
+  @@index([orderNumber])
+  @@index([petId])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@index([resourceId])
+  @@map("reservations")
 }
 
-// Add-on services that can be added to reservations
-model AddOnService {
-  @@map("add_on_service")
-  id              String            @id @default(uuid())
-  name            String
-  description     String?
-  price           Float
-  duration        Int?              // Duration in minutes
-  serviceId       String            // Parent service ID if this is a sub-service
-  isActive        Boolean           @default(true)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  organizationId  String            // Tenant isolation
-  reservationAddOns ReservationAddOn[]
-
-  // Multi-tenant indexing strategy
-  @@index([organizationId])
-  // Common query patterns
-  @@index([organizationId, isActive])
-  @@index([serviceId])
-}
-
-// Junction table for reservation add-ons
 model ReservationAddOn {
-  id            String        @id
-  reservationId String
-  addOnId       String
-  price         Float
-  notes         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime
-  reservation   Reservation   @relation(fields: [reservationId], references: [id])
-  addOn         AddOnService  @relation(fields: [addOnId], references: [id])
+  id             String       @id
+  reservationId  String
+  addOnId        String
+  price          Float
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime
+  organizationId String
+  AddOnService   AddOnService @relation(fields: [addOnId], references: [id])
+  Reservation    Reservation  @relation(fields: [reservationId], references: [id])
 
-  @@index([reservationId])
   @@index([addOnId])
+  @@index([organizationId])
+  @@index([reservationId])
   @@map("reservation_addons")
 }
 
-// Service model (e.g., boarding, daycare, grooming)
+model Resource {
+  id                    String                  @id
+  name                  String
+  type                  ResourceType
+  description           String?
+  capacity              Int                     @default(1)
+  isActive              Boolean                 @default(true)
+  notes                 String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime
+  attributes            Json?
+  availability          String?
+  location              String?
+  maintenanceSchedule   String?
+  lastCleanedAt         DateTime?
+  maintenanceStatus     String?
+  suiteNumber           Int?
+  Reservation           Reservation[]
+  resource_availability resource_availability[]
+
+  @@map("resources")
+}
+
+model resource_availability {
+  id         String             @id
+  resourceId String
+  startTime  DateTime
+  endTime    DateTime
+  status     AvailabilityStatus
+  reason     String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime
+  resources  Resource           @relation(fields: [resourceId], references: [id])
+}
+
 model Service {
-  id              String        @id @default(uuid())
+  id              String          @id
   name            String
   description     String?
   price           Float
-  duration        Int?          // Duration in minutes
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  reservations    Reservation[]
+  duration        Int
+  color           String?
+  serviceCategory ServiceCategory
+  isActive        Boolean         @default(true)
+  requiresStaff   Boolean         @default(false)
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime
+  capacityLimit   Int             @default(0)
 
-  @@index([isActive])
-  @@map("service")
+  @@map("services")
 }
 
-// Enum for reservation status
+
 enum ReservationStatus {
   PENDING
   CONFIRMED
@@ -201,15 +201,192 @@ enum ReservationStatus {
   COMPLETED
 }
 
-// Organization model for multi-tenant support
-model Organization {
-  @@map("organization")
-  id          String   @id @default(uuid())
-  name        String
-  subdomain   String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+enum ResourceType {
+  KENNEL
+  RUN
+  SUITE
+  STANDARD_SUITE
+  STANDARD_PLUS_SUITE
+  VIP_SUITE
+  PLAY_AREA
+  OUTDOOR_PLAY_YARD
+  PRIVATE_PLAY_AREA
+  GROOMING_TABLE
+  BATHING_STATION
+  DRYING_STATION
+  TRAINING_ROOM
+  AGILITY_COURSE
+  GROOMER
+  TRAINER
+  ATTENDANT
+  BATHER
+  OTHER
+}
 
-  // Common query patterns
-  @@index([subdomain])
+enum ServiceCategory {
+  DAYCARE
+  BOARDING
+  GROOMING
+  TRAINING
+  OTHER
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  RESERVED
+  MAINTENANCE
+  OUT_OF_SERVICE
+}
+
+enum ContactMethod {
+  EMAIL
+  SMS
+  BOTH
+  NONE
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  UNKNOWN
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+  REFUNDED
+  PARTIALLY_PAID
+}
+
+enum LedgerEntryType {
+  DEPOSIT
+  WITHDRAWAL
+  ADJUSTMENT
+  FEE
+  INTEREST
+  REFUND
+  PAYMENT
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  CASH
+  CHECK
+  BANK_TRANSFER
+  STORE_CREDIT
+  GIFT_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PetType {
+  DOG
+  CAT
+  BIRD
+  RABBIT
+  REPTILE
+  OTHER
+}
+
+enum PlayGroupType {
+  SMALL_DOGS
+  MEDIUM_DOGS
+  LARGE_DOGS
+  HIGH_ENERGY
+  LOW_ENERGY
+  PUPPIES
+  SENIORS
+  SPECIAL_NEEDS
+}
+
+enum PriceRuleType {
+  DAY_OF_WEEK
+  MULTI_DAY
+  MULTI_PET
+  SEASONAL
+  PROMOTIONAL
+  CUSTOM
+}
+
+enum ReconciliationFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ReconciliationStatus {
+  IN_PROGRESS
+  COMPLETED
+  DISCREPANCIES_FOUND
+  VERIFIED
+  CANCELLED
+}
+
+enum ReconciliationType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  MANUAL
+  SYSTEM
+}
+
+enum ScheduleStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum TimeOffStatus {
+  PENDING
+  APPROVED
+  DENIED
+  CANCELLED
+}
+
+enum TimeOffType {
+  VACATION
+  SICK
+  PERSONAL
+  BEREAVEMENT
+  JURY_DUTY
+  OTHER
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  VOIDED
+  RECONCILED
+  DISPUTED
+}
+
+enum TransactionType {
+  PAYMENT
+  REFUND
+  ADJUSTMENT
+  CREDIT
+  DEBIT
+  VOID
+  FEE
+  TAX
+  DISCOUNT
 }

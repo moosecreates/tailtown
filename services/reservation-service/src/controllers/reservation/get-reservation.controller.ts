@@ -91,15 +91,13 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
     
     // Map frontend status values to database enum values
     const statusMap: { [key: string]: string } = {
-      'PENDING': 'PENDING_PAYMENT',
+      'PENDING': 'PENDING',
       'CONFIRMED': 'CONFIRMED',
       'CHECKED_IN': 'CHECKED_IN',
       'CHECKED_OUT': 'CHECKED_OUT',
       'COMPLETED': 'COMPLETED',
       'NO_SHOW': 'NO_SHOW',
-      'CANCELLED': 'CANCELLED',
-      'DRAFT': 'DRAFT',
-      'PARTIALLY_PAID': 'PARTIALLY_PAID'
+      'CANCELLED': 'CANCELLED'
     };
     
     if (statusString.includes(',')) {
@@ -166,6 +164,33 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
     } catch (error) {
       logger.warn(`Error parsing endDate filter`, { requestId, endDate: req.query.endDate, error });
       warnings.push(`Error parsing endDate filter: ${req.query.endDate}, ignoring this filter`);
+    }
+  }
+  
+  // Handle single date filter (for specific day)
+  if (req.query.date) {
+    try {
+      const date = new Date(req.query.date as string);
+      if (!isNaN(date.getTime())) {
+        // Set to start of day
+        const startOfDay = new Date(date);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        // Set to end of day
+        const endOfDay = new Date(date);
+        endOfDay.setHours(23, 59, 59, 999);
+        
+        filter.startDate = {
+          gte: startOfDay,
+          lte: endOfDay
+        };
+      } else {
+        logger.warn(`Invalid date format`, { requestId, date: req.query.date });
+        warnings.push(`Invalid date format: ${req.query.date}, ignoring this filter`);
+      }
+    } catch (error) {
+      logger.warn(`Error parsing date filter`, { requestId, date: req.query.date, error });
+      warnings.push(`Error parsing date filter: ${req.query.date}, ignoring this filter`);
     }
   }
   
