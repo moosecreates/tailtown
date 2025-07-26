@@ -75,21 +75,8 @@ export const getAllResources = async (
     // Extract query parameters
     const { sortBy, sortOrder } = req.query;
     
-    // Build the query
-    const query: any = {
-      include: {
-        availabilitySlots: {
-          where: {
-            endTime: {
-              gte: new Date()
-            }
-          },
-          orderBy: {
-            startTime: 'asc'
-          }
-        }
-      }
-    };
+    // Build the query - start simple without includes
+    const query: any = {};
     
     // Add ordering if specified
     if (sortBy && sortOrder) {
@@ -119,14 +106,14 @@ export const getResource = async (
     const resource = await prisma.resource.findUnique({
       where: { id },
       include: {
-        availabilitySlots: {
+        Reservation: {
           where: {
-            endTime: {
+            endDate: {
               gte: new Date()
             }
           },
           orderBy: {
-            startTime: 'asc'
+            startDate: 'asc'
           }
         }
       }

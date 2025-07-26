@@ -79,7 +79,7 @@ export const getCustomerById = async (
     const customer = await prisma.customer.findUnique({
       where: { id },
       include: {
-        pets: true
+        Pet: true
       }
     });
     
@@ -190,7 +190,7 @@ export const createCustomer = async (
       const customerWithRelations = await prismaClient.customer.findUnique({
         where: { id: customer.id },
         include: {
-          pets: true
+          Pet: true
         }
       });
       
@@ -230,7 +230,7 @@ export const updateCustomer = async (
     const customerExists = await prisma.customer.findUnique({
       where: { id },
       include: {
-        pets: true
+        Pet: true
       }
     });
     
@@ -275,7 +275,7 @@ export const updateCustomer = async (
       return prismaClient.customer.findUnique({
         where: { id },
         include: {
-          pets: true
+          Pet: true
         }
       });
     });

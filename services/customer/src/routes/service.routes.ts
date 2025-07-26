@@ -12,6 +12,11 @@ import {
 
 const router = Router();
 
+// Test endpoint
+router.get('/test', (req, res) => {
+  res.json({ message: 'Service routes working' });
+});
+
 // GET all services
 router.get('/', getAllServices);
 

@@ -89,46 +89,50 @@ model Resource {
 // Reservation model with partitioning strategy
 // Note: Actual table partitioning would be implemented at the database level
 model Reservation {
-  @@map("reservation")
-  id              String            @id @default(uuid())
-  orderNumber     String?
-  customerId      String
-  petId           String
-  resourceId      String?
-  startDate       DateTime
-  endDate         DateTime
-  status          ReservationStatus @default(CONFIRMED)
-  suiteType       String            // VIP_SUITE, STANDARD_PLUS_SUITE, STANDARD_SUITE
-  price           Float?
-  deposit         Float?
-  balance         Float?
-  notes           String?
-  staffNotes      String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  organizationId  String            // Tenant isolation
-  customer        Customer          @relation(fields: [customerId], references: [id])
-  pet             Pet               @relation(fields: [petId], references: [id])
-  resource        Resource?         @relation(fields: [resourceId], references: [id])
-  addOns          ReservationAddOn[]
+  id                 String            @id
+  orderNumber        String?
+  customerId         String
+  petId              String
+  resourceId         String?
+  startDate          DateTime
+  endDate            DateTime
+  status             ReservationStatus @default(PENDING)
+  notes              String?
+  staffNotes         String?
+  checkInWindow      Int?
+  isRecurring        Boolean           @default(false)
+  recurringPattern   String?
+  preChecked         Boolean           @default(false)
+  checkInDate        DateTime?
+  checkOutDate       DateTime?
+  earlyDropOff       Boolean           @default(false)
+  latePickup         Boolean           @default(false)
+  customPickupPerson String?
+  confirmedBy        String?
+  cancelReason       String?
+  cancelDate         DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime
+  serviceId          String
+  staffAssignedId    String?
+  customer           Customer          @relation(fields: [customerId], references: [id])
+  pet                Pet               @relation(fields: [petId], references: [id])
+  resource           Resource?         @relation(fields: [resourceId], references: [id])
+  service            Service           @relation(fields: [serviceId], references: [id])
+  // staff relationship removed - Staff model not defined
+  addOns             ReservationAddOn[]
 
-  // Multi-tenant indexing strategy
-  @@index([organizationId])
-  
-  // Time-based partition strategy implemented via indexes
-  // These indexes support our date range queries for calendar views
-  @@index([organizationId, startDate, endDate])
-  @@index([organizationId, status])
-  
-  // Common query patterns
   @@index([customerId])
   @@index([petId])
   @@index([resourceId])
-  @@index([organizationId, customerId])
   @@index([orderNumber])
+  @@index([customerId, status])
+  @@index([startDate, endDate])
+  @@index([status, startDate])
+  @@map("reservations")
 
-  // Unique constraint for order numbers within a tenant
-  @@unique([orderNumber, organizationId])
+  // Unique constraint for order numbers
+  @@unique([orderNumber])
 }
 
 // Add-on services that can be added to reservations
@@ -155,28 +159,23 @@ model AddOnService {
 
 // Junction table for reservation add-ons
 model ReservationAddOn {
-  @@map("reservation_add_on")
-  id              String        @id @default(uuid())
-  reservationId   String
-  addOnId         String
-  price           Float
-  notes           String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  organizationId  String        // Tenant isolation
-  reservation     Reservation   @relation(fields: [reservationId], references: [id])
-  addOn           AddOnService  @relation(fields: [addOnId], references: [id])
+  id            String        @id
+  reservationId String
+  addOnId       String
+  price         Float
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime
+  reservation   Reservation   @relation(fields: [reservationId], references: [id])
+  addOn         AddOnService  @relation(fields: [addOnId], references: [id])
 
-  // Multi-tenant indexing strategy
-  @@index([organizationId])
-  // Common query patterns
   @@index([reservationId])
   @@index([addOnId])
+  @@map("reservation_addons")
 }
 
 // Service model (e.g., boarding, daycare, grooming)
 model Service {
-  @@map("service")
   id              String        @id @default(uuid())
   name            String
   description     String?
@@ -185,25 +184,21 @@ model Service {
   isActive        Boolean       @default(true)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  organizationId  String        // Tenant isolation
+  reservations    Reservation[]
 
-  // Multi-tenant indexing strategy
-  @@index([organizationId])
-  // Common query patterns
-  @@index([organizationId, isActive])
+  @@index([isActive])
+  @@map("service")
 }
 
 // Enum for reservation status
 enum ReservationStatus {
-  DRAFT
+  PENDING
   CONFIRMED
   CHECKED_IN
   CHECKED_OUT
   CANCELLED
   NO_SHOW
   COMPLETED
-  PENDING_PAYMENT
-  PARTIALLY_PAID
 }
 
 // Organization model for multi-tenant support

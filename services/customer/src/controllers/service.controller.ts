@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient, ServiceCategory } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 
 const prisma = new PrismaClient();
@@ -16,7 +16,7 @@ export const getAllServices = async (
     const skip = (page - 1) * limit;
     const search = req.query.search as string;
     const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
-    const category = req.query.category as ServiceCategory | undefined;
+    const category = req.query.category as string | undefined;
     
     // Build where condition
     const where: any = {};
@@ -40,20 +40,16 @@ export const getAllServices = async (
       orderBy: {
         name: 'asc'
       }
-      // Removed invalid include statements that were causing 500 error
     });
-    
-    // Simplified metadata handling since we don't have _count anymore
-    const servicesWithMetadata = services.filter(service => service.isActive);
     
     const total = await prisma.service.count({ where });
     
     res.status(200).json({
       status: 'success',
-      results: servicesWithMetadata.length,
+      results: services.length,
       totalPages: Math.ceil(total / limit),
       currentPage: page,
-      data: servicesWithMetadata
+      data: services
     });
   } catch (error) {
     next(error);

@@ -78,9 +78,8 @@ export const getAllPets = async (
           customerId: true,
           createdAt: true,
           updatedAt: true,
-          notes: true,
           // dateOfBirth field removed - not in current schema
-          customer: {
+          Customer: {
             select: {
               id: true,
               firstName: true,
@@ -124,8 +123,7 @@ export const getPetById = async (
         customerId: true,
         createdAt: true,
         updatedAt: true,
-        notes: true,
-        customer: {
+        Customer: {
           select: {
             id: true,
             firstName: true,

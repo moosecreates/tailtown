@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient, ReservationStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 
 // Create a dynamic Prisma client type to handle potential model name differences
@@ -124,17 +124,17 @@ export const getAllReservations = async (
         const statusArray = status.split(',');
         console.log('Status array after split:', statusArray);
         
-        // Validate each status is a valid ReservationStatus
-        const validStatuses = Object.values(ReservationStatus);
+        // Validate each status is a valid reservation status
+        const validStatuses = ['CONFIRMED', 'PENDING', 'CANCELLED', 'CHECKED_IN', 'CHECKED_OUT', 'NO_SHOW'];
         console.log('Valid statuses:', validStatuses);
         
         const validStatusArray = statusArray.filter(s => 
-          validStatuses.includes(s as ReservationStatus)
+          validStatuses.includes(s)
         );
         
         if (validStatusArray.length > 0) {
           where.status = {
-            in: validStatusArray as ReservationStatus[]
+            in: validStatusArray
           };
         }
       }
@@ -471,7 +471,8 @@ export const getReservationsByStatus = async (
     const skip = (page - 1) * limit;
     
     // Validate status
-    if (!Object.values(ReservationStatus).includes(status as ReservationStatus)) {
+    const validStatuses = ['CONFIRMED', 'PENDING', 'CANCELLED', 'CHECKED_IN', 'CHECKED_OUT', 'NO_SHOW'];
+    if (!validStatuses.includes(status)) {
       return next(new AppError(`Invalid status: ${status}`, 400));
     }
     
@@ -488,7 +489,7 @@ export const getReservationsByStatus = async (
     
     const [reservations, totalCount] = await Promise.all([
       reservationModel.findMany({
-        where: { status: status as ReservationStatus },
+        where: { status: status },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
@@ -499,7 +500,7 @@ export const getReservationsByStatus = async (
           resource: true,
         },
       }),
-      reservationModel.count({ where: { status: status as ReservationStatus } })
+      reservationModel.count({ where: { status: status } })
     ]);
     
     res.status(200).json({
@@ -552,7 +553,7 @@ export const getTodayRevenue = async (
     });
     
     const totalRevenue = todayReservations.reduce(
-      (sum, reservation) => sum + (reservation.totalAmount || 0),
+      (sum: number, reservation: any) => sum + (reservation.totalAmount || 0),
       0
     );
     

@@ -41,7 +41,7 @@ async function testConnection(prisma, url) {
     console.log('\nQuerying all customers...')
     const customers = await prisma.customer.findMany({
       include: {
-        pets: true
+        Pet: true
       }
     })
     

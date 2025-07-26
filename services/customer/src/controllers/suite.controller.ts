@@ -76,7 +76,7 @@ export const getAllSuites = async (
         // A reservation overlaps with today if:
         // 1. It starts before or on the end of the day AND
         // 2. It ends on or after the start of the day
-        where.reservations = {
+        where.Reservation = {
           some: {
             AND: [
               { startDate: { lte: filterTodayEnd } },   // Starts before or on the end of today
@@ -90,7 +90,7 @@ export const getAllSuites = async (
         console.log('OCCUPIED filter where clause:', JSON.stringify(where, null, 2));
       } else if (status === 'AVAILABLE') {
         // Find suites with no reservations for today and not in maintenance
-        where.reservations = {
+        where.Reservation = {
           none: {
             AND: [
               { startDate: { lte: filterTodayEnd } },   // Starts before or on the end of today
@@ -120,7 +120,7 @@ export const getAllSuites = async (
     
     // For backward compatibility
     if (available === 'true') {
-      where.reservations = {
+      where.Reservation = {
         none: {
           AND: [
             { startDate: { lte: filterTodayEnd } },   // Starts before or on the end of today
@@ -162,7 +162,7 @@ export const getAllSuites = async (
     const suites = await prisma.resource.findMany({
       where,
       include: {
-        reservations: {
+        Reservation: {
           where: {
             OR: [
               // Reservation starts today
@@ -178,12 +178,12 @@ export const getAllSuites = async (
             status: { in: ['CONFIRMED', 'CHECKED_IN'] }
           },
           include: {
-            pet: {
+            Pet: {
               select: {
                 id: true,
                 name: true,
                 type: true,
-                owner: {
+                Customer: {
                   select: {
                     id: true,
                     firstName: true,
@@ -192,7 +192,7 @@ export const getAllSuites = async (
                 }
               }
             },
-            customer: {
+            Customer: {
               select: {
                 id: true,
                 firstName: true,
@@ -434,7 +434,7 @@ export const getSuiteStats = async (
     // For debugging, let's check which resources have reservations
     const resourcesWithReservations = await prisma.resource.findMany({
       where: {
-        reservations: {
+        Reservation: {
           some: {
             OR: [
               // Reservation starts today
@@ -483,7 +483,7 @@ export const getSuiteStats = async (
             in: [ResourceType.STANDARD_SUITE, ResourceType.STANDARD_PLUS_SUITE, ResourceType.VIP_SUITE]
           },
           isActive: true,
-          reservations: {
+          Reservation: {
             some: {
               OR: [
                 // Reservation starts today
@@ -524,7 +524,7 @@ export const getSuiteStats = async (
           },
           isActive: true,
           // No reservations for today
-          reservations: {
+          Reservation: {
             none: {
               OR: [
                 // Reservation starts today

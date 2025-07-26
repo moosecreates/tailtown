@@ -6,7 +6,7 @@ export const serviceManagement = {
   getAllServices: async () => {
     try {
       console.log('Fetching services from customer API');
-      const response = await customerApi.get('/services');
+      const response = await customerApi.get('/api/services');
       console.log('Services response:', response.data);
       return response.data;
     } catch (error) {
@@ -18,7 +18,7 @@ export const serviceManagement = {
   // Get a single service by ID
   getServiceById: async (id: string, includeDeleted: boolean = false) => {
     try {
-      const response = await customerApi.get(`/services/${id}`, {
+      const response = await customerApi.get(`/api/services/${id}`, {
         params: { includeDeleted }
       });
       return response.data;

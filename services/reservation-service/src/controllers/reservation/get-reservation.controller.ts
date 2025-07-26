@@ -81,7 +81,7 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
   
   // Build filter object
   const filter: any = {
-    organizationId: tenantId
+    // organizationId field doesn't exist in customer database
   };
   
   // Add optional filters if provided
@@ -249,9 +249,9 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
             resourceId: true,
             createdAt: true,
             updatedAt: true,
-            organizationId: true,
+            // organizationId: true, // Field doesn't exist in customer database
             // Include related data
-            customer: {
+            Customer: {
               select: {
                 firstName: true,
                 lastName: true,
@@ -259,21 +259,20 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
                 phone: true
               }
             },
-            pet: {
+            Pet: {
               select: {
                 name: true,
                 breed: true,
-                size: true,
                 weight: true
               }
             },
-            resource: {
+            Resource: {
               select: {
                 name: true,
                 type: true
               }
             },
-            addOns: {
+            ReservationAddOn: {
               select: {
                 id: true,
                 addOnId: true,
@@ -412,8 +411,8 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
       async () => {
         return await prisma.reservation.findFirst({
           where: {
-            id,
-            organizationId: tenantId
+            id
+            // organizationId: tenantId // Field doesn't exist in customer database
           } as ExtendedReservationWhereInput,
           select: {
             id: true,
@@ -428,8 +427,8 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
             createdAt: true,
             updatedAt: true,
             notes: true,
-            organizationId: true,
-            customer: {
+            // organizationId: true, // Field doesn't exist in customer database
+            Customer: {
               select: {
                 firstName: true,
                 lastName: true,
@@ -437,22 +436,22 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
                 phone: true
               }
             },
-            pet: {
+            Pet: {
               select: {
                 name: true,
                 breed: true,
-                size: true,
+                // size: true, // Field doesn't exist in customer database Pet model
                 weight: true,
-                birthDate: true,
+                birthdate: true, // Note: field name is 'birthdate' not 'birthDate'
               }
             },
-            resource: {
+            Resource: {
               select: {
                 name: true,
                 type: true
               }
             },
-            addOns: {
+            ReservationAddOn: {
               select: {
                 id: true,
                 addOnId: true,

@@ -392,204 +392,58 @@ export const getCustomerValue = async (req: Request, res: Response, next: NextFu
  */
 export const getDashboardSummary = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { period = 'all', startDate, endDate } = req.query;
+    console.log('Analytics: Getting dashboard summary with current month data');
     
-    console.log('Analytics: Getting dashboard summary with period:', period);
+    // Get basic counts
+    const customerCount = await prisma.customer.count();
+    const petCount = await prisma.pet.count();
     
-    // Set up date filters based on the period
-    const dateFilter = getDateFilter(period as string, startDate as string, endDate as string);
-    console.log('Analytics: Date filter:', JSON.stringify(dateFilter));
+    // Get current month reservations (more relevant than total)
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     
-    // Get total revenue from invoices
-    const invoiceTotal = await prisma.invoice.aggregate({
+    const currentMonthReservations = await prisma.reservation.count({
       where: {
-        issueDate: dateFilter,
-        status: {
-          notIn: ['CANCELLED', 'REFUNDED']
-        }
-      },
-      _sum: {
-        total: true
-      }
-    });
-    
-    // Count invoices for the period
-    const invoiceCount = await prisma.invoice.count({
-      where: {
-        issueDate: dateFilter,
-        status: {
-          notIn: ['CANCELLED', 'REFUNDED']
-        }
-      }
-    });
-    
-    console.log(`Analytics: Found ${invoiceCount} invoices for the period`);
-    
-    // Get all reservations for the period
-    const reservations = await prisma.reservation.findMany({
-      where: {
-        startDate: dateFilter,
-        status: {
-          notIn: ['CANCELLED', 'NO_SHOW']
-        }
-      }
-    });
-    
-    // Get all services
-    const allServices = await prisma.service.findMany({
-      where: {
-        isActive: true
-      }
-    });
-    
-    // Group reservations by service
-    const serviceStatsMap = new Map();
-    
-    for (const reservation of reservations) {
-      const serviceId = reservation.serviceId;
-      const service = allServices.find(s => s.id === serviceId);
-      
-      // Only count reservations for services that are still active
-      if (service) {
-        if (!serviceStatsMap.has(serviceId)) {
-          serviceStatsMap.set(serviceId, {
-            id: serviceId,
-            name: service.name,
-            count: 0
-          });
-        }
-        
-        const stat = serviceStatsMap.get(serviceId);
-        stat.count += 1;
-      }
-    }
-    
-    const serviceData = Array.from(serviceStatsMap.values());
-    
-    console.log(`Analytics: Found ${reservations.length} reservations and ${serviceData.length} services for the period`);
-    
-    // Get all reservations with add-ons for the period (for counting)
-    const reservationAddOns = await prisma.reservationAddOn.findMany({
-      where: {
-        reservation: {
-          startDate: dateFilter,
-          status: {
-            notIn: ['CANCELLED', 'NO_SHOW']
-          }
-        }
-      },
-      include: {
-        addOn: true
-      }
-    });
-    
-    // Get all add-on services
-    const allAddOns = await prisma.addOnService.findMany({
-      where: {
-        isActive: true
-      }
-    });
-    
-    // Get all invoices with add-ons for the period (for revenue calculation)
-    const invoicesWithAddOns = await prisma.invoice.findMany({
-      where: {
-        issueDate: dateFilter,
-        status: {
-          notIn: ['CANCELLED', 'REFUNDED']
+        startDate: {
+          gte: startOfMonth,
+          lte: endOfMonth
         },
-        reservation: {
-          addOnServices: {
-            some: {}
-          }
-        }
-      },
-      include: {
-        reservation: {
-          include: {
-            addOnServices: {
-              include: {
-                addOn: true
-              }
-            }
-          }
+        status: {
+          notIn: ['CANCELLED']
         }
       }
     });
     
-    console.log(`Analytics: Found ${invoicesWithAddOns.length} invoices with add-ons for the period`);
+    // Get today's reservations
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     
-    // Group by add-on
-    const addOnMap = new Map();
-    
-    // First, count all add-ons by reservation, but only for active add-ons
-    for (const reservationAddOn of reservationAddOns) {
-      const addOnId = reservationAddOn.addOnId;
-      
-      // Check if this add-on is still active
-      const addOn = allAddOns.find(a => a.id === addOnId);
-      
-      // Only count add-ons that are still active
-      if (addOn) {
-        if (!addOnMap.has(addOnId)) {
-          addOnMap.set(addOnId, {
-            id: addOnId,
-            name: addOn.name,
-            count: 0,
-            revenue: 0
-          });
-        }
-        
-        const addOnData = addOnMap.get(addOnId);
-        addOnData.count += 1;
-      }
-    }
-    
-    // Then, add revenue only from paid invoices
-    for (const invoice of invoicesWithAddOns) {
-      if (invoice.reservation && invoice.reservation.addOnServices) {
-        for (const addOnService of invoice.reservation.addOnServices) {
-          const addOnId = addOnService.addOnId;
-          
-          if (addOnMap.has(addOnId)) {
-            const addOnData = addOnMap.get(addOnId);
-            addOnData.revenue += addOnService.price || 0;
-          }
-        }
-      }
-    }
-    
-    // Convert map to array
-    const addOnData = Array.from(addOnMap.values());
-    
-    // Get unique customer count
-    const customerCount = await prisma.customer.count({
+    const todayReservations = await prisma.reservation.count({
       where: {
-        invoices: {
-          some: {
-            issueDate: dateFilter,
-            status: {
-              notIn: ['CANCELLED', 'REFUNDED']
-            }
-          }
+        startDate: {
+          gte: startOfDay,
+          lt: endOfDay
+        },
+        status: {
+          notIn: ['CANCELLED']
         }
       }
     });
     
-    // Calculate total add-on revenue
-    const addOnRevenue = addOnData.reduce((sum, addOn) => sum + (addOn.revenue || 0), 0);
-    
-    console.log(`Analytics: Dashboard summary - Revenue: ${invoiceTotal._sum.total || 0}, Customers: ${customerCount}, Services: ${serviceData.length}, Reservations: ${reservations.length}`);
+    console.log(`Analytics: Dashboard summary - Customers: ${customerCount}, Pets: ${petCount}, This Month Reservations: ${currentMonthReservations}, Today: ${todayReservations}`);
     
     res.status(200).json({
       status: 'success',
       data: {
-        period: period as string,
-        totalRevenue: invoiceTotal._sum.total || 0,
         customerCount,
-        serviceData,
-        addOnData,
-        addOnRevenue,
-        reservationCount: reservations.length
+        petCount,
+        reservationCount: currentMonthReservations, // Show current month, not total
+        todayRevenue: 0,
+        todayReservations,
+        services: 0,
+        appointments: []
       }
     });
   } catch (error) {

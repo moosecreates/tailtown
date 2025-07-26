@@ -95,8 +95,8 @@ model Reservation {
   resourceId       String?
   startDate        DateTime
   endDate          DateTime
-  status           String             @default("CONFIRMED")
-  suiteType        String
+  status           ReservationStatus  @default(CONFIRMED)
+  suiteType        String?
   price            Float?
   deposit          Float?
   balance          Float?
@@ -104,20 +104,17 @@ model Reservation {
   staffNotes       String?
   createdAt        DateTime           @default(now())
   updatedAt        DateTime
-  organizationId   String
   Customer         Customer           @relation(fields: [customerId], references: [id])
   Pet              Pet                @relation(fields: [petId], references: [id])
   Resource         Resource?          @relation(fields: [resourceId], references: [id])
   ReservationAddOn ReservationAddOn[]
 
-  @@unique([orderNumber, organizationId])
+  @@unique([orderNumber])
   @@index([customerId])
   @@index([orderNumber])
-  @@index([organizationId, customerId])
-  @@index([organizationId])
-  @@index([organizationId, startDate, endDate])
-  @@index([organizationId, status])
   @@index([petId])
+  @@index([status])
+  @@index([startDate, endDate])
   @@index([resourceId])
   @@map("reservations")
 }
@@ -141,36 +138,55 @@ model ReservationAddOn {
 }
 
 model Resource {
-  id             String        @id
-  name           String
-  type           String
-  description    String?
-  capacity       Int           @default(1)
-  isActive       Boolean       @default(true)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime
-  organizationId String
-  Reservation    Reservation[]
+  id                    String                  @id
+  name                  String
+  type                  ResourceType
+  description           String?
+  capacity              Int                     @default(1)
+  isActive              Boolean                 @default(true)
+  notes                 String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime
+  attributes            Json?
+  availability          String?
+  location              String?
+  maintenanceSchedule   String?
+  lastCleanedAt         DateTime?
+  maintenanceStatus     String?
+  suiteNumber           Int?
+  Reservation           Reservation[]
+  resource_availability resource_availability[]
 
-  @@index([organizationId])
-  @@index([organizationId, isActive])
-  @@index([organizationId, type])
   @@map("resources")
 }
 
-model Service {
-  id             String   @id
-  name           String
-  description    String?
-  price          Float
-  duration       Int?
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime
-  organizationId String
+model resource_availability {
+  id         String             @id
+  resourceId String
+  startTime  DateTime
+  endTime    DateTime
+  status     AvailabilityStatus
+  reason     String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime
+  resources  Resource           @relation(fields: [resourceId], references: [id])
+}
 
-  @@index([organizationId])
-  @@index([organizationId, isActive])
+model Service {
+  id              String          @id
+  name            String
+  description     String?
+  price           Float
+  duration        Int
+  color           String?
+  serviceCategory ServiceCategory
+  isActive        Boolean         @default(true)
+  requiresStaff   Boolean         @default(false)
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime
+  capacityLimit   Int             @default(0)
+
   @@map("services")
 }
 
