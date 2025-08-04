@@ -186,8 +186,9 @@ We follow a standardized documentation structure to ensure consistency and ease 
   - [Add-On System](./docs/features/AddOnSystem.md) - Service add-on implementation
   - [Checkout Process](./docs/features/CheckoutProcess.md) - End-to-end checkout workflow
 
-- **Operations** (`/docs/operations/`)
-  - [Environment Variables](./docs/operations/Environment-Variables.md) - Documentation of environment variables
+- **Operations Documentation** (`/docs/operations/`)
+  - [Environment Variables](./docs/operations/Environment-Variables.md) - Environment configuration
+  - [Disaster Recovery Plan](./docs/operations/DISASTER-RECOVERY-PLAN.md) - Comprehensive disaster recovery procedures
   - [DevOps](./docs/operations/DevOps.md) - Deployment and operations guide
   - [Setup Guide](./docs/operations/SETUP.md) - Comprehensive setup instructions for development
 
