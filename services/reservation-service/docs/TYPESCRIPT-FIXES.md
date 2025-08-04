@@ -5,34 +5,38 @@ This document outlines the TypeScript fixes implemented in the reservation servi
 
 ## Issues Fixed
 
-### 1. Logger Naming Conflict in schemaUtils.ts
-- **Problem**: Naming conflict between imported `logger` and local `logger` variable in schemaUtils.ts
+### 1. Resource Type Filtering Issues
+- **Problem**: Resource controller was not correctly handling multiple `type` query parameters
 - **Solution**: 
-  - Renamed the imported `logger` to `appLogger`
-  - Renamed the local `logger` variable to `schemaLogger` throughout the file
-  - Updated all references to use the appropriate logger name
+  - Added proper detection of array vs. single value for `type` query parameter
+  - Implemented validation and conversion to ensure query parameters match Prisma `ResourceType` enum values
+  - Added proper error handling and logging for invalid type filters
+  - Used Prisma's `in` filter for handling multiple types correctly
 
-### 2. Potential Null Reference in create-reservation.controller.ts
-- **Problem**: Potential null reference when accessing `newReservation.id` when `newReservation` could be null
+### 2. Prisma Schema Mismatches
+- **Problem**: References to non-existent fields like `organizationId` and incorrect field names like `age` instead of `birthdate`
 - **Solution**:
-  - Added null check using optional chaining operator (`?.`)
-  - Added fallback value when id is null: `newReservation?.id || 'unknown'`
-  - This ensures type safety while maintaining the existing error handling pattern
+  - Removed all invalid `organizationId` references from Prisma queries
+  - Fixed all occurrences of non-existent `age` field on the `Pet` model by replacing with `birthdate`
+  - Synchronized Prisma schema between customer and reservation services
+  - Updated Prisma client imports to include `ResourceType` enum for proper type-safe filtering
 
 ### 3. Type Compatibility Issues
-- **Problem**: `ExtendedReservationWhereInput` was not assignable to `ReservationWhereUniqueInput` in update and delete operations
-- **Solution**: Implemented a two-step approach for operations requiring unique inputs:
-  - First verify the reservation exists using `findFirst` with the extended input type
-  - Then perform the actual operation using only the ID as the where clause
+- **Problem**: Type errors when using query parameters with Prisma enum types
+- **Solution**: 
+  - Added proper type validation and conversion for query parameters
+  - Implemented defensive programming with type guards
+  - Used proper TypeScript type assertions only when necessary
+  - Added filtering of invalid values to prevent runtime errors
 
-### 2. Syntax and Logic Errors
+### 4. Syntax and Logic Errors
 - **Problem**: Nested conditional logic with redundant conditions and variable shadowing in suite type determination
 - **Solution**: Refactored the suite type determination logic to:
   - Remove redundant conditions
   - Fix variable scoping issues
   - Ensure proper assignment of suite type values
 
-### 3. Module Resolution Issues
+### 5. Module Resolution Issues
 - **Problem**: TypeScript couldn't resolve imports correctly, especially when importing from `.js` files
 - **Solution**: Enhanced the TypeScript configuration:
   - Added `moduleResolution: "node"` for better module finding

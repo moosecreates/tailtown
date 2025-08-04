@@ -36,13 +36,16 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - Each service has its own `.env` file in its respective directory
 - Frontend environment file: `/frontend/.env`
 - Reservation service environment file: `/services/reservation-service/.env`
-  - **Critical**: `DATABASE_URL` must be properly set for the reservation service to connect to PostgreSQL
+  - **Critical**: `DATABASE_URL` must be set to port 5433 for the reservation service to connect to PostgreSQL
 - Customer service environment file: `/services/customer/.env`
 - Key environment variables:
   - `DATABASE_URL`: PostgreSQL connection string (format: `postgresql://username:password@localhost:5433/customer?schema=public`)
-  - `PORT`: Service port number (3003 for customer service, 4003 for reservation service)
+  - `PORT`: Service port number (4004 for customer service, 4003 for reservation service)
   - `NODE_ENV`: Environment mode (development, test, production)
   - `JWT_SECRET`: Secret key for authentication
+- **Shared Database Approach**: Both customer and reservation services use the same PostgreSQL database
+  - Prisma schemas must be synchronized between services to avoid runtime errors
+  - Field names must be consistent across services (e.g., `birthdate` not `age` for Pet model)
 - For a complete list of all environment variables and their descriptions, see our detailed [Environment Variables Documentation](./docs/Environment-Variables.md)
 - For service architecture and port assignments, see our [Service Architecture Documentation](./docs/architecture/SERVICE-ARCHITECTURE.md)
 
@@ -58,7 +61,9 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - Maintenance scheduling
 - Occupancy tracking with backend validation
 - Resource conflict prevention
-- Backend API for resource availability checking
+- Backend API for resource availability checking with support for multiple type filtering
+  - Filter resources by one or more types (e.g., `STANDARD_SUITE`, `LUXURY_SUITE`)
+  - Robust validation and error handling for resource type parameters
 - Multi-tenant support for all resource operations
 
 ### Staff Management

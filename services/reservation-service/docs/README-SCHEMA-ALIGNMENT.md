@@ -27,11 +27,11 @@ This document explains the implementation of our schema alignment strategy in th
 
 We've created extended TypeScript types in `src/types/prisma-extensions.ts` to handle fields that might not be recognized by TypeScript but exist in our database schema:
 
-- `ExtendedReservationWhereInput`, `ExtendedResourceWhereInput`, etc. - Extend Prisma's WhereInput types to include tenant isolation fields like `organizationId`
+- `ExtendedReservationWhereInput`, `ExtendedResourceWhereInput`, etc. - Extend Prisma's WhereInput types with additional fields needed for queries
 - `ExtendedReservation` - Extends the Reservation model with additional fields like `suiteType` and `price`
 - `ExtendedReservationStatus` - Extends the ReservationStatus enum with additional statuses
 
-These types allow us to use type assertions to handle schema mismatches without TypeScript errors.
+**Important Note**: As of the latest stable version, we've removed `organizationId` references from queries as this field doesn't exist in the current database schema. The tenant isolation is now handled through other mechanisms in the middleware.
 
 ### 2. Safe Query Execution
 
@@ -88,35 +88,67 @@ These functions can be used to conditionally enable features based on schema ava
 
 ### 1. Tenant Isolation
 
-All controllers use the extended types to handle tenant isolation:
+All controllers use the tenant middleware to handle tenant isolation. The tenant ID is injected into the request by the middleware:
 
 ```typescript
-const whereConditions: ExtendedResourceWhereInput = {
-  organizationId: tenantId
-};
+// Tenant ID is provided by the enhancedTenantMiddleware
+const tenantId = req.tenantId;
+
+// Type filters are properly handled for multiple values
+const typeFilters = Array.isArray(req.query.type) 
+  ? req.query.type.map(t => t as ResourceType)
+  : req.query.type ? [req.query.type as ResourceType] : undefined;
+
+const whereConditions = {};
+if (typeFilters) {
+  whereConditions.type = { in: typeFilters };
+}
 
 const resources = await prisma.resource.findMany({
-  where: whereConditions as any // Type assertion to handle organizationId
+  where: whereConditions
 });
 ```
 
 ### 2. Safe Query Execution
 
-Controllers use `safeExecutePrismaQuery` to handle potential schema mismatches:
+Controllers use defensive programming and proper error handling to manage potential schema mismatches:
 
 ```typescript
-const resource = await safeExecutePrismaQuery(
-  async () => {
-    return await prisma.resource.findUnique({
-      where: {
-        id,
-        ...whereConditions
-      } as any // Type assertion for organizationId
-    });
-  },
-  null, // Fallback value if the query fails
-  `Error finding resource with ID ${id}`
-);
+try {
+  // Handle type filters properly
+  const typeFilters = Array.isArray(req.query.type)
+    ? req.query.type.map(type => {
+        // Validate and convert to ResourceType enum
+        if (Object.values(ResourceType).includes(type as ResourceType)) {
+          return type as ResourceType;
+        }
+        logger.warn(`Invalid resource type: ${type}`);
+        return null;
+      }).filter(Boolean) as ResourceType[]
+    : req.query.type && Object.values(ResourceType).includes(req.query.type as ResourceType)
+      ? [req.query.type as ResourceType]
+      : undefined;
+
+  const whereConditions: any = {};
+  if (typeFilters && typeFilters.length > 0) {
+    whereConditions.type = { in: typeFilters };
+    logger.debug(`Filtering resources by types: ${typeFilters.join(', ')}`);
+  }
+
+  const resources = await prisma.resource.findMany({
+    where: whereConditions,
+    skip: offset,
+    take: limit,
+    orderBy: {
+      name: 'asc'
+    }
+  });
+  
+  return res.json(resources);
+} catch (error) {
+  logger.error(`Error retrieving resources: ${error instanceof Error ? error.message : String(error)}`);
+  return res.status(500).json({ error: 'Error retrieving resources' });
+}
 ```
 
 ### 3. Conditional Feature Enabling

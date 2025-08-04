@@ -88,16 +88,18 @@ The service will perform schema validation on startup and display the results:
 The Reservation Service implements a comprehensive schema alignment strategy that includes:
 
 1. **Defensive Programming**:
-   - Safe query execution with fallbacks for missing tables/columns
+   - Type validation for query parameters (especially for enum values like ResourceType)
    - Graceful error handling for schema mismatches
+   - Proper logging of validation issues and schema errors
 
 2. **Runtime Schema Validation**:
-   - Validation of critical tables and columns on service startup
+   - Optional validation of critical tables and columns on service startup (can be disabled for stability)
    - Detailed reporting of missing schema elements
 
-3. **Multi-tenant Isolation**:
-   - All queries include tenant isolation via organizationId
-   - Proper indexing for performance in multi-tenant environments
+3. **Shared Schema Approach**:
+   - Customer and Reservation services share the same database schema
+   - Prisma schema synchronized between services to avoid mismatches
+   - Field name consistency enforced (e.g., using 'birthdate' instead of 'age' for Pet model)
 
 4. **Database Migrations**:
    - SQL scripts to create missing tables and columns
