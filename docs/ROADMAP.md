@@ -64,10 +64,16 @@ This roadmap outlines the planned features and improvements for the Tailtown app
 - 🔲 Embeddable widgets for customer websites
 
 ## Phase 5: Infrastructure and Scaling
+- ✅ Microservices architecture implementation (Completed August 2025)
+  - Customer service (port 4004)
+  - Reservation service (port 4003)
+  - Frontend application (port 3000)
+  - Shared PostgreSQL database (port 5433)
+- ✅ Service communication via RESTful APIs (Completed August 2025)
+- ✅ Tenant isolation middleware (Completed August 2025)
 - 🔲 Migration to hosted servers
 - 🔲 Cloud infrastructure optimization
 - 🔲 Website integration components for customer online ordering
-- 🔲 Microservices architecture for scalability
 - 🔲 Global content delivery network (CDN)
 - 🔲 Automated deployment pipelines
 - 🔲 High-availability configuration
@@ -79,14 +85,34 @@ Throughout all phases, we will address the following ongoing concerns:
 - 🔲 Comprehensive test coverage (unit, integration, and end-to-end tests)
 - 🔲 Performance optimization for large datasets
 - 🔲 Security audits and improvements
-- ✅ Code refactoring for maintainability and consistency
-- ✅ Documentation updates for implemented features
+- ✅ Schema alignment and consistency (Completed August 3, 2025)
+  - Fixed Prisma schema mismatches between services
+  - Standardized field names and types across services
+  - Removed references to non-existent fields and models
+- ✅ Code refactoring for maintainability and consistency (Ongoing)
+  - Enhanced resource filtering logic
+  - Improved error handling and logging
+  - Fixed tenant middleware for development mode
+- ✅ Documentation updates for implemented features (Completed August 3, 2025)
+  - Updated service architecture documentation
+  - Revised environment variables documentation
+  - Enhanced schema alignment strategy documentation
+  - Updated feature documentation for reservations
 - 🔲 Accessibility compliance (WCAG 2.1 AA)
 - 🔲 DevOps improvements (CI/CD, monitoring, logging)
 
 ## Environment-Specific Considerations
 
 ### Development Environment
+- ✅ Shared database configuration (Completed August 3, 2025)
+  - PostgreSQL on port 5433
+  - Consistent database URL format across services
+  - Schema synchronization between services
+- ✅ Service port standardization (Completed August 3, 2025)
+  - Customer service: 4004
+  - Reservation service: 4003
+  - Frontend: 3000
+- ✅ Enhanced tenant middleware for development mode (Completed August 3, 2025)
 - 🔲 Improved developer tooling
 - 🔲 Streamlined local setup process
 - 🔲 Better debugging capabilities
@@ -113,32 +139,67 @@ Features will be prioritized based on:
 4. Dependencies
 5. Resource availability
 
- Batch operations for reservations (e.g., check-in multiple pets at once)
-- 🔲 Customer portal for self-service booking / - 🔲 Embeddable widgets for customer websites
-- 🔲 Email  and text notifications for reservation status changes
+## Current Focus: Stability and Maintenance (August 2025)
+
+- ✅ Schema alignment between services (Completed August 3, 2025)
+  - Synchronized Prisma schemas between customer and reservation services
+  - Fixed field name inconsistencies (e.g., `birthdate` vs `age`)
+  - Removed references to non-existent fields (e.g., `organizationId`)
+
+- ✅ Resource filtering enhancements (Completed August 3, 2025)
+  - Added support for multiple resource type filtering
+  - Implemented proper enum validation for resource types
+  - Improved error handling and logging
+
+- ✅ Documentation updates (Completed August 3, 2025)
+  - Updated service architecture documentation
+  - Revised environment variables documentation
+  - Enhanced schema alignment strategy documentation
+  - Updated feature documentation for reservations
+
+- ✅ Shared database approach (Completed August 3, 2025)
+  - Both services now use the same PostgreSQL database
+  - Consistent port configuration (5433) for database access
+  - Improved tenant middleware for development mode
+
+## Upcoming Priorities
+
+- 🔲 Batch operations for reservations (e.g., check-in multiple pets at once)
+- 🔲 Customer portal for self-service booking
+- 🔲 Email and text notifications for reservation status changes
 - 🔲 Mobile-responsive design improvements
-**🔲 Priority alerts for staff
-- 🔲 Permission levels and restrictions for users- 🔲 Integration with merchant services
+- 🔲 Priority alerts for staff
+- 🔲 Permission levels and restrictions for users
+- 🔲 Integration with merchant services
 - 🔲 Inventory management for pet supplies
-- ✅ Reporting and analytics dashboard (Implemented May 12, 2025)
-- ✅ Service and add-on revenue reporting (Implemented May 12, 2025)
-- ✅ Customer value tracking and reporting (Implemented May 12, 2025)
-- 🔲 Additional comprehensive reporting features- 🔲 Automated reminders for upcoming appointments
+- 🔲 Additional comprehensive reporting features
+- 🔲 Automated reminders for upcoming appointments
 - 🔲 Comprehensive loyalty rewards system
   - Points accumulation based on services
   - Tiered membership levels
   - Reward redemption options
   - Automated loyalty communications
 
-  bugs:
-  ✅ New Customer under New Order doesn't accept text (Fixed May 6, 2025)
-Cash amount paid after discount can have strange partial penny issues
-✅ New orders are displaying all kennels and not taking availability into account (Fixed May 6, 2025)
-✅ Total price under reservation details is not reflecting the add ons and discounts. (Fixed May 6, 2025)
-✅ Staff scheduling now uses compact time format (minutes only shown when needed) (Fixed May 12, 2025)
-✅ Staff schedule now shows starting assignment location (Fixed May 12, 2025)
-✅ Fixed duplicate shift creation when updating staff schedules (Fixed May 12, 2025)
-✅ Add-on sales are now working on all reservation types (Fixed May 11, 2025)
-✅ Fixed service deletion issues with active reservations (Fixed May 12, 2025)
-✅ Improved service management UI by simplifying deactivation workflow (Fixed May 12, 2025)
-Add feeding schedule to kennel cards with weekly dates automatically added
+## Bug Fixes
+
+### Recent Fixes (August 2025)
+- ✅ Fixed resource filtering to correctly handle multiple resource types (Fixed August 3, 2025)
+- ✅ Fixed Prisma schema mismatches between customer and reservation services (Fixed August 3, 2025)
+- ✅ Fixed field name inconsistencies (`birthdate` vs `age` in Pet model) (Fixed August 3, 2025)
+- ✅ Removed references to non-existent `organizationId` field (Fixed August 3, 2025)
+- ✅ Fixed database connection issues by using consistent port 5433 (Fixed August 3, 2025)
+
+### Previous Fixes
+- ✅ New Customer under New Order doesn't accept text (Fixed May 6, 2025)
+- ✅ New orders are displaying all kennels and not taking availability into account (Fixed May 6, 2025)
+- ✅ Total price under reservation details is not reflecting the add ons and discounts (Fixed May 6, 2025)
+- ✅ Staff scheduling now uses compact time format (minutes only shown when needed) (Fixed May 12, 2025)
+- ✅ Staff schedule now shows starting assignment location (Fixed May 12, 2025)
+- ✅ Fixed duplicate shift creation when updating staff schedules (Fixed May 12, 2025)
+- ✅ Add-on sales are now working on all reservation types (Fixed May 11, 2025)
+- ✅ Fixed service deletion issues with active reservations (Fixed May 12, 2025)
+- ✅ Improved service management UI by simplifying deactivation workflow (Fixed May 12, 2025)
+
+### Outstanding Issues
+- 🔲 Cash amount paid after discount can have strange partial penny issues
+- 🔲 Add feeding schedule to kennel cards with weekly dates automatically added
