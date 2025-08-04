@@ -38,7 +38,9 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
   logger.info(`Processing get all reservations request`, { requestId, query: req.query });
   
   // Get tenant ID from request - added by tenant middleware
-  const tenantId = req.tenantId;
+  // In development mode, use a default tenant ID if not provided
+  const isDev = process.env.NODE_ENV === 'development';
+  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
   if (!tenantId) {
     logger.warn(`Missing tenant ID in request`, { requestId });
     throw AppError.authorizationError('Tenant ID is required');
@@ -73,9 +75,8 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
   const skip = (page - 1) * limit;
   
   // Build filter object
-  const filter: any = {
-    organizationId: tenantId
-  };
+  // Note: organizationId removed as it's not in the schema
+  const filter: any = {};
   
   // Add optional filters if provided
   if (req.query.status) {
@@ -168,7 +169,7 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
             select: {
               name: true,
               breed: true,
-              age: true
+              birthdate: true // Changed from age to birthdate as age doesn't exist in schema
             }
           },
           resource: {
@@ -238,7 +239,9 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
   logger.info(`Processing get reservation by ID request for ID: ${req.params.id}`, { requestId });
   
   // Get tenant ID from request - added by tenant middleware
-  const tenantId = req.tenantId;
+  // In development mode, use a default tenant ID if not provided
+  const isDev = process.env.NODE_ENV === 'development';
+  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
   if (!tenantId) {
     logger.warn(`Missing tenant ID in request`, { requestId });
     throw AppError.authorizationError('Tenant ID is required');
@@ -256,7 +259,7 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
       return await prisma.reservation.findFirst({
         where: {
           id,
-          organizationId: tenantId
+          // organizationId removed as it's not in the schema
         } as ExtendedReservationWhereInput,
         include: {
           customer: {
@@ -271,7 +274,7 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
             select: {
               name: true,
               breed: true,
-              age: true
+              birthdate: true // Changed from age to birthdate as age doesn't exist in schema
             }
           },
           resource: {

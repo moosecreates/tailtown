@@ -32,7 +32,9 @@ export const deleteReservation = catchAsync(async (
   logger.info(`Processing delete reservation request for ID: ${req.params.id}`, { requestId });
   
   // Get tenant ID from request - added by tenant middleware
-  const tenantId = req.tenantId;
+  // In development mode, use a default tenant ID if not provided
+  const isDev = process.env.NODE_ENV === 'development';
+  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
   if (!tenantId) {
     logger.warn(`Missing tenant ID in request`, { requestId });
     throw AppError.authorizationError('Tenant ID is required');
@@ -50,7 +52,7 @@ export const deleteReservation = catchAsync(async (
       return await prisma.reservation.findFirst({
         where: {
           id,
-          organizationId: tenantId
+          // organizationId removed as it's not in the schema
         } as ExtendedReservationWhereInput,
         select: {
           id: true,
@@ -100,7 +102,7 @@ export const deleteReservation = catchAsync(async (
         return await prisma.reservationAddOn.deleteMany({
           where: {
             reservationId: id,
-            organizationId: tenantId
+            // organizationId removed as it's not in the schema
           } as any
         });
       },

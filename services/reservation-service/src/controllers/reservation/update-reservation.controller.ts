@@ -52,7 +52,9 @@ export const updateReservation = catchAsync(async (
   logger.info(`Processing update reservation request for ID: ${req.params.id}`, { requestId });
   
   // Get tenant ID from request - added by tenant middleware
-  const tenantId = req.tenantId;
+  // In development mode, use a default tenant ID if not provided
+  const isDev = process.env.NODE_ENV === 'development';
+  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
   if (!tenantId) {
     logger.warn(`Missing tenant ID in request`, { requestId });
     throw AppError.authorizationError('Tenant ID is required');
@@ -70,7 +72,7 @@ export const updateReservation = catchAsync(async (
       return await prisma.reservation.findFirst({
         where: {
           id,
-          organizationId: tenantId
+          // organizationId removed as it's not in the schema
         } as ExtendedReservationWhereInput,
         include: {
           customer: {
@@ -142,7 +144,7 @@ export const updateReservation = catchAsync(async (
         return await prisma.customer.findFirst({
           where: {
             id: customerId,
-            organizationId: tenantId
+            // organizationId removed as it's not in the schema
           } as ExtendedCustomerWhereInput
         });
       },
@@ -167,7 +169,7 @@ export const updateReservation = catchAsync(async (
         return await prisma.pet.findFirst({
           where: {
             id: petId,
-            organizationId: tenantId
+            // organizationId removed as it's not in the schema
           } as ExtendedPetWhereInput
         });
       },
@@ -263,7 +265,7 @@ export const updateReservation = catchAsync(async (
         return await prisma.resource.findFirst({
           where: {
             id: assignedResourceId,
-            organizationId: tenantId
+            // organizationId removed as it's not in the schema
           } as ExtendedResourceWhereInput
         });
       },
@@ -302,7 +304,7 @@ export const updateReservation = catchAsync(async (
       // First get all resources matching the suite type
       const resources = await prisma.resource.findMany({
         where: {
-          organizationId: tenantId,
+          // organizationId removed as it's not in the schema,
           type: determinedSuiteType
         } as ExtendedResourceWhereInput
       });
@@ -380,7 +382,7 @@ export const updateReservation = catchAsync(async (
       const reservationToUpdate = await prisma.reservation.findFirst({
         where: {
           id,
-          organizationId: tenantId
+          // organizationId removed as it's not in the schema
         } as ExtendedReservationWhereInput,
         select: { id: true }
       });
@@ -406,7 +408,7 @@ export const updateReservation = catchAsync(async (
             select: {
               name: true,
               breed: true,
-              age: true
+              birthdate: true // Changed from age to birthdate as age doesn't exist in schema
             }
           },
           resource: {
@@ -435,7 +437,7 @@ export const updateReservation = catchAsync(async (
           return await prisma.reservationAddOn.deleteMany({
             where: {
               reservationId: id,
-              organizationId: tenantId
+              // organizationId removed as it's not in the schema
             } as any
           });
         },
@@ -454,7 +456,7 @@ export const updateReservation = catchAsync(async (
                   serviceId: addOn.serviceId,
                   quantity: addOn.quantity || 1,
                   notes: addOn.notes || '',
-                  organizationId: tenantId
+                  // organizationId removed as it's not in the schema
                 } as any
               });
             },

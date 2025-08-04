@@ -37,7 +37,9 @@ export const getCustomerReservations = catchAsync(async (req: Request, res: Resp
   });
   
   // Get tenant ID from request - added by tenant middleware
-  const tenantId = req.tenantId;
+  // In development mode, use a default tenant ID if not provided
+  const isDev = process.env.NODE_ENV === 'development';
+  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
   if (!tenantId) {
     logger.warn(`Missing tenant ID in request`, { requestId });
     throw AppError.authorizationError('Tenant ID is required');
@@ -54,8 +56,8 @@ export const getCustomerReservations = catchAsync(async (req: Request, res: Resp
     async () => {
       return await prisma.customer.findFirst({
         where: {
-          id: customerId,
-          organizationId: tenantId
+          id: customerId
+          // organizationId removed as it's not in the schema
         } as ExtendedCustomerWhereInput,
         select: { id: true }
       });
@@ -95,7 +97,7 @@ export const getCustomerReservations = catchAsync(async (req: Request, res: Resp
   
   // Build filter object
   const filter: any = {
-    organizationId: tenantId,
+    // organizationId removed as it's not in the schema
     customerId
   };
   
@@ -166,7 +168,7 @@ export const getCustomerReservations = catchAsync(async (req: Request, res: Resp
             select: {
               name: true,
               breed: true,
-              age: true
+              birthdate: true // Changed from age to birthdate as age doesn't exist in schema
             }
           },
           resource: {

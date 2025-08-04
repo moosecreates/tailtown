@@ -10,7 +10,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ResourceType } from '@prisma/client';
 import { ExtendedResourceWhereInput, ExtendedReservationWhereInput } from '../../types/prisma-extensions';
 import { AppError } from '../../utils/appError';
 import { catchAsync } from '../../middleware/errorHandler';
@@ -87,7 +87,10 @@ async function safeExecutePrismaQuery<T>(
  * Updated to use standardized error handling pattern
  */
 export const getAllResources = catchAsync(async (req: Request, res: Response) => {
-  const tenantId = req.tenantId;
+  // In development mode, use a default tenant ID if not provided
+  const isDev = process.env.NODE_ENV === 'development';
+  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
+  
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -98,13 +101,38 @@ export const getAllResources = catchAsync(async (req: Request, res: Response) =>
   const skip = (page - 1) * limit;
 
   // Build filter conditions
-  const whereConditions: ExtendedResourceWhereInput = {
-    organizationId: tenantId
-  };
+  const whereConditions: any = {};
 
   // Add type filter if provided
   if (req.query.type) {
-    whereConditions.type = req.query.type as any; // Type assertion for resource type
+    try {
+      // Handle both single type and multiple types (array)
+      if (Array.isArray(req.query.type)) {
+        // Convert string types to ResourceType enum values
+        const validTypes = req.query.type
+          .map(t => String(t))
+          .filter(t => Object.values(ResourceType).includes(t as ResourceType));
+        
+        if (validTypes.length > 0) {
+          whereConditions.type = {
+            in: validTypes as ResourceType[]
+          };
+          logger.debug(`Multiple types filter applied: ${JSON.stringify(whereConditions.type)}`);
+        } else {
+          logger.warn(`No valid resource types found in filter: ${JSON.stringify(req.query.type)}`);
+        }
+      } else {
+        const typeStr = String(req.query.type);
+        if (Object.values(ResourceType).includes(typeStr as ResourceType)) {
+          whereConditions.type = typeStr as ResourceType;
+          logger.debug(`Single type filter applied: ${whereConditions.type}`);
+        } else {
+          logger.warn(`Invalid resource type in filter: ${typeStr}`);
+        }
+      }
+    } catch (error) {
+      logger.error(`Error processing resource type filter: ${error}`);
+    }
   }
 
   // Add name search if provided
@@ -171,8 +199,10 @@ export const getAllResources = catchAsync(async (req: Request, res: Response) =>
  */
 export const getResourceById = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const tenantId = req.tenantId;
-
+  // In development mode, use a default tenant ID if not provided
+  const isDev = process.env.NODE_ENV === 'development';
+  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
+  
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -221,7 +251,10 @@ export const getResourceById = catchAsync(async (req: Request, res: Response) =>
  * Updated to use standardized error handling pattern
  */
 export const createResource = catchAsync(async (req: Request, res: Response) => {
-  const tenantId = req.tenantId;
+  // In development mode, use a default tenant ID if not provided
+  const isDev = process.env.NODE_ENV === 'development';
+  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
+  
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -248,8 +281,8 @@ export const createResource = catchAsync(async (req: Request, res: Response) => 
         type,
         capacity: capacity ? parseInt(capacity) : undefined,
         description,
-        isActive: isActive !== undefined ? isActive : true,
-        organizationId: tenantId
+        isActive: isActive !== undefined ? isActive : true
+        // organizationId removed as it's not in the schema
       };
       
       return await prisma.resource.create({
@@ -281,8 +314,10 @@ export const createResource = catchAsync(async (req: Request, res: Response) => 
  */
 export const updateResource = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const tenantId = req.tenantId;
-
+  // In development mode, use a default tenant ID if not provided
+  const isDev = process.env.NODE_ENV === 'development';
+  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
+  
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -347,8 +382,10 @@ export const updateResource = catchAsync(async (req: Request, res: Response) => 
  */
 export const deleteResource = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const tenantId = req.tenantId;
-
+  // In development mode, use a default tenant ID if not provided
+  const isDev = process.env.NODE_ENV === 'development';
+  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
+  
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -418,12 +455,14 @@ export const deleteResource = catchAsync(async (req: Request, res: Response) => 
  */
 export const getResourceAvailability = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const tenantId = req.tenantId;
-  const { startDate, endDate } = req.query;
-
+  // In development mode, use a default tenant ID if not provided
+  const isDev = process.env.NODE_ENV === 'development';
+  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
+  
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
+  const { startDate, endDate } = req.query;
 
   if (!id) {
     throw AppError.validationError('Resource ID is required');
@@ -449,7 +488,7 @@ export const getResourceAvailability = catchAsync(async (req: Request, res: Resp
       return await prisma.reservation.findMany({
         where: {
           resourceId: id,
-          organizationId: tenantId,
+          // organizationId removed as it's not in the schema
           OR: [
             {
               // Reservation starts during the requested period

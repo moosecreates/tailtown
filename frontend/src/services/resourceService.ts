@@ -48,6 +48,14 @@ export interface Resource {
       };
     };
   }>;
+  
+  // Additional properties for different response formats
+  resourceId?: string;     // Alternative ID field used in some API responses
+  resourceName?: string;   // Alternative name field used in some API responses
+  resourceType?: string;   // Alternative type field used in some API responses
+  number?: number;         // Alternative to suiteNumber in some API responses
+  isAvailable?: boolean;   // Availability status from availability endpoints
+  conflictingReservations?: any[]; // Reservations that conflict with availability
 }
 
 export const resourceService = {

@@ -5,6 +5,7 @@ import theme from './theme';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import AccessibilityFix from './components/AccessibilityFix';
 import ScrollFix from './components/ScrollFix';
+import ApiTester from './components/debug/ApiTester';
 
 // Layouts
 import MainLayout from './components/layouts/MainLayout';
@@ -109,7 +110,8 @@ const AppRoutes = () => {
         <Route path="/analytics" element={isAuthenticated ? <AnalyticsDashboard /> : <Navigate to="/login" />} />
         <Route path="/analytics/customers" element={isAuthenticated ? <CustomerValueReport /> : <Navigate to="/login" />} />
         
-        {/* Add any test routes here if needed */}
+        {/* Debug routes */}
+        <Route path="/debug/api" element={<ApiTester />} />
       </Route>
 
       {/* 404 Route */}

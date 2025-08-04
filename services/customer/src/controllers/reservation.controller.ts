@@ -69,9 +69,10 @@ export const getAllReservations = async (
         console.log('Status array after split:', statusArray);
         
         // Validate each status is a valid ReservationStatus
-        const validStatuses = Object.values(ReservationStatus);
+        // Make sure ReservationStatus is defined before using Object.values
+        const validStatuses = ReservationStatus ? Object.values(ReservationStatus) : [];
         console.log('Valid statuses:', validStatuses);
-        const invalidStatuses = statusArray.filter(s => !validStatuses.includes(s as ReservationStatus));
+        const invalidStatuses = statusArray.filter(s => !validStatuses.includes(s as any));
         
         if (invalidStatuses.length > 0) {
           throw new AppError(`Invalid status values: ${invalidStatuses.join(', ')}. Valid values are: ${validStatuses.join(', ')}`, 400);
@@ -435,8 +436,15 @@ export const createReservation = async (
       where: { id: serviceId },
     });
     
+    // Extract the service category safely
+    const serviceCategory = service ? (service as any).serviceCategory : null;
+    
     // Only require suiteType for DAYCARE or BOARDING services
-    const requiresSuiteType = service?.serviceCategory === 'DAYCARE' || service?.serviceCategory === 'BOARDING';
+    const requiresSuiteType = serviceCategory === 'DAYCARE' || serviceCategory === 'BOARDING';
+    
+    console.log('Backend: Service category:', serviceCategory);
+    console.log('Backend: Requires suite type:', requiresSuiteType);
+    console.log('Backend: Provided suite type:', suiteType);
     
     // If service requires a suite type but none was provided, use STANDARD_SUITE as default
     let finalSuiteType = suiteType;
@@ -444,9 +452,12 @@ export const createReservation = async (
       if (!suiteType || !['VIP_SUITE', 'STANDARD_PLUS_SUITE', 'STANDARD_SUITE'].includes(suiteType)) {
         console.log('Backend: Using default STANDARD_SUITE for missing or invalid suiteType:', suiteType);
         finalSuiteType = 'STANDARD_SUITE';
+      } else {
+        console.log('Backend: Using provided suiteType:', suiteType);
       }
     } else {
       // For services that don't require a suite type, we don't need to validate it
+      console.log('Backend: Service does not require a suite type, setting to null');
       finalSuiteType = null;
     }
     
@@ -845,8 +856,8 @@ export const getTodayRevenue = async (
     // Since resource doesn't have a price property, we'll use a fixed value for now
     // In a real implementation, you would need to fetch the price from the service or another source
     const revenue = reservations.reduce((acc, reservation) => {
-      // Use a fixed value of 50 as a placeholder for the resource price
-      return acc + 50; // Default value since resource doesn't have price
+      // Use a fixed value of 50 as a placeholder for the Resource price
+      return acc + 50; // Default value since Resource doesn't have price
     }, 0);
 
     res.status(200).json({

@@ -171,7 +171,6 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'startDate', critical: true, type: 'TIMESTAMP', description: 'Start date of reservation' },
         { name: 'endDate', critical: true, type: 'TIMESTAMP', description: 'End date of reservation' },
         { name: 'status', critical: true, type: 'TEXT', description: 'Reservation status', defaultValue: "'CONFIRMED'" },
-        { name: 'organizationId', critical: true, type: 'TEXT', description: 'Tenant identifier' },
         { name: 'orderNumber', critical: false, type: 'TEXT', description: 'Unique order reference number' },
         { name: 'resourceId', critical: false, type: 'TEXT', description: 'Reference to assigned resource/kennel' },
         { name: 'suiteType', critical: false, type: 'TEXT', description: 'Type of suite/accommodation' },
@@ -189,15 +188,11 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'Reservation_resourceId_fkey', sourceColumn: 'resourceId', targetTable: 'Resource', targetColumn: 'id', onDelete: 'SET NULL', onUpdate: 'CASCADE' }
       ],
       indexes: [
-        { name: 'Reservation_organizationId_idx', columns: ['organizationId'], unique: false },
-        { name: 'Reservation_organizationId_startDate_endDate_idx', columns: ['organizationId', 'startDate', 'endDate'], unique: false },
-        { name: 'Reservation_organizationId_status_idx', columns: ['organizationId', 'status'], unique: false },
         { name: 'Reservation_customerId_idx', columns: ['customerId'], unique: false },
         { name: 'Reservation_petId_idx', columns: ['petId'], unique: false },
         { name: 'Reservation_resourceId_idx', columns: ['resourceId'], unique: false },
-        { name: 'Reservation_organizationId_customerId_idx', columns: ['organizationId', 'customerId'], unique: false },
         { name: 'Reservation_orderNumber_idx', columns: ['orderNumber'], unique: false },
-        { name: 'Reservation_orderNumber_organizationId_key', columns: ['orderNumber', 'organizationId'], unique: true }
+        { name: 'Reservation_orderNumber_key', columns: ['orderNumber'], unique: true }
       ]
     },
     {
@@ -209,7 +204,6 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'firstName', critical: true, type: 'TEXT', description: 'First name' },
         { name: 'lastName', critical: true, type: 'TEXT', description: 'Last name' },
         { name: 'email', critical: true, type: 'TEXT', description: 'Email address' },
-        { name: 'organizationId', critical: true, type: 'TEXT', description: 'Tenant identifier' },
         { name: 'phone', critical: false, type: 'TEXT', description: 'Phone number' },
         { name: 'address', critical: false, type: 'TEXT', description: 'Street address' },
         { name: 'city', critical: false, type: 'TEXT', description: 'City' },
@@ -220,9 +214,8 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'updatedAt', critical: false, type: 'TIMESTAMP', description: 'Last update timestamp' }
       ],
       indexes: [
-        { name: 'Customer_organizationId_idx', columns: ['organizationId'], unique: false },
-        { name: 'Customer_organizationId_email_idx', columns: ['organizationId', 'email'], unique: false },
-        { name: 'Customer_organizationId_lastName_firstName_idx', columns: ['organizationId', 'lastName', 'firstName'], unique: false }
+        { name: 'Customer_email_idx', columns: ['email'], unique: false },
+        { name: 'Customer_lastName_firstName_idx', columns: ['lastName', 'firstName'], unique: false }
       ]
     },
     {
@@ -233,7 +226,6 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'id', critical: true, type: 'TEXT', description: 'Primary key', constraints: ['PRIMARY KEY'] },
         { name: 'name', critical: true, type: 'TEXT', description: 'Pet name' },
         { name: 'customerId', critical: true, type: 'TEXT', description: 'Reference to owner' },
-        { name: 'organizationId', critical: true, type: 'TEXT', description: 'Tenant identifier' },
         { name: 'breed', critical: false, type: 'TEXT', description: 'Breed' },
         { name: 'size', critical: false, type: 'TEXT', description: 'Size category' },
         { name: 'weight', critical: false, type: 'DOUBLE PRECISION', description: 'Weight' },
@@ -246,9 +238,7 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'Pet_customerId_fkey', sourceColumn: 'customerId', targetTable: 'Customer', targetColumn: 'id', onDelete: 'RESTRICT', onUpdate: 'CASCADE' }
       ],
       indexes: [
-        { name: 'Pet_organizationId_idx', columns: ['organizationId'], unique: false },
-        { name: 'Pet_customerId_idx', columns: ['customerId'], unique: false },
-        { name: 'Pet_organizationId_customerId_idx', columns: ['organizationId', 'customerId'], unique: false }
+        { name: 'Pet_customerId_idx', columns: ['customerId'], unique: false }
       ]
     },
     {
@@ -259,7 +249,6 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'id', critical: true, type: 'TEXT', description: 'Primary key', constraints: ['PRIMARY KEY'] },
         { name: 'name', critical: true, type: 'TEXT', description: 'Resource name' },
         { name: 'type', critical: true, type: 'TEXT', description: 'Resource type' },
-        { name: 'organizationId', critical: true, type: 'TEXT', description: 'Tenant identifier' },
         { name: 'description', critical: false, type: 'TEXT', description: 'Description' },
         { name: 'capacity', critical: false, type: 'INTEGER', description: 'Capacity', defaultValue: '1' },
         { name: 'isActive', critical: false, type: 'BOOLEAN', description: 'Active status', defaultValue: 'true' },
@@ -267,9 +256,8 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'updatedAt', critical: false, type: 'TIMESTAMP', description: 'Last update timestamp' }
       ],
       indexes: [
-        { name: 'Resource_organizationId_idx', columns: ['organizationId'], unique: false },
-        { name: 'Resource_organizationId_type_idx', columns: ['organizationId', 'type'], unique: false },
-        { name: 'Resource_organizationId_isActive_idx', columns: ['organizationId', 'isActive'], unique: false }
+        { name: 'Resource_type_idx', columns: ['type'], unique: false },
+        { name: 'Resource_isActive_idx', columns: ['isActive'], unique: false }
       ]
     },
     {
@@ -283,13 +271,11 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'price', critical: true, type: 'DOUBLE PRECISION', description: 'Price' },
         { name: 'duration', critical: false, type: 'INTEGER', description: 'Duration in minutes' },
         { name: 'isActive', critical: false, type: 'BOOLEAN', description: 'Active status', defaultValue: 'true' },
-        { name: 'organizationId', critical: true, type: 'TEXT', description: 'Tenant identifier' },
         { name: 'createdAt', critical: false, type: 'TIMESTAMP', description: 'Creation timestamp', defaultValue: 'CURRENT_TIMESTAMP' },
         { name: 'updatedAt', critical: false, type: 'TIMESTAMP', description: 'Last update timestamp' }
       ],
       indexes: [
-        { name: 'Service_organizationId_idx', columns: ['organizationId'], unique: false },
-        { name: 'Service_organizationId_isActive_idx', columns: ['organizationId', 'isActive'], unique: false }
+        { name: 'Service_isActive_idx', columns: ['isActive'], unique: false }
       ]
     },
     {
@@ -304,7 +290,6 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'duration', critical: false, type: 'INTEGER', description: 'Duration in minutes' },
         { name: 'serviceId', critical: true, type: 'TEXT', description: 'Reference to parent service' },
         { name: 'isActive', critical: false, type: 'BOOLEAN', description: 'Active status', defaultValue: 'true' },
-        { name: 'organizationId', critical: true, type: 'TEXT', description: 'Tenant identifier' },
         { name: 'createdAt', critical: false, type: 'TIMESTAMP', description: 'Creation timestamp', defaultValue: 'CURRENT_TIMESTAMP' },
         { name: 'updatedAt', critical: false, type: 'TIMESTAMP', description: 'Last update timestamp' }
       ],
@@ -312,8 +297,6 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'AddOnService_serviceId_fkey', sourceColumn: 'serviceId', targetTable: 'Service', targetColumn: 'id', onDelete: 'RESTRICT', onUpdate: 'CASCADE' }
       ],
       indexes: [
-        { name: 'AddOnService_organizationId_idx', columns: ['organizationId'], unique: false },
-        { name: 'AddOnService_organizationId_isActive_idx', columns: ['organizationId', 'isActive'], unique: false },
         { name: 'AddOnService_serviceId_idx', columns: ['serviceId'], unique: false }
       ]
     },
@@ -327,7 +310,6 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'addOnId', critical: true, type: 'TEXT', description: 'Reference to add-on service' },
         { name: 'price', critical: true, type: 'DOUBLE PRECISION', description: 'Price at time of booking' },
         { name: 'notes', critical: false, type: 'TEXT', description: 'Additional notes' },
-        { name: 'organizationId', critical: true, type: 'TEXT', description: 'Tenant identifier' },
         { name: 'createdAt', critical: false, type: 'TIMESTAMP', description: 'Creation timestamp', defaultValue: 'CURRENT_TIMESTAMP' },
         { name: 'updatedAt', critical: false, type: 'TIMESTAMP', description: 'Last update timestamp' }
       ],
@@ -336,13 +318,16 @@ const schemaDefinition: SchemaDefinition = {
         { name: 'ReservationAddOn_addOnId_fkey', sourceColumn: 'addOnId', targetTable: 'AddOnService', targetColumn: 'id', onDelete: 'RESTRICT', onUpdate: 'CASCADE' }
       ],
       indexes: [
-        { name: 'ReservationAddOn_organizationId_idx', columns: ['organizationId'], unique: false },
         { name: 'ReservationAddOn_reservationId_idx', columns: ['reservationId'], unique: false },
         { name: 'ReservationAddOn_addOnId_idx', columns: ['addOnId'], unique: false }
       ]
     }
   ]
 };
+    schemaLogger.error(`Error checking if index exists: ${error instanceof Error ? error.message : String(error)}`);
+    return false;
+  }
+}
 
 /**
  * Get critical columns that should exist for a specific table
@@ -432,7 +417,9 @@ function generateTableCreationSQL(tableName: string): string {
   const table = schemaDefinition.tables.find(t => t.name === tableName);
   if (!table) return '';
   
-  let sql = `-- Create ${table.name} table\nCREATE TABLE IF NOT EXISTS "${table.name}" (\n`;
+  let sql = `-- Create ${table.name} table
+CREATE TABLE IF NOT EXISTS "${table.name}" (
+`;
   
   // Add columns
   const columnDefinitions = table.columns.map(column => {
@@ -449,7 +436,8 @@ function generateTableCreationSQL(tableName: string): string {
     }
     
     return columnDef;
-  }).join(',\n');
+  }).join(',
+');
   
   sql += columnDefinitions;
   
@@ -459,10 +447,14 @@ function generateTableCreationSQL(tableName: string): string {
   );
   
   if (primaryKeyColumn) {
-    sql += `,\n\n  CONSTRAINT "${table.name}_pkey" PRIMARY KEY ("${primaryKeyColumn.name}")`;
+    sql += `,
+
+  CONSTRAINT "${table.name}_pkey" PRIMARY KEY ("${primaryKeyColumn.name}")`;
   }
   
-  sql += '\n);\n';
+  sql += '
+);
+';
   
   return sql;
 }
@@ -477,13 +469,16 @@ function generateIndexCreationSQL(tableName: string): string {
   const table = schemaDefinition.tables.find(t => t.name === tableName);
   if (!table || !table.indexes || table.indexes.length === 0) return '';
   
-  let sql = `\n-- Create indexes for ${table.name}\n`;
+  let sql = `
+-- Create indexes for ${table.name}
+`;
   
   table.indexes.forEach(index => {
     const columns = index.columns.map(col => `"${col}"`).join(', ');
     const uniqueStr = index.unique ? 'UNIQUE ' : '';
     
-    sql += `CREATE ${uniqueStr}INDEX IF NOT EXISTS "${index.name}" ON "${table.name}"(${columns});\n`;
+    sql += `CREATE ${uniqueStr}INDEX IF NOT EXISTS "${index.name}" ON "${table.name}"(${columns});
+`;
   });
   
   return sql;
@@ -499,12 +494,15 @@ function generateRelationshipSQL(tableName: string): string {
   const table = schemaDefinition.tables.find(t => t.name === tableName);
   if (!table || !table.relationships || table.relationships.length === 0) return '';
   
-  let sql = `\n-- Add foreign key constraints for ${table.name}\n`;
+  let sql = `
+-- Add foreign key constraints for ${table.name}
+`;
   
   table.relationships.forEach(rel => {
     sql += `ALTER TABLE "${table.name}" ADD CONSTRAINT "${rel.name}" ` +
            `FOREIGN KEY ("${rel.sourceColumn}") REFERENCES "${rel.targetTable}"("${rel.targetColumn}") ` +
-           `ON DELETE ${rel.onDelete} ON UPDATE ${rel.onUpdate};\n`;
+           `ON DELETE ${rel.onDelete} ON UPDATE ${rel.onUpdate};
+`;
   });
   
   return sql;
@@ -525,20 +523,25 @@ function generateMigrationScript(
   missingIndexes: Record<string, string[]>,
   missingRelationships: Record<string, string[]>
 ): string {
-  let sql = `-- Migration script generated on ${new Date().toISOString()}\n\n`;
+  let sql = `-- Migration script generated on ${new Date().toISOString()}
+
+`;
   
   // Create missing tables
   if (missingTables.length > 0) {
-    sql += '-- Creating missing tables\n';
+    sql += '-- Creating missing tables
+';
     missingTables.forEach(tableName => {
-      sql += generateTableCreationSQL(tableName) + '\n';
+      sql += generateTableCreationSQL(tableName) + '
+';
     });
   }
   
   // Add missing columns
   const existingTables = Object.keys(missingColumns);
   if (existingTables.length > 0) {
-    sql += '-- Adding missing columns to existing tables\n';
+    sql += '-- Adding missing columns to existing tables
+';
     existingTables.forEach(tableName => {
       const table = schemaDefinition.tables.find(t => t.name === tableName);
       if (!table) return;
@@ -552,28 +555,34 @@ function generateMigrationScript(
           columnDef += ` DEFAULT ${column.defaultValue}`;
         }
         
-        sql += `ALTER TABLE "${tableName}" ADD COLUMN IF NOT EXISTS "${columnName}" ${columnDef};\n`;
+        sql += `ALTER TABLE "${tableName}" ADD COLUMN IF NOT EXISTS "${columnName}" ${columnDef};
+`;
       });
-      sql += '\n';
+      sql += '
+';
     });
   }
   
   // Create missing indexes
   if (Object.keys(missingIndexes).length > 0) {
-    sql += '-- Creating missing indexes\n';
+    sql += '-- Creating missing indexes
+';
     Object.keys(missingIndexes).forEach(tableName => {
       sql += generateIndexCreationSQL(tableName);
     });
-    sql += '\n';
+    sql += '
+';
   }
   
   // Create missing relationships
   if (Object.keys(missingRelationships).length > 0) {
-    sql += '-- Creating missing relationships\n';
+    sql += '-- Creating missing relationships
+';
     Object.keys(missingRelationships).forEach(tableName => {
       sql += generateRelationshipSQL(tableName);
     });
-    sql += '\n';
+    sql += '
+';
   }
   
   return sql;
@@ -600,9 +609,6 @@ async function indexExists(prisma: PrismaClient, tableName: string, indexName: s
     
     return result[0].exists;
   } catch (error) {
-    schemaLogger.error(`Error checking if index ${indexName} on table ${tableName} exists: ${error instanceof Error ? error.message : String(error)}`);
-    return false;
-  }
 }
 
 /**

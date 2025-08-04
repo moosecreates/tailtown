@@ -572,6 +572,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           formData.resourceId = null;
         }
         
+        // Double-check that we're sending a valid suiteType
+        if (!formData.suiteType || !['VIP_SUITE', 'STANDARD_PLUS_SUITE', 'STANDARD_SUITE'].includes(formData.suiteType)) {
+          console.log('Invalid or missing suiteType, defaulting to STANDARD_SUITE');
+          formData.suiteType = 'STANDARD_SUITE';
+        }
+        
         // If we have initialData with a kennelId but are not using it as resourceId,
         // include it as a separate field for backward compatibility
         if (initialData?.kennelId && initialData.kennelId !== selectedSuiteId) {

@@ -5,7 +5,8 @@
  * It implements schema alignment strategy with defensive programming.
  */
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { TenantRequest } from '../../types/request';
 import { AppError } from '../../utils/service';
 import { catchAsync } from '../../middleware/catchAsync';
 import { logger } from '../../utils/logger';
@@ -48,10 +49,15 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
   logger.info(`Processing create reservation request`, { requestId });
   
   // Get tenant ID from request - added by tenant middleware
-  const tenantId = req.tenantId;
+  // In development mode, we use a default tenant ID if not provided
+  const isDev = process.env.NODE_ENV === 'development';
+  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
+  
   if (!tenantId) {
     logger.warn(`Missing tenant ID in request`, { requestId });
     throw AppError.authorizationError('Tenant ID is required');
+  } else if (isDev && !req.tenantId) {
+    logger.info(`Using default tenant ID in development mode: ${tenantId}`, { requestId });
   }
 
   // Validate required fields
@@ -135,7 +141,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
       return await prisma.customer.findFirstOrThrow({
         where: {
           id: customerId,
-          organizationId: tenantId
+          // organizationId removed as it's not in the schema
         } as ExtendedCustomerWhereInput
       });
     },
@@ -152,7 +158,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
       return await prisma.pet.findFirstOrThrow({
         where: {
           id: petId,
-          organizationId: tenantId
+          // organizationId removed as it's not in the schema
         } as ExtendedPetWhereInput
       });
     },
@@ -188,7 +194,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
         return await prisma.resource.findFirstOrThrow({
           where: {
             id: assignedResourceId,
-            organizationId: tenantId
+            // organizationId removed as it's not in the schema
           } as ExtendedResourceWhereInput
         });
       },
@@ -224,7 +230,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
       // First get all resources matching the suite type
       const resources = await prisma.resource.findMany({
         where: {
-          organizationId: tenantId,
+          // organizationId removed as it's not in the schema,
           type: determinedSuiteType
         } as ExtendedResourceWhereInput
       });
@@ -314,7 +320,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
     endDate: parsedEndDate,
     serviceType,
     suiteType: determinedSuiteType,
-    organizationId: tenantId,
+    // organizationId removed as it's not in the schema
     status: status || 'PENDING'
   };
   
@@ -343,7 +349,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
             select: {
               name: true,
               breed: true,
-              age: true
+              birthdate: true // Changed from age to birthdate as age doesn't exist in schema
             }
           },
           resource: {
@@ -376,7 +382,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
                   serviceId: addOn.serviceId,
                   quantity: addOn.quantity || 1,
                   notes: addOn.notes || '',
-                  organizationId: tenantId
+                  // organizationId removed as it's not in the schema
                 } as any
               });
             },

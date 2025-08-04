@@ -25,7 +25,7 @@ dotenv.config();
 
 // Initialize the Express application
 const app = express();
-const PORT = process.env.PORT || 3002; // Using port 3002 as standard for backend
+const PORT = process.env.PORT || 4004; // Using port 4004 for customer service
 
 // Increase HTTP header limits to prevent 431 errors
 app.set('etag', false); // Disable ETag generation to reduce header size
@@ -51,8 +51,18 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   crossOriginEmbedderPolicy: false
 }));
-// Minimal middleware configuration to reduce header overhead
-app.use(cors());
+// Enhanced CORS configuration to ensure frontend can connect
+app.use(cors({
+  origin: '*', // Allow all origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// Add OPTIONS handling for preflight requests
+app.options('*', cors());
+
+// Request body parsing middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
