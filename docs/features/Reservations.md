@@ -53,6 +53,8 @@ The dashboard shows reservations filtered by specific statuses:
 - Customer and pet selection with search functionality
 - Service selection with dynamic pricing
 - Date and time selection with availability checking
+- Resource filtering by type (e.g., `STANDARD_SUITE`, `LUXURY_SUITE`)
+- Support for multiple resource type filtering in a single query
 - Add-on service selection after reservation creation
 
 ### Add-On System
@@ -67,3 +69,17 @@ The dashboard shows reservations filtered by specific statuses:
 - Dynamic suite/kennel selection based on availability
 - Proper form labels and field outlines for improved usability
 - Error handling for invalid selections
+
+## Backend Architecture
+
+### Shared Database Approach
+- Customer and Reservation services share the same PostgreSQL database (port 5433)
+- Prisma schemas are synchronized between services to avoid runtime errors
+- Field names and types are consistent across services (e.g., using `birthdate` instead of `age` for Pet model)
+
+### Resource Filtering
+- API supports filtering resources by one or more types
+- Multiple type parameters are handled as an array (e.g., `?type=STANDARD_SUITE&type=LUXURY_SUITE`)
+- Type values are validated against the Prisma `ResourceType` enum
+- Invalid type values are logged but don't cause API failures
+- Proper error handling for all database queries

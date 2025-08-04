@@ -8,8 +8,9 @@ Location: `/services/customer/.env`
 
 ### Database Configuration
 - `DATABASE_URL`: PostgreSQL connection string
-  - Format: `postgresql://username:password@localhost:5432/tailtown?schema=public`
+  - Format: `postgresql://username:password@localhost:5433/customer?schema=public`
   - Required: Yes
+  - **Critical**: Must use port 5433 for both customer and reservation services
 
 - `DATABASE_SSL_ENABLED`: Enable SSL for database connections
   - Default: false (true in production)
@@ -21,7 +22,9 @@ Location: `/services/customer/.env`
 
 ### Server Configuration
 - `PORT`: Server port number
-  - Default: 3002
+  - Customer Service: 4004
+  - Reservation Service: 4003
+  - Frontend: 3000
   - Required: Yes
 
 - `NODE_ENV`: Environment mode

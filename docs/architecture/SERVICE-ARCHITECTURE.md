@@ -9,7 +9,7 @@ Tailtown is built on a microservice architecture with the following core service
 | Service | Description | Port | Repository Path |
 |---------|-------------|------|----------------|
 | Frontend | React-based UI application | 3000 | `/frontend` |
-| Customer Service | Manages customer and pet data | 3003 | `/services/customer` |
+| Customer Service | Manages customer and pet data | 4004 | `/services/customer` |
 | Reservation Service | Handles reservations and resource management | 4003 | `/services/reservation-service` |
 
 ## Service Boundaries
@@ -41,6 +41,14 @@ Tailtown is built on a microservice architecture with the following core service
   - Conflict detection for reservations
   - Add-on service management
   - Resource occupancy tracking
+
+## Database Architecture
+
+### Shared Database Approach
+- Customer and Reservation services share the same PostgreSQL database (port 5433)
+- Prisma schemas must be synchronized between services to avoid runtime errors
+- Field names and types must be consistent across services
+- Schema validation can be disabled in development mode for stability
 
 ## Service Communication
 

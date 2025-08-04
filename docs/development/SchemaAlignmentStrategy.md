@@ -8,25 +8,35 @@ This document outlines our approach to handling Prisma schema mismatches between
 
 During development, we encountered several issues related to schema mismatches:
 
-1. **Missing Fields**: References to fields that no longer exist in the schema
+1. **Missing Fields**: References to fields that no longer exist in the schema (e.g., `organizationId`, `age` instead of `birthdate`)
 2. **Missing Relations**: References to relations that have been renamed or removed
 3. **Missing Tables**: Attempts to query tables that don't exist in certain environments
 4. **TypeScript Errors**: Type errors due to schema changes not reflected in the code
+5. **Enum Handling**: Incorrect handling of enum values in query parameters (e.g., `ResourceType`)
 
-These issues caused 500 Internal Server Errors in the API and TypeScript compilation errors.
+These issues caused 500 Internal Server Errors in the API and TypeScript compilation errors, particularly in the resource filtering functionality.
 
 ## Solution Strategy
 
 We've implemented a multi-layered approach to handle schema mismatches:
 
-### 1. Defensive Programming
+### 1. Shared Database Approach
+
+- Both customer and reservation services use the same PostgreSQL database
+- Prisma schemas are synchronized between services to avoid runtime errors
+- Field names and types are kept consistent across services (e.g., using `birthdate` instead of `age` for Pet model)
+- Database connection strings use the same port (5433) for both services
+
+### 2. Defensive Programming
 
 All controllers use defensive programming techniques:
 - Null checks before accessing potentially missing fields
 - Default values for fields that might not exist
 - Fallback behavior when expected data is not available
+- Proper validation and conversion of query parameters, especially for enum values
+- Type guards to ensure type safety at runtime
 
-### 2. Raw SQL Queries with Error Handling
+### 3. Raw SQL Queries with Error Handling
 
 For tables that might not exist in all environments (e.g., `Invoice`):
 - Use `prisma.$queryRaw` instead of the Prisma client models
@@ -51,14 +61,14 @@ try {
 }
 ```
 
-### 3. Feature Toggles
+### 4. Feature Toggles
 
 For features dependent on schema elements that might be missing:
 - Implement feature toggles to disable functionality when required schema elements are missing
 - Provide informative messages to users when features are unavailable
 - Maintain a clean separation between core and optional features
 
-### 4. Schema Validation on Startup
+### 5. Schema Validation on Startup
 
 - Validate critical schema elements on service startup
 - Log warnings for missing non-critical elements
@@ -98,8 +108,28 @@ The pet controller has been updated to:
    - Changed from using `include` with the entire owner object to using `select` with specific owner fields
 
 2. **Remove invalid field references**:
+   - Replaced references to non-existent `age` field with `birthdate`
+   - Fixed field name casing to match the database schema
    - Removed all references to the non-existent `profilePhoto` field
    - Disabled pet photo upload functionality temporarily
+
+### Resource Controller
+
+The resource controller has been updated to:
+
+1. **Fix multiple type filtering**:
+   - Added proper detection of array vs. single value for `type` query parameter
+   - Implemented validation and conversion to ensure query parameters match Prisma `ResourceType` enum values
+   - Used Prisma's `in` filter for handling multiple types correctly
+
+2. **Remove invalid field references**:
+   - Removed all references to non-existent `organizationId` field
+   - Fixed relation references to match the actual database schema
+
+3. **Improve error handling and logging**:
+   - Added detailed logging for filter application
+   - Added warnings for invalid type values
+   - Implemented proper error handling for Prisma query failures
 
 ### Reservation Service
 
