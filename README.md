@@ -164,7 +164,7 @@ We follow a standardized documentation structure to ensure consistency and ease 
 
 - **Main Documentation**
   - [Current State](./docs/CURRENT_STATE.md) - Overview of the current system state and features
-  - [Unified Roadmap](./docs/UNIFIED-ROADMAP.md) - Comprehensive development and refactoring plans
+  - [Roadmap](./docs/ROADMAP.md) - Comprehensive development and refactoring plans
   - [Documentation Guide](./docs/README.md) - Guide to all project documentation
 
 - **Architecture Documentation** (`/docs/architecture/`)
@@ -203,8 +203,8 @@ We follow a standardized documentation structure to ensure consistency and ease 
   - [Date Conflict Validation](./services/reservation-service/docs/DATE-CONFLICT-VALIDATION.md) - Reservation conflict detection
   - [Database Migration](./services/reservation-service/docs/DATABASE-MIGRATION.md) - Database migration procedures
   - [Schema Alignment](./services/reservation-service/docs/README-SCHEMA-ALIGNMENT.md) - Schema alignment for reservation service
-  - [Legacy Roadmap](./docs/ROADMAP.md) - Previous development roadmap (see Unified Roadmap for current plans)
-  - [Legacy Refactoring Roadmap](./services/reservation-service/docs/REFACTORING-ROADMAP.md) - Previous refactoring roadmap (see Unified Roadmap for current plans)
+  - [Legacy Roadmap](./docs/ROADMAP-LEGACY.md) - Previous development roadmap (see Roadmap for current plans)
+  - [Legacy Refactoring Roadmap](./services/reservation-service/docs/REFACTORING-ROADMAP.md) - Previous refactoring roadmap (see Roadmap for current plans)
 
 ## Project Structure
 
