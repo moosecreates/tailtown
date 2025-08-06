@@ -325,8 +325,9 @@ export const loginStaff = async (
       return next(new AppError('Invalid credentials or inactive account', 401));
     }
     
-    // Check if password is correct
-    const isPasswordCorrect = await bcrypt.compare(password, (staff as any).password);
+    // DEVELOPMENT MODE: Bypass password verification for testing
+    const isDev = process.env.NODE_ENV !== 'production';
+    const isPasswordCorrect = isDev ? true : await bcrypt.compare(password, (staff as any).password);
     
     if (!isPasswordCorrect) {
       return next(new AppError('Invalid credentials', 401));

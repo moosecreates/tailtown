@@ -25,7 +25,7 @@ dotenv.config();
 
 // Initialize the Express application
 const app = express();
-const PORT = process.env.PORT || 4004; // Using port 4004 for customer service
+const PORT = 4004; // Explicitly setting port 4004 for customer service
 
 // Increase HTTP header limits to prevent 431 errors
 app.set('etag', false); // Disable ETag generation to reduce header size

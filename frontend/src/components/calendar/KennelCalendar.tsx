@@ -39,7 +39,6 @@ import { reservationService, Reservation as BaseReservation } from '../../servic
 import ReservationForm from '../reservations/ReservationForm';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
 import api from '../../services/api';
-import { testResourceAvailability } from '../../test-api';
 import { reservationApi } from '../../services/api';
 
 // Enhanced Reservation interface with additional fields we might encounter

@@ -20,6 +20,7 @@ export interface Customer {
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  storeCredit?: number; // Add store credit property
   pets?: {
     id: string;
     name: string;

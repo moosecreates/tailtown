@@ -28,9 +28,9 @@ import { determineSuiteStatus } from '../../utils/suiteUtils';
 
 // Suite types we store in the attributes
 enum SuiteType {
-  STANDARD = 'STANDARD',
-  STANDARD_PLUS = 'STANDARD_PLUS',
-  VIP = 'VIP'
+  STANDARD = 'STANDARD_SUITE',
+  STANDARD_PLUS = 'STANDARD_PLUS_SUITE',
+  VIP = 'VIP_SUITE'
 }
 
 // Suite colors for different types
@@ -148,11 +148,14 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
           // Use the utility function to determine the suite status
           const status = determineSuiteStatus(suite);
           
+          // Use the suite.type directly from the database, or fall back to attributes.suiteType, or default to STANDARD_SUITE
+          const suiteType = suite.type || suite.attributes?.suiteType || 'STANDARD_SUITE';
+          
           return {
             id: suite.id,
             name: suite.name,
             suiteNumber: suite.attributes?.suiteNumber || 0,
-            suiteType: suite.attributes?.suiteType || 'STANDARD',
+            suiteType: suiteType, // Use the properly extracted suite type
             status: status,
             pet: pet,
             owner: owner,

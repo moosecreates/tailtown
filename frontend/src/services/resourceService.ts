@@ -1,5 +1,5 @@
 import { AxiosResponse } from 'axios';
-import api from './api';
+import { reservationApi as api } from './api';
 import { PaginatedResponse } from '../types/common';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
 
@@ -163,7 +163,7 @@ export const resourceService = {
     }
   },
 
-  // Suite-specific methods
+  // Suite-specific methods - using resource endpoints with filters
   getSuites: async (
     type?: string,
     status?: string,
@@ -171,15 +171,56 @@ export const resourceService = {
     date?: string
   ): Promise<{ status: string; data: Resource[]; results?: number }> => {
     try {
-      const response: AxiosResponse = await api.get('/api/suites', {
-        params: { 
-          type,
-          status,
-          search,
-          date
+      // Use the resources endpoint with type filter for suites
+      // All suites are resources with type containing "SUITE"
+      // Use a dynamic type filter to match all suite types in the database
+      const suiteTypes = ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE', 'SUITE'];
+      
+      // To get all resources, implement pagination
+      let allResources: Resource[] = [];
+      let currentPage = 1;
+      let totalPages = 1;
+      const pageSize = 100; // Fetch 100 per page for efficiency
+      
+      console.log('Fetching all suite resources with pagination');
+      
+      // Continue fetching pages until we've got all resources
+      do {
+        // If a specific type is provided, use it; otherwise, query for all suite types
+        const response: AxiosResponse = await api.get('/api/resources', {
+          params: { 
+            // Use the provided type or query for all types containing 'SUITE'
+            type: type || suiteTypes.join(','),
+            status,
+            search,
+            date,
+            page: currentPage,
+            limit: pageSize
+          }
+        });
+        
+        if (response?.data?.status === 'success' && Array.isArray(response?.data?.data)) {
+          // Add resources from this page to our collection
+          allResources = [...allResources, ...response.data.data];
+          
+          // Update pagination tracking
+          currentPage++;
+          totalPages = response.data.totalPages || 1;
+          
+          console.log(`Fetched page ${currentPage-1} of ${totalPages}, got ${response.data.data.length} resources, total so far: ${allResources.length}`);
+        } else {
+          break; // Exit the loop if we got an invalid response
         }
-      });
-      return response.data;
+      } while (currentPage <= totalPages);
+      
+      console.log(`Completed fetching all resources. Total: ${allResources.length}`);
+      
+      // Return the same structure as the API but with all resources combined
+      return {
+        status: 'success',
+        data: allResources,
+        results: allResources.length
+      };
     } catch (error: any) {
       console.error('Error in getSuites:', error);
       throw error;
@@ -192,16 +233,144 @@ export const resourceService = {
       total: number;
       occupied: number;
       available: number;
+      reserved: number;
       maintenance: number;
       needsCleaning: number;
       occupancyRate: number;
     }
   }> => {
     try {
-      const response: AxiosResponse = await api.get('/api/suites/stats', {
-        params: { date }
+      console.log('Fetching suite stats for date:', date);
+      
+      // First, get all suites with pagination
+      const suiteTypes = ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE', 'SUITE'];
+      let allSuites: Resource[] = [];
+      let currentPage = 1;
+      let totalPages = 1;
+      const pageSize = 100; // Fetch 100 per page for efficiency
+      
+      // Fetch all suites across pagination
+      do {
+        const response: AxiosResponse = await api.get('/api/resources', {
+          params: { 
+            type: suiteTypes.join(','),
+            date,
+            page: currentPage,
+            limit: pageSize
+          }
+        });
+        
+        if (response?.data?.status === 'success' && Array.isArray(response?.data?.data)) {
+          const { data, totalPages: pages, currentPage: page } = response.data;
+          allSuites = [...allSuites, ...data];
+          
+          totalPages = pages || 1;
+          currentPage += 1;
+          
+          console.log(`Stats: Fetched page ${page} of ${pages}, got ${data.length} resources, total so far: ${allSuites.length}`);
+        } else {
+          break; // Exit if the response format is unexpected
+        }
+      } while (currentPage <= totalPages);
+      
+      console.log(`Stats: Completed fetching all resources. Total: ${allSuites.length}`);
+      
+      // Now fetch reservations for this date to determine occupied and reserved suites
+      const reservationsResponse: AxiosResponse = await api.get('/api/reservations', {
+        params: {
+          date,
+          status: ['CONFIRMED', 'CHECKED_IN'].join(',') // Only include active reservations
+        }
       });
-      return response.data;
+      
+      // Extract reservations and organize by suiteId/resourceId
+      const reservationsBySuiteId: Record<string, any[]> = {};
+      
+      if (reservationsResponse?.data?.status === 'success' && Array.isArray(reservationsResponse?.data?.data)) {
+        const reservations = reservationsResponse.data.data;
+        console.log(`Fetched ${reservations.length} reservations for date ${date}`);
+        
+        // Map reservations to suites
+        reservations.forEach((reservation: any) => {
+          const resourceId = reservation.resourceId || reservation.suiteId || reservation.kennelId;
+          if (resourceId) {
+            if (!reservationsBySuiteId[resourceId]) {
+              reservationsBySuiteId[resourceId] = [];
+            }
+            reservationsBySuiteId[resourceId].push(reservation);
+          }
+        });
+      }
+      
+      // Calculate stats
+      let total = 0;
+      let available = 0;
+      let occupied = 0;
+      let reserved = 0;
+      let maintenance = 0;
+      let needsCleaning = 0;
+      
+      // Debug: Log sample suite data
+      console.log('Calculating stats for', allSuites.length, 'suites');
+      if (allSuites.length > 0) {
+        const sample = allSuites[0];
+        console.log('Sample suite data:', {
+          id: sample.id,
+          type: sample.type,
+          maintenanceStatus: sample.attributes?.maintenanceStatus,
+          hasReservations: reservationsBySuiteId[sample.id] ? true : false
+        });
+      }
+      
+      allSuites.forEach(suite => {
+        total += 1;
+        
+        // Check for maintenance status
+        const isInMaintenance = suite.attributes?.maintenanceStatus === 'MAINTENANCE';
+        
+        // Check for reservations
+        const suiteReservations = reservationsBySuiteId[suite.id] || [];
+        const hasActiveReservations = suiteReservations.length > 0;
+        
+        // Determine if any active reservations are CHECKED_IN (occupied) vs just CONFIRMED (reserved)
+        const isOccupied = hasActiveReservations && 
+          suiteReservations.some(res => res.status === 'CHECKED_IN');
+        
+        const isReserved = hasActiveReservations && 
+          !isOccupied && // Not already counted as occupied
+          suiteReservations.some(res => res.status === 'CONFIRMED');
+        
+        // Update stats based on status
+        if (isInMaintenance) {
+          maintenance += 1;
+        } else if (isOccupied) {
+          occupied += 1;
+        } else if (isReserved) {
+          reserved += 1;
+        } else {
+          available += 1;
+        }
+      });
+      
+      // Calculate occupancy rate (including both occupied and reserved)
+      const occupancyRate = total > 0 ? Math.round(((occupied + reserved) / total) * 100) : 0;
+      
+      console.log(`Stats calculated: Total=${total}, Occupied=${occupied}, Reserved=${reserved}, Available=${available}, Maintenance=${maintenance}, Occupancy Rate=${occupancyRate}%`);
+      
+      
+
+      return {
+        status: 'success',
+        data: {
+          total,
+          occupied,
+          reserved,
+          available,
+          maintenance,
+          needsCleaning,
+          occupancyRate
+        }
+      };
     } catch (error: any) {
       console.error('Error in getSuiteStats:', error);
       throw error;
@@ -210,7 +379,11 @@ export const resourceService = {
 
   updateSuiteCleaning: async (id: string, data: { maintenanceStatus: string, notes?: string }): Promise<{ status: string; data: Resource }> => {
     try {
-      const response: AxiosResponse = await api.put(`/api/suites/${id}/cleaning`, data);
+      // Use the standard resource update endpoint instead
+      const response: AxiosResponse = await api.patch(`/api/resources/${id}`, {
+        maintenanceStatus: data.maintenanceStatus,
+        notes: data.notes
+      });
       return response.data;
     } catch (error: any) {
       console.error('Error in updateSuiteCleaning:', error);
@@ -218,10 +391,18 @@ export const resourceService = {
     }
   },
 
+  // This method would require a special endpoint on the backend
+  // For now, we'll implement a fallback that returns a helpful message
   initializeSuites: async (options: { count: number, vipCount: number, standardPlusCount: number }): Promise<{ status: string; message: string; data: any }> => {
     try {
-      const response: AxiosResponse = await api.post('/api/suites/initialize', options);
-      return response.data;
+      // Since this is a specialized operation, we don't have a direct equivalent in the resource API
+      // In a production environment, you would implement this endpoint on the backend
+      console.warn('Suite initialization endpoint not available in this version');
+      return {
+        status: 'error',
+        message: 'Suite initialization is not available in this version of the API',
+        data: null
+      };
     } catch (error: any) {
       console.error('Error in initializeSuites:', error);
       throw error;
@@ -307,8 +488,9 @@ export const resourceService = {
     } 
   }> => {
     try {
-      const response: AxiosResponse = await api.post('/api/v1/resources/availability/batch', {
-        resourceIds,
+      // Using the correct endpoint path that exists in the backend
+      const response: AxiosResponse = await api.post('/api/resources/availability/batch', {
+        resources: resourceIds, // Also fixing the parameter name to match what the backend expects
         startDate,
         endDate
       });

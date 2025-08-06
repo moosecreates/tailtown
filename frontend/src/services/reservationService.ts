@@ -1,5 +1,5 @@
 import { AxiosResponse } from 'axios';
-import api from './api';
+import { reservationApi as api } from './api';
 import { PaginatedResponse } from '../types/common';
 
 export interface Reservation {

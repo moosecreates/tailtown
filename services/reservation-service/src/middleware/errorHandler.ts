@@ -9,6 +9,21 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError, ErrorType, ErrorContext } from '../utils/appError';
 import { logger } from '../utils/logger';
+import { reservationErrorTracker, ReservationErrorCategory } from '../utils/reservation-error-tracker';
+
+/**
+ * Async handler to catch errors in async controller functions
+ * 
+ * @param fn - The async controller function
+ * @returns Express middleware function
+ */
+export const asyncHandler = (
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    fn(req, res, next).catch(next);
+  };
+};
 
 /**
  * Handle Prisma-specific errors
@@ -103,8 +118,27 @@ export const sendErrorProd = (err: any, req: Request, res: Response): void => {
   const statusCode = err.statusCode || 500;
   
   // Log error with request information
-  logger.error(`[${req.method}] ${req.path} - ${err.type || 'ERROR'}: ${err.message}`);
+  logger.error(
+    `[${process.env.NODE_ENV}] ERROR: ${err.message} | Type: ${err.type} | Status: ${statusCode}`,
+    { error: err, req: req }
+  );
+
+  // Track error with reservation error tracker
+  const category = err.type === ErrorType.VALIDATION_ERROR
+    ? ReservationErrorCategory.VALIDATION_ERROR
+    : err.type === ErrorType.DATABASE_ERROR
+    ? ReservationErrorCategory.DB_CONNECTION_ERROR
+    : err.type === ErrorType.RESOURCE_CONFLICT
+    ? ReservationErrorCategory.RESOURCE_CONFLICT
+    : err.type === ErrorType.RESOURCE_NOT_FOUND
+    ? ReservationErrorCategory.RESOURCE_NOT_FOUND
+    : ReservationErrorCategory.UNKNOWN;
   
+  const errorId = reservationErrorTracker.trackErrorFromRequest(err, req, category);
+  if (errorId) {
+    logger.debug(`Error tracked with ID: ${errorId}`);
+  }
+
   // For operational errors, send message to client
   if (err.isOperational) {
     res.status(statusCode).json({

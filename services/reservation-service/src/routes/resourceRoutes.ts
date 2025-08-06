@@ -8,6 +8,7 @@
 
 import express from 'express';
 import { checkResourceAvailability } from '../controllers/resource/availability.controller';
+import { batchCheckResourceAvailability } from '../controllers/resource/batch-availability.controller';
 import {
   getAllResources,
   getResourceById,
@@ -26,8 +27,10 @@ router.get('/health', (req, res) => {
 
 // Resource availability routes - specific routes must come before parameterized routes
 router.get('/availability', checkResourceAvailability);
-// Temporarily disable batch availability endpoint until implementation is fixed
-// router.post('/availability/batch', batchCheckResourceAvailability);
+// Enable batch availability endpoint
+router.post('/availability/batch', batchCheckResourceAvailability);
+// Add v1 version of the batch endpoint to match frontend expectations
+router.post('/v1/resources/availability/batch', batchCheckResourceAvailability);
 
 // Resource CRUD routes
 router.get('/', getAllResources);

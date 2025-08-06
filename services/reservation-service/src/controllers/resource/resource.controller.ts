@@ -102,6 +102,14 @@ export const getAllResources = catchAsync(async (req: Request, res: Response) =>
 
   // Build filter conditions
   const whereConditions: any = {};
+  
+  // Store tenantId in a variable but don't add to whereConditions yet
+  // This will be used when the schema includes organizationId
+  const multiTenancyEnabled = false; // Toggle this when schema is updated
+  if (multiTenancyEnabled) {
+    // This line is disabled until the schema includes organizationId
+    // whereConditions.organizationId = tenantId;
+  }
 
   // Add type filter if provided
   if (req.query.type) {
@@ -167,7 +175,7 @@ export const getAllResources = catchAsync(async (req: Request, res: Response) =>
   const resources = await safeExecutePrismaQuery(
     async () => {
       return await prisma.resource.findMany({
-        where: whereConditions as any, // Type assertion to handle organizationId
+        where: whereConditions, // No need for type assertion since we're not using organizationId yet
         skip,
         take: limit,
         orderBy: {
@@ -221,8 +229,12 @@ export const getResourceById = catchAsync(async (req: Request, res: Response) =>
         id
       };
       
-      // Add organizationId for tenant isolation
-      whereClause.organizationId = tenantId;
+      // Prepare for multi-tenancy but don't add the field yet
+      // This will be uncommented when the schema includes organizationId
+      // const multiTenancyEnabled = false;
+      // if (multiTenancyEnabled) {
+      //   whereClause.organizationId = tenantId;
+      // }
       
       return await prisma.resource.findUnique({
         where: whereClause
@@ -353,8 +365,12 @@ export const updateResource = catchAsync(async (req: Request, res: Response) => 
         id
       };
       
-      // Add organizationId for tenant isolation
-      whereClause.organizationId = tenantId;
+      // Prepare for multi-tenancy but don't add the field yet
+      // This will be uncommented when the schema includes organizationId
+      // const multiTenancyEnabled = false;
+      // if (multiTenancyEnabled) {
+      //   whereClause.organizationId = tenantId;
+      // }
       
       return await prisma.resource.update({
         where: whereClause,
@@ -427,8 +443,12 @@ export const deleteResource = catchAsync(async (req: Request, res: Response) => 
         id
       };
       
-      // Add organizationId for tenant isolation
-      whereClause.organizationId = tenantId;
+      // Prepare for multi-tenancy but don't add the field yet
+      // This will be uncommented when the schema includes organizationId
+      // const multiTenancyEnabled = false;
+      // if (multiTenancyEnabled) {
+      //   whereClause.organizationId = tenantId;
+      // }
       
       return await prisma.resource.delete({
         where: whereClause

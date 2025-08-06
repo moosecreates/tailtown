@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 import { paymentService } from '../../services/paymentService';
 import { customerService } from '../../services/customerService';
+import { invoiceService } from '../../services/invoiceService';
 
 interface PaymentProcessingProps {
   onContinue: (paymentData: any) => void;
@@ -60,13 +61,30 @@ const PaymentProcessing: React.FC<PaymentProcessingProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<boolean>(false);
   
-  // Load customer store credit - getting it from context or parent component
-  // For now, we'll mock this with a static value since we don't have the customer ID
+  // Load customer store credit from the API if we have an invoice
   useEffect(() => {
-    // In a real implementation, this would load from the API
-    // For now, just set a mock value
-    setStoreCredit(0); // Set to 0 as we don't have real data available
-  }, []);
+    const loadStoreCredit = async () => {
+      try {
+        if (invoiceId) {
+          // Get invoice details first
+          const invoice = await invoiceService.getInvoiceById(invoiceId);
+          if (invoice?.customerId) {
+            // Get customer details and extract store credit
+            const customerData = await customerService.getCustomerById(invoice.customerId);
+            if (customerData?.storeCredit) {
+              setStoreCredit(customerData.storeCredit);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load store credit:', error);
+        // Default to 0 if there's an error
+        setStoreCredit(0);
+      }
+    };
+    
+    loadStoreCredit();
+  }, [invoiceId]);
   
   // Handle store credit checkbox change
   const handleStoreCreditChange = (event: React.ChangeEvent<HTMLInputElement>) => {

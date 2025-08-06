@@ -447,13 +447,21 @@ export const createReservation = async (
     console.log('Backend: Provided suite type:', suiteType);
     
     // If service requires a suite type but none was provided, use STANDARD_SUITE as default
+    // Validate and normalize the suite type based on service requirements
     let finalSuiteType = suiteType;
     if (requiresSuiteType) {
-      if (!suiteType || !['VIP_SUITE', 'STANDARD_PLUS_SUITE', 'STANDARD_SUITE'].includes(suiteType)) {
-        console.log('Backend: Using default STANDARD_SUITE for missing or invalid suiteType:', suiteType);
-        finalSuiteType = 'STANDARD_SUITE';
+      const validSuiteTypes = ['VIP_SUITE', 'STANDARD_PLUS_SUITE', 'STANDARD_SUITE'];
+      
+      if (!suiteType) {
+        console.warn('Backend: No suiteType provided for a service that requires one');
+        finalSuiteType = 'STANDARD_SUITE'; // Default
+        console.log(`Backend: Using default suite type: ${finalSuiteType}`);
+      } else if (!validSuiteTypes.includes(suiteType)) {
+        console.warn(`Backend: Invalid suiteType provided: "${suiteType}". Valid types are: ${validSuiteTypes.join(', ')}`);
+        finalSuiteType = 'STANDARD_SUITE'; // Default
+        console.log(`Backend: Using default suite type: ${finalSuiteType} instead of invalid type: ${suiteType}`);
       } else {
-        console.log('Backend: Using provided suiteType:', suiteType);
+        console.log(`Backend: Using valid provided suiteType: ${suiteType}`);
       }
     } else {
       // For services that don't require a suite type, we don't need to validate it
@@ -516,17 +524,34 @@ export const createReservation = async (
     if (requiresSuiteType && finalSuiteType) {
       // If resourceId provided, validate it and ensure it matches the requested suiteType
       if (resourceId) {
+        console.log(`Backend: Validating provided resource ID: ${resourceId}`);
         const suite = await prisma.resource.findUnique({ where: { id: resourceId } });
-        if (!suite || !suite.isActive) {
-          return next(new AppError('Selected suite/kennel not found or inactive', 404));
+        if (!suite) {
+          console.error(`Backend: Resource with ID ${resourceId} not found`);
+          return next(new AppError(`Selected suite/kennel not found with ID: ${resourceId}`, 404));
         }
-        if (suite.type !== finalSuiteType) {
-          return next(new AppError('Selected suite/kennel does not match requested suiteType', 400));
+        
+        if (!suite.isActive) {
+          console.error(`Backend: Resource with ID ${resourceId} is inactive`);
+          return next(new AppError('Selected suite/kennel is marked as inactive', 404));
         }
+        
+        // Log the resource type for debugging
+        console.log(`Backend: Found resource ${resourceId} of type: ${suite.type}, requested type: ${finalSuiteType}`);
+        
+        // Enhanced type checking with better error reporting
+        if (suite.type && finalSuiteType && suite.type !== finalSuiteType) {
+          console.error(`Backend: Type mismatch - Suite is ${suite.type}, requested ${finalSuiteType}`);
+          return next(new AppError(`Selected suite/kennel type (${suite.type}) doesn't match requested type (${finalSuiteType})`, 400));
+        }
+        
         const available = await isSuiteAvailable(resourceId);
         if (!available) {
+          console.error(`Backend: Resource ${resourceId} is not available for requested dates`);
           return next(new AppError('Selected suite/kennel is not available for the requested dates', 400));
         }
+        
+        console.log(`Backend: Resource ${resourceId} validated successfully`);
       } else {
         // Auto-assign: find an available suite of the requested type
         const candidateSuites = await prisma.resource.findMany({
@@ -575,39 +600,49 @@ export const createReservation = async (
       console.log('Backend: Service does not require a suite, not assigning a resource');
     }
 
-    // Generate a unique order number for this reservation
-    const orderNumber = await generateOrderNumber();
-    console.log(`Backend: Generated order number: ${orderNumber}`);
-    
-    console.log('Backend: Creating reservation in database');
-    const newReservation = await prisma.reservation.create({
-      data: {
-        orderNumber,
-        customerId,
-        petId,
-        serviceId,
-        startDate,
-        endDate,
-        resourceId: assignedResourceId,
-        status,
-        notes
-      },
-      include: {
-        customer: true,
-        pet: true,
-        resource: true
-      }
-    });
-    
-    console.log('Backend: Successfully created reservation:', newReservation);
-    
-    res.status(201).json({
-      status: 'success',
-      data: newReservation,
-    });
-    
-    console.log('Backend: Sent success response');
+    // Log final resource assignment for debugging
+    console.log(`Backend: Final resource assignment status: resourceId=${assignedResourceId}, suiteType=${finalSuiteType}`);
+
+    try {
+      // Generate a unique order number for this reservation
+      const orderNumber = await generateOrderNumber();
+      console.log(`Backend: Generated order number: ${orderNumber}`);
+      
+      console.log('Backend: Creating reservation in database');
+      const newReservation = await prisma.reservation.create({
+        data: {
+          orderNumber,
+          customerId,
+          petId,
+          serviceId,
+          startDate,
+          endDate,
+          resourceId: assignedResourceId,
+          status,
+          notes
+        },
+        include: {
+          customer: true,
+          pet: true,
+          resource: true
+        }
+      });
+      
+      console.log('Backend: Successfully created reservation:', newReservation);
+      
+      res.status(201).json({
+        status: 'success',
+        data: newReservation,
+      });
+      
+      console.log('Backend: Sent success response');
+    } catch (dbError) {
+      console.error('Backend: Database error creating reservation:', dbError);
+      const errorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
+      return next(new AppError(`Failed to create reservation: ${errorMessage}`, 500));
+    }
   } catch (error) {
+    console.error('Backend: Error in createReservation:', error);
     next(error);
   }
 };

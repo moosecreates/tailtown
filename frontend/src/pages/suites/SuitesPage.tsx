@@ -37,6 +37,7 @@ const SuitesPage: React.FC = () => {
     total: 0,
     occupied: 0,
     available: 0,
+    reserved: 0,
     maintenance: 0,
     needsCleaning: 0,
     occupancyRate: 0
@@ -215,25 +216,31 @@ const SuitesPage: React.FC = () => {
 
         <Box sx={{ mb: 4 }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={4} lg={2}>
               <Paper sx={{ p: 2, height: '100%', bgcolor: 'primary.light', color: 'white' }}>
                 <Typography variant="h6">Total Suites</Typography>
                 <Typography variant="h3">{stats.total}</Typography>
               </Paper>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={4} lg={2.5}>
               <Paper sx={{ p: 2, height: '100%', bgcolor: '#81C784' }}>
                 <Typography variant="h6">Available</Typography>
                 <Typography variant="h3">{stats.available}</Typography>
               </Paper>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={4} lg={2.5}>
               <Paper sx={{ p: 2, height: '100%', bgcolor: '#FF8A65', color: 'white' }}>
                 <Typography variant="h6">Occupied</Typography>
                 <Typography variant="h3">{stats.occupied}</Typography>
               </Paper>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={6} lg={2.5}>
+              <Paper sx={{ p: 2, height: '100%', bgcolor: '#FFB74D' }}>
+                <Typography variant="h6">Reserved</Typography>
+                <Typography variant="h3">{stats.reserved || 0}</Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={6} lg={2.5}>
               <Paper sx={{ p: 2, height: '100%', bgcolor: '#9E9E9E', color: 'white' }}>
                 <Typography variant="h6">Maintenance</Typography>
                 <Typography variant="h3">{stats.maintenance}</Typography>

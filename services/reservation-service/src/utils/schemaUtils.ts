@@ -423,21 +423,21 @@ CREATE TABLE IF NOT EXISTS "${table.name}" (
   
   // Add columns
   const columnDefinitions = table.columns.map(column => {
-    let columnDef = `  "${column.name}" ${column.type}`;
+    // Build column definition
+    let columnDef = `${column.name} ${column.type}`;
     
-    if (column.constraints && column.constraints.includes('PRIMARY KEY')) {
-      columnDef += ' NOT NULL';
-    } else if (column.critical) {
-      columnDef += ' NOT NULL';
+    // Add constraints if any
+    if (column.constraints && column.constraints.length > 0) {
+      columnDef += ` ${column.constraints.join(' ')}`;
     }
     
+    // Add default value if specified
     if (column.defaultValue) {
       columnDef += ` DEFAULT ${column.defaultValue}`;
     }
     
     return columnDef;
-  }).join(',
-');
+  }).join(',\n');
   
   sql += columnDefinitions;
   

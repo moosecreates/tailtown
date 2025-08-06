@@ -80,7 +80,14 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
   
   // Add optional filters if provided
   if (req.query.status) {
-    filter.status = req.query.status;
+    // Handle comma-separated status values
+    const statusValues = (req.query.status as string).split(',');
+    if (statusValues.length > 1) {
+      filter.status = { in: statusValues };
+      logger.info(`Filtering by multiple statuses: ${statusValues.join(', ')}`, { requestId });
+    } else {
+      filter.status = req.query.status;
+    }
   }
   
   if (req.query.customerId) {
@@ -99,21 +106,34 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
     filter.suiteType = req.query.suiteType;
   }
   
-  // Handle date filters
-  if (req.query.startDate) {
+  // Handle date filters - support both 'startDate' and 'date' parameters
+  const dateParam = req.query.startDate || req.query.date;
+  if (dateParam) {
     try {
-      const startDate = new Date(req.query.startDate as string);
-      if (!isNaN(startDate.getTime())) {
+      // Parse the date string in YYYY-MM-DD format
+      const dateStr = dateParam as string;
+      const [year, month, day] = dateStr.split('-').map(num => parseInt(num, 10));
+      
+      // Create date objects for start and end of the day in local timezone
+      // Month is 0-indexed in JavaScript Date
+      const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+      const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+      
+      if (!isNaN(startOfDay.getTime()) && !isNaN(endOfDay.getTime())) {
+        // Filter for reservations that start on the specific date
         filter.startDate = {
-          gte: startDate
+          gte: startOfDay,
+          lte: endOfDay
         };
+        
+        logger.info(`Filtering reservations for date: ${dateStr}, using start: ${startOfDay.toISOString()} and end: ${endOfDay.toISOString()}`, { requestId });
       } else {
-        logger.warn(`Invalid startDate filter`, { requestId, startDate: req.query.startDate });
-        warnings.push(`Invalid startDate filter: ${req.query.startDate}, ignoring this filter`);
+        logger.warn(`Invalid date filter format`, { requestId, dateParam });
+        warnings.push(`Invalid date filter: ${dateParam}, ignoring this filter`);
       }
     } catch (error) {
-      logger.warn(`Error parsing startDate filter`, { requestId, startDate: req.query.startDate, error });
-      warnings.push(`Error parsing startDate filter: ${req.query.startDate}, ignoring this filter`);
+      logger.warn(`Error parsing date filter`, { requestId, dateParam, error });
+      warnings.push(`Error parsing date filter: ${dateParam}, ignoring this filter`);
     }
   }
   
@@ -287,10 +307,10 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
           addOnServices: {
             select: {
               id: true,
-              serviceId: true,
-              quantity: true,
+              addOnId: true,
+              price: true,
               notes: true,
-              service: {
+              addOn: {
                 select: {
                   name: true,
                   price: true,

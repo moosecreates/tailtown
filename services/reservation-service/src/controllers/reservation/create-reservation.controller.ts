@@ -314,18 +314,28 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
   
   // Prepare reservation data
   const reservationData: any = {
-    customerId,
-    petId,
+    customer: {
+      connect: { id: customerId }
+    },
+    pet: {
+      connect: { id: petId }
+    },
     startDate: parsedStartDate,
     endDate: parsedEndDate,
-    serviceType,
-    suiteType: determinedSuiteType,
+    service: {
+      connect: { type: serviceType }
+    },
+    // suiteType is handled through resource assignment
     // organizationId removed as it's not in the schema
     status: status || 'PENDING'
   };
   
   // Add optional fields if provided
-  if (assignedResourceId) reservationData.resourceId = assignedResourceId;
+  if (assignedResourceId) {
+    reservationData.resource = {
+      connect: { id: assignedResourceId }
+    };
+  }
   if (price !== undefined) reservationData.price = parseFloat(String(price));
   if (deposit !== undefined) reservationData.deposit = parseFloat(String(deposit));
   if (notes !== undefined) reservationData.notes = notes;

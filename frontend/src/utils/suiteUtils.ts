@@ -8,25 +8,55 @@ import { Resource } from '../services/resourceService';
  * @param suite The suite resource object
  * @returns Status string: 'OCCUPIED', 'MAINTENANCE', or 'AVAILABLE'
  */
-export const determineSuiteStatus = (suite: Resource): 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' => {
+export const determineSuiteStatus = (suite: Resource): 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' | 'RESERVED' => {
+  // Log suite ID and basic info for debugging
+  console.log(`Determining status for suite: ${suite.id}, ${suite.name}`, {
+    maintenanceStatus: suite.attributes?.maintenanceStatus,
+    hasReservations: suite.reservations ? suite.reservations.length > 0 : false,
+    reservationsCount: suite.reservations?.length || 0,
+    // Log first reservation status if it exists
+    firstReservationStatus: suite.reservations?.[0]?.status || 'none'
+  });
+
   // Check if suite is in maintenance
   if (suite.attributes?.maintenanceStatus === 'MAINTENANCE') {
+    console.log(`Suite ${suite.id} is in MAINTENANCE`);
     return 'MAINTENANCE';
   }
   
   // Check if suite has active reservations
   if (suite.reservations && suite.reservations.length > 0) {
+    console.log(`Suite ${suite.id} has ${suite.reservations.length} reservations:`, 
+      suite.reservations.map(res => ({ 
+        id: res.id, 
+        status: res.status, 
+        startDate: res.startDate,
+        endDate: res.endDate
+      })));
+      
     // Check for active reservations (PENDING, CONFIRMED or CHECKED_IN)
     const hasActiveReservation = suite.reservations.some(res => 
       ['PENDING', 'CONFIRMED', 'CHECKED_IN'].includes(res.status)
     );
     
     if (hasActiveReservation) {
+      console.log(`Suite ${suite.id} is OCCUPIED due to active reservation`);
       return 'OCCUPIED';
+    }
+    
+    // Check for upcoming reservation (not yet checked in)
+    const hasUpcomingReservation = suite.reservations.some(res => 
+      res.status === 'CONFIRMED' && new Date(res.startDate) > new Date()
+    );
+    
+    if (hasUpcomingReservation) {
+      console.log(`Suite ${suite.id} is RESERVED for upcoming stay`);
+      return 'RESERVED';
     }
   }
   
   // Default status
+  console.log(`Suite ${suite.id} is AVAILABLE (no active reservations)`);
   return 'AVAILABLE';
 };
 
