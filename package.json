@@ -19,7 +19,11 @@
     "npm": ">=8.0.0"
   },
   "devDependencies": {
-    "lerna": "^6.6.2"
+    "@playwright/test": "^1.54.2",
+    "chromedriver": "^139.0.0",
+    "lerna": "^6.6.2",
+    "puppeteer": "^24.16.0",
+    "selenium-webdriver": "^4.34.0"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",

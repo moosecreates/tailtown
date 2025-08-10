@@ -568,8 +568,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           // Log for debugging
           console.log('Sending reservation with resourceId:', selectedSuiteId);
         } else {
-          // Explicitly set resourceId to null for auto-assign
-          formData.resourceId = null;
+          // Don't explicitly set resourceId to null, as this can cause issues with the backend
+          // The backend will handle auto-assignment if resourceId is undefined
+          console.log('Not setting resourceId, allowing backend to auto-assign');
         }
         
         // Double-check that we're sending a valid suiteType

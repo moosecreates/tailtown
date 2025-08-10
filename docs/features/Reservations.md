@@ -83,3 +83,37 @@ The dashboard shows reservations filtered by specific statuses:
 - Type values are validated against the Prisma `ResourceType` enum
 - Invalid type values are logged but don't cause API failures
 - Proper error handling for all database queries
+
+## API Responses and Frontend Parsing
+
+### GET /api/reservations
+
+The reservation service returns a paginated response with reservations nested under `data.reservations`:
+
+```json
+{
+  "status": "success",
+  "results": 3,
+  "pagination": {
+    "totalCount": 316,
+    "totalPages": 32,
+    "currentPage": 1,
+    "limit": 10,
+    "hasNextPage": true,
+    "hasPrevPage": false
+  },
+  "data": {
+    "reservations": [
+      { "id": "...", "status": "CONFIRMED", "startDate": "...", "endDate": "...", "customer": { ... }, "pet": { ... }, "resource": { ... } }
+    ]
+  }
+}
+```
+
+Supported query parameters include `page`, `limit`, `status`, `customerId`, `petId`, `resourceId`, `suiteType`, and either `date` (YYYY-MM-DD) or `startDate` + `endDate`.
+
+### Frontend normalization
+
+- The frontend `Reservations.tsx` normalizes multiple historical shapes, extracting the array from `data`, `data.data`, or `data.reservations`.
+- Pagination is read from either top-level `totalPages` or `pagination.totalPages`.
+- Rendering uses optional chaining for nested fields (e.g., `reservation.pet?.name`, `reservation.customer?.firstName`) to prevent runtime errors when related objects are omitted.

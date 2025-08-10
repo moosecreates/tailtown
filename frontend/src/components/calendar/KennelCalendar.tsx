@@ -209,24 +209,22 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
       console.log('Fetching all suite resources');
       
       try {
-        // Get all resources of type 'suite'
-        const resourcesResponse = await reservationApi.get('/api/resources', {
-          params: {
-            type: 'suite'
-          },
-          headers: {
-            'x-tenant-id': '1' // Using default tenant ID as a header
-          }
-        });
+        // Use paginated helper to fetch ALL suite resources across pages
+        const suitesResponse = await resourceService.getSuites(
+          undefined,
+          undefined,
+          undefined,
+          formatDateToYYYYMMDD(currentDate)
+        );
         
-        console.log('Resources API response:', JSON.stringify(resourcesResponse.data));
+        console.log('Suites (paginated) API response:', JSON.stringify(suitesResponse));
         
         // Extract resources from the response
         let kennelResources: Resource[] = [];
         
-        if (resourcesResponse?.data?.status === 'success' && Array.isArray(resourcesResponse?.data?.data)) {
-          kennelResources = resourcesResponse.data.data;
-          console.log(`Found ${kennelResources.length} suite resources`);
+        if (suitesResponse?.status === 'success' && Array.isArray(suitesResponse?.data)) {
+          kennelResources = suitesResponse.data;
+          console.log(`Found ${kennelResources.length} suite resources (all pages)`);
         } else {
           console.error('Could not find suite resources in response');
           setError('Failed to load kennels: Could not find suite resources');
@@ -651,34 +649,67 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
         // If a specific kennel was selected, include its ID
         resourceId: selectedKennel?.id || formData.resourceId || formData.kennelId,
       };
-      
       console.log('KennelCalendar: Submitting reservation data:', submissionData);
       setLoading(true);
       
-      // Define the API response type to handle the structure correctly
-      interface ApiResponse {
-        status: string;
-        data?: any;
-        message?: string;
-      }
-      
-      let result: ApiResponse | undefined;
+      // Call API and normalize response to a Reservation object
+      let result: any;
       let updatedReservation: any = null;
       
       if (isNewReservation) {
         // Create a new reservation
-        result = await reservationService.createReservation(submissionData) as ApiResponse;
-      } else {
+        result = await reservationService.createReservation(submissionData);
+      } else if (selectedReservation) {
         // Update an existing reservation
-        result = await reservationService.updateReservation(selectedReservation.id, submissionData) as ApiResponse;
+        result = await reservationService.updateReservation(selectedReservation.id, submissionData);
+      } else {
+        throw new Error('No reservation selected for update');
       }
       
       console.log('KennelCalendar: Reservation API response:', result);
       
-      // Check if the operation was successful
-      if (result && result.status === 'success') {
-        // Store the reservation data for later use
-        updatedReservation = result.data;
+      // Normalize result: support API wrapper, direct Reservation, or { reservation: {...} }
+      if (result && typeof result === 'object') {
+        const statusVal = (result as any).status;
+        if (typeof statusVal === 'string') {
+          const lowered = statusVal.toLowerCase();
+          // Treat explicit API failure statuses as errors when wrapper has no data
+          if ((lowered === 'fail' || lowered === 'error') && !('data' in (result as any))) {
+            const msg = (result as any).message || 'Failed to save reservation.';
+            setFormError(msg);
+            setLoading(false);
+            return undefined;
+          }
+        }
+        if ('data' in (result as any)) {
+          const wrapper: any = result;
+          if ('status' in wrapper && typeof wrapper.status === 'string' && wrapper.status !== 'success') {
+            const msg = wrapper.message || 'Failed to save reservation.';
+            setFormError(msg);
+            setLoading(false);
+            return undefined;
+          }
+          // Unwrap common shapes: data.reservation or data
+          updatedReservation = wrapper.data?.reservation ?? wrapper.data;
+        } else if ('reservation' in (result as any)) {
+          updatedReservation = (result as any).reservation;
+        } else {
+          updatedReservation = result;
+        }
+      } else {
+        updatedReservation = result;
+      }
+
+      console.log('KennelCalendar: Normalized reservation:', updatedReservation);
+      
+      // Helper: narrow if the object looks like a reservation (lenient but meaningful)
+      const isReservationLike = (obj: any) => {
+        if (!obj || typeof obj !== 'object') return false;
+        return ('id' in obj || '_id' in obj || 'serviceId' in obj || ('customerId' in obj && 'petId' in obj));
+      };
+      
+      // Treat as success only if it looks like a reservation
+      if (isReservationLike(updatedReservation)) {
         
         // For updates, close the form immediately
         if (!isNewReservation) {
@@ -687,8 +718,6 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
           setSelectedKennel(null);
           setSelectedDate(null);
         }
-        // For new reservations, we keep the form open for add-ons
-        // The ReservationForm component will handle closing the dialog after add-ons are processed
         // This is key to ensuring the add-ons dialog appears after reservation creation
         console.log('KennelCalendar: Keeping form open for add-ons dialog');
         
@@ -717,11 +746,14 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
         let reservationId = '';
         if (typeof updatedReservation === 'object' && updatedReservation !== null) {
           if ('id' in updatedReservation) {
-            reservationId = updatedReservation.id as string;
+            reservationId = (updatedReservation as any).id as string;
           } else if ('_id' in updatedReservation) {
-            reservationId = updatedReservation._id as string;
+            reservationId = (updatedReservation as any)._id as string;
           }
         }
+        
+        // Stop loading spinner
+        setLoading(false);
         
         // Return the reservation ID so it can be used for add-ons
         console.log('KennelCalendar: Returning reservation ID for add-ons:', reservationId);
@@ -919,13 +951,16 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
           
           // Check for type match for Standard Plus Suite (special case)
           // This handles cases where the specific kennel ID doesn't match but the suite type does
+          // BUT we need to make sure we're only matching the specific kennel this reservation belongs to
           if (kennel.type === 'STANDARD_PLUS_SUITE' && 
               (r.suiteType === 'STANDARD_PLUS_SUITE' || 
                r.type === 'STANDARD_PLUS_SUITE' || 
                (r.notes && r.notes.includes('Standard Plus')) || 
                (r.staffNotes && r.staffNotes.includes('Standard Plus')))) {
-            return true;
-          }
+            // Only return true if this resource has the same ID as our kennel
+            // This prevents a single reservation from appearing in multiple kennels
+            return resourceId === kennelId;
+          }  
           
           return false;
         });
@@ -1000,7 +1035,13 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
             (reservation.notes && reservation.notes.includes('Standard Plus')) || 
             (reservation.staffNotes && reservation.staffNotes.includes('Standard Plus'));
             
-          if (isStandardPlusSuite) {
+          // Only match if we have a specific resourceId match OR if this reservation has the same resourceId
+          // This prevents a single reservation from appearing in multiple kennels
+          const hasMatchingResourceId = 
+            (reservation.resourceId && reservation.resourceId === kennelId) ||
+            (reservation.resource?.id && reservation.resource.id === kennelId);
+            
+          if (isStandardPlusSuite && hasMatchingResourceId) {
             // Check date range for this suite type match
             const reservationStart = new Date(reservation.startDate);
             reservationStart.setHours(0, 0, 0, 0);

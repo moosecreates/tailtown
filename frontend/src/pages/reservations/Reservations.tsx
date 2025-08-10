@@ -65,13 +65,34 @@ const Reservations = () => {
         getFormattedDateString(selectedDate) // date filter using formatted string
       );
       console.log('Reservations response:', response);
-      if (response?.status === 'success' && Array.isArray(response?.data)) {
-        setReservations(response.data);
-        setTotalPages(response.totalPages || 1);
-      } else {
-        console.error('Invalid reservations response format:', response);
-        setReservations([]);
+      // Normalize various possible response shapes
+      let reservationsArray: any[] = [];
+      let pages = 1;
+
+      if (response && typeof response === 'object') {
+        const anyResp: any = response as any;
+        if (anyResp.status === 'success') {
+          if (Array.isArray(anyResp.data)) {
+            reservationsArray = anyResp.data;
+          } else if (anyResp.data && Array.isArray(anyResp.data.data)) {
+            reservationsArray = anyResp.data.data;
+          } else if (anyResp.data && Array.isArray(anyResp.data.reservations)) {
+            reservationsArray = anyResp.data.reservations;
+          }
+          pages = anyResp.totalPages || anyResp.pagination?.totalPages || 1;
+        } else if (Array.isArray(anyResp)) {
+          // Direct array response fallback
+          reservationsArray = anyResp;
+        }
       }
+
+      if (!Array.isArray(reservationsArray)) {
+        console.error('Invalid reservations response format:', response);
+        reservationsArray = [];
+      }
+
+      setReservations(reservationsArray);
+      setTotalPages(pages);
     } catch (err) {
       setError('Failed to load reservations');
       console.error('Error loading reservations:', err);
@@ -263,18 +284,20 @@ const Reservations = () => {
                       <Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Pet:</Typography>
-                          <Typography variant="body2">{reservation.pet.name}</Typography>
-                          <Typography variant="caption" color="text.secondary">({reservation.pet.type})</Typography>
+                          <Typography variant="body2">{reservation.pet?.name || 'Unknown'}</Typography>
+                          {reservation.pet?.type && (
+                            <Typography variant="caption" color="text.secondary">({reservation.pet?.type})</Typography>
+                          )}
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Owner:</Typography>
-                          <Typography variant="body2">{reservation.customer.firstName} {reservation.customer.lastName}</Typography>
+                          <Typography variant="body2">{reservation.customer?.firstName || ''} {reservation.customer?.lastName || ''}</Typography>
                         </Box>
                       </Box>
                       <Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Service:</Typography>
-                          <Typography variant="body2">{reservation.service.name}</Typography>
+                          <Typography variant="body2">{reservation.service?.name || 'Unknown'}</Typography>
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Status:</Typography>

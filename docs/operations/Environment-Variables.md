@@ -165,6 +165,10 @@ Location: `/frontend/.env`
 ### API Configuration
 - `REACT_APP_API_URL`: Backend API URL
   - Required: Yes
+  
+- `REACT_APP_RESERVATION_API_URL`: Reservation Service base URL
+  - Default: `http://localhost:4003`
+  - Required: Yes (frontend reservation and resource calls use this)
 
 - `REACT_APP_API_TIMEOUT`: Request timeout (ms)
   - Default: 30000

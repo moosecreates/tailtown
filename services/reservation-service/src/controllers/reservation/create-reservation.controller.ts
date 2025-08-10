@@ -8,6 +8,7 @@
 import { Response } from 'express';
 import { TenantRequest } from '../../types/request';
 import { AppError } from '../../utils/service';
+import { ServiceCategory } from '@prisma/client';
 import { catchAsync } from '../../middleware/catchAsync';
 import { logger } from '../../utils/logger';
 import { detectReservationConflicts } from '../../utils/reservation-conflicts';
@@ -66,7 +67,8 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
     petId, 
     startDate, 
     endDate, 
-    serviceType,
+    serviceId, // Changed from serviceType to serviceId
+    serviceType, // Keep this for backward compatibility
     suiteType: requestedSuiteType,
     resourceId: requestedResourceId,
     status,
@@ -98,9 +100,9 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
     throw AppError.validationError('End date is required');
   }
   
-  if (!serviceType) {
-    logger.warn(`Missing required field: serviceType`, { requestId });
-    throw AppError.validationError('Service type is required');
+  if (!serviceId) {
+    logger.warn(`Missing required field: serviceId`, { requestId });
+    throw AppError.validationError('Service ID is required');
   }
   
   // Parse dates
@@ -172,13 +174,44 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
   // Determine suite type based on service type if not provided
   let determinedSuiteType = requestedSuiteType;
   
-  if (!determinedSuiteType) {
-    determinedSuiteType = determineSuiteType(serviceType);
-    if (!determinedSuiteType) {
-      logger.warn(`Could not determine suite type from service type ${serviceType}`, { requestId });
-      throw AppError.validationError(`Could not determine suite type from service type ${serviceType}`);
+  // First, get the service details to determine the service type
+  let serviceDetails;
+  try {
+    serviceDetails = await prisma.service.findUnique({
+      where: { id: serviceId }
+    });
+    
+    if (!serviceDetails) {
+      logger.warn(`Service with ID ${serviceId} not found`, { requestId });
+      throw AppError.validationError(`Service with ID ${serviceId} not found`);
     }
-    logger.info(`Determined suite type: ${determinedSuiteType} from service type: ${serviceType}`, { requestId });
+    
+    // Set the serviceType from the service details
+    const serviceCategory = serviceDetails.serviceCategory;
+    logger.info(`Found service with category: ${serviceCategory}`, { requestId });
+    
+    // Determine suite type based on service category
+    if (!determinedSuiteType) {
+      determinedSuiteType = determineSuiteType(serviceCategory);
+      if (!determinedSuiteType) {
+        logger.info(`Could not determine suite type from service category ${serviceCategory}, using default`, { requestId });
+        // Use a default suite type instead of throwing an error
+        determinedSuiteType = 'KENNEL';
+      }
+      logger.info(`Determined suite type: ${determinedSuiteType} from service category: ${serviceCategory}`, { requestId });
+    }
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    logger.error(`Error fetching service details: ${error}`, { requestId });
+    throw AppError.serverError('Error processing service information');
+  }
+  
+  if (!determinedSuiteType) {
+    // If no suite type could be determined, use a default
+    determinedSuiteType = 'KENNEL';
+    logger.info(`Using default suite type: ${determinedSuiteType}`, { requestId });
   }
   
   // Warnings to collect during processing
@@ -323,7 +356,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
     startDate: parsedStartDate,
     endDate: parsedEndDate,
     service: {
-      connect: { type: serviceType }
+      connect: { id: serviceId }
     },
     // suiteType is handled through resource assignment
     // organizationId removed as it's not in the schema

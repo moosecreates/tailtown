@@ -241,6 +241,8 @@ Throughout all phases, we will address the following ongoing concerns:
 - ✅ Fixed field name inconsistencies (`birthdate` vs `age` in Pet model) (Fixed August 3, 2025)
 - ✅ Removed references to non-existent `organizationId` field (Fixed August 3, 2025)
 - ✅ Fixed database connection issues by using consistent port 5433 (Fixed August 3, 2025)
+- ✅ Kennel calendar now loads all ~165 suites by paginating `/api/resources` via `resourceService.getSuites()` (Fixed August 10, 2025)
+- ✅ Reservations UI updated to parse nested response `{ data: { reservations: [...] }, pagination }` and render safely (Fixed August 10, 2025)
 
 ### Previous Fixes
 - ✅ New Customer under New Order doesn't accept text (Fixed May 6, 2025)

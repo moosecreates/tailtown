@@ -106,6 +106,11 @@ This document outlines the completed work and next stages of the reservation ser
 - Update form validation to match backend requirements
 - Implement comprehensive end-to-end testing
 
+**Progress (August 10, 2025):**
+- Frontend `Reservations.tsx` updated to parse nested response `{ data: { reservations: [...] }, pagination }` and legacy shapes
+- Defensive rendering added for nested relations (pet, customer, resource)
+- Kennel calendar updated to load all suites via paginated `/api/resources` through `resourceService.getSuites()`
+
 **Success Criteria:**
 - All frontend components work with the refactored backend
 - Error messages are properly displayed to users
