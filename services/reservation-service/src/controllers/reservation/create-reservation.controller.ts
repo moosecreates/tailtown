@@ -401,6 +401,14 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
               type: true,
               location: true
             }
+          },
+          service: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              description: true
+            }
           }
         } as unknown as ExtendedReservationInclude
       });

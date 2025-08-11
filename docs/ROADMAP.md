@@ -58,6 +58,13 @@ This document combines the overall project roadmap and the reservation service r
 - ✅ Customer accounts with balance and payment history
 - ✅ Sales add-ons and upselling features
 
+## Analytics & Reporting Notes
+
+- Revenue totals come from invoices, not reservations. Totals sum `Invoice.total` filtered by `issueDate` and `status` not in `CANCELLED`/`REFUNDED`. See `services/customer/src/controllers/analytics.controller.ts` (`getDashboardSummary()`, `getSalesByService()`).
+- To see revenue in reports, create invoices for reservations via the UI (New Order) or `POST /api/invoices` in customer-service. Linking `reservationId` is recommended.
+- Add-on revenue requires reservation add-ons and invoices associated to those reservations; analytics reads add-on amounts from `reservation.addOnServices` on the invoice’s reservation.
+- Time-period filters use `getDateFilter()` with day/week/month/year/all/custom and operate on invoice `issueDate`.
+- Counts by service/add-on include only currently active items.
 ### Infrastructure
 - ✅ Microservices architecture implementation (Completed August 2025)
   - Customer service (port 4004)
@@ -243,6 +250,7 @@ Throughout all phases, we will address the following ongoing concerns:
 - ✅ Fixed database connection issues by using consistent port 5433 (Fixed August 3, 2025)
 - ✅ Kennel calendar now loads all ~165 suites by paginating `/api/resources` via `resourceService.getSuites()` (Fixed August 10, 2025)
 - ✅ Reservations UI updated to parse nested response `{ data: { reservations: [...] }, pagination }` and render safely (Fixed August 10, 2025)
+- ✅ Reservation-service now includes the `service` relation in all reservation responses (list/get/create/update); frontend displays service name instead of 'Unknown' (Fixed August 10, 2025)
 
 ### Previous Fixes
 - ✅ New Customer under New Order doesn't accept text (Fixed May 6, 2025)

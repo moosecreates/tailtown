@@ -198,6 +198,14 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
               type: true,
               location: true
             }
+          },
+          service: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              description: true
+            }
           }
         } as unknown as ExtendedReservationInclude
       });
@@ -302,6 +310,14 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
               name: true,
               type: true,
               location: true
+            }
+          },
+          service: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              description: true
             }
           },
           addOnServices: {

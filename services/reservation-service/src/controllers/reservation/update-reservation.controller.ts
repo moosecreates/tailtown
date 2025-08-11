@@ -417,6 +417,14 @@ export const updateReservation = catchAsync(async (
               type: true,
               location: true
             }
+          },
+          service: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
+              description: true
+            }
           }
         } as unknown as ExtendedReservationInclude
       });

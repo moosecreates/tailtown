@@ -93,7 +93,9 @@ export const reservationService = {
   getReservationById: async (id: string): Promise<Reservation> => {
     try {
       const response: AxiosResponse = await api.get(`/api/reservations/${id}`);
-      return response.data.data;
+      const payload = response?.data;
+      const normalized = (payload?.data?.reservation ?? payload?.data ?? payload?.reservation ?? payload) as Reservation;
+      return normalized;
     } catch (error: any) {
       console.error('Error in getReservationById:', error);
       throw error;
@@ -115,7 +117,9 @@ export const reservationService = {
       console.log('Sending update request:', { id, data: reservation });
       const response: AxiosResponse = await api.put(`/api/reservations/${id}`, reservation);
       console.log('Update response:', response.data);
-      return response.data.data;
+      const payload = response?.data;
+      const normalized = (payload?.data?.reservation ?? payload?.data ?? payload?.reservation ?? payload) as Reservation;
+      return normalized;
     } catch (error: any) {
       console.error('Error in updateReservation:', error);
       throw error;
