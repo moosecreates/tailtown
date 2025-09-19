@@ -145,7 +145,7 @@ export const resourceService = {
     status?: string,
     search?: string,
     date?: string
-  ): Promise<{ status: string; data: Resource[]; results?: number }> => {
+  ): Promise<{ status: string; data: ResourceWithReservations[]; results?: number }> => {
     try {
       // Use the resources endpoint with type filter for suites
       // All suites are resources with type containing "SUITE"
@@ -158,32 +158,22 @@ export const resourceService = {
       let totalPages = 1;
       const pageSize = 100; // Fetch 100 per page for efficiency
       
-      console.log('Fetching all suite resources with pagination');
-      
-      // Continue fetching pages until we've got all resources
       do {
-        // If a specific type is provided, use it; otherwise, query for all suite types
         const response: AxiosResponse = await api.get('/api/resources', {
           params: { 
-            // Use the provided type or query for all types containing 'SUITE'
-            type: type || suiteTypes.join(','),
-            status,
-            search,
-            date,
+            type: suiteTypes.join(','),
             page: currentPage,
-            limit: pageSize
+            limit: pageSize,
+            date: date // Include date parameter for potential filtering
           }
         });
         
         if (response?.data?.status === 'success' && Array.isArray(response?.data?.data)) {
-          // Add resources from this page to our collection
-          allResources = [...allResources, ...response.data.data];
-          
-          // Update pagination tracking
-          currentPage++;
+          allResources = allResources.concat(response.data.data);
           totalPages = response.data.totalPages || 1;
           
-          console.log(`Fetched page ${currentPage-1} of ${totalPages}, got ${response.data.data.length} resources, total so far: ${allResources.length}`);
+          console.log(`Fetched page ${currentPage} of ${totalPages}, got ${response.data.data.length} resources, total so far: ${allResources.length}`);
+          currentPage++; // Increment AFTER processing the response
         } else {
           break; // Exit the loop if we got an invalid response
         }
@@ -191,11 +181,47 @@ export const resourceService = {
       
       console.log(`Completed fetching all resources. Total: ${allResources.length}`);
       
-      // Return the same structure as the API but with all resources combined
+      // Now fetch reservations for each suite to determine occupancy
+      const formattedDate = date || formatDateToYYYYMMDD(new Date());
+      console.log(`Fetching reservations for ${allResources.length} suites on date: ${formattedDate}`);
+      
+      // Get all reservations for the specified date
+      const reservationsResponse = await api.get('/api/reservations', {
+        params: {
+          startDate: formattedDate,
+          endDate: formattedDate,
+          status: 'PENDING,CONFIRMED,CHECKED_IN',
+          page: 1,
+          limit: 1000
+        }
+      });
+      
+      const reservations = reservationsResponse?.data?.data?.reservations || [];
+      console.log(`Found ${reservations.length} reservations for date ${formattedDate}`);
+      
+      // Attach reservations to each resource
+      const resourcesWithReservations: ResourceWithReservations[] = allResources.map(resource => {
+        const resourceReservations = reservations.filter((reservation: any) => 
+          reservation.resourceId === resource.id
+        );
+        
+        if (resourceReservations.length > 0) {
+          console.log(`Resource ${resource.name} (${resource.id}) has ${resourceReservations.length} reservations`);
+        }
+        
+        return {
+          ...resource,
+          reservations: resourceReservations
+        };
+      });
+      
+      console.log(`Completed enriching ${resourcesWithReservations.length} resources with reservation data`);
+      
+      // Return the same structure as the API but with all resources combined and enriched
       return {
         status: 'success',
-        data: allResources,
-        results: allResources.length
+        data: resourcesWithReservations,
+        results: resourcesWithReservations.length
       };
     } catch (error: any) {
       console.error('Error in getSuites:', error);
@@ -218,64 +244,11 @@ export const resourceService = {
     try {
       console.log('Fetching suite stats for date:', date);
       
-      // First, get all suites with pagination
-      const suiteTypes = ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE', 'SUITE'];
-      let allSuites: Resource[] = [];
-      let currentPage = 1;
-      let totalPages = 1;
-      const pageSize = 100; // Fetch 100 per page for efficiency
+      // Use the same logic as getSuites to get enriched data with reservations
+      const suitesResponse = await resourceService.getSuites(undefined, undefined, undefined, date);
       
-      // Fetch all suites across pagination
-      do {
-        const response: AxiosResponse = await api.get('/api/resources', {
-          params: { 
-            type: suiteTypes.join(','),
-            date,
-            page: currentPage,
-            limit: pageSize
-          }
-        });
-        
-        if (response?.data?.status === 'success' && Array.isArray(response?.data?.data)) {
-          const { data, totalPages: pages, currentPage: page } = response.data;
-          allSuites = [...allSuites, ...data];
-          
-          totalPages = pages || 1;
-          currentPage += 1;
-          
-          console.log(`Stats: Fetched page ${page} of ${pages}, got ${data.length} resources, total so far: ${allSuites.length}`);
-        } else {
-          break; // Exit if the response format is unexpected
-        }
-      } while (currentPage <= totalPages);
-      
-      console.log(`Stats: Completed fetching all resources. Total: ${allSuites.length}`);
-      
-      // Now fetch reservations for this date to determine occupied and reserved suites
-      const reservationsResponse: AxiosResponse = await api.get('/api/reservations', {
-        params: {
-          date,
-          status: ['CONFIRMED', 'CHECKED_IN'].join(',') // Only include active reservations
-        }
-      });
-      
-      // Extract reservations and organize by suiteId/resourceId
-      const reservationsBySuiteId: Record<string, any[]> = {};
-      
-      if (reservationsResponse?.data?.status === 'success' && Array.isArray(reservationsResponse?.data?.data)) {
-        const reservations = reservationsResponse.data.data;
-        console.log(`Fetched ${reservations.length} reservations for date ${date}`);
-        
-        // Map reservations to suites
-        reservations.forEach((reservation: any) => {
-          const resourceId = reservation.resourceId || reservation.suiteId || reservation.kennelId;
-          if (resourceId) {
-            if (!reservationsBySuiteId[resourceId]) {
-              reservationsBySuiteId[resourceId] = [];
-            }
-            reservationsBySuiteId[resourceId].push(reservation);
-          }
-        });
+      if (suitesResponse.status !== 'success' || !Array.isArray(suitesResponse.data)) {
+        throw new Error('Failed to fetch suites data for stats calculation');
       }
       
       // Calculate stats
@@ -286,53 +259,43 @@ export const resourceService = {
       let maintenance = 0;
       let needsCleaning = 0;
       
-      // Debug: Log sample suite data
-      console.log('Calculating stats for', allSuites.length, 'suites');
-      if (allSuites.length > 0) {
-        const sample = allSuites[0];
-        console.log('Sample suite data:', {
-          id: sample.id,
-          type: sample.type,
-          maintenanceStatus: sample.attributes?.maintenanceStatus,
-          hasReservations: reservationsBySuiteId[sample.id] ? true : false
-        });
+      const suites = suitesResponse.data;
+      console.log(`Calculating stats for ${suites.length} suites with reservation data`);
+      
+      for (const suite of suites) {
+        total++;
+        
+        // Check if suite has active reservations
+        const hasActiveReservations = suite.reservations && suite.reservations.length > 0;
+        
+        // Determine the status of each suite
+        const maintenanceStatus = (suite as any).maintenanceStatus || suite.attributes?.maintenanceStatus;
+        const lastCleaned = (suite as any).lastCleanedAt || suite.attributes?.lastCleaned;
+        
+        if (maintenanceStatus === 'MAINTENANCE' || maintenanceStatus === 'OUT_OF_ORDER') {
+          maintenance++;
+        } else if (maintenanceStatus === 'NEEDS_CLEANING' || 
+                   (lastCleaned && new Date(lastCleaned) < new Date(Date.now() - 24 * 60 * 60 * 1000))) {
+          needsCleaning++;
+        } else if (hasActiveReservations && suite.reservations) {
+          // Check reservation status to determine if occupied or reserved
+          const reservation = suite.reservations[0];
+          if (reservation.status === 'CONFIRMED' || reservation.status === 'CHECKED_IN') {
+            occupied++;
+          } else if (reservation.status === 'PENDING') {
+            reserved++;
+          } else {
+            available++;
+          }
+        } else {
+          available++;
+        }
       }
       
-      allSuites.forEach(suite => {
-        total += 1;
-        
-        // Check for maintenance status
-        const isInMaintenance = suite.attributes?.maintenanceStatus === 'MAINTENANCE';
-        
-        // Check for reservations
-        const suiteReservations = reservationsBySuiteId[suite.id] || [];
-        const hasActiveReservations = suiteReservations.length > 0;
-        
-        // Determine if any active reservations are CHECKED_IN (occupied) vs just CONFIRMED (reserved)
-        const isOccupied = hasActiveReservations && 
-          suiteReservations.some(res => res.status === 'CHECKED_IN');
-        
-        const isReserved = hasActiveReservations && 
-          !isOccupied && // Not already counted as occupied
-          suiteReservations.some(res => res.status === 'CONFIRMED');
-        
-        // Update stats based on status
-        if (isInMaintenance) {
-          maintenance += 1;
-        } else if (isOccupied) {
-          occupied += 1;
-        } else if (isReserved) {
-          reserved += 1;
-        } else {
-          available += 1;
-        }
-      });
-      
-      // Calculate occupancy rate (including both occupied and reserved)
+      // Calculate occupancy rate
       const occupancyRate = total > 0 ? Math.round(((occupied + reserved) / total) * 100) : 0;
       
-      console.log(`Stats calculated: Total=${total}, Occupied=${occupied}, Reserved=${reserved}, Available=${available}, Maintenance=${maintenance}, Occupancy Rate=${occupancyRate}%`);
-      
+      console.log(`Stats calculated: Total=${total}, Occupied=${occupied}, Reserved=${reserved}, Available=${available}, Maintenance=${maintenance}, Needs Cleaning=${needsCleaning}, Occupancy Rate=${occupancyRate}%`);
       
 
       return {
