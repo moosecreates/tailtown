@@ -10,8 +10,7 @@ import { AppError } from '../../utils/service';
 import { catchAsync } from '../../middleware/catchAsync';
 import { logger } from '../../utils/logger';
 import { 
-  ExtendedReservationWhereInput,
-  ExtendedReservationInclude
+  ExtendedReservationWhereInput
 } from '../../types/prisma-extensions';
 import { safeExecutePrismaQuery, prisma } from './utils/prisma-helpers';
 
@@ -40,7 +39,7 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
   // Get tenant ID from request - added by tenant middleware
   // In development mode, use a default tenant ID if not provided
   const isDev = process.env.NODE_ENV === 'development';
-  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
+  const tenantId = req.tenantId || (isDev ? 'dev' : undefined);
   if (!tenantId) {
     logger.warn(`Missing tenant ID in request`, { requestId });
     throw AppError.authorizationError('Tenant ID is required');
@@ -78,6 +77,9 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
   // Note: organizationId removed as it's not in the schema
   const filter: any = {};
   
+  // Enforce tenant scoping for multi-tenancy
+  filter.tenantId = tenantId;
+  
   // Add optional filters if provided
   if (req.query.status) {
     // Handle comma-separated status values
@@ -106,53 +108,83 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
     filter.suiteType = req.query.suiteType;
   }
   
-  // Handle date filters - support both 'startDate' and 'date' parameters
-  const dateParam = req.query.startDate || req.query.date;
-  if (dateParam) {
+  // Handle date filters
+  // Support overlapping range when both startDate and endDate are provided
+  let rangeApplied = false;
+  if (req.query.startDate && req.query.endDate) {
     try {
-      // Parse the date string in YYYY-MM-DD format
-      const dateStr = dateParam as string;
-      const [year, month, day] = dateStr.split('-').map(num => parseInt(num, 10));
-      
-      // Create date objects for start and end of the day in local timezone
-      // Month is 0-indexed in JavaScript Date
-      const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
-      const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
-      
-      if (!isNaN(startOfDay.getTime()) && !isNaN(endOfDay.getTime())) {
-        // Filter for reservations that start on the specific date
-        filter.startDate = {
-          gte: startOfDay,
-          lte: endOfDay
-        };
-        
-        logger.info(`Filtering reservations for date: ${dateStr}, using start: ${startOfDay.toISOString()} and end: ${endOfDay.toISOString()}`, { requestId });
+      const startStr = req.query.startDate as string;
+      const endStr = req.query.endDate as string;
+      const [sy, sm, sd] = startStr.split('-').map(n => parseInt(n, 10));
+      const [ey, em, ed] = endStr.split('-').map(n => parseInt(n, 10));
+
+      const startOfRange = new Date(sy, (sm || 1) - 1, sd || 1, 0, 0, 0, 0);
+      const endOfRange = new Date(ey, (em || 1) - 1, ed || 1, 23, 59, 59, 999);
+
+      if (!isNaN(startOfRange.getTime()) && !isNaN(endOfRange.getTime())) {
+        const andConds = [
+          // reservation starts on/before range end
+          { startDate: { lte: endOfRange } },
+          // reservation ends on/after range start
+          { endDate: { gte: startOfRange } }
+        ];
+        filter.AND = Array.isArray(filter.AND) ? [...filter.AND, ...andConds] : andConds;
+        rangeApplied = true;
+        logger.info(`Filtering reservations overlapping range ${startStr} - ${endStr}`, { requestId, startOfRange, endOfRange });
       } else {
-        logger.warn(`Invalid date filter format`, { requestId, dateParam });
-        warnings.push(`Invalid date filter: ${dateParam}, ignoring this filter`);
+        logger.warn(`Invalid startDate/endDate range provided`, { requestId, startDate: req.query.startDate, endDate: req.query.endDate });
+        warnings.push(`Invalid date range: startDate=${req.query.startDate}, endDate=${req.query.endDate}`);
       }
     } catch (error) {
-      logger.warn(`Error parsing date filter`, { requestId, dateParam, error });
-      warnings.push(`Error parsing date filter: ${dateParam}, ignoring this filter`);
+      logger.warn(`Error parsing date range`, { requestId, startDate: req.query.startDate, endDate: req.query.endDate, error });
+      warnings.push(`Error parsing date range: startDate=${req.query.startDate}, endDate=${req.query.endDate}`);
     }
   }
-  
-  if (req.query.endDate) {
-    try {
-      const endDate = new Date(req.query.endDate as string);
-      if (!isNaN(endDate.getTime())) {
-        filter.endDate = {
-          lte: endDate
-        };
-      } else {
-        logger.warn(`Invalid endDate filter`, { requestId, endDate: req.query.endDate });
-        warnings.push(`Invalid endDate filter: ${req.query.endDate}, ignoring this filter`);
+
+  // If no valid range, support single-day filtering via 'date' or 'startDate'
+  if (!rangeApplied) {
+    const dateParam = req.query.startDate || req.query.date;
+    if (dateParam) {
+      try {
+        const dateStr = dateParam as string;
+        const [year, month, day] = dateStr.split('-').map(num => parseInt(num, 10));
+        const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+        const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+        if (!isNaN(startOfDay.getTime()) && !isNaN(endOfDay.getTime())) {
+          filter.startDate = { gte: startOfDay, lte: endOfDay };
+          logger.info(`Filtering reservations for date: ${dateStr}, using start: ${startOfDay.toISOString()} and end: ${endOfDay.toISOString()}`, { requestId });
+        } else {
+          logger.warn(`Invalid date filter format`, { requestId, dateParam });
+          warnings.push(`Invalid date filter: ${dateParam}, ignoring this filter`);
+        }
+      } catch (error) {
+        logger.warn(`Error parsing date filter`, { requestId, dateParam, error });
+        warnings.push(`Error parsing date filter: ${dateParam}, ignoring this filter`);
       }
-    } catch (error) {
-      logger.warn(`Error parsing endDate filter`, { requestId, endDate: req.query.endDate, error });
-      warnings.push(`Error parsing endDate filter: ${req.query.endDate}, ignoring this filter`);
+    }
+
+    if (req.query.endDate) {
+      try {
+        const endDate = new Date(req.query.endDate as string);
+        if (!isNaN(endDate.getTime())) {
+          filter.endDate = { lte: endDate };
+        } else {
+          logger.warn(`Invalid endDate filter`, { requestId, endDate: req.query.endDate });
+          warnings.push(`Invalid endDate filter: ${req.query.endDate}, ignoring this filter`);
+        }
+      } catch (error) {
+        logger.warn(`Error parsing endDate filter`, { requestId, endDate: req.query.endDate, error });
+        warnings.push(`Error parsing endDate filter: ${req.query.endDate}, ignoring this filter`);
+      }
     }
   }
+
+  // Determine ordering
+  const allowedSortFields = ['startDate', 'endDate', 'createdAt', 'updatedAt'];
+  const sortByParam = (req.query.sortBy as string) || 'startDate';
+  const sortField = allowedSortFields.includes(sortByParam) ? sortByParam : 'startDate';
+  const sortOrderParam = (req.query.sortOrder as string) === 'asc' ? 'asc' : ((req.query.sortOrder as string) === 'desc' ? 'desc' : 'desc');
+  const orderByClause: any = { [sortField]: sortOrderParam };
   
   // Get total count for pagination
   const totalCount = await safeExecutePrismaQuery(
@@ -173,41 +205,44 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
         where: filter as ExtendedReservationWhereInput,
         skip,
         take: limit,
-        orderBy: {
-          startDate: 'desc'
-        },
-        include: {
+        orderBy: orderByClause,
+        select: {
+          // Base fields (explicitly exclude cutOffDate and organizationId by not selecting them)
+          id: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          customerId: true,
+          petId: true,
+          serviceId: true,
+          resourceId: true,
+          // Relations (keep minimal, safe fields)
           customer: {
             select: {
               firstName: true,
-              lastName: true,
-              email: true,
-              phone: true
+              lastName: true
             }
           },
           pet: {
             select: {
-              name: true,
-              breed: true,
-              birthdate: true // Changed from age to birthdate as age doesn't exist in schema
+              name: true
             }
           },
           resource: {
             select: {
               name: true,
-              type: true,
-              location: true
+              type: true
             }
           },
           service: {
             select: {
               id: true,
-              name: true,
-              price: true,
-              description: true
+              name: true
             }
           }
-        } as unknown as ExtendedReservationInclude
+        }
       });
     },
     [], // Default to empty array if there's an error
@@ -287,55 +322,51 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
       return await prisma.reservation.findFirst({
         where: {
           id,
-          // organizationId removed as it's not in the schema
+          tenantId
         } as ExtendedReservationWhereInput,
-        include: {
+        select: {
+          // Base fields (explicitly exclude cutOffDate and organizationId by not selecting them)
+          id: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          customerId: true,
+          petId: true,
+          serviceId: true,
+          resourceId: true,
+          // Relations (minimal)
           customer: {
             select: {
               firstName: true,
-              lastName: true,
-              email: true,
-              phone: true
+              lastName: true
             }
           },
           pet: {
             select: {
-              name: true,
-              breed: true,
-              birthdate: true // Changed from age to birthdate as age doesn't exist in schema
+              name: true
             }
           },
           resource: {
             select: {
               name: true,
-              type: true,
-              location: true
+              type: true
             }
           },
           service: {
             select: {
               id: true,
-              name: true,
-              price: true,
-              description: true
+              name: true
             }
           },
           addOnServices: {
             select: {
               id: true,
-              addOnId: true,
-              price: true,
-              notes: true,
-              addOn: {
-                select: {
-                  name: true,
-                  price: true,
-                  description: true
-                }
-              }
+              addOnId: true
             }
           }
-        } as unknown as ExtendedReservationInclude
+        }
       });
     },
     null, // Default to null if there's an error

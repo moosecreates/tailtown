@@ -1,24 +1,56 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function(app) {
-  // Proxy all requests through /api
+  // Route reservation-related APIs to reservation-service (4003)
   app.use(
-    '/api',
+    '/api/reservations',
     createProxyMiddleware({
-      target: 'http://localhost:3002',
+      target: 'http://localhost:4003',
       changeOrigin: true,
-      pathRewrite: {
-        '^/api': '', // remove /api prefix when forwarding to target
-      },
       logLevel: 'debug',
       onError: (err, req, res) => {
         console.error('Proxy Error:', err);
         res.status(500).json({ error: 'Proxy Error', details: err.message });
-      },
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,PATCH,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      }
+    })
+  );
+
+  app.use(
+    '/api/resources',
+    createProxyMiddleware({
+      target: 'http://localhost:4003',
+      changeOrigin: true,
+      logLevel: 'debug',
+      onError: (err, req, res) => {
+        console.error('Proxy Error:', err);
+        res.status(500).json({ error: 'Proxy Error', details: err.message });
+      }
+    })
+  );
+
+  app.use(
+    '/api/error-tracking',
+    createProxyMiddleware({
+      target: 'http://localhost:4003',
+      changeOrigin: true,
+      logLevel: 'debug',
+      onError: (err, req, res) => {
+        console.error('Proxy Error:', err);
+        res.status(500).json({ error: 'Proxy Error', details: err.message });
+      }
+    })
+  );
+
+  // Default: other /api routes to customer-service (4004)
+  app.use(
+    '/api',
+    createProxyMiddleware({
+      target: 'http://localhost:4004',
+      changeOrigin: true,
+      logLevel: 'debug',
+      onError: (err, req, res) => {
+        console.error('Proxy Error:', err);
+        res.status(500).json({ error: 'Proxy Error', details: err.message });
       }
     })
   );

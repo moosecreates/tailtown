@@ -26,7 +26,7 @@ import { Service } from '../../types/service';
 import { customerService } from '../../services/customerService';
 import { petService } from '../../services/petService';
 import { serviceManagement } from '../../services/serviceManagement';
-import { resourceService, Resource } from '../../services/resourceService';
+import { resourceService, type Resource } from '../../services/resourceService';
 import AddOnSelectionDialog from './AddOnSelectionDialog';
 
 /**

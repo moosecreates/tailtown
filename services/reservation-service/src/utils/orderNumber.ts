@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
  * 
  * The number is sequential within a given day and tenant
  * 
- * @param tenantId The organization ID for tenant isolation
+ * @param tenantId The tenant ID for tenant isolation
  * @returns A unique order number string
  */
 export async function generateOrderNumber(tenantId: string): Promise<string> {
@@ -26,7 +26,7 @@ export async function generateOrderNumber(tenantId: string): Promise<string> {
   
   const todayReservationsCount = await prisma.reservation.count({
     where: {
-      organizationId: tenantId,
+      tenantId: tenantId,
       createdAt: {
         gte: startOfDay,
         lte: endOfDay
@@ -44,7 +44,7 @@ export async function generateOrderNumber(tenantId: string): Promise<string> {
   const existingReservation = await prisma.reservation.findFirst({
     where: { 
       orderNumber,
-      organizationId: tenantId
+      tenantId: tenantId
     } as ExtendedReservationWhereInput
   });
   

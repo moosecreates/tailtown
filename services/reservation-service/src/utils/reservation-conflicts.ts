@@ -63,7 +63,7 @@ export async function detectReservationConflicts(
 
   // Build the base query conditions
   const baseConditions: any = {
-    organizationId: tenantId,
+    tenantId: tenantId,
     AND: [
       { startDate: { lte: endDate } },
       { endDate: { gte: startDate } }
@@ -169,7 +169,7 @@ export async function detectReservationConflicts(
       // Find all resources of the requested suite type
       const resources = await prisma.resource.findMany({
         where: {
-          organizationId: tenantId,
+          tenantId: tenantId,
           type: suiteType
         } as any
       });

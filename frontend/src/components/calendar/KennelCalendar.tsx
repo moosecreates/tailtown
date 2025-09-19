@@ -34,12 +34,24 @@ import {
   Today as TodayIcon,
   ArrowBackIosNew
 } from '@mui/icons-material';
-import { resourceService, Resource } from '../../services/resourceService';
+import { resourceService, type Resource } from '../../services/resourceService';
 import { reservationService, Reservation as BaseReservation } from '../../services/reservationService';
 import ReservationForm from '../reservations/ReservationForm';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
-import api from '../../services/api';
 import { reservationApi } from '../../services/api';
+
+// Extended Resource interface for specific properties used in KennelCalendar
+interface ExtendedResource extends Resource {
+  resourceId?: string;
+  resourceName?: string;
+  suiteNumber?: string;
+  reservations?: Array<{
+    id: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+  }>;
+}
 
 // Enhanced Reservation interface with additional fields we might encounter
 interface Reservation extends BaseReservation {
@@ -48,7 +60,7 @@ interface Reservation extends BaseReservation {
   suiteId?: string;
   suiteType?: string;
   staffNotes?: string;
-  resource?: Resource & { resourceId?: string };
+  resource?: ExtendedResource;
 }
 
 // Define the view types
@@ -65,7 +77,7 @@ interface KennelCalendarProps {
 // Wrapper component to prevent unnecessary re-renders of the reservation form
 // This is a separate component to avoid React hooks rules violations
 interface ReservationFormWrapperProps {
-  selectedKennel: Resource | null;
+  selectedKennel: ExtendedResource | null;
   selectedDate: { start: Date; end: Date } | null;
   selectedReservation: Reservation | null;
   onSubmit: (formData: any) => Promise<{reservationId?: string} | void>;
@@ -135,7 +147,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
   const [viewType, setViewType] = useState<ViewType>('week');
   
   // State for kennels and reservations
-  const [kennels, setKennels] = useState<Resource[]>([]);
+  const [kennels, setKennels] = useState<ExtendedResource[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -160,7 +172,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
   
   // State for the reservation form dialog
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
-  const [selectedKennel, setSelectedKennel] = useState<Resource | null>(null);
+  const [selectedKennel, setSelectedKennel] = useState<ExtendedResource | null>(null);
   const [selectedDate, setSelectedDate] = useState<{ start: Date; end: Date } | null>(null);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   
@@ -220,7 +232,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
         console.log('Suites (paginated) API response:', JSON.stringify(suitesResponse));
         
         // Extract resources from the response
-        let kennelResources: Resource[] = [];
+        let kennelResources: ExtendedResource[] = [];
         
         if (suitesResponse?.status === 'success' && Array.isArray(suitesResponse?.data)) {
           kennelResources = suitesResponse.data;
@@ -239,7 +251,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
         const formattedDate = formatDateToYYYYMMDD(currentDate);
         
         // Extract resource IDs for batch availability check
-        const resourceIds = kennelResources.map((resource: Resource) => resource.id);
+        const resourceIds = kennelResources.map((resource: ExtendedResource) => resource.id);
         
         let availabilityResponse;
         
@@ -250,10 +262,6 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
             resourceIds: resourceIds, // Changed from 'resources' to 'resourceIds' to match backend expectation
             startDate: formattedDate,
             endDate: formattedDate
-          }, {
-            headers: {
-              'x-tenant-id': '1' // Using default tenant ID as a header
-            }
           });
         } else {
           console.log('No resources found, skipping availability check');
@@ -294,7 +302,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
         }
         
         // Combine resource data with availability data
-        const kennelData = kennelResources.map((resource: Resource) => ({
+        const kennelData = kennelResources.map((resource: ExtendedResource) => ({
           ...resource,
           isAvailable: availabilityMap[resource.id] !== undefined ? availabilityMap[resource.id] : true,
           checkDate: formattedDate
@@ -387,9 +395,19 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
 
               // Make a follow-up request to get actual kennels
               try {
-                const suiteResponse = await api.get('/api/suites');
-                if (suiteResponse?.data && Array.isArray(suiteResponse.data)) {
-                  console.log(`Found ${suiteResponse.data.length} suites in follow-up request`);
+                const suiteResponse = await reservationApi.get('/api/resources', {
+                  params: { type: 'STANDARD_SUITE,STANDARD_PLUS_SUITE,VIP_SUITE' }
+                });
+                if (suiteResponse?.data?.status === 'success' && Array.isArray(suiteResponse?.data?.data)) {
+                  console.log(`Found ${suiteResponse.data.data.length} suites in follow-up request`);
+                  kennelData = suiteResponse.data.data.map((suite: any) => ({
+                    ...suite,
+                    isAvailable: response.data.data.isAvailable || true,
+                    checkDate: response.data.data.checkDate || formatDateToYYYYMMDD(currentDate)
+                  }));
+                } else if (Array.isArray(suiteResponse?.data)) {
+                  // Legacy/fallback
+                  console.log(`Found ${suiteResponse.data.length} suites in follow-up request (legacy format)`);
                   kennelData = suiteResponse.data.map((suite: any) => ({
                     ...suite,
                     isAvailable: response.data.data.isAvailable || true,
@@ -502,7 +520,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
       const endDate = formatDateToYYYYMMDD(days[days.length - 1]);
       
       // Get traditional reservations for the calendar display
-      const reservationsResponse = await api.get('/api/reservations', {
+      const reservationsResponse = await reservationApi.get('/api/reservations', {
         params: {
           page: 1,
           limit: 1000,
@@ -553,8 +571,23 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
       }
       
       // Set the reservations data for traditional display
-      if (reservationsResponse?.data?.status === 'success' && Array.isArray(reservationsResponse?.data?.data)) {
-        setReservations(reservationsResponse.data.data);
+      let parsedReservations: any[] | null = null;
+      if (reservationsResponse?.data?.status === 'success') {
+        // Preferred shape: { status: 'success', data: { reservations: [...] } }
+        if (Array.isArray(reservationsResponse?.data?.data?.reservations)) {
+          parsedReservations = reservationsResponse.data.data.reservations;
+        }
+        // Fallback: { status: 'success', data: [...] }
+        else if (Array.isArray(reservationsResponse?.data?.data)) {
+          parsedReservations = reservationsResponse.data.data;
+        }
+        // Fallback: { status: 'success', reservations: [...] }
+        else if (Array.isArray(reservationsResponse?.data?.reservations)) {
+          parsedReservations = reservationsResponse.data.reservations;
+        }
+      }
+      if (Array.isArray(parsedReservations)) {
+        setReservations(parsedReservations as Reservation[]);
       } else {
         setError('Failed to load reservations');
       }
@@ -607,7 +640,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
   }, [loadReservations]);
 
   // Function to handle clicking on a cell
-  const handleCellClick = (kennel: Resource, date: Date, existingReservation?: Reservation) => {
+  const handleCellClick = (kennel: ExtendedResource, date: Date, existingReservation?: Reservation) => {
     if (existingReservation) {
       // If there's an existing reservation, open the form to edit it
       setSelectedReservation(existingReservation);
@@ -867,13 +900,53 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
 
   /**
    * Function to check if a kennel is occupied on a specific date
-   * Uses backend API data when available, falls back to frontend check if API data isn't available
+   * Simplified version that directly checks reservations data
    */
-  const isKennelOccupied = (kennel: Resource, date: Date): Reservation | undefined => {
+  const isKennelOccupied = (kennel: ExtendedResource, date: Date): Reservation | undefined => {
     const dateStr = formatDateToYYYYMMDD(date);
     const kennelId = kennel.id || kennel.resourceId;
     
     console.log(`Checking occupancy for kennel ${kennel.name || kennel.resourceName} (ID: ${kennelId}) on ${dateStr}`);
+    
+    // Directly check the reservations data for this kennel and date
+    const matchingReservation = reservations.find(reservation => {
+      // Check if this reservation is for this kennel
+      if (reservation.resourceId !== kennelId) {
+        return false;
+      }
+      
+      // Check if the date falls within the reservation period
+      const startDate = new Date(reservation.startDate);
+      const endDate = new Date(reservation.endDate);
+      const checkDate = new Date(date);
+      
+      // Set times to compare just dates
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+      checkDate.setHours(12, 0, 0, 0); // Noon to avoid timezone issues
+      
+      const isInRange = checkDate >= startDate && checkDate <= endDate;
+      
+      if (isInRange) {
+        console.log(`Found reservation for kennel ${kennelId} on ${dateStr}:`, {
+          reservationId: reservation.id,
+          customer: reservation.customer?.firstName + ' ' + reservation.customer?.lastName,
+          status: reservation.status,
+          startDate: reservation.startDate,
+          endDate: reservation.endDate
+        });
+      }
+      
+      return isInRange;
+    });
+    
+    return matchingReservation;
+  };
+
+  // Legacy complex availability checking (keeping as fallback)
+  const isKennelOccupiedLegacy = (kennel: ExtendedResource, date: Date): Reservation | undefined => {
+    const dateStr = formatDateToYYYYMMDD(date);
+    const kennelId = kennel.id || kennel.resourceId;
     
     // First check availability data from the API
     if (availabilityData) {
@@ -1074,7 +1147,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
 
   // Function to group kennels by type
   const groupedKennels = useMemo(() => {
-    const grouped: Record<string, Resource[]> = {
+    const grouped: Record<string, ExtendedResource[]> = {
       'VIP_SUITE': [],
       'STANDARD_PLUS_SUITE': [],
       'STANDARD_SUITE': []

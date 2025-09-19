@@ -22,9 +22,36 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import SearchIcon from '@mui/icons-material/Search';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import PetsIcon from '@mui/icons-material/Pets';
-import { resourceService, Resource } from '../../services';
+import { resourceService, type Resource } from '../../services/resourceService';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
 import { determineSuiteStatus } from '../../utils/suiteUtils';
+
+/**
+ * Extended Resource type that includes reservations
+ */
+interface ResourceWithReservations extends Resource {
+  reservations?: Array<{
+    id: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+    pet?: {
+      id: string;
+      name: string;
+      breed?: string;
+      customer?: {
+        id: string;
+        firstName: string;
+        lastName: string;
+      };
+    };
+    customer?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+    };
+  }>;
+}
 
 // Suite types we store in the attributes
 enum SuiteType {
@@ -124,7 +151,7 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
       );
       if (response?.status === 'success' && Array.isArray(response?.data)) {
         
-        const suites = response.data.map((suite: Resource) => {
+        const suites = response.data.map((suite: ResourceWithReservations) => {
           // Safely extract pet and owner info
           let pet = null;
           let owner = null;
@@ -133,13 +160,13 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
             const reservation = suite.reservations[0];
             if (reservation.pet) {
               pet = reservation.pet;
-              // Try to get owner from pet.owner if available
-              if (reservation.pet.owner) {
-                owner = reservation.pet.owner;
+              // Try to get owner from pet.customer if available
+              if (reservation.pet.customer) {
+                owner = reservation.pet.customer;
               }
             }
             
-            // If no owner from pet.owner, try reservation.customer
+            // If no owner from pet.customer, try reservation.customer
             if (!owner && reservation.customer) {
               owner = reservation.customer;
             }

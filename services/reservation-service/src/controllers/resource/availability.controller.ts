@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { AppError } from '../../utils/service';
-import { ExtendedReservationWhereInput, ExtendedReservationStatus, ExtendedReservationInclude } from '../../types/prisma-extensions';
+import { AppError } from '../../utils/appError';
+import { TenantRequest } from '../../types/request';
+import { ExtendedReservationWhereInput, ExtendedReservationStatus } from '../../types/prisma-extensions';
 
 const prisma = new PrismaClient();
 
@@ -29,15 +30,16 @@ async function safeExecutePrismaQuery<T>(queryFn: () => Promise<T>, fallbackValu
  * @returns {Object} Response with isAvailable flag and any conflicting reservations
  */
 export const checkResourceAvailability = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // Get tenant ID from request - added by tenant middleware
-    // Use a default tenant ID if one isn't provided
-    const tenantId = req.tenantId || 'default';
-    console.log(`Using tenant ID: ${tenantId} for resource availability check`);
+    // Get tenant ID from request - added by tenant middleware (required)
+    const tenantId = req.tenantId;
+    if (!tenantId) {
+      return next(AppError.authorizationError('Tenant ID is required'));
+    }
 
     // Get query parameters
     const { resourceId, resourceType, date, startDate, endDate } = req.query;
@@ -81,8 +83,8 @@ export const checkResourceAvailability = async (
     
     if (resourceId) {
       // If resourceId is provided, just use that specific resource
-      const resource = await prisma.resource.findUnique({
-        where: { id: resourceId as string }
+      const resource = await prisma.resource.findFirst({
+        where: { id: resourceId as string, tenantId } as any
       });
       
       if (resource) {
@@ -92,9 +94,9 @@ export const checkResourceAvailability = async (
       // If resourceType is provided, find all resources of that type
       resources = await prisma.resource.findMany({
         where: {
-          // Removed organizationId reference as it doesn't exist in the database
+          tenantId,
           type: resourceType as any // TODO: Fix type casting
-        }
+        } as any
       });
       
       console.log(`Found ${resources.length} resources of type ${resourceType}`);
@@ -119,7 +121,7 @@ export const checkResourceAvailability = async (
       async () => {
         return await prisma.reservation.findMany({
           where: {
-            organizationId: tenantId,
+            tenantId: tenantId,
             resourceId: {
               in: resources.map(r => r.id)
             },
@@ -131,26 +133,27 @@ export const checkResourceAvailability = async (
             // Only check active reservations
             status: {
               in: [
-                ExtendedReservationStatus.CONFIRMED, 
-                ExtendedReservationStatus.CHECKED_IN, 
-                ExtendedReservationStatus.PENDING_PAYMENT, 
-                ExtendedReservationStatus.PARTIALLY_PAID
+                ExtendedReservationStatus.PENDING,
+                ExtendedReservationStatus.CONFIRMED,
+                ExtendedReservationStatus.CHECKED_IN
               ] as any
             }
           } as ExtendedReservationWhereInput,
-          include: {
+          select: {
+            id: true,
+            resourceId: true,
+            startDate: true,
+            endDate: true,
+            status: true,
             customer: {
               select: {
                 firstName: true,
-                lastName: true,
-                email: true,
-                phone: true
+                lastName: true
               }
             },
             pet: {
               select: {
-                name: true,
-                breed: true
+                name: true
               }
             },
             service: {
@@ -158,7 +161,7 @@ export const checkResourceAvailability = async (
                 name: true
               }
             }
-          } as unknown as ExtendedReservationInclude
+          }
         });
       },
       [], // Empty array fallback if there's an error

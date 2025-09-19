@@ -1,6 +1,6 @@
 /**
  * Prisma client extension for multi-tenant support
- * These type extensions are necessary because our schema includes fields like organizationId
+ * These type extensions are necessary because our schema includes fields like tenantId
  * for multi-tenant isolation, but the Prisma client doesn't recognize them in TypeScript.
  */
 
@@ -8,7 +8,7 @@ import { Prisma, ReservationStatus as PrismaReservationStatus } from '@prisma/cl
 
 // Define tenant-specific types to use with type assertions
 export interface TenantFields {
-  organizationId: string;
+  tenantId: string;
 }
 
 // Extend the ReservationStatus enum to include our custom statuses
@@ -25,24 +25,24 @@ export enum ExtendedReservationStatus {
   DRAFT = 'DRAFT'
 }
 
-// Extend Prisma's WhereInput types to include organizationId
+// Extend Prisma's WhereInput types to include tenantId
 export interface ExtendedReservationWhereInput extends Prisma.ReservationWhereInput {
-  organizationId?: string | Prisma.StringFilter;
+  tenantId?: string | Prisma.StringFilter;
 }
 export interface ExtendedCustomerWhereInput extends Prisma.CustomerWhereInput {
-  organizationId?: string | Prisma.StringFilter;
+  tenantId?: string | Prisma.StringFilter;
 }
 export interface ExtendedPetWhereInput extends Prisma.PetWhereInput {
-  organizationId?: string | Prisma.StringFilter;
+  tenantId?: string | Prisma.StringFilter;
 }
 export interface ExtendedResourceWhereInput extends Prisma.ResourceWhereInput {
-  organizationId?: string | Prisma.StringFilter;
+  tenantId?: string | Prisma.StringFilter;
 }
 export interface ExtendedAddOnServiceWhereInput extends Prisma.AddOnServiceWhereInput {
-  organizationId?: string | Prisma.StringFilter;
+  tenantId?: string | Prisma.StringFilter;
 }
 export interface ExtendedServiceWhereInput extends Prisma.ServiceWhereInput {
-  organizationId?: string | Prisma.StringFilter;
+  tenantId?: string | Prisma.StringFilter;
 }
 
 // Extend Prisma's model types to include custom fields
@@ -84,5 +84,5 @@ export interface ExtendedReservationAddOnCreateInput extends Prisma.ReservationA
  * when we need to use fields not recognized by TypeScript but present in our database.
  * 
  * Example usage:
- * const whereClause = { organizationId: tenantId } as ExtendedReservationWhereInput;
+ * const whereClause = { tenantId } as ExtendedReservationWhereInput;
  */

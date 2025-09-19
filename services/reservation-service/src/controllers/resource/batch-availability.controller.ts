@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { AppError } from '../../utils/service';
+import { AppError } from '../../utils/appError';
+import { TenantRequest } from '../../types/request';
 import { ExtendedReservationWhereInput, ExtendedReservationStatus, ExtendedReservationInclude } from '../../types/prisma-extensions';
 
 const prisma = new PrismaClient();
@@ -21,21 +22,30 @@ async function safeExecutePrismaQuery<T>(queryFn: () => Promise<T>, fallbackValu
  * @route POST /api/resources/availability/batch
  */
 export const batchCheckResourceAvailability = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // Get tenant ID from request - added by tenant middleware
-    // Use a default tenant ID if one isn't provided
-    const tenantId = req.tenantId || 'default';
-    console.log(`Using tenant ID: ${tenantId} for batch resource availability check`);
+    // Get tenant ID from request - added by tenant middleware (required)
+    const tenantId = req.tenantId;
+    if (!tenantId) {
+      return next(AppError.authorizationError('Tenant ID is required'));
+    }
 
     // Get request body - expecting an array of resource IDs and date ranges
-    const { resources, date, startDate, endDate } = req.body;
-    
-    if (!resources || !Array.isArray(resources) || resources.length === 0) {
-      return next(new AppError('Resource IDs are required', 400));
+    const { resources: resourcesBody, resourceIds, date, startDate, endDate } = req.body;
+
+    // Accept either 'resources' or 'resourceIds' to be backward/forward compatible
+    const resources =
+      Array.isArray(resourcesBody) && resourcesBody.length > 0
+        ? resourcesBody
+        : Array.isArray(resourceIds) && resourceIds.length > 0
+        ? resourceIds
+        : [];
+
+    if (!Array.isArray(resources) || resources.length === 0) {
+      return next(new AppError('Resource IDs are required. Provide an array via "resources" or "resourceIds".', 400));
     }
     
     // Determine if we're checking for a single date or a date range
@@ -73,7 +83,7 @@ export const batchCheckResourceAvailability = async (
       async () => {
         return await prisma.reservation.findMany({
           where: {
-            organizationId: tenantId,
+            tenantId: tenantId,
             resourceId: {
               in: resources
             },
@@ -85,14 +95,18 @@ export const batchCheckResourceAvailability = async (
             // Only check active reservations
             status: {
               in: [
-                ExtendedReservationStatus.CONFIRMED, 
-                ExtendedReservationStatus.CHECKED_IN, 
-                ExtendedReservationStatus.PENDING_PAYMENT, 
-                ExtendedReservationStatus.PARTIALLY_PAID
+                ExtendedReservationStatus.PENDING,
+                ExtendedReservationStatus.CONFIRMED,
+                ExtendedReservationStatus.CHECKED_IN
               ] as any
             }
           } as ExtendedReservationWhereInput,
-          include: {
+          select: {
+            id: true,
+            resourceId: true,
+            startDate: true,
+            endDate: true,
+            status: true,
             customer: {
               select: {
                 firstName: true,
@@ -104,7 +118,7 @@ export const batchCheckResourceAvailability = async (
                 name: true
               }
             }
-          } as unknown as ExtendedReservationInclude
+          }
         });
       },
       [], // Empty array fallback if there's an error
@@ -141,11 +155,17 @@ export const batchCheckResourceAvailability = async (
     return res.status(200).json({
       status: 'success',
       data: {
-        resources: req.body.resources ? req.body.resources.map((id: string) => ({
+        resources: (
+          Array.isArray(req.body?.resources) && req.body.resources.length > 0
+            ? req.body.resources
+            : Array.isArray(req.body?.resourceIds)
+            ? req.body.resourceIds
+            : []
+        ).map((id: string) => ({
           resourceId: id,
           isAvailable: true, // Default to available if we can't determine
           occupyingReservations: []
-        })) : [],
+        })),
         message: 'Batch availability check completed with limited data'
       }
     });

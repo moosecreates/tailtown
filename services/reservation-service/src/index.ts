@@ -12,7 +12,7 @@ const app = createService({
 
 // Apply tenant middleware to ensure all requests include tenant ID
 app.use(tenantMiddleware({
-  required: false,
+  required: true,
   // In production, this would validate against a tenant service
   validateTenant: async (tenantId) => true
 }));

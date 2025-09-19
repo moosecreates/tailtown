@@ -2,31 +2,15 @@ import { AxiosResponse } from 'axios';
 import { reservationApi as api } from './api';
 import { PaginatedResponse } from '../types/common';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
+import { ServiceCategory } from '../types/service';
+import { serviceManagement } from './serviceManagement';
+import { Resource, ResourceType, AvailabilityStatus, ResourceAvailability } from '../types/resource';
 
-export interface Resource {
-  id: string;
-  name: string;
-  type: string;
-  description?: string;
-  capacity: number;
-  availability?: string;
-  location?: string;
-  // Direct columns for suite properties
-  suiteNumber?: number;
-  lastCleanedAt?: Date | string | null;
-  maintenanceStatus?: string;
-  // JSON attributes for flexible, non-queryable properties
-  attributes?: {
-    suiteType?: string;
-    amenities?: string[];
-    size?: string;
-    location?: string;
-    [key: string]: any;
-  };
-  notes?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+// Re-export the Resource types
+export type { Resource, ResourceType, AvailabilityStatus, ResourceAvailability };
+
+// Local helper type for endpoints where we enrich a Resource with reservations
+type ResourceWithReservations = Resource & {
   reservations?: Array<{
     id: string;
     startDate: string;
@@ -48,15 +32,7 @@ export interface Resource {
       };
     };
   }>;
-  
-  // Additional properties for different response formats
-  resourceId?: string;     // Alternative ID field used in some API responses
-  resourceName?: string;   // Alternative name field used in some API responses
-  resourceType?: string;   // Alternative type field used in some API responses
-  number?: number;         // Alternative to suiteNumber in some API responses
-  isAvailable?: boolean;   // Availability status from availability endpoints
-  conflictingReservations?: any[]; // Reservations that conflict with availability
-}
+};
 
 export const resourceService = {
   
@@ -84,7 +60,7 @@ export const resourceService = {
     }
   },
 
-  getResource: async (id: string, date?: string): Promise<{ status: string; data: Resource }> => {
+  getResource: async (id: string, date?: string): Promise<{ status: string; data: ResourceWithReservations }> => {
     try {
       // Use the date provided or get today's date
       const formattedDate = date || formatDateToYYYYMMDD(new Date());
@@ -416,14 +392,73 @@ export const resourceService = {
     serviceId?: string
   ): Promise<{ status: string; data: Resource[] }> => {
     try {
-      const response: AxiosResponse = await api.get('/api/resources/available', {
-        params: {
-          startDate,
-          endDate,
-          serviceId
+      // Determine resourceType from serviceId -> serviceCategory mapping
+      let resourceType: string | undefined;
+
+      if (serviceId) {
+        try {
+          const svcResp = await serviceManagement.getServiceById(serviceId);
+          // Handle possible response shapes
+          const service = (svcResp?.data?.id ? svcResp.data : svcResp?.data) || svcResp;
+          const category: ServiceCategory | string | undefined = service?.serviceCategory || service?.category;
+
+          const mapServiceCategoryToResourceType = (cat?: ServiceCategory | string): string | undefined => {
+            switch (cat) {
+              case ServiceCategory.BOARDING:
+              case 'BOARDING':
+                return 'SUITE';
+              case ServiceCategory.DAYCARE:
+              case 'DAYCARE':
+                // Using SUITE for daycare to align with current suite-based selection flow
+                return 'SUITE';
+              case ServiceCategory.GROOMING:
+              case 'GROOMING':
+                return 'GROOMING_TABLE';
+              case ServiceCategory.TRAINING:
+              case 'TRAINING':
+                return 'TRAINING_ROOM';
+              default:
+                return 'OTHER';
+            }
+          };
+
+          resourceType = mapServiceCategoryToResourceType(category);
+        } catch (e) {
+          console.warn('Unable to resolve service by ID to map resourceType; proceeding without service filter', e);
         }
-      });
-      return response.data;
+      }
+
+      // Build params for backend availability endpoint
+      const params: Record<string, string> = {
+        startDate,
+        endDate
+      };
+      if (resourceType) params.resourceType = resourceType;
+
+      const response: AxiosResponse = await api.get('/api/resources/availability', { params });
+
+      // Normalize backend response to the array of available resources expected by callers
+      // Backend shape: { status, data: { resources: [{ resourceId, name, type, isAvailable, ... }] } }
+      const resources = Array.isArray(response?.data?.data?.resources)
+        ? response.data.data.resources
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
+
+      const normalized: Resource[] = (resources as any[])
+        .filter((r) => r && (r.isAvailable === undefined || r.isAvailable === true))
+        .map((r: any) => ({
+          id: r.id || r.resourceId,
+          name: r.name || r.resourceName || 'Resource',
+          type: r.type || r.resourceType || 'OTHER',
+          capacity: 'capacity' in r ? r.capacity : 1,
+          attributes: 'attributes' in r ? r.attributes : undefined,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        } as Resource));
+
+      return { status: 'success', data: normalized };
     } catch (error: any) {
       console.error('Error in getAvailableResourcesByDate:', error);
       throw error;
@@ -451,7 +486,7 @@ export const resourceService = {
     } 
   }> => {
     try {
-      const response: AxiosResponse = await api.get('/api/v1/resources/availability', {
+      const response: AxiosResponse = await api.get('/api/resources/availability', {
         params: { resourceId, date }
       });
       return response.data;

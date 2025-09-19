@@ -17,7 +17,8 @@ import {
   ExtendedCustomerWhereInput,
   ExtendedPetWhereInput,
   ExtendedResourceWhereInput,
-  ExtendedReservationInclude
+  ExtendedReservationInclude,
+  ExtendedServiceWhereInput
 } from '../../types/prisma-extensions';
 import { safeExecutePrismaQuery, prisma } from './utils/prisma-helpers';
 
@@ -44,21 +45,17 @@ function determineSuiteType(serviceType: string): string | null {
  * @route POST /api/v1/reservations
  * @param {string} req.tenantId - The tenant ID (provided by middleware)
  */
-export const createReservation = catchAsync(async (req: Request, res: Response) => {
+export const createReservation = catchAsync(async (req: TenantRequest, res: Response) => {
   // Generate a unique request ID for logging
   const requestId = `create-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
   logger.info(`Processing create reservation request`, { requestId });
   
   // Get tenant ID from request - added by tenant middleware
-  // In development mode, we use a default tenant ID if not provided
-  const isDev = process.env.NODE_ENV === 'development';
-  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
+  const tenantId = req.tenantId;
   
   if (!tenantId) {
     logger.warn(`Missing tenant ID in request`, { requestId });
     throw AppError.authorizationError('Tenant ID is required');
-  } else if (isDev && !req.tenantId) {
-    logger.info(`Using default tenant ID in development mode: ${tenantId}`, { requestId });
   }
 
   // Validate required fields
@@ -143,6 +140,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
       return await prisma.customer.findFirstOrThrow({
         where: {
           id: customerId,
+          tenantId: tenantId
           // organizationId removed as it's not in the schema
         } as ExtendedCustomerWhereInput
       });
@@ -160,6 +158,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
       return await prisma.pet.findFirstOrThrow({
         where: {
           id: petId,
+          tenantId: tenantId
           // organizationId removed as it's not in the schema
         } as ExtendedPetWhereInput
       });
@@ -177,8 +176,8 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
   // First, get the service details to determine the service type
   let serviceDetails;
   try {
-    serviceDetails = await prisma.service.findUnique({
-      where: { id: serviceId }
+    serviceDetails = await prisma.service.findFirst({
+      where: { id: serviceId, tenantId: tenantId } as ExtendedServiceWhereInput
     });
     
     if (!serviceDetails) {
@@ -227,6 +226,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
         return await prisma.resource.findFirstOrThrow({
           where: {
             id: assignedResourceId,
+            tenantId: tenantId
             // organizationId removed as it's not in the schema
           } as ExtendedResourceWhereInput
         });
@@ -264,7 +264,8 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
       const resources = await prisma.resource.findMany({
         where: {
           // organizationId removed as it's not in the schema,
-          type: determinedSuiteType
+          type: determinedSuiteType,
+          tenantId: tenantId
         } as ExtendedResourceWhereInput
       });
       
@@ -347,6 +348,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
   
   // Prepare reservation data
   const reservationData: any = {
+    tenantId: tenantId,
     customer: {
       connect: { id: customerId }
     },
@@ -429,6 +431,7 @@ export const createReservation = catchAsync(async (req: Request, res: Response) 
             async () => {
               return await prisma.reservationAddOn.create({
                 data: {
+                  tenantId: tenantId,
                   reservationId: newReservation.id,
                   serviceId: addOn.serviceId,
                   quantity: addOn.quantity || 1,

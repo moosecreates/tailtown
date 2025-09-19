@@ -17,7 +17,8 @@ import priceRuleRoutes from './routes/priceRule.routes';
 import invoiceRoutes from './routes/invoice.routes';
 import paymentRoutes from './routes/payment.routes';
 import addonRoutes from './routes/addon.routes';
-import analyticsRoutes from './routes/analytics.routes';
+// Using fixed analytics routes to avoid schema issues
+import analyticsRoutes from './routes/analytics-fixed.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 // Load environment variables

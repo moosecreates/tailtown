@@ -15,6 +15,7 @@ import { ExtendedResourceWhereInput, ExtendedReservationWhereInput } from '../..
 import { AppError } from '../../utils/appError';
 import { catchAsync } from '../../middleware/errorHandler';
 import { logger } from '../../utils/logger';
+import { TenantRequest } from '../../types/request';
 
 const prisma = new PrismaClient();
 
@@ -86,11 +87,8 @@ async function safeExecutePrismaQuery<T>(
  * Implements schema alignment strategy with fallback to empty array
  * Updated to use standardized error handling pattern
  */
-export const getAllResources = catchAsync(async (req: Request, res: Response) => {
-  // In development mode, use a default tenant ID if not provided
-  const isDev = process.env.NODE_ENV === 'development';
-  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
-  
+export const getAllResources = catchAsync(async (req: TenantRequest, res: Response) => {
+  const tenantId = req.tenantId;
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -100,16 +98,8 @@ export const getAllResources = catchAsync(async (req: Request, res: Response) =>
   const limit = parseInt(req.query.limit as string) || 20;
   const skip = (page - 1) * limit;
 
-  // Build filter conditions
-  const whereConditions: any = {};
-  
-  // Store tenantId in a variable but don't add to whereConditions yet
-  // This will be used when the schema includes organizationId
-  const multiTenancyEnabled = false; // Toggle this when schema is updated
-  if (multiTenancyEnabled) {
-    // This line is disabled until the schema includes organizationId
-    // whereConditions.organizationId = tenantId;
-  }
+  // Build filter conditions (tenant-scoped)
+  const whereConditions: any = { tenantId };
 
   // Add type filter if provided
   if (req.query.type) {
@@ -205,12 +195,9 @@ export const getAllResources = catchAsync(async (req: Request, res: Response) =>
  * Implements schema alignment strategy with fallback to null
  * Updated to use standardized error handling pattern
  */
-export const getResourceById = catchAsync(async (req: Request, res: Response) => {
+export const getResourceById = catchAsync(async (req: TenantRequest, res: Response) => {
   const { id } = req.params;
-  // In development mode, use a default tenant ID if not provided
-  const isDev = process.env.NODE_ENV === 'development';
-  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
-  
+  const tenantId = req.tenantId;
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -224,20 +211,11 @@ export const getResourceById = catchAsync(async (req: Request, res: Response) =>
   // Get resource with safe execution
   const resource = await safeExecutePrismaQuery(
     async () => {
-      // Use type assertion for where clause to handle organizationId
-      const whereClause: any = {
-        id
-      };
-      
-      // Prepare for multi-tenancy but don't add the field yet
-      // This will be uncommented when the schema includes organizationId
-      // const multiTenancyEnabled = false;
-      // if (multiTenancyEnabled) {
-      //   whereClause.organizationId = tenantId;
-      // }
-      
-      return await prisma.resource.findUnique({
-        where: whereClause
+      return await prisma.resource.findFirst({
+        where: {
+          id,
+          tenantId
+        }
       });
     },
     null, // Null fallback if there's an error
@@ -262,11 +240,8 @@ export const getResourceById = catchAsync(async (req: Request, res: Response) =>
  * Implements schema alignment strategy with proper error handling
  * Updated to use standardized error handling pattern
  */
-export const createResource = catchAsync(async (req: Request, res: Response) => {
-  // In development mode, use a default tenant ID if not provided
-  const isDev = process.env.NODE_ENV === 'development';
-  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
-  
+export const createResource = catchAsync(async (req: TenantRequest, res: Response) => {
+  const tenantId = req.tenantId;
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -293,8 +268,8 @@ export const createResource = catchAsync(async (req: Request, res: Response) => 
         type,
         capacity: capacity ? parseInt(capacity) : undefined,
         description,
-        isActive: isActive !== undefined ? isActive : true
-        // organizationId removed as it's not in the schema
+        isActive: isActive !== undefined ? isActive : true,
+        tenantId: tenantId
       };
       
       return await prisma.resource.create({
@@ -324,12 +299,9 @@ export const createResource = catchAsync(async (req: Request, res: Response) => 
  * Implements schema alignment strategy with proper error handling
  * Updated to use standardized error handling pattern
  */
-export const updateResource = catchAsync(async (req: Request, res: Response) => {
+export const updateResource = catchAsync(async (req: TenantRequest, res: Response) => {
   const { id } = req.params;
-  // In development mode, use a default tenant ID if not provided
-  const isDev = process.env.NODE_ENV === 'development';
-  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
-  
+  const tenantId = req.tenantId;
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -356,6 +328,20 @@ export const updateResource = catchAsync(async (req: Request, res: Response) => 
   if (capacity !== undefined) updateData.capacity = parseInt(capacity);
   if (description !== undefined) updateData.description = description;
   if (isActive !== undefined) updateData.isActive = isActive;
+
+  // Ensure resource belongs to tenant before update
+  const existingResource = await safeExecutePrismaQuery(
+    async () => {
+      return await prisma.resource.findFirst({
+        where: { id, tenantId }
+      });
+    },
+    null,
+    `Error verifying resource ownership before update: ${id}`
+  );
+  if (!existingResource) {
+    throw AppError.notFoundError('Resource', id);
+  }
 
   // Update resource with safe execution and throw errors
   const updatedResource = await safeExecutePrismaQuery(
@@ -396,12 +382,9 @@ export const updateResource = catchAsync(async (req: Request, res: Response) => 
  * Implements schema alignment strategy with proper error handling
  * Updated to use standardized error handling pattern
  */
-export const deleteResource = catchAsync(async (req: Request, res: Response) => {
+export const deleteResource = catchAsync(async (req: TenantRequest, res: Response) => {
   const { id } = req.params;
-  // In development mode, use a default tenant ID if not provided
-  const isDev = process.env.NODE_ENV === 'development';
-  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
-  
+  const tenantId = req.tenantId;
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -415,13 +398,13 @@ export const deleteResource = catchAsync(async (req: Request, res: Response) => 
   // Check if resource is used in any reservations
   const reservationsUsingResource = await safeExecutePrismaQuery(
     async () => {
-      const whereConditions: ExtendedReservationWhereInput = {
+      const whereConditions: any = {
         resourceId: id,
-        organizationId: tenantId
+        tenantId: tenantId
       };
       
       return await prisma.reservation.count({
-        where: whereConditions as any // Type assertion to handle organizationId
+        where: whereConditions
       });
     },
     0, // Zero fallback if there's an error
@@ -435,29 +418,35 @@ export const deleteResource = catchAsync(async (req: Request, res: Response) => 
     );
   }
 
-  // Delete resource with safe execution and throw errors
-  const deletedResource = await safeExecutePrismaQuery(
+  // Verify resource belongs to tenant before deletion
+  const existingResource = await safeExecutePrismaQuery(
     async () => {
-      // Use type assertion for where clause to handle organizationId
-      const whereClause: any = {
-        id
-      };
-      
-      // Prepare for multi-tenancy but don't add the field yet
-      // This will be uncommented when the schema includes organizationId
-      // const multiTenancyEnabled = false;
-      // if (multiTenancyEnabled) {
-      //   whereClause.organizationId = tenantId;
-      // }
-      
-      return await prisma.resource.delete({
-        where: whereClause
+      return await prisma.resource.findFirst({
+        where: { id, tenantId }
       });
     },
-    null, // Null fallback if there's an error
-    `Error deleting resource with ID: ${id}`,
-    true // Throw error instead of returning fallback
+    null,
+    `Error verifying resource ownership before deletion: ${id}`
   );
+
+  if (!existingResource) {
+    throw AppError.notFoundError('Resource', id);
+  }
+
+  // Delete resource with safe execution
+  const deleteResult = await safeExecutePrismaQuery(
+    async () => {
+      return await prisma.resource.deleteMany({
+        where: { id, tenantId }
+      });
+    },
+    { count: 0 }, // Fallback if there's an error
+    `Error deleting resource with ID: ${id}`
+  );
+
+  if (!deleteResult || deleteResult.count === 0) {
+    throw AppError.notFoundError('Resource', id);
+  }
 
   logger.success(`Successfully deleted resource: ${id}`);
 
@@ -473,12 +462,9 @@ export const deleteResource = catchAsync(async (req: Request, res: Response) => 
  * This is a convenience method that wraps the availability controller
  * Updated to use standardized error handling pattern
  */
-export const getResourceAvailability = catchAsync(async (req: Request, res: Response) => {
+export const getResourceAvailability = catchAsync(async (req: TenantRequest, res: Response) => {
   const { id } = req.params;
-  // In development mode, use a default tenant ID if not provided
-  const isDev = process.env.NODE_ENV === 'development';
-  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
-  
+  const tenantId = req.tenantId;
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -502,11 +488,26 @@ export const getResourceAvailability = catchAsync(async (req: Request, res: Resp
 
   logger.info(`Checking availability for resource ID: ${id} from ${parsedStartDate} to ${parsedEndDate}`);
 
+  // Ensure resource exists and belongs to tenant
+  const resourceRecord = await safeExecutePrismaQuery(
+    async () => {
+      return await prisma.resource.findFirst({
+        where: { id, tenantId }
+      });
+    },
+    null,
+    `Error verifying resource before availability check: ${id}`
+  );
+  if (!resourceRecord) {
+    throw AppError.notFoundError('Resource', id);
+  }
+
   // Check for overlapping reservations with safe execution
   const overlappingReservations = await safeExecutePrismaQuery(
     async () => {
       return await prisma.reservation.findMany({
         where: {
+          tenantId: tenantId,
           resourceId: id,
           // organizationId removed as it's not in the schema
           OR: [

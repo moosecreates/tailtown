@@ -1,11 +1,11 @@
 // Simple test script to check API connectivity
-import api from './services/api';
+import { reservationApi as api } from './services/api';
 
 // Function to test the resource availability endpoint
 export const testResourceAvailability = async () => {
   try {
     console.log('Testing resource availability endpoint...');
-    console.log('API base URL:', process.env.REACT_APP_API_URL || 'http://localhost:4004');
+    console.log('Reservation API base URL:', process.env.REACT_APP_RESERVATION_API_URL || 'http://localhost:4003');
     
     const response = await api.get('/api/resources/availability', {
       params: {

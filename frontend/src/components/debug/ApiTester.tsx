@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Button, Typography, Paper, CircularProgress, Alert } from '@mui/material';
-import api from '../../services/api';
+import { reservationApi } from '../../services/api';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
 
 /**
@@ -10,7 +10,7 @@ const ApiTester: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
-  const [apiUrl, setApiUrl] = useState<string>(process.env.REACT_APP_API_URL || 'http://localhost:4004');
+  const [apiUrl, setApiUrl] = useState<string>(process.env.REACT_APP_RESERVATION_API_URL || 'http://localhost:4003');
 
   const testApi = async () => {
     setLoading(true);
@@ -22,7 +22,7 @@ const ApiTester: React.FC = () => {
       console.log('API URL:', apiUrl);
       
       // Test the API connection
-      const response = await api.get('/api/resources/availability', {
+      const response = await reservationApi.get('/api/resources/availability', {
         params: {
           resourceType: 'suite',
           date: formatDateToYYYYMMDD(new Date()),
@@ -103,3 +103,4 @@ const ApiTester: React.FC = () => {
 };
 
 export default ApiTester;
+

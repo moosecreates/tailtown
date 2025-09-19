@@ -1,5 +1,5 @@
 import { Resource, ResourceAvailability } from '../types/resource';
-import api from './api';
+import { reservationApi as api } from './api';
 
 // Get all resources
 export const getAllResources = async () => {

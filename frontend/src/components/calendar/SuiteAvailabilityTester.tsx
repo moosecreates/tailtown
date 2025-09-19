@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Button, Typography, Paper, CircularProgress, Alert, Grid } from '@mui/material';
-import api from '../../services/api';
+import { reservationApi as api } from '../../services/api';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
 
 /**
@@ -10,7 +10,7 @@ const SuiteAvailabilityTester: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [suites, setSuites] = useState<any[]>([]);
-  const [apiUrl, setApiUrl] = useState<string>(process.env.REACT_APP_API_URL || 'http://localhost:4004');
+  const [apiUrl, setApiUrl] = useState<string>(process.env.REACT_APP_RESERVATION_API_URL || 'http://localhost:4003');
   const [date] = useState<Date>(new Date());
 
   const fetchSuiteAvailability = async () => {

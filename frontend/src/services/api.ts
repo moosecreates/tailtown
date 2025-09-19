@@ -13,6 +13,26 @@ const defaultHeaders = {
 // Default validation for all API instances
 const defaultValidateStatus = (status: number) => status < 500;
 
+// Default timeout (ms) for all API instances to prevent indefinite hangs
+const API_TIMEOUT: number = (() => {
+  const raw = process.env.REACT_APP_API_TIMEOUT;
+  const parsed = raw ? parseInt(raw, 10) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 30000; // 30s default
+})();
+
+// Tenant ID provider (no hardcoded fallback)
+const getTenantId = (): string | undefined => {
+  try {
+    const fromStorage =
+      localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId');
+    if (fromStorage && fromStorage.trim()) return fromStorage.trim();
+  } catch (_) {
+    // Access to localStorage might fail in non-browser environments
+  }
+  const fromEnv = process.env.REACT_APP_TENANT_ID;
+  return fromEnv && fromEnv.trim() ? fromEnv.trim() : undefined;
+};
+
 // Add request interceptor for logging
 const addRequestInterceptor = (instance: AxiosInstance) => {
   instance.interceptors.request.use(
@@ -56,7 +76,8 @@ const addResponseInterceptor = (instance: AxiosInstance) => {
 const customerApi = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:4004',
   headers: defaultHeaders,
-  validateStatus: defaultValidateStatus
+  validateStatus: defaultValidateStatus,
+  timeout: API_TIMEOUT
 });
 
 // Add interceptors to customer API
@@ -70,11 +91,25 @@ addResponseInterceptor(customerApi);
 const reservationApi = axios.create({
   baseURL: process.env.REACT_APP_RESERVATION_API_URL || 'http://localhost:4003',
   headers: {
-    ...defaultHeaders,
-    'x-tenant-id': 'default' // Add default tenant ID header for all requests
+    ...defaultHeaders
   },
-  validateStatus: defaultValidateStatus
+  validateStatus: defaultValidateStatus,
+  timeout: API_TIMEOUT
 });
+
+// Ensure tenant header is attached dynamically for each request
+reservationApi.interceptors.request.use(
+  (config) => {
+    const tenantId = getTenantId();
+    if (tenantId) {
+      config.headers = { ...(config.headers || {}), 'x-tenant-id': tenantId } as any;
+    } else {
+      console.warn('Tenant ID not set; requests may be rejected by the server');
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Add interceptors to reservation API
 addRequestInterceptor(reservationApi);

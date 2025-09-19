@@ -2,6 +2,45 @@
 
 A modern, full-featured management system for pet resorts, providing comprehensive tools for reservations, customer management, and pet care services.
 
+## Recent Updates (September 2025)
+
+### 🎉 Major System Fixes and Improvements
+
+#### Analytics Dashboard Overhaul
+- **Fixed $0 Revenue Display**: Analytics now show accurate revenue data based on selected time periods
+- **Period-Based Filtering**: Dashboard correctly filters data by month, year, or all-time
+- **Real Data Integration**: Replaced mock data with actual database queries
+- **Helpful Messaging**: Clear indicators when no data exists for current period with guidance to view historical data
+- **Current Status**: All analytics endpoints working with accurate financial data
+
+#### Reservation System Enhancements
+- **Schema Synchronization**: Fixed Prisma schema mismatches between customer and reservation services
+- **Calendar Display Fix**: Resolved complex calendar logic that prevented reservations from displaying
+- **Simplified Logic**: Replaced overly complex availability checking with direct reservation data queries
+- **Real-Time Updates**: Calendar now properly refreshes after reservation creation
+- **Add-On Integration**: Seamless add-on service selection workflow during reservation creation
+
+#### Backend API Stabilization
+- **Database Schema Alignment**: Both services now use identical, correct Prisma schemas
+- **Field Validation**: Removed references to non-existent database fields (cutOffDate, organizationId)
+- **Type Safety**: Enhanced TypeScript type definitions and null checking
+- **Error Handling**: Improved error messages and graceful fallbacks
+- **Service Reliability**: Stable microservices architecture with proper tenant middleware
+
+#### Technical Improvements
+- **Prisma Client Regeneration**: Automated schema synchronization between services
+- **Date Handling**: Fixed timezone issues in calendar date comparisons
+- **API Response Formats**: Standardized response structures across all endpoints
+- **Logging Enhancement**: Added detailed debugging information for troubleshooting
+- **Performance Optimization**: Streamlined database queries and reduced complexity
+
+### Current System Status
+- ✅ **Frontend** (port 3000): Fully functional with working calendar and analytics
+- ✅ **Customer Service** (port 4004): Analytics and customer management working correctly
+- ✅ **Reservation Service** (port 4003): Reservation creation and calendar display working
+- ✅ **Database**: PostgreSQL with synchronized schemas and accurate data
+- ✅ **All Core Features**: Reservation creation, calendar display, analytics, and customer management
+
 ## Features
 
 ### Customer Management
@@ -219,7 +258,7 @@ We follow a standardized documentation structure to ensure consistency and ease 
 │   │   └── contexts/       # React contexts
 │   
 ├── services/
-│   ├── customer/           # Customer service (port 3003)
+│   ├── customer/           # Customer service (port 4004)
 │   │   ├── src/
 │   │   │   ├── controllers/  # Route handlers
 │   │   │   ├── routes/       # API routes
@@ -289,10 +328,10 @@ We follow a standardized documentation structure to ensure consistency and ease 
 
 ### Available URLs
 - Frontend: http://localhost:3000
-- Customer Service API: http://localhost:3003
+- Customer Service API: http://localhost:4004
 - Reservation Service API: http://localhost:4003
 - Health Check Endpoints:
-  - Customer Service: http://localhost:3003/health
+  - Customer Service: http://localhost:4004/health
   - Reservation Service: http://localhost:4003/health
 
 ## API Documentation
