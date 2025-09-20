@@ -19,6 +19,7 @@ This document combines the overall project roadmap and the reservation service r
 - **Calendar Functionality** - Fix grooming and training calendars
 - **Drag-and-Drop Calendar** - Enable moving reservations between dates/times
 - **Retail POS System** - Point of sale for retail items and packages
+- **Comprehensive Reports Page** - Advanced reporting for financials, customers, pets, marketing, and operations
 
 ## Previous Focus: Stability and Maintenance (August 2025)
 
@@ -159,9 +160,27 @@ This document combines the overall project roadmap and the reservation service r
 - 🔲 **Coupons & Discounts** - Comprehensive coupon and promotional code system
 - 🔲 **Contracts Management** - Digital contract creation, signing, and storage
 - 🔲 **Group Classes** - Multi-week group training classes with enrollment management
+- 🔲 **Comprehensive Reports Page** - Advanced reporting system with multiple report types:
+  - **Sales Reports**: Advanced sales analytics with flexible time period filtering
+    - **Time Filters**: Day, week, month, month-to-date (if current month), year-to-date
+    - **Year-over-Year Comparison**: Compare current period to same period last year
+    - **Metrics**: Total sales, average transaction, sales by service type, payment methods
+    - **Trending**: Growth rates, seasonal patterns, performance indicators
+  - **Financial Reports**: Revenue, profit/loss, payment methods, outstanding balances
+  - **Sales Tax Reports**: Comprehensive tax reporting for compliance and filing
+    - **Monthly Tax Reports**: Month-by-month tax collection summaries
+    - **Quarterly Tax Reports**: Quarterly tax totals for quarterly filing requirements
+    - **Annual Tax Reports**: Year-end tax summaries for annual reporting
+    - **Tax Breakdown**: Taxable vs. non-taxable sales, tax rates applied, exemptions
+    - **Export Options**: Tax reports formatted for accounting software and tax filing
+  - **Customer Reports**: Customer acquisition, retention rates, lifetime value, demographics, visit frequency
+  - **Pet Reports**: Pet demographics, breed analysis, health tracking, service preferences
+  - **Marketing Reports**: Campaign effectiveness, referral tracking, seasonal trends, promotional analysis
+  - **Operational Reports**: Staff performance, resource utilization, booking patterns, capacity analysis
+  - **Service Reports**: Popular services, add-on performance, pricing analysis, duration trends
+  - **Custom Reports**: User-defined filters, date ranges, export capabilities (PDF, CSV, Excel)
 - 🔲 Integration with merchant services
 - 🔲 Inventory management for pet supplies
-- 🔲 Additional comprehensive reporting features
 - 🔲 Automated reminders for upcoming appointments
 - 🔲 Comprehensive loyalty rewards system
   - Points accumulation based on services
@@ -329,6 +348,7 @@ Throughout all phases, we will address the following ongoing concerns:
 |--------------|--------|---------------------|----------|
 | Retail Items & POS | 🔲 Planned | November 15, 2025 | High |
 | Vaccine Requirements Admin | 🔲 Planned | November 22, 2025 | High |
+| Comprehensive Reports Page | 🔲 Planned | November 25, 2025 | High |
 | Deposits & Wait-list | 🔲 Planned | November 30, 2025 | Medium |
 | Testing Infrastructure | 🔲 Planned | November 30, 2025 | High |
 

@@ -90,20 +90,22 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ### Main Navigation (Daily Operations)
 - **Dashboard**: Overview of daily activities and key metrics
+- **Boarding & Daycare**: Main calendar view for boarding and daycare services with integrated booking
+- **Grooming**: Specialized grooming calendar and appointments with integrated scheduling
+- **Training**: Training session calendar and scheduling with integrated booking
 - **Customers**: Customer profiles and contact management
 - **Pets**: Pet profiles with medical history and records
 - **Kennels**: Kennel board and suite management with sub-navigation:
   - Kennel Board: Real-time suite availability and occupancy
   - Print Kennel Cards: Generate physical kennel identification cards
-- **Reservations**: Booking management and reservation details
-- **New Order**: Complete 5-step order processing system with customer search, service selection, add-ons, invoice generation, and payment processing
-- **Calendar**: Multi-service scheduling with sub-navigation:
-  - Boarding & Daycare: Main calendar view
-  - Grooming: Specialized grooming appointments
-  - Training: Training session scheduling
 - **Reports**: Business analytics and reporting with sub-navigation:
+  - All Reports: Comprehensive reporting system with 8 categories
   - Sales Dashboard: Revenue and performance metrics
   - Customer Value: Customer lifetime value analysis
+
+### Temporarily Hidden (Being Integrated into Calendar)
+- **Reservations**: Booking management (functionality moving to calendar views)
+- **New Order**: Order processing (functionality moving to calendar-based booking)
 
 ### Admin Panel (Administrative Functions)
 - **Services**: Manage boarding, daycare, grooming, and training services

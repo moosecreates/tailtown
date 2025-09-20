@@ -103,6 +103,9 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
 
   const navItems: NavItem[] = [
     { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
+    { path: '/calendar', label: 'Boarding & Daycare', icon: DaycareIcon },
+    { path: '/calendar/grooming', label: 'Grooming', icon: GroomingIcon },
+    { path: '/calendar/training', label: 'Training', icon: TrainingIcon },
     { path: '/customers', label: 'Customers', icon: PeopleIcon },
     { path: '/pets', label: 'Pets', icon: PetsIcon },
     { 
@@ -114,23 +117,15 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
         { path: '/kennels/print-cards', label: 'Print Kennel Cards', icon: PrintIcon },
       ] 
     },
-    { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
-    { path: '/orders/new', label: 'New Order', icon: OrdersIcon },
+    // Hidden while building calendar-integrated ordering functionality
+    // { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
+    // { path: '/orders/new', label: 'New Order', icon: OrdersIcon },
     { 
-      path: '/calendar', 
-      label: 'Calendar', 
-      icon: CalendarIcon,
-      children: [
-        { path: '/calendar', label: 'Boarding & Daycare', icon: DaycareIcon },
-        { path: '/calendar/grooming', label: 'Grooming', icon: GroomingIcon },
-        { path: '/calendar/training', label: 'Training', icon: TrainingIcon },
-      ] 
-    },
-    { 
-      path: '/analytics', 
+      path: '/reports', 
       label: 'Reports', 
       icon: AnalyticsIcon,
       children: [
+        { path: '/reports', label: 'All Reports', icon: ReportIcon },
         { path: '/analytics', label: 'Sales Dashboard', icon: ReportIcon },
         { path: '/analytics/customers', label: 'Customer Value', icon: PaymentIcon },
       ] 

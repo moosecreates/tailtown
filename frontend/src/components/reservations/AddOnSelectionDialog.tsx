@@ -377,14 +377,25 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
         <Button onClick={handleClose} disabled={saving}>
           Cancel
         </Button>
-        <Button 
-          variant="contained" 
-          color="primary"
-          onClick={handleSaveAddOns}
-          disabled={selectedAddOns.length === 0 || saving}
-        >
-          {saving ? <CircularProgress size={24} /> : 'Add to Reservation'}
-        </Button>
+        {selectedAddOns.length === 0 ? (
+          <Button 
+            variant="outlined" 
+            color="secondary"
+            onClick={handleSaveAddOns}
+            disabled={saving}
+          >
+            Skip Add-Ons
+          </Button>
+        ) : (
+          <Button 
+            variant="contained" 
+            color="primary"
+            onClick={handleSaveAddOns}
+            disabled={saving}
+          >
+            {saving ? <CircularProgress size={24} /> : 'Add to Reservation'}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

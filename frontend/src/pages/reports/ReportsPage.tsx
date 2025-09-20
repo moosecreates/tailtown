@@ -1,0 +1,593 @@
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Container,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  Chip,
+  Tabs,
+  Tab,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  Paper,
+  Alert,
+  IconButton,
+} from '@mui/material';
+import {
+  Assessment as ReportsIcon,
+  TrendingUp as SalesIcon,
+  AttachMoney as FinancialIcon,
+  People as CustomerIcon,
+  Pets as PetIcon,
+  Campaign as MarketingIcon,
+  Business as OperationalIcon,
+  Build as ServiceIcon,
+  GetApp as ExportIcon,
+} from '@mui/icons-material';
+
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`reports-tabpanel-${index}`}
+      aria-labelledby={`reports-tab-${index}`}
+      {...other}
+    >
+      {value === index && (
+        <Box sx={{ p: 3 }}>
+          {children}
+        </Box>
+      )}
+    </div>
+  );
+}
+
+const ReportsPage: React.FC = () => {
+  const [tabValue, setTabValue] = useState(0);
+  const [dateRange, setDateRange] = useState('month');
+  const [exportFormat, setExportFormat] = useState('pdf');
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  const handleExport = (reportType: string) => {
+    // Placeholder for export functionality
+    alert(`Exporting ${reportType} report as ${exportFormat.toUpperCase()}...`);
+  };
+
+  const ReportCard = ({ 
+    title, 
+    description, 
+    icon, 
+    status = 'planned',
+    onGenerate,
+    onExport 
+  }: {
+    title: string;
+    description: string;
+    icon: React.ReactNode;
+    status?: 'available' | 'planned' | 'coming-soon';
+    onGenerate?: () => void;
+    onExport?: () => void;
+  }) => (
+    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <CardContent sx={{ flexGrow: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          {icon}
+          <Typography variant="h6" sx={{ ml: 1 }}>
+            {title}
+          </Typography>
+          <Box sx={{ ml: 'auto' }}>
+            <Chip 
+              label={status === 'available' ? 'Available' : status === 'planned' ? 'Planned' : 'Coming Soon'} 
+              color={status === 'available' ? 'success' : status === 'planned' ? 'warning' : 'default'}
+              size="small"
+            />
+          </Box>
+        </Box>
+        <Typography variant="body2" color="text.secondary">
+          {description}
+        </Typography>
+      </CardContent>
+      <CardActions>
+        <Button 
+          size="small" 
+          onClick={onGenerate}
+          disabled={status !== 'available'}
+        >
+          Generate Report
+        </Button>
+        <IconButton 
+          size="small" 
+          onClick={onExport}
+          disabled={status !== 'available'}
+          title="Export Report"
+        >
+          <ExportIcon />
+        </IconButton>
+      </CardActions>
+    </Card>
+  );
+
+  return (
+    <Container maxWidth="xl">
+      <Box sx={{ mt: 4, mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <ReportsIcon sx={{ fontSize: 40, mr: 2, color: 'primary.main' }} />
+          <Typography variant="h4" component="h1">
+            Reports & Analytics
+          </Typography>
+        </Box>
+
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <Typography variant="body2">
+            <strong>Demo Mode:</strong> This reports page shows the planned comprehensive reporting system. 
+            Most reports are currently in development. The Sales Dashboard and Customer Value reports are available in the Analytics section.
+          </Typography>
+        </Alert>
+
+        {/* Report Controls */}
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Report Settings
+          </Typography>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={3}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Date Range</InputLabel>
+                <Select
+                  value={dateRange}
+                  label="Date Range"
+                  onChange={(e) => setDateRange(e.target.value)}
+                >
+                  <MenuItem value="day">Today</MenuItem>
+                  <MenuItem value="week">This Week</MenuItem>
+                  <MenuItem value="month">This Month</MenuItem>
+                  <MenuItem value="month-to-date">Month to Date</MenuItem>
+                  <MenuItem value="year-to-date">Year to Date</MenuItem>
+                  <MenuItem value="year">This Year</MenuItem>
+                  <MenuItem value="custom">Custom Range</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Export Format</InputLabel>
+                <Select
+                  value={exportFormat}
+                  label="Export Format"
+                  onChange={(e) => setExportFormat(e.target.value)}
+                >
+                  <MenuItem value="pdf">PDF</MenuItem>
+                  <MenuItem value="csv">CSV</MenuItem>
+                  <MenuItem value="excel">Excel</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <TextField
+                fullWidth
+                size="small"
+                label="Start Date"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                disabled={dateRange !== 'custom'}
+              />
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <TextField
+                fullWidth
+                size="small"
+                label="End Date"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                disabled={dateRange !== 'custom'}
+              />
+            </Grid>
+          </Grid>
+        </Paper>
+
+        {/* Report Categories Tabs */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={tabValue} onChange={handleTabChange} aria-label="report categories">
+            <Tab label="Sales Reports" />
+            <Tab label="Financial Reports" />
+            <Tab label="Customer Reports" />
+            <Tab label="Pet Reports" />
+            <Tab label="Marketing Reports" />
+            <Tab label="Operational Reports" />
+            <Tab label="Service Reports" />
+            <Tab label="Tax Reports" />
+          </Tabs>
+        </Box>
+
+        {/* Sales Reports */}
+        <TabPanel value={tabValue} index={0}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Daily Sales Summary"
+                description="Daily sales totals with year-over-year comparison, payment method breakdown, and trending analysis."
+                icon={<SalesIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Daily Sales')}
+                onExport={() => handleExport('Daily Sales')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Weekly Sales Report"
+                description="Weekly sales performance with growth rates and seasonal pattern analysis."
+                icon={<SalesIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Weekly Sales')}
+                onExport={() => handleExport('Weekly Sales')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Monthly Sales Analysis"
+                description="Comprehensive monthly sales report with service breakdown and performance indicators."
+                icon={<SalesIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Monthly Sales')}
+                onExport={() => handleExport('Monthly Sales')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Year-to-Date Sales"
+                description="Cumulative YTD sales with comparison to previous year and growth projections."
+                icon={<SalesIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('YTD Sales')}
+                onExport={() => handleExport('YTD Sales')}
+              />
+            </Grid>
+          </Grid>
+        </TabPanel>
+
+        {/* Financial Reports */}
+        <TabPanel value={tabValue} index={1}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Profit & Loss Statement"
+                description="Comprehensive P&L with revenue, expenses, and net profit analysis by time period."
+                icon={<FinancialIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('P&L Statement')}
+                onExport={() => handleExport('P&L Statement')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Revenue Analysis"
+                description="Detailed revenue breakdown by service type, add-ons, and payment methods."
+                icon={<FinancialIcon color="primary" />}
+                status="available"
+                onGenerate={() => window.open('/analytics', '_blank')}
+                onExport={() => handleExport('Revenue Analysis')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Outstanding Balances"
+                description="Customer account balances, overdue payments, and accounts receivable aging."
+                icon={<FinancialIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Outstanding Balances')}
+                onExport={() => handleExport('Outstanding Balances')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Payment Methods Report"
+                description="Analysis of payment methods used, processing fees, and payment trends."
+                icon={<FinancialIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Payment Methods')}
+                onExport={() => handleExport('Payment Methods')}
+              />
+            </Grid>
+          </Grid>
+        </TabPanel>
+
+        {/* Customer Reports */}
+        <TabPanel value={tabValue} index={2}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Customer Acquisition"
+                description="New customer registration trends, referral sources, and acquisition costs."
+                icon={<CustomerIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Customer Acquisition')}
+                onExport={() => handleExport('Customer Acquisition')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Customer Lifetime Value"
+                description="CLV analysis, retention rates, and customer segmentation by value."
+                icon={<CustomerIcon color="primary" />}
+                status="available"
+                onGenerate={() => window.open('/analytics/customer-value', '_blank')}
+                onExport={() => handleExport('Customer Lifetime Value')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Customer Demographics"
+                description="Customer demographics, geographic distribution, and profile analysis."
+                icon={<CustomerIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Customer Demographics')}
+                onExport={() => handleExport('Customer Demographics')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Visit Frequency Analysis"
+                description="Customer visit patterns, frequency analysis, and retention metrics."
+                icon={<CustomerIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Visit Frequency')}
+                onExport={() => handleExport('Visit Frequency')}
+              />
+            </Grid>
+          </Grid>
+        </TabPanel>
+
+        {/* Pet Reports */}
+        <TabPanel value={tabValue} index={3}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Pet Demographics"
+                description="Pet population analysis by breed, age, size, and type distribution."
+                icon={<PetIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Pet Demographics')}
+                onExport={() => handleExport('Pet Demographics')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Breed Analysis"
+                description="Popular breeds, breed-specific service preferences, and health trends."
+                icon={<PetIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Breed Analysis')}
+                onExport={() => handleExport('Breed Analysis')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Health & Vaccination Tracking"
+                description="Vaccination status, health records, and compliance reporting."
+                icon={<PetIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Health Tracking')}
+                onExport={() => handleExport('Health Tracking')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Service Preferences by Pet"
+                description="Service usage patterns based on pet characteristics and preferences."
+                icon={<PetIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Service Preferences')}
+                onExport={() => handleExport('Service Preferences')}
+              />
+            </Grid>
+          </Grid>
+        </TabPanel>
+
+        {/* Marketing Reports */}
+        <TabPanel value={tabValue} index={4}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Campaign Effectiveness"
+                description="Marketing campaign performance, ROI analysis, and conversion tracking."
+                icon={<MarketingIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Campaign Effectiveness')}
+                onExport={() => handleExport('Campaign Effectiveness')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Referral Source Analysis"
+                description="Customer referral sources, referral program performance, and attribution."
+                icon={<MarketingIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Referral Analysis')}
+                onExport={() => handleExport('Referral Analysis')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Seasonal Trends"
+                description="Seasonal booking patterns, demand forecasting, and capacity planning."
+                icon={<MarketingIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Seasonal Trends')}
+                onExport={() => handleExport('Seasonal Trends')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Promotional Analysis"
+                description="Coupon usage, discount effectiveness, and promotional campaign results."
+                icon={<MarketingIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Promotional Analysis')}
+                onExport={() => handleExport('Promotional Analysis')}
+              />
+            </Grid>
+          </Grid>
+        </TabPanel>
+
+        {/* Operational Reports */}
+        <TabPanel value={tabValue} index={5}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Staff Performance"
+                description="Staff productivity metrics, performance indicators, and scheduling efficiency."
+                icon={<OperationalIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Staff Performance')}
+                onExport={() => handleExport('Staff Performance')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Resource Utilization"
+                description="Suite occupancy rates, resource efficiency, and capacity optimization."
+                icon={<OperationalIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Resource Utilization')}
+                onExport={() => handleExport('Resource Utilization')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Booking Patterns"
+                description="Reservation trends, peak times analysis, and demand patterns."
+                icon={<OperationalIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Booking Patterns')}
+                onExport={() => handleExport('Booking Patterns')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Capacity Analysis"
+                description="Facility capacity utilization, bottleneck identification, and expansion planning."
+                icon={<OperationalIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Capacity Analysis')}
+                onExport={() => handleExport('Capacity Analysis')}
+              />
+            </Grid>
+          </Grid>
+        </TabPanel>
+
+        {/* Service Reports */}
+        <TabPanel value={tabValue} index={6}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Popular Services"
+                description="Most requested services, service popularity trends, and demand analysis."
+                icon={<ServiceIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Popular Services')}
+                onExport={() => handleExport('Popular Services')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Add-On Performance"
+                description="Add-on service uptake, revenue contribution, and upselling effectiveness."
+                icon={<ServiceIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Add-On Performance')}
+                onExport={() => handleExport('Add-On Performance')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Pricing Analysis"
+                description="Service pricing optimization, price sensitivity analysis, and revenue per service."
+                icon={<ServiceIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Pricing Analysis')}
+                onExport={() => handleExport('Pricing Analysis')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Service Duration Trends"
+                description="Average service durations, efficiency metrics, and time optimization opportunities."
+                icon={<ServiceIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Duration Trends')}
+                onExport={() => handleExport('Duration Trends')}
+              />
+            </Grid>
+          </Grid>
+        </TabPanel>
+
+        {/* Tax Reports */}
+        <TabPanel value={tabValue} index={7}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Monthly Tax Report"
+                description="Monthly sales tax collection summary for monthly filing requirements."
+                icon={<FinancialIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Monthly Tax')}
+                onExport={() => handleExport('Monthly Tax')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Quarterly Tax Report"
+                description="Quarterly tax totals and breakdown for quarterly filing requirements."
+                icon={<FinancialIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Quarterly Tax')}
+                onExport={() => handleExport('Quarterly Tax')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Annual Tax Summary"
+                description="Year-end tax summary for annual reporting and tax return preparation."
+                icon={<FinancialIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Annual Tax')}
+                onExport={() => handleExport('Annual Tax')}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <ReportCard
+                title="Tax Breakdown Analysis"
+                description="Taxable vs. non-taxable sales breakdown with exemption tracking and audit trail."
+                icon={<FinancialIcon color="primary" />}
+                status="planned"
+                onGenerate={() => handleExport('Tax Breakdown')}
+                onExport={() => handleExport('Tax Breakdown')}
+              />
+            </Grid>
+          </Grid>
+        </TabPanel>
+      </Box>
+    </Container>
+  );
+};
+
+export default ReportsPage;

@@ -23,13 +23,15 @@ Demonstrate the complete Tailtown Pet Resort Management System to a team of deve
 - **Technology Stack**: React + TypeScript, Express.js, Prisma ORM
 
 ### **2. Complete Order Flow Demo (10 minutes)**
-**Navigate to: New Order**
+**Navigate to: New Order (or demonstrate calendar-based booking)**
 1. **Customer Search** - Search for existing customer (e.g., "Antonia")
 2. **Pet Selection** - Select customer's pet (e.g., "bunny")
 3. **Service Selection** - Choose service (Boarding), set dates
 4. **Add-On Services** - Add optional services (or skip if fixed)
 5. **Invoice Review** - Show itemized invoice with tax calculation
 6. **Payment Processing** - Process payment and show confirmation
+
+*Note: New Order and Reservations are temporarily hidden from navigation as functionality is being integrated into calendar views*
 
 ### **3. Reservation Management (5 minutes)**
 **Navigate to: Reservations**
