@@ -45,7 +45,15 @@ const ReservationCreation: React.FC<ReservationCreationProps> = ({
 }) => {
   // State for form data
   const [startDate, setStartDate] = useState<Date | null>(initialReservation.startDate || new Date());
-  const [endDate, setEndDate] = useState<Date | null>(initialReservation.endDate || new Date());
+  const [endDate, setEndDate] = useState<Date | null>(() => {
+    if (initialReservation.endDate) {
+      return initialReservation.endDate;
+    }
+    // Default end date to tomorrow if no initial end date is provided
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow;
+  });
   const [services, setServices] = useState<any[]>([]);
   const [selectedService, setSelectedService] = useState<string>('');
   const [availableResources, setAvailableResources] = useState<any[]>([]);
@@ -137,6 +145,18 @@ const ReservationCreation: React.FC<ReservationCreationProps> = ({
     loadAvailableResources();
   }, [startDate, endDate, selectedService, selectedResource]);
 
+  // Handle start date change
+  const handleStartDateChange = (newStartDate: Date | null) => {
+    setStartDate(newStartDate);
+    
+    // Ensure end date is after start date
+    if (newStartDate && endDate && newStartDate >= endDate) {
+      const newEndDate = new Date(newStartDate.getTime());
+      newEndDate.setDate(newEndDate.getDate() + 1); // Add one day
+      setEndDate(newEndDate);
+    }
+  };
+
   // Handle service selection
   const handleServiceChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     const serviceId = event.target.value as string;
@@ -157,6 +177,12 @@ const ReservationCreation: React.FC<ReservationCreationProps> = ({
   const handleContinue = () => {
     if (!startDate || !endDate || !selectedService) {
       setError('Please fill in all required fields');
+      return;
+    }
+    
+    // Validate that start date is before end date
+    if (startDate >= endDate) {
+      setError('Start date must be before end date');
       return;
     }
     
@@ -233,7 +259,7 @@ const ReservationCreation: React.FC<ReservationCreationProps> = ({
               <DatePicker
                 label="Start Date"
                 value={startDate}
-                onChange={(newValue) => setStartDate(newValue)}
+                onChange={handleStartDateChange}
                 slotProps={{ 
                   textField: { 
                     fullWidth: true, 
@@ -254,7 +280,7 @@ const ReservationCreation: React.FC<ReservationCreationProps> = ({
                   
                   const updatedDate = new Date(startDate);
                   updatedDate.setHours(newValue.getHours(), newValue.getMinutes());
-                  setStartDate(updatedDate);
+                  handleStartDateChange(updatedDate);
                   
                   // Update end time if we have a service duration
                   const service = services.find(s => s.id === selectedService);

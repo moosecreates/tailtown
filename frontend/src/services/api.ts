@@ -80,6 +80,20 @@ const customerApi = axios.create({
   timeout: API_TIMEOUT
 });
 
+// Ensure tenant header is attached dynamically for each request to customer API
+customerApi.interceptors.request.use(
+  (config) => {
+    const tenantId = getTenantId();
+    if (tenantId) {
+      config.headers = { ...(config.headers || {}), 'x-tenant-id': tenantId } as any;
+    } else {
+      console.warn('Tenant ID not set; requests may be rejected by the server');
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Add interceptors to customer API
 addRequestInterceptor(customerApi);
 addResponseInterceptor(customerApi);

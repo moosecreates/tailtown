@@ -328,6 +328,12 @@ const OrderEntry: React.FC = () => {
       }
       
       // Step 1: Create the reservation
+      console.log('Order data for reservation creation:', {
+        customer: orderData.customer,
+        pet: orderData.pet,
+        reservation: orderData.reservation
+      });
+      
       const reservationData: any = {
         customerId: orderData.customer.id,
         petId: orderData.pet.id,
@@ -343,7 +349,10 @@ const OrderEntry: React.FC = () => {
         reservationData.resourceId = orderData.reservation.resourceId;
       }
       
+      console.log('Final reservation data being sent:', reservationData);
+      
       const reservation = await reservationService.createReservation(reservationData);
+      console.log('Reservation created successfully:', reservation);
       setCreatedReservationId(reservation.id);
       
       // Step 2: Create the invoice
@@ -422,10 +431,28 @@ const OrderEntry: React.FC = () => {
       });
       
     } catch (err: any) {
-      setError(err.message || 'An error occurred while processing the order');
+      console.error('Error in completeOrder:', err);
+      
+      let errorMessage = 'An error occurred while processing the order';
+      
+      // Extract more specific error messages
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      // Log the full error for debugging
+      if (err.response?.data) {
+        console.error('Server error response:', err.response.data);
+      }
+      
+      setError(errorMessage);
       setSnackbar({
         open: true,
-        message: err.message || 'An error occurred while processing the order',
+        message: errorMessage,
         severity: 'error',
       });
     } finally {

@@ -104,10 +104,42 @@ export const reservationService = {
 
   createReservation: async (reservation: Omit<Reservation, 'id'>): Promise<Reservation> => {
     try {
+      console.log('Creating reservation with data:', reservation);
       const response: AxiosResponse = await api.post('/api/reservations', reservation);
-      return response.data.data;
+      console.log('Reservation creation response:', response.data);
+      
+      // Handle different response formats
+      let reservationData;
+      
+      if (response.data?.success === true && response.data?.data?.reservation) {
+        // Standard success response format
+        reservationData = response.data.data.reservation;
+      } else if (response.data?.data?.reservation) {
+        // Alternative format
+        reservationData = response.data.data.reservation;
+      } else if (response.data?.data && response.data.data.id) {
+        // Data directly in data field
+        reservationData = response.data.data;
+      } else if (response.data?.id) {
+        // Data directly in response
+        reservationData = response.data;
+      } else {
+        console.error('Unexpected response format:', response.data);
+        throw new Error(`Unexpected response format: ${JSON.stringify(response.data)}`);
+      }
+      
+      if (!reservationData || !reservationData.id) {
+        console.error('No reservation data or ID found:', reservationData);
+        throw new Error('No reservation ID returned from server');
+      }
+      
+      console.log('Successfully extracted reservation data:', reservationData);
+      return reservationData;
     } catch (error: any) {
       console.error('Error in createReservation:', error);
+      if (error.response?.data) {
+        console.error('Server error details:', error.response.data);
+      }
       throw error;
     }
   },

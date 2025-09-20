@@ -357,13 +357,45 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
           service: {
             select: {
               id: true,
-              name: true
+              name: true,
+              price: true,
+              description: true
             }
           },
           addOnServices: {
             select: {
               id: true,
-              addOnId: true
+              addOnId: true,
+              price: true,
+              notes: true,
+              addOn: {
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                  price: true
+                }
+              }
+            }
+          },
+          invoice: {
+            select: {
+              id: true,
+              invoiceNumber: true,
+              status: true,
+              total: true,
+              subtotal: true,
+              taxAmount: true,
+              discount: true,
+              payments: {
+                select: {
+                  id: true,
+                  amount: true,
+                  method: true,
+                  status: true,
+                  paymentDate: true
+                }
+              }
             }
           }
         }

@@ -399,7 +399,6 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
                   params: { type: 'STANDARD_SUITE,STANDARD_PLUS_SUITE,VIP_SUITE' }
                 });
                 if (suiteResponse?.data?.status === 'success' && Array.isArray(suiteResponse?.data?.data)) {
-                  console.log(`Found ${suiteResponse.data.data.length} suites in follow-up request`);
                   kennelData = suiteResponse.data.data.map((suite: any) => ({
                     ...suite,
                     isAvailable: response.data.data.isAvailable || true,
@@ -407,7 +406,6 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
                   }));
                 } else if (Array.isArray(suiteResponse?.data)) {
                   // Legacy/fallback
-                  console.log(`Found ${suiteResponse.data.length} suites in follow-up request (legacy format)`);
                   kennelData = suiteResponse.data.map((suite: any) => ({
                     ...suite,
                     isAvailable: response.data.data.isAvailable || true,
@@ -611,7 +609,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
     if (kennels.length > 0) {
       loadReservations();
     }
-  }, [loadReservations, currentDate, viewType, kennels]);
+  }, [loadReservations, currentDate, viewType]); // Removed kennels dependency to prevent excessive reloads
   
   /**
    * Event listener to handle reservation completion
@@ -906,7 +904,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
     const dateStr = formatDateToYYYYMMDD(date);
     const kennelId = kennel.id || kennel.resourceId;
     
-    console.log(`Checking occupancy for kennel ${kennel.name || kennel.resourceName} (ID: ${kennelId}) on ${dateStr}`);
+    // Removed excessive logging for performance
     
     // Directly check the reservations data for this kennel and date
     const matchingReservation = reservations.find(reservation => {
@@ -926,16 +924,6 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
       checkDate.setHours(12, 0, 0, 0); // Noon to avoid timezone issues
       
       const isInRange = checkDate >= startDate && checkDate <= endDate;
-      
-      if (isInRange) {
-        console.log(`Found reservation for kennel ${kennelId} on ${dateStr}:`, {
-          reservationId: reservation.id,
-          customer: reservation.customer?.firstName + ' ' + reservation.customer?.lastName,
-          status: reservation.status,
-          startDate: reservation.startDate,
-          endDate: reservation.endDate
-        });
-      }
       
       return isInRange;
     });
