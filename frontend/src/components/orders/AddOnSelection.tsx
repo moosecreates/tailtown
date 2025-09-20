@@ -326,7 +326,14 @@ const AddOnSelection: React.FC<AddOnSelectionProps> = ({
         </Box>
       </Paper>
       
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={() => onContinue([], 0)}
+        >
+          Skip Add-Ons
+        </Button>
         <Button
           variant="contained"
           color="primary"
