@@ -373,8 +373,12 @@ We follow a standardized documentation structure to ensure consistency and ease 
    cd frontend
    npm install
 
-   # Backend
+   # Customer Service
    cd ../services/customer
+   npm install
+
+   # Reservation Service
+   cd ../reservation-service
    npm install
    ```
 
@@ -383,17 +387,24 @@ We follow a standardized documentation structure to ensure consistency and ease 
    # Frontend
    cp frontend/.env.example frontend/.env
 
-   # Backend
+   # Customer Service
    cp services/customer/.env.example services/customer/.env
+
+   # Reservation Service
+   cp services/reservation-service/.env.example services/reservation-service/.env
    ```
 
 4. Start the development servers:
    ```bash
-   # Terminal 1: Backend
+   # Terminal 1: Customer Service
    cd services/customer
    npm run dev
 
-   # Terminal 2: Frontend
+   # Terminal 2: Reservation Service
+   cd services/reservation-service
+   npm run dev
+
+   # Terminal 3: Frontend
    cd frontend
    npm start
    ```
