@@ -105,8 +105,6 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
     { path: '/customers', label: 'Customers', icon: PeopleIcon },
     { path: '/pets', label: 'Pets', icon: PetsIcon },
-    { path: '/services', label: 'Services', icon: ServicesIcon },
-    { path: '/resources', label: 'Resources', icon: ResourcesIcon },
     { 
       path: '/suites', 
       label: 'Kennels', 
@@ -118,8 +116,6 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     },
     { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
     { path: '/orders/new', label: 'New Order', icon: OrdersIcon },
-    { path: '/staff/scheduling', label: 'Staff Scheduling', icon: ScheduleIcon },
-    // Price Rules moved to Settings
     { 
       path: '/calendar', 
       label: 'Calendar', 
@@ -132,7 +128,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     },
     { 
       path: '/analytics', 
-      label: 'Analytics', 
+      label: 'Reports', 
       icon: AnalyticsIcon,
       children: [
         { path: '/analytics', label: 'Sales Dashboard', icon: ReportIcon },
@@ -258,7 +254,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
             <ListItemIcon>
               <SettingsIcon />
             </ListItemIcon>
-            <ListItemText primary="Settings" />
+            <ListItemText primary="Admin" />
           </ListItemButton>
         </ListItem>
       </List>

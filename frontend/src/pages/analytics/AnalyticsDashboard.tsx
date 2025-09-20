@@ -158,7 +158,7 @@ const AnalyticsDashboard = () => {
     <Container maxWidth="xl">
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Analytics & Reporting
+          Sales Dashboard
         </Typography>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="subtitle1" color="text.secondary">
