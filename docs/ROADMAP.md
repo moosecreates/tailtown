@@ -2,7 +2,25 @@
 
 This document combines the overall project roadmap and the reservation service refactoring roadmap to provide a single source of truth for tracking progress across all aspects of the Tailtown Pet Resort Management System.
 
-## Current Focus: Stability and Maintenance (August 2025)
+## Recent Major Milestone (September 2025)
+
+### ✅ Complete Order System Implementation (v2.0.0)
+- **Complete 5-step order processing** from customer selection to payment
+- **End-to-end workflow** with invoice generation and payment tracking
+- **Enhanced reservation API** with complete financial data
+- **Fixed CORS issues** across all services
+- **Smart date validation** and error handling
+
+## Current Focus: Bug Fixes and Calendar Enhancements (October 2025)
+
+### 🔥 Immediate Priorities
+- **Multi-Pet Selection Fix** - Allow selecting multiple pets for single reservation
+- **Optional Add-Ons Fix** - Make add-ons truly optional in order process
+- **Calendar Functionality** - Fix grooming and training calendars
+- **Drag-and-Drop Calendar** - Enable moving reservations between dates/times
+- **Retail POS System** - Point of sale for retail items and packages
+
+## Previous Focus: Stability and Maintenance (August 2025)
 
 - ✅ Schema alignment between services (Completed August 3, 2025)
   - Synchronized Prisma schemas between customer and reservation services
@@ -119,7 +137,11 @@ This document combines the overall project roadmap and the reservation service r
 ## Upcoming Features
 
 ### Enhanced User Experience
-- 🔲 Drag-and-drop functionality for calendar events
+- 🔲 **Drag-and-drop reservation calendar** - Move reservations between dates/times/resources
+- 🔲 **Multi-pet reservation selection** - Select multiple pets for a single reservation
+- 🔲 **Optional add-ons workflow** - Make add-ons truly optional in order process
+- 🔲 **Functional grooming calendar** - Fix and enhance grooming-specific calendar features
+- 🔲 **Functional training calendar** - Fix and enhance training-specific calendar features
 - 🔲 Batch operations for reservations (e.g., check-in multiple pets at once)
 - 🔲 Advanced filtering and search capabilities
 - 🔲 Customer portal for self-service booking
@@ -128,8 +150,15 @@ This document combines the overall project roadmap and the reservation service r
 - 🔲 Dark mode support
 - 🔲 Priority alerts for staff
 - 🔲 Permission levels and restrictions for users
+- 🔲 **Recent checkouts tracking** - Keep track of recent pet checkouts for staff reference
 
 ### Business Operations
+- 🔲 **Retail Items & Packages** - Point of sale system for retail products and service packages
+- 🔲 **Deposits & Wait-list Management** - Handle reservation deposits and waiting lists
+- 🔲 **Standing Reservations** - Recurring/repeating reservation system
+- 🔲 **Coupons & Discounts** - Comprehensive coupon and promotional code system
+- 🔲 **Contracts Management** - Digital contract creation, signing, and storage
+- 🔲 **Group Classes** - Multi-week group training classes with enrollment management
 - 🔲 Integration with merchant services
 - 🔲 Inventory management for pet supplies
 - 🔲 Additional comprehensive reporting features
@@ -142,6 +171,16 @@ This document combines the overall project roadmap and the reservation service r
 - 🔲 Integration with accounting software
 - 🔲 Staff performance metrics
 - 🔲 Multi-location support
+
+### Admin Settings & Configuration
+- 🔲 **Vaccine Requirements Management** - Admin area to edit and configure required vaccines (multi-tenant support)
+- 🔲 **System Configuration** - Enhanced admin settings for business rules and preferences
+- 🔲 **Multi-tenant Vaccine Policies** - Different vaccine requirements per tenant/location
+
+### Hardware Integration
+- 🔲 **Name Tag Printer Integration** - Direct printing of pet name tags and kennel cards
+- 🔲 **Receipt Printer Integration** - Point of sale receipt printing
+- 🔲 **Barcode/QR Code System** - Pet identification and tracking
 
 ### Advanced Features
 - 🔲 Pet health monitoring and alerts
@@ -267,20 +306,48 @@ Throughout all phases, we will address the following ongoing concerns:
 - 🔲 Cash amount paid after discount can have strange partial penny issues
 - 🔲 Add feeding schedule to kennel cards with weekly dates automatically added
 
+### New Issues Identified (September 2025)
+- 🔲 **Multi-Pet Selection**: When creating new reservation, can't select multiple pets at the same time
+- 🔲 **Optional Add-Ons**: Suggested add-ons need to be optional - currently no way to continue without an add-on in cart
+- 🔲 **Grooming Calendar**: Grooming calendar is currently non-functional
+- 🔲 **Training Calendar**: Training calendar is currently non-functional
+
 ## Implementation Timeline
 
+### Immediate Priority (October 2025)
 | Feature/Task | Status | Estimated Completion | Priority |
 |--------------|--------|---------------------|----------|
-| Schema Alignment | ✅ Completed (Aug 3, 2025) | - | High |
-| Resource Filtering | ✅ Completed (Aug 3, 2025) | - | High |
-| Documentation Updates | ✅ Completed (Aug 3, 2025) | - | High |
-| Reservation Controller Refactoring | 🔄 In Progress | August 17, 2025 | High |
-| API Documentation | 🔄 In Progress | August 10, 2025 | Medium |
-| Performance Optimization | ⏱️ Planned | August 31, 2025 | Medium |
-| Testing Infrastructure | ⏱️ Planned | September 21, 2025 | High |
-| Frontend Integration | ⏱️ Planned | October 12, 2025 | High |
-| Batch Operations | ⏱️ Planned | October 31, 2025 | Medium |
-| Email Notifications | ⏱️ Planned | November 15, 2025 | Medium |
+| Complete Order System | ✅ Completed (Sep 19, 2025) | - | High |
+| Multi-Pet Selection Bug Fix | 🔲 Planned | October 5, 2025 | High |
+| Optional Add-Ons Bug Fix | 🔲 Planned | October 5, 2025 | High |
+| Grooming Calendar Fix | 🔲 Planned | October 12, 2025 | High |
+| Training Calendar Fix | 🔲 Planned | October 12, 2025 | High |
+| Drag-and-Drop Calendar | 🔲 Planned | October 19, 2025 | High |
+
+### Short Term (November 2025)
+| Feature/Task | Status | Estimated Completion | Priority |
+|--------------|--------|---------------------|----------|
+| Retail Items & POS | 🔲 Planned | November 15, 2025 | High |
+| Vaccine Requirements Admin | 🔲 Planned | November 22, 2025 | High |
+| Deposits & Wait-list | 🔲 Planned | November 30, 2025 | Medium |
+| Testing Infrastructure | 🔲 Planned | November 30, 2025 | High |
+
+### Medium Term (December 2025 - January 2026)
+| Feature/Task | Status | Estimated Completion | Priority |
+|--------------|--------|---------------------|----------|
+| Standing Reservations | 🔲 Planned | December 15, 2025 | Medium |
+| Group Classes Enhancement | 🔲 Planned | December 22, 2025 | Medium |
+| Coupons System | 🔲 Planned | January 10, 2026 | Medium |
+| Name Tag Printer Integration | 🔲 Planned | January 15, 2026 | Medium |
+| Contracts Management | 🔲 Planned | January 31, 2026 | Medium |
+
+### Long Term (Q1-Q2 2026)
+| Feature/Task | Status | Estimated Completion | Priority |
+|--------------|--------|---------------------|----------|
+| Recent Checkouts Tracking | 🔲 Planned | February 15, 2026 | Low |
+| Performance Optimization | 🔲 Planned | March 1, 2026 | Medium |
+| Advanced Analytics | 🔲 Planned | March 31, 2026 | Medium |
+| Customer Portal | 🔲 Planned | April 30, 2026 | Medium |
 
 ## Monitoring and Evaluation
 
