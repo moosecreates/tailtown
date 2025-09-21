@@ -114,6 +114,7 @@ export const updateReservation = catchAsync(async (
   const {
     customerId,
     petId,
+    serviceId,
     resourceId,
     startDate,
     endDate,
@@ -179,6 +180,30 @@ export const updateReservation = catchAsync(async (
     );
     
     updateData.petId = petId;
+  }
+  
+  // Validate serviceId if provided
+  if (serviceId !== undefined) {
+    if (!serviceId) {
+      logger.warn(`Invalid service ID provided`, { requestId });
+      throw AppError.validationError('Valid service ID is required');
+    }
+    
+    // Verify service exists
+    await safeExecutePrismaQuery(
+      async () => {
+        return await prisma.service.findFirst({
+          where: {
+            id: serviceId
+          }
+        });
+      },
+      null,
+      `Error verifying service with ID ${serviceId}`,
+      true // Enable throwError flag
+    );
+    
+    updateData.serviceId = serviceId;
   }
   
   // Process dates if provided

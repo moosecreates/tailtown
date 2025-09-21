@@ -677,10 +677,16 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
       // Prepare the data for submission
       const submissionData = {
         ...formData,
-        // If a specific kennel was selected, include its ID
-        resourceId: selectedKennel?.id || formData.resourceId || formData.kennelId,
+        // Prioritize form's resourceId over selectedKennel for updates
+        resourceId: formData.resourceId || selectedKennel?.id || formData.kennelId,
       };
       console.log('KennelCalendar: Submitting reservation data:', submissionData);
+      console.log('KennelCalendar: selectedKennel:', selectedKennel);
+      console.log('KennelCalendar: formData.resourceId:', formData.resourceId);
+      console.log('KennelCalendar: formData.serviceId:', formData.serviceId);
+      console.log('KennelCalendar: formData.kennelId:', formData.kennelId);
+      console.log('KennelCalendar: Final resourceId:', submissionData.resourceId);
+      console.log('KennelCalendar: Final serviceId:', submissionData.serviceId);
       setLoading(true);
       
       // Call API and normalize response to a Reservation object
@@ -691,8 +697,20 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
         // Create a new reservation
         result = await reservationService.createReservation(submissionData);
       } else if (selectedReservation) {
-        // Update an existing reservation
-        result = await reservationService.updateReservation(selectedReservation.id, submissionData);
+        // Update an existing reservation - only send updateable fields
+        const updateData = {
+          startDate: submissionData.startDate,
+          endDate: submissionData.endDate,
+          status: submissionData.status,
+          notes: submissionData.notes,
+          staffNotes: submissionData.staffNotes,
+          resourceId: submissionData.resourceId,
+          serviceId: submissionData.serviceId
+        };
+        console.log('KennelCalendar: Sending update data (filtered):', updateData);
+        console.log('KennelCalendar: updateData.serviceId:', updateData.serviceId);
+        console.log('KennelCalendar: updateData.resourceId:', updateData.resourceId);
+        result = await reservationService.updateReservation(selectedReservation.id, updateData);
       } else {
         throw new Error('No reservation selected for update');
       }
@@ -742,15 +760,17 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
       // Treat as success only if it looks like a reservation
       if (isReservationLike(updatedReservation)) {
         
-        // For updates, close the form immediately
+        // For updates, close the form immediately and don't show add-ons
         if (!isNewReservation) {
+          console.log('KennelCalendar: Update completed, closing form');
           setIsFormOpen(false);
           setSelectedReservation(null);
           setSelectedKennel(null);
           setSelectedDate(null);
+        } else {
+          // Only keep form open for add-ons dialog if this is a NEW reservation
+          console.log('KennelCalendar: Keeping form open for add-ons dialog (new reservation)');
         }
-        // This is key to ensuring the add-ons dialog appears after reservation creation
-        console.log('KennelCalendar: Keeping form open for add-ons dialog');
         
         // Implement a more reliable refresh mechanism
         // First clear the existing data to prevent stale data display
@@ -760,9 +780,15 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
         // Wait a short delay to ensure backend has processed the change
         setTimeout(async () => {
           try {
+            console.log('KennelCalendar: Starting calendar refresh after reservation update');
+            console.log('KennelCalendar: Updated reservation resourceId:', updatedReservation?.resourceId);
+            
             // Reload both reservations and availability data
             await loadReservations();
             console.log('KennelCalendar: Calendar data refreshed after reservation change');
+            
+            // Force a re-render by updating the key or state
+            setLoading(false);
             
             // If a callback was provided, call it with the updated reservation
             if (onEventUpdate && updatedReservation) {
@@ -771,7 +797,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
           } catch (refreshError) {
             console.error('KennelCalendar: Error refreshing calendar data:', refreshError);
           }
-        }, 500); // 500ms delay to ensure backend has processed the change
+        }, 1000); // Increased delay to 1000ms to ensure backend has processed the change
         
         // Extract the reservation ID (handling different response formats)
         let reservationId = '';
@@ -786,9 +812,14 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
         // Stop loading spinner
         setLoading(false);
         
-        // Return the reservation ID so it can be used for add-ons
-        console.log('KennelCalendar: Returning reservation ID for add-ons:', reservationId);
-        return { reservationId };
+        // Only return reservation ID for add-ons if this is a NEW reservation
+        if (isNewReservation) {
+          console.log('KennelCalendar: Returning reservation ID for add-ons:', reservationId);
+          return { reservationId };
+        } else {
+          console.log('KennelCalendar: Update completed, not returning reservation ID');
+          return undefined; // Don't trigger add-ons dialog for updates
+        }
       } else {
         console.error('KennelCalendar: Reservation API response was not successful:', result);
         // Extract error message from the response if available

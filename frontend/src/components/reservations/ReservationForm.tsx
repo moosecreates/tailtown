@@ -567,6 +567,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           formData.resourceId = selectedSuiteId;
           // Log for debugging
           console.log('Sending reservation with resourceId:', selectedSuiteId);
+      console.log('ReservationForm: Current selectedSuiteId state:', selectedSuiteId);
+      console.log('ReservationForm: Available suites:', availableSuites.map(s => ({id: s.id, name: s.name})));
         } else {
           // Don't explicitly set resourceId to null, as this can cause issues with the backend
           // The backend will handle auto-assignment if resourceId is undefined
@@ -812,6 +814,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               }}
               onChange={(e) => {
                 const serviceId = e.target.value;
+                console.log('ReservationForm: Service selection changed from', selectedService, 'to', serviceId);
                 setSelectedService(serviceId);
                 
                 // Find the selected service to get its duration
@@ -918,7 +921,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                         id="kennel-number-select"
                         value={selectedSuiteId || ""}
                         label="Kennel/Suite Number"
-                        onChange={e => setSelectedSuiteId(e.target.value || '')}
+                        onChange={e => {
+                          const newSuiteId = e.target.value || '';
+                          console.log('ReservationForm: Kennel selection changed from', selectedSuiteId, 'to', newSuiteId);
+                          setSelectedSuiteId(newSuiteId);
+                        }}
                         inputProps={{
                           'aria-label': 'Select kennel number',
                           'aria-hidden': 'false'
@@ -1070,7 +1077,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 id="status-select"
                 value={selectedStatus || "CONFIRMED"}
                 label="Reservation Status"
-                onChange={(e) => setSelectedStatus(e.target.value || 'CONFIRMED')}
+                onChange={e => setSelectedStatus(e.target.value)}
                 displayEmpty
                 // Add proper ARIA attributes to fix accessibility warning
                 inputProps={{

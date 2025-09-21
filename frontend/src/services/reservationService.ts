@@ -147,7 +147,7 @@ export const reservationService = {
   updateReservation: async (id: string, reservation: Partial<Reservation>): Promise<Reservation> => {
     try {
       console.log('Sending update request:', { id, data: reservation });
-      const response: AxiosResponse = await api.put(`/api/reservations/${id}`, reservation);
+      const response: AxiosResponse = await api.patch(`/api/reservations/${id}`, reservation);
       console.log('Update response:', response.data);
       const payload = response?.data;
       const normalized = (payload?.data?.reservation ?? payload?.data ?? payload?.reservation ?? payload) as Reservation;
