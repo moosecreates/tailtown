@@ -1,24 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Paper, Typography, Card, CardContent, CardHeader, Button, CircularProgress, Chip } from '@mui/material';
 import { 
-  People as PeopleIcon, 
-  Pets as PetsIcon, 
-  EventNote as EventNoteIcon, 
+  Login as InIcon, 
+  Logout as OutIcon, 
+  Hotel as OvernightIcon, 
   AttachMoney as MoneyIcon
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
-import { customerService } from '../services/customerService';
-import { petService } from '../services/petService';
 import { reservationService } from '../services/reservationService';
 
 /**
  * Dashboard component displays key business metrics and upcoming reservations.
- * Shows customer count, pet count, revenue, and recent activity.
+ * Shows reservation counts (In, Out, Overnight), revenue, and recent activity.
  */
 const Dashboard = () => {
-  const [customerCount, setCustomerCount] = useState<number | null>(null);
-  const [petCount, setPetCount] = useState<number | null>(null);
-  const [reservationCount, setReservationCount] = useState<number | null>(null);
+  const [inCount, setInCount] = useState<number | null>(null);
+  const [outCount, setOutCount] = useState<number | null>(null);
+  const [overnightCount, setOvernightCount] = useState<number | null>(null);
   const [todayRevenue, setTodayRevenue] = useState<number | null>(null);
   // Use proper type definitions for API responses
   type ReservationResponse = {
@@ -52,116 +50,168 @@ const Dashboard = () => {
 const loadData = async () => {
     setLoading(true);
     try {
-      // Get today's date in YYYY-MM-DD format for filtering, preserving local timezone
+      // Get today's date in local timezone (YYYY-MM-DD format)
       const today = new Date();
       const year = today.getFullYear();
       const month = String(today.getMonth() + 1).padStart(2, '0');
       const day = String(today.getDate()).padStart(2, '0');
       const formattedToday = `${year}-${month}-${day}`;
       
+      // Get tomorrow's date for overnight calculations
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowYear = tomorrow.getFullYear();
+      const tomorrowMonth = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const tomorrowDay = String(tomorrow.getDate()).padStart(2, '0');
+      const formattedTomorrow = `${tomorrowYear}-${tomorrowMonth}-${tomorrowDay}`;
+      
+      console.log('Local timezone info:', {
+        currentTime: today.toString(),
+        timezoneOffset: today.getTimezoneOffset(),
+        formattedToday,
+        formattedTomorrow
+      });
+      
       // Define statuses to include (all except CANCELLED)
       const activeStatuses = 'PENDING,CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED,NO_SHOW';
       
       console.log('Loading dashboard data for today:', formattedToday);
       // Reset all state to prevent stale or mock data from persisting
-      setCustomerCount(null);
-      setPetCount(null);
-      setReservationCount(0); // Explicitly set to 0 until we have real data
-      setTodayRevenue(0); // Explicitly set to 0 until we have real data
+      setInCount(0);
+      setOutCount(0);
+      setOvernightCount(0);
+      setTodayRevenue(0);
       setUpcomingReservations([]);
       
-      const [customers, pets, todayReservations, upcoming, revenue] = await Promise.all([
-        customerService.getAllCustomers(),
-        petService.getAllPets(1, 1),
+      console.log('Making API calls...');
+      
+      // Get a date range around today (yesterday to tomorrow) to capture all relevant reservations
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayFormatted = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+      
+      console.log('Date range for reservations:', yesterdayFormatted, 'to', formattedTomorrow);
+      
+      // Make separate calls to get exactly what we need
+      const [todayStarting, upcoming, revenue] = await Promise.all([
+        // Get reservations starting today (for IN count)
         reservationService.getAllReservations(1, 100, 'startDate', 'asc', activeStatuses, formattedToday),
         reservationService.getAllReservations(1, 10, 'startDate', 'asc', 'CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED', formattedToday),
         reservationService.getTodayRevenue()
       ]);
+      console.log('API calls completed');
       
-      // Process customer count from API response
-      if (customers && customers.data && Array.isArray(customers.data)) {
-        setCustomerCount(customers.data.length);
-        console.log('Customer count set to:', customers.data.length);
-      } else {
-        setCustomerCount(0);
-        console.log('No valid customer data found, setting count to 0');
-      }
-
-      // Process pet count from API response
-      if (pets && pets.results !== undefined) {
-        setPetCount(pets.results);
-        console.log('Pet count set to:', pets.results);
-      } else if (pets && pets.data && Array.isArray(pets.data)) {
-        setPetCount(pets.data.length);
-        console.log('Pet count set to:', pets.data.length);
-      } else {
-        setPetCount(0);
-        console.log('No valid pet data found, setting count to 0');
-      }
-
-      // Process reservation count from API response
-      console.log('Today reservations API full response:', todayReservations);
+      // Process reservations to calculate In, Out, and Overnight counts
+      let inCount = 0;
+      let outCount = 0;
+      let overnightCount = 0;
       
-      let reservationCount = 0;
+      console.log('Today starting reservations response:', todayStarting);
       
-      // Based on the actual API response structure
-      if (todayReservations && todayReservations.status === 'success') {
-        // ALWAYS use the results field which contains the actual count of filtered reservations
-        // This is the correct field to use as it represents the count of reservations after filtering
-        reservationCount = todayReservations.results || 0;
-        console.log('Using results field for reservation count:', reservationCount);
-      } else if (Array.isArray(todayReservations)) {
-        // Direct array response
-        reservationCount = todayReservations.length;
-        console.log('Using array length for reservation count:', reservationCount);
-      } else {
-        console.log('No valid reservation data structure found, setting count to 0');
+      let reservations: any[] = [];
+      
+      // Handle different response structures
+      if (todayStarting && todayStarting.data) {
+        if (Array.isArray(todayStarting.data)) {
+          // Direct array in data field
+          reservations = todayStarting.data;
+        } else if (typeof todayStarting.data === 'object' && todayStarting.data !== null) {
+          // Check for nested reservations array
+          const dataObj = todayStarting.data as any;
+          if (dataObj.reservations && Array.isArray(dataObj.reservations)) {
+            reservations = dataObj.reservations;
+          }
+        }
       }
       
-      console.log('Final reservation count being set:', reservationCount);
-      setReservationCount(reservationCount);
+      console.log('Processing reservations:', reservations.length);
+      
+      if (reservations.length > 0) {
+        
+        // Since we filtered by today's date, all reservations START today
+        // So IN count = total reservations
+        inCount = reservations.length;
+        console.log('IN count set to total reservations starting today:', inCount);
+        
+        reservations.forEach((reservation: any) => {
+          const reservationStart = new Date(reservation.startDate);
+          const reservationEnd = new Date(reservation.endDate);
+          
+          // Convert to local timezone for comparison
+          const startDateLocal = new Date(reservationStart.getTime() - (reservationStart.getTimezoneOffset() * 60000));
+          const endDateLocal = new Date(reservationEnd.getTime() - (reservationEnd.getTimezoneOffset() * 60000));
+          
+          // Get local date strings (YYYY-MM-DD)
+          const startDateStr = startDateLocal.toISOString().split('T')[0];
+          const endDateStr = endDateLocal.toISOString().split('T')[0];
+          const todayStr = formattedToday; // Already in YYYY-MM-DD format
+          
+          console.log('Processing reservation:', {
+            id: reservation.id,
+            customer: reservation.customer?.firstName + ' ' + reservation.customer?.lastName,
+            pet: reservation.pet?.name,
+            service: reservation.service?.name,
+            startDate: reservation.startDate,
+            endDate: reservation.endDate,
+            startDateStr,
+            endDateStr,
+            todayStr,
+            timezone: 'Local timezone adjusted'
+          });
+          
+          // Out: Reservations ending today  
+          if (endDateStr === todayStr) {
+            outCount++;
+            console.log('OUT count incremented for reservation:', reservation.id, reservation.customer?.firstName, reservation.pet?.name);
+          }
+          
+          // Overnight: Reservations that start today but end after today
+          if (endDateStr > todayStr) {
+            overnightCount++;
+            console.log('OVERNIGHT count incremented for reservation:', reservation.id, reservation.customer?.firstName, reservation.pet?.name);
+          }
+        });
+      }
+      
+      console.log('Reservation counts - In:', inCount, 'Out:', outCount, 'Overnight:', overnightCount);
+      setInCount(inCount);
+      setOutCount(outCount);
+      setOvernightCount(overnightCount);
       
       // Safely extract reservation data from response - ensure it's always an array
       // Cast upcoming to the proper response type
       const reservationResponse = upcoming as ReservationResponse;
       console.log('Processing upcoming reservations response:', reservationResponse);
       
-      // Based on the API logs, we're getting: { status: 'success', results: 10, pagination: {...}, data: {...} }
-      if (reservationResponse && typeof reservationResponse === 'object' && reservationResponse.status === 'success') {
-        // Handle reservations where data is directly in the data field (not nested)
-        console.log('Upcoming reservations full response:', reservationResponse);
-        
-        let upcomingReservationsData: any[] = [];
-        
-        // Based on the actual API response structure
-        if (reservationResponse && reservationResponse.status === 'success') {
-          if (reservationResponse.data && Array.isArray(reservationResponse.data)) {
-            // Direct array in data field (this is the actual structure from the API)
-            upcomingReservationsData = reservationResponse.data;
-            console.log('Found upcoming reservations as array in data field', upcomingReservationsData.length);
-          } else if (reservationResponse.data && typeof reservationResponse.data === 'object') {
-            // Handle nested structure if present
-            const dataObj = reservationResponse.data as Record<string, any>;
-            if (dataObj.data && Array.isArray(dataObj.data)) {
-              upcomingReservationsData = dataObj.data;
-              console.log('Found upcoming reservations in nested data.data array', upcomingReservationsData.length);
-            } else if (dataObj.reservations && Array.isArray(dataObj.reservations)) {
-              upcomingReservationsData = dataObj.reservations;
-              console.log('Found upcoming reservations in data.reservations array', upcomingReservationsData.length);
-            }
+      // Process upcoming reservations with the same structure handling
+      console.log('Upcoming reservations full response:', reservationResponse);
+      
+      let upcomingReservationsData: any[] = [];
+      
+      if (reservationResponse && reservationResponse.status === 'success' && reservationResponse.data) {
+        if (Array.isArray(reservationResponse.data)) {
+          // Direct array in data field
+          upcomingReservationsData = reservationResponse.data;
+          console.log('Found upcoming reservations as array in data field', upcomingReservationsData.length);
+        } else if (typeof reservationResponse.data === 'object' && reservationResponse.data !== null) {
+          // Handle nested structure
+          const dataObj = reservationResponse.data as any;
+          if (dataObj.reservations && Array.isArray(dataObj.reservations)) {
+            upcomingReservationsData = dataObj.reservations;
+            console.log('Found upcoming reservations in data.reservations array', upcomingReservationsData.length);
+          } else if (dataObj.data && Array.isArray(dataObj.data)) {
+            upcomingReservationsData = dataObj.data;
+            console.log('Found upcoming reservations in nested data.data array', upcomingReservationsData.length);
           }
-        } else if (Array.isArray(reservationResponse)) {
-          // Direct array response
-          upcomingReservationsData = reservationResponse;
-          console.log('Found upcoming reservations as direct array response', upcomingReservationsData.length);
         }
-        
-        console.log('Final upcoming reservations being set:', upcomingReservationsData.length);
-        setUpcomingReservations(upcomingReservationsData);
-      } else {
-        console.error('Invalid upcoming reservations data', reservationResponse);
-        setUpcomingReservations([]);
+      } else if (Array.isArray(reservationResponse)) {
+        // Direct array response
+        upcomingReservationsData = reservationResponse;
+        console.log('Found upcoming reservations as direct array response', upcomingReservationsData.length);
       }
+      
+      console.log('Final upcoming reservations being set:', upcomingReservationsData.length);
+      setUpcomingReservations(upcomingReservationsData);
       
       // Process revenue data from API response
       console.log('Today\'s revenue full response:', revenue);
@@ -261,31 +311,31 @@ const loadData = async () => {
 
   const stats = [
   { 
-    title: 'Customers', 
-    value: customerCount === null ? <CircularProgress size={20} /> : customerCount, 
-    icon: <PeopleIcon sx={{ fontSize: 40, color: 'primary.main' }} />,
-    link: '/customers',
+    title: 'In', 
+    value: inCount === null ? <CircularProgress size={20} /> : inCount, 
+    icon: <InIcon sx={{ fontSize: 40, color: 'primary.main' }} />,
+    link: '/calendar',
     change: ''
   },
   { 
-    title: 'Pets', 
-    value: petCount === null ? <CircularProgress size={20} /> : petCount, 
-    icon: <PetsIcon sx={{ fontSize: 40, color: 'secondary.main' }} />,
-    link: '/pets',
+    title: 'Out', 
+    value: outCount === null ? <CircularProgress size={20} /> : outCount, 
+    icon: <OutIcon sx={{ fontSize: 40, color: 'secondary.main' }} />,
+    link: '/calendar',
     change: ''
   },
   { 
-    title: "Today's Reservations", 
-    value: reservationCount === null ? <CircularProgress size={20} /> : reservationCount, 
-    icon: <EventNoteIcon sx={{ fontSize: 40, color: 'success.main' }} />,
-    link: '/reservations',
+    title: 'Overnight', 
+    value: overnightCount === null ? <CircularProgress size={20} /> : overnightCount, 
+    icon: <OvernightIcon sx={{ fontSize: 40, color: 'success.main' }} />,
+    link: '/calendar',
     change: ''
   },
   { 
     title: 'Today\'s Revenue', 
     value: todayRevenue === null ? <CircularProgress size={20} /> : `$${(todayRevenue || 0).toLocaleString()}`, 
     icon: <MoneyIcon sx={{ fontSize: 40, color: 'info.main' }} />,
-    link: '/revenue',
+    link: '/reports',
     change: ''
   }
 ];
