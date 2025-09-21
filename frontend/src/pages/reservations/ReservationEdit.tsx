@@ -19,6 +19,9 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { reservationService } from '../../services/reservationService';
 import { Reservation } from '../../services/reservationService';
+import { serviceManagement } from '../../services/serviceManagement';
+import { resourceService, type Resource } from '../../services/resourceService';
+import { Service } from '../../types/service';
 
 export default function ReservationEdit() {
   const { id } = useParams<{ id: string }>();
@@ -26,39 +29,55 @@ export default function ReservationEdit() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reservation, setReservation] = useState<Reservation | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
   type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
 
   const [formData, setFormData] = useState({
     startDate: new Date(),
     endDate: new Date(),
     status: 'CONFIRMED' as ReservationStatus,
+    serviceId: '',
+    resourceId: '',
     notes: '',
     staffNotes: '',
   });
 
   useEffect(() => {
-    const fetchReservation = async () => {
+    const fetchData = async () => {
       try {
         if (!id) return;
-        const data = await reservationService.getReservationById(id);
-        setReservation(data);
+        
+        // Load reservation, services, and resources in parallel
+        const [reservationData, servicesResponse, resourcesResponse] = await Promise.all([
+          reservationService.getReservationById(id),
+          serviceManagement.getAllServices(),
+          resourceService.getAllResources()
+        ]);
+        
+        setReservation(reservationData);
+        setServices(servicesResponse.data || []);
+        setResources(resourcesResponse.data || []);
+        
         setFormData({
-          startDate: new Date(data.startDate),
-          endDate: new Date(data.endDate),
-          status: data.status,
-          notes: data.notes || '',
-          staffNotes: data.staffNotes || '',
+          startDate: new Date(reservationData.startDate),
+          endDate: new Date(reservationData.endDate),
+          status: reservationData.status,
+          serviceId: reservationData.service?.id || '',
+          resourceId: reservationData.resource?.id || '',
+          notes: reservationData.notes || '',
+          staffNotes: reservationData.staffNotes || '',
         });
         setError(null);
       } catch (error) {
-        console.error('Error fetching reservation:', error);
+        console.error('Error fetching data:', error);
         setError('Failed to load reservation details');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchReservation();
+    fetchData();
   }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,10 +90,15 @@ export default function ReservationEdit() {
         endDate: formData.endDate.toISOString(),
       });
       const updatedReservation = await reservationService.updateReservation(id, {
-        ...formData,
         startDate: formData.startDate.toISOString(),
         endDate: formData.endDate.toISOString(),
-      });
+        status: formData.status,
+        notes: formData.notes,
+        staffNotes: formData.staffNotes,
+        // Add the fields that the backend expects
+        ...(formData.serviceId && { serviceId: formData.serviceId }),
+        ...(formData.resourceId && { resourceId: formData.resourceId }),
+      } as any);
       console.log('Updated reservation:', updatedReservation);
       navigate(`/reservations/${id}`);
     } catch (error) {
@@ -158,6 +182,42 @@ export default function ReservationEdit() {
                 <MenuItem value="COMPLETED">Completed</MenuItem>
                 <MenuItem value="CANCELLED">Cancelled</MenuItem>
                 <MenuItem value="NO_SHOW">No Show</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel>Service</InputLabel>
+              <Select
+                value={formData.serviceId}
+                label="Service"
+                onChange={(e) => setFormData({ ...formData, serviceId: e.target.value })}
+              >
+                <MenuItem value="">
+                  <em>Select a service</em>
+                </MenuItem>
+                {services.map((service) => (
+                  <MenuItem key={service.id} value={service.id}>
+                    {service.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel>Kennel/Suite</InputLabel>
+              <Select
+                value={formData.resourceId}
+                label="Kennel/Suite"
+                onChange={(e) => setFormData({ ...formData, resourceId: e.target.value })}
+              >
+                <MenuItem value="">
+                  <em>Select a kennel/suite</em>
+                </MenuItem>
+                {resources.map((resource) => (
+                  <MenuItem key={resource.id} value={resource.id}>
+                    {resource.name} ({resource.type})
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
 
