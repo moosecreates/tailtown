@@ -206,15 +206,32 @@ const ReportsPage: React.FC = () => {
 
         {/* Report Categories Tabs */}
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tabValue} onChange={handleTabChange} aria-label="report categories">
-            <Tab label="Sales Reports" />
-            <Tab label="Financial Reports" />
-            <Tab label="Customer Reports" />
-            <Tab label="Pet Reports" />
-            <Tab label="Marketing Reports" />
-            <Tab label="Operational Reports" />
-            <Tab label="Service Reports" />
-            <Tab label="Tax Reports" />
+          <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange} 
+            aria-label="report categories"
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+            sx={{
+              '& .MuiTab-root': {
+                minWidth: 100,
+                fontSize: '0.8rem',
+                padding: '6px 8px',
+              },
+              '& .MuiTabs-flexContainer': {
+                gap: 0.5,
+              }
+            }}
+          >
+            <Tab label="Sales" />
+            <Tab label="Financial" />
+            <Tab label="Customer" />
+            <Tab label="Pet" />
+            <Tab label="Marketing" />
+            <Tab label="Operations" />
+            <Tab label="Service" />
+            <Tab label="Tax" />
           </Tabs>
         </Box>
 
