@@ -222,17 +222,16 @@ const loadData = async () => {
           if (petId) {
             try {
               const petDetails = await petService.getPetById(petId);
-              console.log(`Pet ${petDetails.name} details:`, petDetails);
-              console.log(`Pet ${petDetails.name} icons:`, petDetails.petIcons);
-              console.log(`Pet ${petDetails.name} iconNotes:`, petDetails.iconNotes);
+              console.log(`Pet ${petDetails.name} icons from database:`, petDetails.petIcons);
+              console.log(`Pet ${petDetails.name} iconNotes from database:`, petDetails.iconNotes);
               
               // Merge pet details with reservation
               return {
                 ...reservation,
                 pet: {
                   ...reservation.pet,
-                  petIcons: petDetails.petIcons,
-                  iconNotes: petDetails.iconNotes
+                  petIcons: petDetails.petIcons || [],
+                  iconNotes: petDetails.iconNotes || {}
                 }
               };
             } catch (error) {
