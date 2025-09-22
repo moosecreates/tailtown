@@ -217,10 +217,12 @@ const loadData = async () => {
       // Fetch detailed pet data for each reservation to get pet icons
       const reservationsWithPetDetails = await Promise.all(
         upcomingReservationsData.map(async (reservation) => {
-          if (reservation.pet?.id) {
+          // Use petId from reservation root level, not from pet object
+          const petId = reservation.petId || reservation.pet?.id;
+          if (petId) {
             try {
-              console.log('Fetching pet details for pet ID:', reservation.pet.id);
-              const petDetails = await petService.getPetById(reservation.pet.id);
+              console.log('Fetching pet details for pet ID:', petId);
+              const petDetails = await petService.getPetById(petId);
               console.log('Pet details fetched:', petDetails);
               console.log('Pet icons from API:', petDetails.petIcons);
               console.log('Pet icon notes from API:', petDetails.iconNotes);
@@ -235,7 +237,7 @@ const loadData = async () => {
                 }
               };
             } catch (error) {
-              console.error('Error fetching pet details for pet ID:', reservation.pet.id, error);
+              console.error('Error fetching pet details for pet ID:', petId, error);
               return reservation; // Return original reservation if pet fetch fails
             }
           }
@@ -501,6 +503,8 @@ const loadData = async () => {
                       // Debug: Log the full reservation object to see pet data structure
                       console.log('Full reservation object:', reservation);
                       console.log('Pet data:', reservation.pet);
+                      console.log('Pet ID:', reservation.pet?.id);
+                      console.log('Reservation petId field:', reservation.petId);
                       
                       return (
                       <Box 
