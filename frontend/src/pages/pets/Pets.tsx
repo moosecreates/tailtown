@@ -195,8 +195,10 @@ const Pets = () => {
                           petIcons={pet.petIcons}
                           iconNotes={pet.iconNotes}
                           petType={pet.type}
+                          profilePhoto={pet.profilePhoto}
                           size="small"
                           nameVariant="body2"
+                          showPhoto={true}
                         />
                       </TableCell>
                       <TableCell onClick={() => handleRowClick(pet.id)} sx={{ cursor: 'pointer' }}>

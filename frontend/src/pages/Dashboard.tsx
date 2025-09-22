@@ -231,7 +231,8 @@ const loadData = async () => {
                 pet: {
                   ...reservation.pet,
                   petIcons: petDetails.petIcons || [],
-                  iconNotes: petDetails.iconNotes || {}
+                  iconNotes: petDetails.iconNotes || {},
+                  profilePhoto: petDetails.profilePhoto
                 }
               };
             } catch (error) {
@@ -525,8 +526,10 @@ const loadData = async () => {
                             petIcons={reservation.pet?.petIcons}
                             iconNotes={reservation.pet?.iconNotes}
                             petType={reservation.pet?.type}
+                            profilePhoto={reservation.pet?.profilePhoto}
                             size="small"
                             nameVariant="body2"
+                            showPhoto={true}
                           />
                         </Box>
                         <Typography variant="body2" align="left">{reservation.service?.name}</Typography>

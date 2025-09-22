@@ -306,8 +306,10 @@ const Reservations = () => {
                             petIcons={reservation.pet?.petIcons}
                             iconNotes={reservation.pet?.iconNotes}
                             petType={reservation.pet?.type}
+                            profilePhoto={reservation.pet?.profilePhoto}
                             size="small"
                             nameVariant="body2"
+                            showPhoto={true}
                           />
                           {reservation.pet?.type && (
                             <Typography variant="caption" color="text.secondary">({reservation.pet?.type})</Typography>
