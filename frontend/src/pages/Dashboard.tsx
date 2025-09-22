@@ -492,8 +492,8 @@ const loadData = async () => {
                         <Box sx={{ textAlign: 'left' }}>
                           <PetNameWithIcons
                             petName={reservation.pet?.name || 'Unknown Pet'}
-                            petIcons={reservation.pet?.petIcons}
-                            iconNotes={reservation.pet?.iconNotes}
+                            petIcons={reservation.pet?.petIcons || ['small-group', 'medication-required', 'red-flag']} // Test icons
+                            iconNotes={reservation.pet?.iconNotes || {'red-flag': 'Test note'}}
                             petType={reservation.pet?.type}
                             size="small"
                             nameVariant="body2"
