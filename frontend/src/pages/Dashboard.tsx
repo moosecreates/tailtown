@@ -465,7 +465,12 @@ const loadData = async () => {
                       <Typography variant="subtitle2" align="left">Status</Typography>
                     </Box>
                     
-                    {upcomingReservations.map((reservation) => (
+                    {upcomingReservations.map((reservation) => {
+                      // Debug: Log the full reservation object to see pet data structure
+                      console.log('Full reservation object:', reservation);
+                      console.log('Pet data:', reservation.pet);
+                      
+                      return (
                       <Box 
                         key={reservation.id}
                         sx={{ 
@@ -509,7 +514,8 @@ const loadData = async () => {
                           />
                         </Box>
                       </Box>
-                    ))}
+                      );
+                    })}
                   </Box>
                 )}
               </Box>
