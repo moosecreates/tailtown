@@ -222,6 +222,8 @@ const loadData = async () => {
               console.log('Fetching pet details for pet ID:', reservation.pet.id);
               const petDetails = await petService.getPetById(reservation.pet.id);
               console.log('Pet details fetched:', petDetails);
+              console.log('Pet icons from API:', petDetails.petIcons);
+              console.log('Pet icon notes from API:', petDetails.iconNotes);
               
               // Merge pet details with reservation
               return {
