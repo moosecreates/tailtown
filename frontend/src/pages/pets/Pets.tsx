@@ -17,7 +17,10 @@ import {
   InputAdornment,
   Pagination,
   CircularProgress,
-  Alert
+  Alert,
+  Skeleton,
+  Snackbar,
+  TablePagination
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -29,6 +32,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { petService, Pet } from '../../services/petService';
 import PetNameWithIcons from '../../components/pets/PetNameWithIcons';
+import { debounce } from 'lodash';
 
 
 

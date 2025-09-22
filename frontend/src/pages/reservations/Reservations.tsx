@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Typography,
@@ -18,7 +18,12 @@ import {
   Pagination,
   CircularProgress,
   Alert,
-  Tooltip
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Menu,
+  MenuItem
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -30,6 +35,8 @@ import {
 import { Link } from 'react-router-dom';
 import PetNameWithIcons from '../../components/pets/PetNameWithIcons';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import InfoIcon from '@mui/icons-material/Info';
 import ReservationForm from '../../components/reservations/ReservationForm';
 import { reservationService } from '../../services/reservationService';
