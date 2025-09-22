@@ -221,11 +221,7 @@ const loadData = async () => {
           const petId = reservation.petId || reservation.pet?.id;
           if (petId) {
             try {
-              console.log('Fetching pet details for pet ID:', petId);
               const petDetails = await petService.getPetById(petId);
-              console.log('Pet details fetched:', petDetails);
-              console.log('Pet icons from API:', petDetails.petIcons);
-              console.log('Pet icon notes from API:', petDetails.iconNotes);
               
               // Merge pet details with reservation
               return {
@@ -500,11 +496,7 @@ const loadData = async () => {
                     </Box>
                     
                     {upcomingReservations.map((reservation) => {
-                      // Debug: Log the full reservation object to see pet data structure
-                      console.log('Full reservation object:', reservation);
-                      console.log('Pet data:', reservation.pet);
-                      console.log('Pet ID:', reservation.pet?.id);
-                      console.log('Reservation petId field:', reservation.petId);
+                      // Pet icons will display here once assigned to pets
                       
                       return (
                       <Box 
