@@ -43,6 +43,11 @@ import Scheduling from './pages/staff/Scheduling';
 import OrderEntry from './pages/orders/OrderEntry';
 import PrintKennelCards from './pages/kennels/PrintKennelCards';
 
+// Marketing Pages
+import MarketingHub from './pages/admin/marketing/MarketingHub';
+import SmsMarketing from './pages/admin/marketing/SmsMarketing';
+import EmailMarketing from './pages/admin/marketing/EmailMarketing';
+
 // Custom event and utility components
 
 // Custom event for route changes
@@ -111,6 +116,11 @@ const AppRoutes = () => {
         <Route path="/reports" element={isAuthenticated ? <ReportsPage /> : <Navigate to="/login" />} />
         <Route path="/analytics" element={isAuthenticated ? <AnalyticsDashboard /> : <Navigate to="/login" />} />
         <Route path="/analytics/customers" element={isAuthenticated ? <CustomerValueReport /> : <Navigate to="/login" />} />
+        
+        {/* Marketing Routes */}
+        <Route path="/admin/marketing" element={isAuthenticated ? <MarketingHub /> : <Navigate to="/login" />} />
+        <Route path="/admin/marketing/sms" element={isAuthenticated ? <SmsMarketing /> : <Navigate to="/login" />} />
+        <Route path="/admin/marketing/email" element={isAuthenticated ? <EmailMarketing /> : <Navigate to="/login" />} />
         
         {/* Debug routes */}
         <Route path="/debug/api" element={<ApiTester />} />
