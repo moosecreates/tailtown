@@ -16,7 +16,8 @@ import {
   Schedule as ScheduleIcon,
   People as UsersIcon,
   AttachMoney as PriceRulesIcon,
-  Settings as GeneralIcon
+  Settings as GeneralIcon,
+  Campaign as MarketingIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
@@ -50,6 +51,13 @@ const Settings: React.FC = () => {
       icon: <UsersIcon sx={{ fontSize: 40, color: 'info.main' }} />,
       path: '/settings/users',
       stats: 'Active Users: 5'
+    },
+    {
+      title: 'Marketing',
+      description: 'Manage SMS and email marketing campaigns with Twilio and SendGrid',
+      icon: <MarketingIcon sx={{ fontSize: 40, color: 'purple' }} />,
+      path: '/admin/marketing',
+      stats: 'Campaigns: 0'
     },
     {
       title: 'Price Rules',
