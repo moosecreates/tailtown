@@ -1,26 +1,36 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Typography, 
-  Container, 
-  Box, 
-  Button, 
-  Paper, 
-  Chip, 
-  IconButton, 
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  Alert,
+import React, { useState, useEffect } from 'react';
+import {
+  Container,
+  Typography,
+  Box,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Button,
+  Chip,
+  IconButton,
+  TextField,
+  InputAdornment,
+  Pagination,
   CircularProgress,
-  Menu,
-  MenuItem,
-  TextField
+  Alert,
+  Tooltip
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Visibility as ViewIcon,
+  Search as SearchIcon,
+  FilterList as FilterIcon
+} from '@mui/icons-material';
+import { Link } from 'react-router-dom';
+import PetNameWithIcons from '../../components/pets/PetNameWithIcons';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import InfoIcon from '@mui/icons-material/Info';
-import AddIcon from '@mui/icons-material/Add';
 import ReservationForm from '../../components/reservations/ReservationForm';
 import { reservationService } from '../../services/reservationService';
 import { debounce } from 'lodash';
@@ -284,7 +294,14 @@ const Reservations = () => {
                       <Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Pet:</Typography>
-                          <Typography variant="body2">{reservation.pet?.name || 'Unknown'}</Typography>
+                          <PetNameWithIcons
+                            petName={reservation.pet?.name || 'Unknown'}
+                            petIcons={reservation.pet?.petIcons}
+                            iconNotes={reservation.pet?.iconNotes}
+                            petType={reservation.pet?.type}
+                            size="small"
+                            nameVariant="body2"
+                          />
                           {reservation.pet?.type && (
                             <Typography variant="caption" color="text.secondary">({reservation.pet?.type})</Typography>
                           )}

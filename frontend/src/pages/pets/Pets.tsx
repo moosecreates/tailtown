@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Typography,
   Container,
+  Typography,
   Box,
-  Button,
   Paper,
   Table,
   TableBody,
@@ -11,18 +10,25 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  CircularProgress,
-  Alert,
-  Snackbar,
-  TablePagination,
-  Skeleton,
+  Button,
+  Chip,
+  IconButton,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Pagination,
+  CircularProgress,
+  Alert
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import debounce from 'lodash/debounce';
-import { useNavigate } from 'react-router-dom';
-import { Pet, petService, PaginatedResponse } from '../../services/petService';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Visibility as ViewIcon,
+  Search as SearchIcon,
+  FilterList as FilterIcon
+} from '@mui/icons-material';
+import { Link, useNavigate } from 'react-router-dom';
+import { petService, Pet } from '../../services/petService';
+import PetNameWithIcons from '../../components/pets/PetNameWithIcons';
 
 
 
@@ -180,7 +186,14 @@ const Pets = () => {
                       sx={{ '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
                     >
                       <TableCell onClick={() => handleRowClick(pet.id)} sx={{ cursor: 'pointer' }}>
-                        {pet.name}
+                        <PetNameWithIcons
+                          petName={pet.name}
+                          petIcons={pet.petIcons}
+                          iconNotes={pet.iconNotes}
+                          petType={pet.type}
+                          size="small"
+                          nameVariant="body2"
+                        />
                       </TableCell>
                       <TableCell onClick={() => handleRowClick(pet.id)} sx={{ cursor: 'pointer' }}>
                         {pet.type}

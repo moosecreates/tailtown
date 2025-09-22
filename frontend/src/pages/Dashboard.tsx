@@ -8,6 +8,7 @@ import {
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { reservationService } from '../services/reservationService';
+import PetNameWithIcons from '../components/pets/PetNameWithIcons';
 
 /**
  * Dashboard component displays key business metrics and upcoming reservations.
@@ -483,7 +484,16 @@ const loadData = async () => {
                         style={{ textDecoration: 'none', color: 'inherit' }}
                       >
                         <Typography variant="body2" align="left">{reservation.customer?.firstName} {reservation.customer?.lastName}</Typography>
-                        <Typography variant="body2" align="left">{reservation.pet?.name}</Typography>
+                        <Box sx={{ textAlign: 'left' }}>
+                          <PetNameWithIcons
+                            petName={reservation.pet?.name || 'Unknown Pet'}
+                            petIcons={reservation.pet?.petIcons}
+                            iconNotes={reservation.pet?.iconNotes}
+                            petType={reservation.pet?.type}
+                            size="small"
+                            nameVariant="body2"
+                          />
+                        </Box>
                         <Typography variant="body2" align="left">{reservation.service?.name}</Typography>
                         <Typography variant="body2" align="left">
                           {new Date(reservation.startDate).toLocaleDateString()}
