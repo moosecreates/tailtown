@@ -31,15 +31,6 @@ const PetNameWithIcons: React.FC<PetNameWithIconsProps> = ({
   direction = 'row',
   gap = 1
 }) => {
-  // Debug logging
-  console.log('PetNameWithIcons received:', {
-    petName,
-    petIcons,
-    iconNotes,
-    petType,
-    hasIcons: petIcons && petIcons.length > 0
-  });
-  
   const hasIcons = petIcons && petIcons.length > 0;
 
   return (

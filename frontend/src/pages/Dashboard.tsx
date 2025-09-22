@@ -8,6 +8,7 @@ import {
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { reservationService } from '../services/reservationService';
+import { petService } from '../services/petService';
 import PetNameWithIcons from '../components/pets/PetNameWithIcons';
 
 /**
@@ -212,7 +213,36 @@ const loadData = async () => {
       }
       
       console.log('Final upcoming reservations being set:', upcomingReservationsData.length);
-      setUpcomingReservations(upcomingReservationsData);
+      
+      // Fetch detailed pet data for each reservation to get pet icons
+      const reservationsWithPetDetails = await Promise.all(
+        upcomingReservationsData.map(async (reservation) => {
+          if (reservation.pet?.id) {
+            try {
+              console.log('Fetching pet details for pet ID:', reservation.pet.id);
+              const petDetails = await petService.getPetById(reservation.pet.id);
+              console.log('Pet details fetched:', petDetails);
+              
+              // Merge pet details with reservation
+              return {
+                ...reservation,
+                pet: {
+                  ...reservation.pet,
+                  petIcons: petDetails.petIcons,
+                  iconNotes: petDetails.iconNotes
+                }
+              };
+            } catch (error) {
+              console.error('Error fetching pet details for pet ID:', reservation.pet.id, error);
+              return reservation; // Return original reservation if pet fetch fails
+            }
+          }
+          return reservation; // Return original reservation if no pet ID
+        })
+      );
+      
+      console.log('Reservations with pet details:', reservationsWithPetDetails);
+      setUpcomingReservations(reservationsWithPetDetails);
       
       // Process revenue data from API response
       console.log('Today\'s revenue full response:', revenue);
@@ -492,8 +522,8 @@ const loadData = async () => {
                         <Box sx={{ textAlign: 'left' }}>
                           <PetNameWithIcons
                             petName={reservation.pet?.name || 'Unknown Pet'}
-                            petIcons={reservation.pet?.petIcons || ['small-group', 'medication-required', 'red-flag']} // Test icons
-                            iconNotes={reservation.pet?.iconNotes || {'red-flag': 'Test note'}}
+                            petIcons={reservation.pet?.petIcons}
+                            iconNotes={reservation.pet?.iconNotes}
                             petType={reservation.pet?.type}
                             size="small"
                             nameVariant="body2"

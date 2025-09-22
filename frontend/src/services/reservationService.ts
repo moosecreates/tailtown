@@ -33,6 +33,8 @@ export interface Reservation {
     name: string;
     type: string;
     breed: string;
+    petIcons?: string[];
+    iconNotes?: { [iconId: string]: string };
   };
   service?: {
     id: string;
