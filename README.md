@@ -4,6 +4,31 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ## Recent Updates (September 2025)
 
+### ✅ LATEST FIX: Reservation Edit Form Data Loading (September 23, 2025)
+
+#### Issue Resolved
+- **Problem**: Reservation edit form fields were not pre-populating when clicking on existing reservations in the calendar
+- **Root Cause**: The availability API was returning incomplete reservation data (missing `customerId`, `petId`, `serviceId`)
+- **Impact**: Staff couldn't edit existing reservations effectively, requiring manual re-entry of all data
+
+#### Technical Solution Implemented
+1. **Enhanced Data Fetching**: Added `fetchCompleteReservation()` function to retrieve full reservation data
+2. **API Endpoint Fix**: Corrected API endpoint URL from `/reservations/` to `/api/reservations/`
+3. **Response Structure Handling**: Added proper extraction of nested reservation data from API response
+4. **Fallback Logic**: Implemented graceful fallback to incomplete data if complete fetch fails
+
+#### Code Changes
+- **File**: `/frontend/src/components/calendar/KennelCalendar.tsx`
+- **New Function**: `fetchCompleteReservation()` - Fetches complete reservation data by ID
+- **Enhanced Function**: `handleCellClick()` - Now async and fetches complete data before opening form
+- **API Integration**: Uses correct reservation service endpoint with proper response parsing
+
+#### Result
+- ✅ **Form Pre-population**: All fields now populate correctly (customer, pet, service, dates, status)
+- ✅ **Complete Data**: Full reservation data with all required IDs available for editing
+- ✅ **Seamless UX**: Staff can now click any reservation and immediately see all details
+- ✅ **Error Handling**: Graceful fallback ensures form still opens even if complete data fetch fails
+
 ### 🎉 MAJOR MILESTONE: Complete Order System Implementation
 
 #### End-to-End Order Processing

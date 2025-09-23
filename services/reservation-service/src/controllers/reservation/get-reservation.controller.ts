@@ -239,7 +239,8 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
           service: {
             select: {
               id: true,
-              name: true
+              name: true,
+              serviceCategory: true
             }
           }
         }
@@ -359,7 +360,8 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
               id: true,
               name: true,
               price: true,
-              description: true
+              description: true,
+              serviceCategory: true
             }
           },
           addOnServices: {

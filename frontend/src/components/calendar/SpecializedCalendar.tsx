@@ -184,13 +184,28 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
   const handleEventClick = (clickInfo: EventClickArg) => {
     // Get the reservation from the event's extendedProps
     const reservation = clickInfo.event.extendedProps.reservation as Reservation;
+    console.log('SpecializedCalendar: Event clicked, reservation data:', reservation);
     if (reservation) {
-      setSelectedEvent(reservation);
+      console.log('SpecializedCalendar: Setting selectedEvent and opening form');
+      
+      // Transform the reservation data to include IDs that ReservationForm expects
+      const transformedReservation = {
+        ...reservation,
+        // The reservation already has the correct IDs at the top level
+        customerId: reservation.customerId,
+        petId: reservation.petId,
+        serviceId: reservation.serviceId,
+      };
+      
+      console.log('SpecializedCalendar: Transformed reservation:', transformedReservation);
+      setSelectedEvent(transformedReservation);
       setSelectedDate({
         start: new Date(reservation.startDate),
         end: new Date(reservation.endDate)
       });
       setIsFormOpen(true);
+    } else {
+      console.log('SpecializedCalendar: No reservation data found in event');
     }
   };
 
@@ -360,13 +375,16 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
         </DialogTitle>
         <DialogContent sx={{ py: 1, px: 2 }}>
           {selectedEvent || selectedDate ? (
-            <ReservationForm
-              onSubmit={handleFormSubmit}
-              initialData={selectedEvent || undefined}
-              defaultDates={selectedDate || undefined}
-              showAddOns={true}
-              serviceCategories={serviceCategories}
-            />
+            <>
+              {console.log('SpecializedCalendar: Rendering ReservationForm with selectedEvent:', selectedEvent)}
+              <ReservationForm
+                onSubmit={handleFormSubmit}
+                initialData={selectedEvent || undefined}
+                defaultDates={selectedDate || undefined}
+                showAddOns={true}
+                serviceCategories={serviceCategories}
+              />
+            </>
           ) : (
             <div>Loading reservation form...</div>
           )}

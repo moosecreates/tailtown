@@ -101,8 +101,20 @@ const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = ({
   }
 
   // Create the initial data object for the form directly
+  console.log('KennelCalendar: selectedReservation:', selectedReservation);
+  console.log('KennelCalendar: selectedReservation keys:', selectedReservation ? Object.keys(selectedReservation) : 'null');
+  if (selectedReservation) {
+    console.log('KennelCalendar: selectedReservation.customerId:', selectedReservation.customerId);
+    console.log('KennelCalendar: selectedReservation.petId:', selectedReservation.petId);
+    console.log('KennelCalendar: selectedReservation.serviceId:', selectedReservation.serviceId);
+  }
   const formInitialData = selectedReservation ? {
     ...selectedReservation,
+    // The reservation already has the correct IDs at the top level
+    // Just ensure they're preserved (they should already be there)
+    customerId: selectedReservation.customerId,
+    petId: selectedReservation.petId,
+    serviceId: selectedReservation.serviceId,
     // For existing reservations, don't override the resourceId
     // This prevents issues with invalid resourceIds
   } : {
@@ -118,6 +130,8 @@ const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = ({
     // Add the kennel ID as a separate property that won't be used directly by the Select component
     kennelId: selectedKennel.id
   };
+  
+  console.log('KennelCalendar: formInitialData:', formInitialData);
   
   return (
     <ReservationForm
@@ -657,11 +671,38 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
     };
   }, [loadReservations, loadKennels]);
 
+  // Function to fetch complete reservation data
+  const fetchCompleteReservation = async (reservationId: string) => {
+    try {
+      const response = await reservationApi.get(`/api/reservations/${reservationId}`);
+      if (response.data.status === 'success') {
+        // The API returns the reservation wrapped in a 'reservation' property
+        const reservationData = response.data.data?.reservation || response.data.data;
+        console.log('KennelCalendar: Raw API response data:', response.data.data);
+        console.log('KennelCalendar: Extracted reservation data:', reservationData);
+        return reservationData;
+      }
+    } catch (error) {
+      console.error('Error fetching complete reservation:', error);
+    }
+    return null;
+  };
+
   // Function to handle clicking on a cell
-  const handleCellClick = (kennel: ExtendedResource, date: Date, existingReservation?: Reservation) => {
+  const handleCellClick = async (kennel: ExtendedResource, date: Date, existingReservation?: Reservation) => {
     if (existingReservation) {
-      // If there's an existing reservation, open the form to edit it
-      setSelectedReservation(existingReservation);
+      // If there's an existing reservation, fetch the complete data and open the form to edit it
+      console.log('KennelCalendar: Fetching complete reservation data for ID:', existingReservation.id);
+      const completeReservation = await fetchCompleteReservation(existingReservation.id);
+      
+      if (completeReservation) {
+        console.log('KennelCalendar: Complete reservation data:', completeReservation);
+        setSelectedReservation(completeReservation);
+      } else {
+        console.log('KennelCalendar: Failed to fetch complete reservation, using incomplete data');
+        setSelectedReservation(existingReservation);
+      }
+      
       setSelectedKennel(kennel);
       setSelectedDate({
         start: new Date(existingReservation.startDate),

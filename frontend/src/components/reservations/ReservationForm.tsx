@@ -163,6 +163,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         selectsWithOptions.current.suiteType = true;
 
         if (initialData) {
+          console.log('ReservationForm: Processing initialData:', initialData);
+          console.log('ReservationForm: initialData keys:', Object.keys(initialData));
+          console.log('ReservationForm: initialData.customerId:', initialData.customerId);
+          console.log('ReservationForm: initialData.petId:', initialData.petId);
+          console.log('ReservationForm: initialData.serviceId:', initialData.serviceId);
           // Set dates if they exist in initialData
           if (initialData.startDate) {
             setStartDate(new Date(initialData.startDate));
@@ -177,7 +182,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           
           // Set customer ID if it exists in the customers list
           const customersList = customersResponse.data || [];
+          console.log('ReservationForm: Available customers:', customersList.length, 'Looking for customerId:', initialData.customerId);
           if (initialData.customerId && customersList.some((c: Customer) => c.id === initialData.customerId)) {
+            console.log('ReservationForm: Found customer, setting selectedCustomer');
             setSelectedCustomer(initialData.customerId);
             
             // Load pets for the selected customer
@@ -188,7 +195,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               selectsWithOptions.current.pet = petsData.length > 0;
               
               // Only set pet ID if it exists in the pets list
+              console.log('ReservationForm: Available pets:', petsData.length, 'Looking for petId:', initialData.petId);
               if (initialData.petId && petsData.some(p => p.id === initialData.petId)) {
+                console.log('ReservationForm: Found pet, setting selectedPet');
                 setSelectedPet(initialData.petId);
               }
             } catch (err) {
@@ -199,8 +208,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           
           // Only set service ID if it exists in the services list
           const servicesList = servicesResponse.data || [];
+          console.log('ReservationForm: Available services:', servicesList.length, 'Looking for serviceId:', initialData.serviceId);
           if (initialData.serviceId && servicesList.some((s: Service) => s.id === initialData.serviceId)) {
+            console.log('ReservationForm: Found service, setting selectedService');
             setSelectedService(initialData.serviceId);
+          } else {
+            console.log('ReservationForm: Service not found in list');
           }
           
           // Mark that initial data has been loaded
