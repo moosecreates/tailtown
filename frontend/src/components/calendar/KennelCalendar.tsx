@@ -125,6 +125,7 @@ const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = ({
       initialData={formInitialData}
       defaultDates={selectedDate}
       showAddOns={true}
+      serviceCategories={['BOARDING', 'DAYCARE']}
     />
   );
 };

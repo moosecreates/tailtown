@@ -61,6 +61,12 @@ interface ReservationFormProps {
    * Whether to show add-on services in the form
    */
   showAddOns?: boolean;
+
+  /**
+   * Optional array of service categories to filter services by
+   * If provided, only services matching these categories will be shown
+   */
+  serviceCategories?: string[];
 }
 
 /**
@@ -84,7 +90,7 @@ interface ReservationFormProps {
  * />
  * ```
  */
-const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData, defaultDates, showAddOns = false }) => {
+const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData, defaultDates, showAddOns = false, serviceCategories }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -141,8 +147,17 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         setCustomers(customersResponse.data || []);
         selectsWithOptions.current.customer = (customersResponse.data || []).length > 0;
         
-        setServices(servicesResponse.data || []);
-        selectsWithOptions.current.service = (servicesResponse.data || []).length > 0;
+        // Filter services by categories if provided
+        let filteredServices = servicesResponse.data || [];
+        if (serviceCategories && serviceCategories.length > 0) {
+          filteredServices = filteredServices.filter((service: any) => 
+            serviceCategories.includes(service.serviceCategory)
+          );
+          console.log(`ReservationForm: Filtered services to ${filteredServices.length} services for categories:`, serviceCategories);
+        }
+        
+        setServices(filteredServices);
+        selectsWithOptions.current.service = filteredServices.length > 0;
         
         // Mark that suite type options are always available since they're hardcoded
         selectsWithOptions.current.suiteType = true;

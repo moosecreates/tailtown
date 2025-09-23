@@ -64,11 +64,11 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
       );
       
       console.log('SpecializedCalendar: Got response:', response);
-      if (response?.status === 'success' && Array.isArray(response?.data)) {
+      if (response?.status === 'success' && (response as any)?.data?.reservations && Array.isArray((response as any).data.reservations)) {
         // Filter reservations by service category if specified
-        let filteredReservations = response.data;
+        let filteredReservations = (response as any).data.reservations;
         if (serviceCategories && serviceCategories.length > 0) {
-          filteredReservations = response.data.filter(reservation => {
+          filteredReservations = (response as any).data.reservations.filter((reservation: any) => {
             // Check if the reservation's service category matches any of the specified categories
             if (!reservation.service || typeof reservation.service !== 'object') {
               return false;
@@ -76,6 +76,7 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
             
             // Safely access the serviceCategory property
             const serviceObj = reservation.service as any;
+            console.log('SpecializedCalendar: Service object for reservation', reservation.id, ':', serviceObj);
             if (!serviceObj.serviceCategory) {
               console.log('SpecializedCalendar: No serviceCategory found for reservation:', reservation.id);
               return false;
@@ -93,7 +94,7 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
           console.log('SpecializedCalendar: Filtered reservations by service category:', filteredReservations.length);
         }
         
-        const calendarEvents = filteredReservations.map(reservation => ({
+        const calendarEvents = filteredReservations.map((reservation: any) => ({
           id: reservation.id,
           title: `${reservation.pet?.name || 'Pet'} - ${reservation.service?.name || 'Service'}`,
           start: reservation.startDate,
@@ -364,6 +365,7 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
               initialData={selectedEvent || undefined}
               defaultDates={selectedDate || undefined}
               showAddOns={true}
+              serviceCategories={serviceCategories}
             />
           ) : (
             <div>Loading reservation form...</div>
