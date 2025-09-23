@@ -11,3 +11,4 @@ export { deleteReservation } from './delete-reservation.controller';
 export { getAllReservations, getReservationById } from './get-reservation.controller';
 export { getCustomerReservations } from './customer-reservation.controller';
 export { getTodayRevenue } from './revenue.controller';
+export { addAddOnsToReservation } from './add-ons.controller';

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, BrowserRouter, useLocation } from 'react-route
 import { Box, CircularProgress, CssBaseline, ThemeProvider } from '@mui/material';
 import theme from './theme';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ShoppingCartProvider } from './contexts/ShoppingCartContext';
 import AccessibilityFix from './components/AccessibilityFix';
 import ScrollFix from './components/ScrollFix';
 import ApiTester from './components/debug/ApiTester';
@@ -41,6 +42,7 @@ import NotFound from './pages/NotFound';
 import PriceRuleRedirect from './components/redirects/PriceRuleRedirect';
 import Scheduling from './pages/staff/Scheduling';
 import OrderEntry from './pages/orders/OrderEntry';
+import CheckoutPage from './pages/checkout/CheckoutPage';
 import PrintKennelCards from './pages/kennels/PrintKennelCards';
 
 // Marketing Pages
@@ -113,6 +115,7 @@ const AppRoutes = () => {
         <Route path="/settings/price-rules/:id" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />
         <Route path="/staff/scheduling" element={isAuthenticated ? <Scheduling /> : <Navigate to="/login" />} />
         <Route path="/orders/new" element={isAuthenticated ? <OrderEntry /> : <Navigate to="/login" />} />
+        <Route path="/checkout" element={isAuthenticated ? <CheckoutPage /> : <Navigate to="/login" />} />
         <Route path="/reports" element={isAuthenticated ? <ReportsPage /> : <Navigate to="/login" />} />
         <Route path="/analytics" element={isAuthenticated ? <AnalyticsDashboard /> : <Navigate to="/login" />} />
         <Route path="/analytics/customers" element={isAuthenticated ? <CustomerValueReport /> : <Navigate to="/login" />} />
@@ -142,13 +145,15 @@ const App = () => {
         <ScrollFix />
         <RouteChangeListener />
         <AuthProvider>
-          <React.Suspense fallback={
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-              <CircularProgress />
-            </Box>
-          }>
-            <AppRoutes />
-          </React.Suspense>
+          <ShoppingCartProvider>
+            <React.Suspense fallback={
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+              </Box>
+            }>
+              <AppRoutes />
+            </React.Suspense>
+          </ShoppingCartProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

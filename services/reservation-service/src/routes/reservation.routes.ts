@@ -17,7 +17,8 @@ import {
   updateReservation,
   deleteReservation,
   getCustomerReservations,
-  getTodayRevenue
+  getTodayRevenue,
+  addAddOnsToReservation
 } from '../controllers/reservation';
 
 const router = Router();
@@ -43,5 +44,8 @@ router.post('/', createReservation);
 router.get('/:id', getReservationById);
 router.patch('/:id', updateReservation);
 router.delete('/:id', deleteReservation);
+
+// Add-ons route (must come after the main parameterized routes)
+router.post('/:id/add-ons', addAddOnsToReservation);
 
 export default router;

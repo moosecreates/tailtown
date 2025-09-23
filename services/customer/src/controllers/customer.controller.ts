@@ -154,15 +154,20 @@ export const createCustomer = async (
       // Remove any fields that might cause Prisma validation errors
       const sanitizedCustomerData = { ...customerFields };
       
-      // Remove empty arrays and undefined/null fields that might cause Prisma validation errors
+      // Remove empty arrays, undefined/null fields, and empty strings that might cause Prisma validation errors
       Object.keys(sanitizedCustomerData).forEach(key => {
-        if (sanitizedCustomerData[key] === null || sanitizedCustomerData[key] === undefined) {
+        if (sanitizedCustomerData[key] === null || 
+            sanitizedCustomerData[key] === undefined || 
+            sanitizedCustomerData[key] === '') {
           delete sanitizedCustomerData[key];
         }
         if (Array.isArray(sanitizedCustomerData[key]) && sanitizedCustomerData[key].length === 0) {
           delete sanitizedCustomerData[key];
         }
       });
+      
+      // Always remove id field for creation - it should be auto-generated
+      delete sanitizedCustomerData.id;
       
       // Create the customer
       const customer = await prismaClient.customer.create({

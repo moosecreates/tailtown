@@ -12,8 +12,18 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ taxRate }) => {
   // Access the cart state
   const { state } = useShoppingCart();
   
-  // Calculate subtotal (simplified implementation)
-  const subtotal = state.items.reduce((total, item) => total + (item.price || 0), 0);
+  // Calculate subtotal including add-ons
+  const subtotal = state.items.reduce((total, item) => {
+    let itemTotal = item.price || 0;
+    
+    // Add add-ons to the item total
+    if (item.addOns && item.addOns.length > 0) {
+      itemTotal += item.addOns.reduce((addOnTotal, addOn) => 
+        addOnTotal + (addOn.price * addOn.quantity), 0);
+    }
+    
+    return total + itemTotal;
+  }, 0);
   
   // Calculate tax
   const tax = subtotal * taxRate;
@@ -34,12 +44,25 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ taxRate }) => {
         </TableHead>
         <TableBody>
           {state.items.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell>Service</TableCell>
-              <TableCell>Service</TableCell>
-              <TableCell>-</TableCell>
-              <TableCell align="right">${item.price.toFixed(2)}</TableCell>
-            </TableRow>
+            <React.Fragment key={item.id}>
+              {/* Main service row */}
+              <TableRow>
+                <TableCell>{item.serviceName || 'Service'}</TableCell>
+                <TableCell>Service</TableCell>
+                <TableCell>{item.petName ? `for ${item.petName}` : '-'}</TableCell>
+                <TableCell align="right">${(item.price || 0).toFixed(2)}</TableCell>
+              </TableRow>
+              
+              {/* Add-on rows */}
+              {item.addOns && item.addOns.map((addOn, index) => (
+                <TableRow key={`${item.id}-addon-${index}`}>
+                  <TableCell sx={{ pl: 4 }}>+ {addOn.name}</TableCell>
+                  <TableCell>Add-on</TableCell>
+                  <TableCell>Qty: {addOn.quantity}</TableCell>
+                  <TableCell align="right">${(addOn.price * addOn.quantity).toFixed(2)}</TableCell>
+                </TableRow>
+              ))}
+            </React.Fragment>
           ))}
           
           {/* Summary rows */}

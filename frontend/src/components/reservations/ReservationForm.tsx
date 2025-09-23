@@ -28,6 +28,8 @@ import { petService } from '../../services/petService';
 import { serviceManagement } from '../../services/serviceManagement';
 import { resourceService, type Resource } from '../../services/resourceService';
 import AddOnSelectionDialog from './AddOnSelectionDialog';
+import { useShoppingCart } from '../../contexts/ShoppingCartContext';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Props for the ReservationForm component
@@ -99,6 +101,10 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   const [currentServiceDuration, setCurrentServiceDuration] = useState<number | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  
+  // Shopping cart and navigation hooks
+  const { addItem } = useShoppingCart();
+  const navigate = useNavigate();
 
   // Kennel/suite override state
   const [availableSuites, setAvailableSuites] = useState<Resource[]>([]);
@@ -510,6 +516,70 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     
     loadAvailableSuites();
   }, [selectedSuiteType, initialData]);
+
+  /**
+   * Handle proceeding to checkout instead of creating reservation immediately
+   * Adds the reservation details to the shopping cart and navigates to checkout
+   */
+  const handleProceedToCheckout = async () => {
+    setError('');
+    setLoading(true);
+    
+    try {
+      // Validate required fields
+      if (!selectedCustomer || !selectedPet || !selectedService || !startDate || !endDate) {
+        setError('Please fill in all required fields');
+        setLoading(false);
+        return;
+      }
+      
+      // Get the selected objects for detailed information
+      const selectedCustomerObj = customers.find(c => c.id === selectedCustomer);
+      const selectedPetObj = pets.find(p => p.id === selectedPet);
+      const selectedServiceObj = services.find(s => s.id === selectedService);
+      const selectedSuiteObj = availableSuites.find(s => s.id === selectedSuiteId);
+      
+      if (!selectedCustomerObj || !selectedPetObj || !selectedServiceObj) {
+        setError('Invalid selection. Please try again.');
+        setLoading(false);
+        return;
+      }
+      
+      // Create cart item with reservation details
+      const cartItem = {
+        id: `reservation-${Date.now()}`, // Temporary ID for cart
+        price: selectedServiceObj.price || 0,
+        quantity: 1,
+        serviceName: selectedServiceObj.name,
+        serviceId: selectedServiceObj.id,
+        customerId: selectedCustomerObj.id,
+        customerName: `${selectedCustomerObj.firstName} ${selectedCustomerObj.lastName}`,
+        petId: selectedPetObj.id,
+        petName: selectedPetObj.name,
+        startDate: startDate,
+        endDate: endDate,
+        suiteType: selectedSuiteType || 'STANDARD_SUITE',
+        resourceId: selectedSuiteId || undefined,
+        resourceName: selectedSuiteObj?.name || undefined,
+        notes: '',
+        addOns: [] // Will be handled in checkout if needed
+      };
+      
+      console.log('Adding reservation to cart:', cartItem);
+      
+      // Add to shopping cart
+      addItem(cartItem);
+      
+      // Navigate to checkout
+      navigate('/checkout');
+      
+    } catch (error: any) {
+      console.error('Error preparing checkout:', error);
+      setError(error.message || 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   /**
    * Handle form submission
@@ -1097,10 +1167,37 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             </>
           )}
 
+          {!initialData && (
+            <Box sx={{ mb: 2, p: 2, bgcolor: 'warning.light', borderRadius: 1, border: '2px solid', borderColor: 'warning.main' }}>
+              <Typography variant="body2" color="warning.contrastText" sx={{ fontWeight: 'bold' }}>
+                ⚠️ <strong>IMPORTANT:</strong> Use "Proceed to Checkout" below to create reservations with proper invoicing and payment processing. This ensures accurate financial records and analytics.
+              </Typography>
+            </Box>
+          )}
+
           <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
-            <Button type="submit" variant="contained" color="primary" size="small">
-              {initialData ? 'Update Reservation' : 'Create Reservation'}
-            </Button>
+            {!initialData && (
+              <>
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  size="large"
+                  onClick={handleProceedToCheckout}
+                  disabled={loading}
+                  sx={{ mr: 1, px: 3, py: 1.5, fontSize: '1.1rem', fontWeight: 'bold' }}
+                >
+                  🛒 Proceed to Checkout (Recommended)
+                </Button>
+                <Button type="submit" variant="outlined" color="secondary" size="small" disabled={loading}>
+                  {loading ? 'Processing...' : 'Quick Create (Staff Only)'}
+                </Button>
+              </>
+            )}
+            {initialData && (
+              <Button type="submit" variant="contained" color="primary" size="small" disabled={loading}>
+                {loading ? 'Processing...' : 'Update Reservation'}
+              </Button>
+            )}
           </Box>
         </Box>
       </Paper>

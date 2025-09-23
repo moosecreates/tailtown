@@ -21,8 +21,9 @@ import {
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import VaccinationStatus from '../../components/VaccinationStatus';
-import PetIconSelector from '../../components/pets/PetIconSelector';
-import PetIconDisplay from '../../components/pets/PetIconDisplay';
+// Pet icon components temporarily disabled
+// import PetIconSelector from '../../components/pets/PetIconSelector';
+// import PetIconDisplay from '../../components/pets/PetIconDisplay';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { Pet, petService } from '../../services/petService';
 import { customerService } from '../../services/customerService';
@@ -67,8 +68,7 @@ const PetDetails = () => {
     vetPhone: null,
     customerId: '',
     isActive: true,
-    petIcons: [],
-    iconNotes: {},
+    // petIcons and iconNotes removed - not supported in current schema
     vaccinationStatus: undefined,
     vaccineExpirations: undefined
   });
@@ -193,9 +193,7 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
         allergies: pet.allergies,
         vetName: pet.vetName,
         vetPhone: pet.vetPhone,
-        // Include pet icons and icon notes in database storage
-        petIcons: pet.petIcons || [],
-        iconNotes: pet.iconNotes || {},
+        // Pet icons not supported in current database schema
         vaccinationStatus: pet.vaccinationStatus || {},
         vaccineExpirations: pet.vaccineExpirations || {},
         customerId: pet.customerId,
@@ -498,29 +496,12 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
           
           <Typography variant="h6" gutterBottom>Additional Information</Typography>
 
-          {/* Pet Icons Selector */}
-          <PetIconSelector
-            selectedIcons={pet.petIcons || []}
-            onChange={(selectedIcons) => {
-              setPet(prev => ({
-                ...prev,
-                petIcons: selectedIcons
-              }));
-            }}
-          />
-
-          {/* Display selected icons if any */}
-          {pet.petIcons && pet.petIcons.length > 0 && (
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="subtitle2" gutterBottom>Selected Pet Icons:</Typography>
-              <PetIconDisplay 
-                iconIds={pet.petIcons} 
-                size="large" 
-                showLabels={true} 
-                customNotes={pet.iconNotes} 
-              />
-            </Box>
-          )}
+          {/* Pet Icons temporarily disabled - database schema doesn't support them */}
+          <Box sx={{ mb: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              Pet icons feature is temporarily unavailable
+            </Typography>
+          </Box>
 
           <Box sx={{ display: 'grid', gap: 2 }}>
             {/* Medical Information */}

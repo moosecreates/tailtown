@@ -19,9 +19,9 @@ import {
   Paper,
   Divider
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Add as AddIcon, Remove as RemoveIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useShoppingCart } from '../../contexts/ShoppingCartContext';
 import { serviceManagement } from '../../services/serviceManagement';
 import { reservationService, Reservation } from '../../services/reservationService';
 import addonService, { AddOnService } from '../../services/addonService';
@@ -32,6 +32,7 @@ interface AddOnSelectionDialogProps {
   reservationId: string;
   serviceId: string;
   onAddOnsAdded: (success: boolean) => void;
+  redirectToCheckout?: boolean; // New prop to indicate checkout flow
 }
 
 interface AddOn {
@@ -48,7 +49,8 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
   onClose,
   reservationId,
   serviceId,
-  onAddOnsAdded
+  onAddOnsAdded,
+  redirectToCheckout = false
 }) => {
   // State for available add-ons
   const [availableAddOns, setAvailableAddOns] = useState<any[]>([]);
@@ -59,6 +61,10 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
   
   // State for selected add-ons
   const [selectedAddOns, setSelectedAddOns] = useState<AddOn[]>([]);
+  
+  // Navigation and shopping cart hooks
+  const navigate = useNavigate();
+  const { addItem } = useShoppingCart();
   
   // Calculate subtotal
   const [subtotal, setSubtotal] = useState<number>(0);
@@ -155,8 +161,43 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
    */
   const handleSaveAddOns = async () => {
     if (selectedAddOns.length === 0) {
-      onClose();
-      return;
+      // Always redirect to checkout when no add-ons are selected
+      // This ensures proper invoice and payment processing
+      try {
+        const reservation = await reservationService.getReservationById(reservationId);
+        
+        // Create cart item from reservation
+        const cartItem = {
+          id: `reservation-${reservationId}`,
+          price: reservation.service?.price || 0,
+          quantity: 1,
+          serviceName: reservation.service?.name || 'Unknown Service',
+          serviceId: reservation.serviceId,
+          customerId: reservation.customerId,
+          customerName: `${reservation.customer?.firstName || ''} ${reservation.customer?.lastName || ''}`.trim(),
+          petId: reservation.petId,
+          petName: reservation.pet?.name || 'Unknown Pet',
+          startDate: new Date(reservation.startDate),
+          endDate: new Date(reservation.endDate),
+          suiteType: 'STANDARD_SUITE', // Default suite type
+          resourceId: reservation.resource?.id || undefined,
+          notes: reservation.notes || '',
+          addOns: [] // No add-ons selected
+        };
+        
+        console.log('Adding reservation to cart and redirecting to checkout:', cartItem);
+        
+        // Add to cart and navigate to checkout
+        addItem(cartItem);
+        navigate('/checkout');
+        onClose();
+        return;
+      } catch (error) {
+        console.error('Error preparing checkout:', error);
+        // Fall back to normal close behavior
+        onClose();
+        return;
+      }
     }
     
     try {
@@ -182,6 +223,47 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
       
       // Notify parent component that add-ons were added successfully
       onAddOnsAdded(true);
+      
+      // Always redirect to checkout after adding add-ons
+      // This ensures proper invoice and payment processing
+      try {
+        const reservation = await reservationService.getReservationById(reservationId);
+        
+        // Create cart item from reservation with add-ons
+        const cartItem = {
+          id: `reservation-${reservationId}`,
+          price: reservation.service?.price || 0,
+          quantity: 1,
+          serviceName: reservation.service?.name || 'Unknown Service',
+          serviceId: reservation.serviceId,
+          customerId: reservation.customerId,
+          customerName: `${reservation.customer?.firstName || ''} ${reservation.customer?.lastName || ''}`.trim(),
+          petId: reservation.petId,
+          petName: reservation.pet?.name || 'Unknown Pet',
+          startDate: new Date(reservation.startDate),
+          endDate: new Date(reservation.endDate),
+          suiteType: 'STANDARD_SUITE', // Default suite type
+          resourceId: reservation.resource?.id || undefined,
+          notes: reservation.notes || '',
+          addOns: selectedAddOns.map(addon => ({
+            id: addon.addOnId,
+            name: addon.name,
+            price: addon.price,
+            quantity: addon.quantity
+          }))
+        };
+        
+        console.log('Adding reservation with add-ons to cart and redirecting to checkout:', cartItem);
+        
+        // Add to cart and navigate to checkout
+        addItem(cartItem);
+        navigate('/checkout');
+        onClose();
+        return;
+      } catch (error) {
+        console.error('Error preparing checkout with add-ons:', error);
+        // Fall back to normal close behavior
+      }
       
       // Close the dialog after a short delay to show the success message
       setTimeout(() => {
@@ -384,7 +466,7 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
             onClick={handleSaveAddOns}
             disabled={saving}
           >
-            Skip Add-Ons
+            Continue to Checkout
           </Button>
         ) : (
           <Button 
@@ -393,7 +475,7 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
             onClick={handleSaveAddOns}
             disabled={saving}
           >
-            {saving ? <CircularProgress size={24} /> : 'Add to Reservation'}
+            {saving ? <CircularProgress size={24} /> : 'Add Services & Checkout'}
           </Button>
         )}
       </DialogActions>

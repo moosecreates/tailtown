@@ -18,6 +18,9 @@ import PaymentIcon from '@mui/icons-material/Payment';
 import { useShoppingCart, CartItem } from '../../contexts/ShoppingCartContext';
 import OrderSummary from '../../components/cart/OrderSummary';
 import PaymentStep from './steps/PaymentStep';
+import { reservationService } from '../../services/reservationService';
+import { invoiceService } from '../../services/invoiceService';
+import { paymentService } from '../../services/paymentService';
 
 interface AddOn {
   id: string;
@@ -107,13 +110,130 @@ const CheckoutPage: React.FC = () => {
       return;
     }
     
+    if (cartItems.length === 0) {
+      setError('Your cart is empty');
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     
     try {
-      // In a real application, this would call a payment processing API
-      // For demo purposes, we'll simulate a successful payment after a delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Processing checkout for items:', cartItems);
+      
+      // Step 1: Handle reservations for each cart item
+      const createdReservations = [];
+      for (const item of cartItems) {
+        let reservation;
+        
+        // Check if this is an existing reservation (from add-ons dialog)
+        if (item.id && item.id.startsWith('reservation-')) {
+          const existingReservationId = item.id.replace('reservation-', '');
+          console.log('Using existing reservation:', existingReservationId);
+          
+          try {
+            // Get the existing reservation
+            reservation = await reservationService.getReservationById(existingReservationId);
+            console.log('Found existing reservation:', reservation);
+          } catch (error) {
+            console.error('Error fetching existing reservation:', error);
+            // If we can't find the existing reservation, create a new one
+            reservation = null;
+          }
+        }
+        
+        // If no existing reservation found, create a new one
+        if (!reservation) {
+          // Validate required fields
+          if (!item.customerId || !item.petId || !item.serviceId || !item.startDate || !item.endDate) {
+            throw new Error('Missing required reservation data');
+          }
+          
+          const reservationData = {
+            customerId: item.customerId,
+            petId: item.petId,
+            serviceId: item.serviceId,
+            startDate: item.startDate.toISOString(),
+            endDate: item.endDate.toISOString(),
+            resourceId: item.resourceId || undefined,
+            status: 'CONFIRMED' as 'CONFIRMED' | 'PENDING' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW',
+            notes: item.notes || '',
+          };
+          
+          console.log('Creating new reservation:', reservationData);
+          reservation = await reservationService.createReservation(reservationData);
+        }
+        
+        createdReservations.push({
+          reservation,
+          originalItem: item
+        });
+      }
+      
+      // Step 2: Create invoice for the first customer (assuming single customer checkout)
+      const firstItem = cartItems[0];
+      const invoiceLineItems = cartItems.map(item => ({
+        description: `${item.serviceName} for ${item.petName}`,
+        quantity: 1,
+        unitPrice: item.price,
+        amount: item.price,
+        taxable: true
+      }));
+      
+      // Add add-ons as separate line items
+      cartItems.forEach(item => {
+        if (item.addOns && item.addOns.length > 0) {
+          item.addOns.forEach(addOn => {
+            invoiceLineItems.push({
+              description: `${addOn.name} (Add-on)`,
+              quantity: addOn.quantity,
+              unitPrice: addOn.price,
+              amount: addOn.price * addOn.quantity,
+              taxable: true
+            });
+          });
+        }
+      });
+      
+      const invoiceData = {
+        customerId: firstItem.customerId!,
+        reservationId: createdReservations[0]?.reservation?.id,
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Due in 7 days
+        subtotal: subtotal,
+        taxRate: taxRate,
+        taxAmount: tax,
+        discount: 0,
+        total: total,
+        status: 'DRAFT' as 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED' | 'REFUNDED',
+        notes: 'Reservation checkout payment',
+        lineItems: invoiceLineItems
+      };
+      
+      console.log('Creating invoice:', invoiceData);
+      const invoice = await invoiceService.createInvoice(invoiceData);
+      
+      // Step 3: Process payment (only if invoice was created successfully)
+      if (invoice?.id) {
+        const paymentData = {
+          invoiceId: invoice.id,
+          customerId: firstItem.customerId!,
+          amount: paymentAmount,
+          method: paymentMethod.toUpperCase() as 'CREDIT_CARD' | 'DEBIT_CARD' | 'CASH' | 'CHECK' | 'BANK_TRANSFER' | 'STORE_CREDIT' | 'GIFT_CARD',
+          status: 'PAID' as 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'PARTIALLY_REFUNDED',
+          transactionId: `TXID-${Date.now()}`,
+          notes: `Payment processed via ${paymentMethod}`
+        };
+        
+        console.log('Processing payment:', paymentData);
+        await paymentService.createPayment(paymentData);
+        
+        // Step 4: Update invoice status to PAID
+        await invoiceService.updateInvoice(invoice.id, { 
+          status: 'PAID' as 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED' | 'REFUNDED' 
+        });
+      }
+      
+      console.log('Checkout completed successfully');
       
       // Process successful payment
       setSuccess(true);
@@ -121,11 +241,29 @@ const CheckoutPage: React.FC = () => {
       // Clear the cart after successful payment
       clearCart();
       
-      // In a real app, you would also create reservations in the database here
+      // Trigger a calendar refresh event
+      window.dispatchEvent(new CustomEvent('reservation-created', { 
+        detail: { 
+          reservationIds: createdReservations.map(r => r.reservation.id),
+          refreshCalendar: true 
+        } 
+      }));
       
     } catch (err: any) {
-      setError('Payment processing failed. Please try again.');
-      console.error('Payment error:', err);
+      console.error('Checkout error:', err);
+      
+      let errorMessage = 'Payment processing failed. Please try again.';
+      
+      // Extract more specific error messages
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -183,10 +321,10 @@ const CheckoutPage: React.FC = () => {
         </Alert>
       )}
       
+      {/* Order Summary - Full width at top */}
       <Grid container spacing={3}>
-        {/* Order Summary */}
-        <Grid item xs={12} md={5}>
-          <Paper elevation={2} sx={{ p: 3 }}>
+        <Grid item xs={12}>
+          <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
               Order Summary
             </Typography>
@@ -196,9 +334,11 @@ const CheckoutPage: React.FC = () => {
             <OrderSummary taxRate={taxRate} />
           </Paper>
         </Grid>
-        
-        {/* Payment Information */}
-        <Grid item xs={12} md={7}>
+      </Grid>
+      
+      {/* Payment Information - Full width below */}
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
           <Paper elevation={2} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Payment Information
@@ -216,7 +356,7 @@ const CheckoutPage: React.FC = () => {
               />
               
               <Grid container spacing={2}>
-                <Grid item xs={12}>
+                <Grid item xs={12} sm={6}>
                   <FormControlLabel
                     control={
                       <Checkbox
@@ -228,7 +368,7 @@ const CheckoutPage: React.FC = () => {
                     label="Save payment information for future bookings"
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid item xs={12} sm={6}>
                   <Button
                     type="submit"
                     variant="contained"
@@ -237,9 +377,8 @@ const CheckoutPage: React.FC = () => {
                     size="large"
                     disabled={loading}
                     startIcon={<PaymentIcon />}
-                    sx={{ mt: 2 }}
                   >
-                    {loading ? <CircularProgress size={24} /> : `Complete Payment`}
+                    {loading ? <CircularProgress size={24} /> : `Complete Payment - $${total.toFixed(2)}`}
                   </Button>
                 </Grid>
               </Grid>

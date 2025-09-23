@@ -5,7 +5,11 @@ import { reservationApi as api } from './api';
 export const getAllResources = async () => {
   try {
     console.log('Getting all resources...');
-    const response = await api.get('/api/resources');
+    const response = await api.get('/api/resources', {
+      params: {
+        limit: 1000  // Set a high limit to get all resources
+      }
+    });
     console.log('Response status:', response.status);
     console.log('Response data:', response.data);
     

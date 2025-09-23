@@ -247,21 +247,26 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
         // Now check availability for these resources
         console.log('Checking availability for suite resources');
         
-        // Get the current date in YYYY-MM-DD format
-        const formattedDate = formatDateToYYYYMMDD(currentDate);
+        // Get the date range for the entire visible week/month
+        const days = getDaysToDisplay();
+        const startDate = formatDateToYYYYMMDD(days[0]);
+        const endDate = formatDateToYYYYMMDD(days[days.length - 1]);
+        
+        console.log(`Checking availability for date range: ${startDate} to ${endDate}`);
         
         // Extract resource IDs for batch availability check
         const resourceIds = kennelResources.map((resource: ExtendedResource) => resource.id);
         
+        // Declare availabilityResponse outside the if block
         let availabilityResponse;
         
         // Only make batch availability request if there are resources
         if (resourceIds.length > 0) {
-          // Make batch availability request
+          // Make batch availability request for the entire visible date range
           availabilityResponse = await reservationApi.post('/api/resources/availability/batch', {
             resourceIds: resourceIds, // Changed from 'resources' to 'resourceIds' to match backend expectation
-            startDate: formattedDate,
-            endDate: formattedDate
+            startDate: startDate,
+            endDate: endDate
           });
         } else {
           console.log('No resources found, skipping availability check');
@@ -305,7 +310,7 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
         const kennelData = kennelResources.map((resource: ExtendedResource) => ({
           ...resource,
           isAvailable: availabilityMap[resource.id] !== undefined ? availabilityMap[resource.id] : true,
-          checkDate: formattedDate
+          checkDate: startDate // Use the start date of the range instead of formattedDate
         }));
         
         console.log(`Processed ${kennelData.length} kennels with availability data`);
@@ -396,7 +401,10 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
               // Make a follow-up request to get actual kennels
               try {
                 const suiteResponse = await reservationApi.get('/api/resources', {
-                  params: { type: 'STANDARD_SUITE,STANDARD_PLUS_SUITE,VIP_SUITE' }
+                  params: { 
+                    type: 'STANDARD_SUITE,STANDARD_PLUS_SUITE,VIP_SUITE',
+                    limit: 1000  // Get all resources, not just first 20
+                  }
                 });
                 if (suiteResponse?.data?.status === 'success' && Array.isArray(suiteResponse?.data?.data)) {
                   kennelData = suiteResponse.data.data.map((suite: any) => ({
@@ -603,13 +611,16 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
     loadKennels();
   }, [loadKennels]);
 
-  useEffect(() => {
-    // Only load reservations if we have successfully loaded kennels first
-    // This prevents errors when trying to check availability for non-existent kennels
-    if (kennels.length > 0) {
-      loadReservations();
-    }
-  }, [loadReservations, currentDate, viewType]); // Removed kennels dependency to prevent excessive reloads
+  // Temporarily disable separate reservations loading to prevent race condition
+  // The availability data from loadKennels() already contains all reservation information
+  // useEffect(() => {
+  //   // Only load reservations if we have successfully loaded kennels first
+  //   // This prevents errors when trying to check availability for non-existent kennels
+  //   // Skip loading reservations if we already have availability data with reservations
+  //   if (kennels.length > 0 && !availabilityData) {
+  //     loadReservations();
+  //   }
+  // }, [loadReservations, currentDate, viewType, availabilityData]); // Added availabilityData dependency
   
   /**
    * Event listener to handle reservation completion
@@ -628,14 +639,22 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
       loadReservations();
     };
     
-    // Add the event listener for the custom event
-    document.addEventListener('reservationComplete', handleReservationComplete);
+    const handleCheckoutComplete = (event: Event) => {
+      console.log('Checkout completed, refreshing calendar...');
+      // Reload kennels and reservations to refresh the calendar
+      loadKennels();
+    };
     
-    // Clean up the event listener when the component unmounts to prevent memory leaks
+    // Add the event listeners for the custom events
+    document.addEventListener('reservationComplete', handleReservationComplete);
+    window.addEventListener('reservation-created', handleCheckoutComplete);
+    
+    // Clean up the event listeners when the component unmounts to prevent memory leaks
     return () => {
       document.removeEventListener('reservationComplete', handleReservationComplete);
+      window.removeEventListener('reservation-created', handleCheckoutComplete);
     };
-  }, [loadReservations]);
+  }, [loadReservations, loadKennels]);
 
   // Function to handle clicking on a cell
   const handleCellClick = (kennel: ExtendedResource, date: Date, existingReservation?: Reservation) => {
@@ -935,9 +954,33 @@ const KennelCalendar = ({ onEventUpdate }: KennelCalendarProps): JSX.Element => 
     const dateStr = formatDateToYYYYMMDD(date);
     const kennelId = kennel.id || kennel.resourceId;
     
-    // Removed excessive logging for performance
+    // First check availability data (which has the most up-to-date reservation info)
+    if (availabilityData?.resources) {
+      const resourceAvailability = (availabilityData as any).resources.find((r: any) => r.resourceId === kennelId);
+      if (resourceAvailability?.occupyingReservations) {
+        const matchingReservation = resourceAvailability.occupyingReservations.find((reservation: any) => {
+          // Check if the date falls within the reservation period
+          const startDate = new Date(reservation.startDate);
+          const endDate = new Date(reservation.endDate);
+          const checkDate = new Date(date);
+          
+          // Set times to compare just dates
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999);
+          checkDate.setHours(12, 0, 0, 0); // Noon to avoid timezone issues
+          
+          const isInRange = checkDate >= startDate && checkDate <= endDate;
+          
+          return isInRange;
+        });
+        
+        if (matchingReservation) {
+          return matchingReservation as Reservation;
+        }
+      }
+    }
     
-    // Directly check the reservations data for this kennel and date
+    // Fallback to checking the reservations state
     const matchingReservation = reservations.find(reservation => {
       // Check if this reservation is for this kennel
       if (reservation.resourceId !== kennelId) {
