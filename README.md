@@ -196,7 +196,6 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ### Resource Management
 - Track kennels, rooms, and equipment
-- Maintenance scheduling
 - Occupancy tracking with backend validation
 - Resource conflict prevention
 - Backend API for resource availability checking with support for multiple type filtering

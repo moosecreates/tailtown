@@ -7,7 +7,7 @@ const ImageTest = () => {
   useEffect(() => {
     // Get the URL from Prisma Studio and set it here
     const testUrl = '/uploads/pets/pet-1744685553244-883005399.jpg';
-    setImageUrl(`http://localhost:3002${testUrl}`);
+    setImageUrl(`${process.env.REACT_APP_API_URL || 'http://localhost:4004'}${testUrl}`);
   }, []);
 
   return (

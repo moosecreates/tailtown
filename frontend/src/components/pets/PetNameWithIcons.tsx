@@ -56,7 +56,7 @@ const PetNameWithIcons: React.FC<PetNameWithIconsProps> = ({
     >
       {showPhoto && (
         <Avatar
-          src={profilePhoto ? `http://localhost:3002${profilePhoto}` : undefined}
+          src={profilePhoto ? `${process.env.REACT_APP_API_URL || 'http://localhost:4004'}${profilePhoto}` : undefined}
           alt={petName}
           sx={{ 
             width: avatarSizeMap[size], 

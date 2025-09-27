@@ -260,7 +260,7 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
             <Avatar
               src={pet.profilePhoto ? 
                 // Use a simple direct path to the image
-                `http://localhost:3002${pet.profilePhoto}?t=${photoTimestamp}` : 
+                `${process.env.REACT_APP_API_URL || 'http://localhost:4004'}${pet.profilePhoto}?t=${photoTimestamp}` : 
                 undefined
               }
               alt={pet.name || 'Pet'}
@@ -316,7 +316,7 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
                       // Create a local cached URL to display immediately
                       if (updatedPet.profilePhoto) {
                         // Use a simple direct path to the image
-                        const imageUrl = `http://localhost:3002${updatedPet.profilePhoto}`;
+                        const imageUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:4004'}${updatedPet.profilePhoto}`;
                         
                         // Preload the image to ensure it's in browser cache
                         const preloadImg = new Image();

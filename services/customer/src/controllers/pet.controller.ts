@@ -340,16 +340,17 @@ export const uploadPetPhoto = async (
 
       // Update pet with new photo URL - use a simpler path without the /api prefix
       const photoUrl = `/uploads/pets/${path.basename(req.file.path)}`;
-      // Photo upload successful
-      // const updatedPet = await prisma.pet.update({
-      //   where: { id },
-      //   data: { profilePhoto: photoUrl },
-      // });
+      
+      // Update pet with new photo URL
+      const updatedPet = await prisma.pet.update({
+        where: { id },
+        data: { profilePhoto: photoUrl },
+      });
 
       res.status(200).json({
         status: 'success',
-        data: pet, // Using the original pet object since profilePhoto update is disabled
-        message: 'Photo upload functionality is currently disabled due to schema changes'
+        data: updatedPet,
+        message: 'Photo uploaded successfully'
       });
     });
   } catch (error) {
