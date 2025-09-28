@@ -6,7 +6,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { EventInput, DateSelectArg, EventClickArg } from '@fullcalendar/core';
 
-import { Box, Paper, Dialog, DialogTitle, DialogContent } from '@mui/material';
+import { Box, Paper, Dialog, DialogTitle, DialogContent, Button, Typography } from '@mui/material';
 import { reservationService } from '../../services/reservationService';
 import ReservationForm from '../reservations/ReservationForm';
 import { Reservation } from '../../services/reservationService';
@@ -76,37 +76,43 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
             
             // Safely access the serviceCategory property
             const serviceObj = reservation.service as any;
-            console.log('SpecializedCalendar: Service object for reservation', reservation.id, ':', serviceObj);
             if (!serviceObj.serviceCategory) {
-              console.log('SpecializedCalendar: No serviceCategory found for reservation:', reservation.id);
               return false;
             }
             
             const serviceCategory = serviceObj.serviceCategory;
-            console.log('SpecializedCalendar: Checking service category:', serviceCategory, 'against:', serviceCategories);
-            
-            return serviceCategories.some(category => {
-              const match = serviceCategory === category;
-              console.log('SpecializedCalendar: Category match?', category, match);
-              return match;
-            });
+            return serviceCategories.some(category => serviceCategory === category);
           });
-          console.log('SpecializedCalendar: Filtered reservations by service category:', filteredReservations.length);
+          console.log('SpecializedCalendar: Filtered reservations by service category. Result count:', filteredReservations.length);
         }
         
-        const calendarEvents = filteredReservations.map((reservation: any) => ({
-          id: reservation.id,
-          title: `${reservation.pet?.name || 'Pet'} - ${reservation.service?.name || 'Service'}`,
-          start: reservation.startDate,
-          end: reservation.endDate,
-          backgroundColor: getStatusColor(reservation.status),
-          extendedProps: {
-            reservation
-          }
-        }));
+        const calendarEvents = filteredReservations.map((reservation: any) => {
+          console.log('SpecializedCalendar: Creating event for reservation:', reservation.id, {
+            startDate: reservation.startDate,
+            endDate: reservation.endDate,
+            petName: reservation.pet?.name,
+            serviceName: reservation.service?.name,
+            status: reservation.status
+          });
+          
+          return {
+            id: reservation.id,
+            title: `${reservation.pet?.name || 'Pet'} - ${reservation.service?.name || 'Service'}`,
+            start: reservation.startDate,
+            end: reservation.endDate,
+            backgroundColor: getStatusColor(reservation.status),
+            borderColor: getStatusColor(reservation.status),
+            textColor: '#ffffff',
+            extendedProps: {
+              reservation
+            }
+          };
+        });
         
         console.log('SpecializedCalendar: Created calendar events:', calendarEvents.length);
+        console.log('SpecializedCalendar: Sample event:', calendarEvents[0]);
         setEvents(calendarEvents);
+        console.log('SpecializedCalendar: Events state updated with', calendarEvents.length, 'events');
         return calendarEvents;
       } else {
         console.warn('SpecializedCalendar: Invalid response format or no reservations found');
@@ -294,9 +300,24 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
     }
   };
 
+  // Debug log for render
+  console.log('SpecializedCalendar: Rendering with events:', events.length, events.map(e => ({ id: e.id, title: e.title, start: e.start, end: e.end })));
+
   return (
     <Box sx={{ height: 'calc(100vh - 200px)', p: 2 }}>
-      <Paper elevation={3} sx={{ height: '100%', p: 2 }}>
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h6">
+          {calendarTitle || 'Specialized Calendar'} ({events.length} reservations)
+        </Typography>
+        <Button 
+          variant="outlined" 
+          onClick={loadReservations}
+          size="small"
+        >
+          Refresh
+        </Button>
+      </Box>
+      <Paper elevation={3} sx={{ height: 'calc(100% - 60px)', p: 2 }}>
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           headerToolbar={{
