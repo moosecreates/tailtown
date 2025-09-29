@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { Box, Typography, Avatar } from '@mui/material';
 import PetIconDisplay from './PetIconDisplay';
 
@@ -18,10 +18,11 @@ interface PetNameWithIconsProps {
 }
 
 /**
- * Component that displays a pet name with associated icons
+ * Optimized component that displays a pet name with associated icons
  * Used throughout the application for consistent pet identification
+ * Memoized to prevent unnecessary re-renders
  */
-const PetNameWithIcons: React.FC<PetNameWithIconsProps> = ({
+const PetNameWithIcons: React.FC<PetNameWithIconsProps> = memo(({
   petName,
   petIcons = [],
   iconNotes = {},
@@ -35,15 +36,18 @@ const PetNameWithIcons: React.FC<PetNameWithIconsProps> = ({
   direction = 'row',
   gap = 1
 }) => {
-  console.log(`PetNameWithIcons for ${petName}:`, { petIcons, iconNotes, hasIcons: petIcons && petIcons.length > 0 });
-  const hasIcons = petIcons && petIcons.length > 0;
+  const hasIcons = useMemo(() => petIcons && petIcons.length > 0, [petIcons]);
   
-  // Size mapping for avatars
-  const avatarSizeMap = {
-    small: 24,
-    medium: 32,
-    large: 40
-  };
+  // Memoized size mapping for avatars
+  const avatarSize = useMemo(() => {
+    const sizeMap = { small: 24, medium: 32, large: 40 };
+    return sizeMap[size];
+  }, [size]);
+  
+  // Memoized profile photo URL
+  const photoUrl = useMemo(() => {
+    return profilePhoto ? `${process.env.REACT_APP_API_URL || 'http://localhost:4004'}${profilePhoto}` : undefined;
+  }, [profilePhoto]);
 
   return (
     <Box 
@@ -56,11 +60,11 @@ const PetNameWithIcons: React.FC<PetNameWithIconsProps> = ({
     >
       {showPhoto && (
         <Avatar
-          src={profilePhoto ? `${process.env.REACT_APP_API_URL || 'http://localhost:4004'}${profilePhoto}` : undefined}
+          src={photoUrl}
           alt={petName}
           sx={{ 
-            width: avatarSizeMap[size], 
-            height: avatarSizeMap[size],
+            width: avatarSize, 
+            height: avatarSize,
             fontSize: size === 'small' ? '0.75rem' : size === 'medium' ? '0.875rem' : '1rem'
           }}
         >
@@ -89,6 +93,8 @@ const PetNameWithIcons: React.FC<PetNameWithIconsProps> = ({
       )}
     </Box>
   );
-};
+});
+
+PetNameWithIcons.displayName = 'PetNameWithIcons';
 
 export default PetNameWithIcons;

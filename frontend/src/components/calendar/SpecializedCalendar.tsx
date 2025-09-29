@@ -50,9 +50,6 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
 
   const loadReservations = useCallback(async () => {
     try {
-      console.log('SpecializedCalendar: Loading reservations...');
-      console.log('SpecializedCalendar: Filtering by service categories:', serviceCategories);
-      
       // Get all relevant reservations (PENDING, CONFIRMED or CHECKED_IN)
       // We don't filter by date to ensure we see all current reservations
       const response = await reservationService.getAllReservations(
@@ -63,7 +60,6 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
         'PENDING,CONFIRMED,CHECKED_IN' // status - include pending reservations too
       );
       
-      console.log('SpecializedCalendar: Got response:', response);
       if (response?.status === 'success' && (response as any)?.data?.reservations && Array.isArray((response as any).data.reservations)) {
         // Filter reservations by service category if specified
         let filteredReservations = (response as any).data.reservations;
@@ -83,18 +79,9 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
             const serviceCategory = serviceObj.serviceCategory;
             return serviceCategories.some(category => serviceCategory === category);
           });
-          console.log('SpecializedCalendar: Filtered reservations by service category. Result count:', filteredReservations.length);
         }
         
         const calendarEvents = filteredReservations.map((reservation: any) => {
-          console.log('SpecializedCalendar: Creating event for reservation:', reservation.id, {
-            startDate: reservation.startDate,
-            endDate: reservation.endDate,
-            petName: reservation.pet?.name,
-            serviceName: reservation.service?.name,
-            status: reservation.status
-          });
-          
           return {
             id: reservation.id,
             title: `${reservation.pet?.name || 'Pet'} - ${reservation.service?.name || 'Service'}`,
@@ -109,10 +96,7 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
           };
         });
         
-        console.log('SpecializedCalendar: Created calendar events:', calendarEvents.length);
-        console.log('SpecializedCalendar: Sample event:', calendarEvents[0]);
         setEvents(calendarEvents);
-        console.log('SpecializedCalendar: Events state updated with', calendarEvents.length, 'events');
         return calendarEvents;
       } else {
         console.warn('SpecializedCalendar: Invalid response format or no reservations found');
@@ -129,7 +113,7 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
   // Load reservations when the component mounts or when serviceCategories changes
   useEffect(() => {
     loadReservations();
-  }, [loadReservations, serviceCategories]);
+  }, [loadReservations]);
   
   /**
    * Event listener to handle reservation completion
@@ -299,9 +283,6 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
       throw error; // Re-throw the error so the ReservationForm can handle it
     }
   };
-
-  // Debug log for render
-  console.log('SpecializedCalendar: Rendering with events:', events.length, events.map(e => ({ id: e.id, title: e.title, start: e.start, end: e.end })));
 
   return (
     <Box sx={{ height: 'calc(100vh - 200px)', p: 2 }}>
