@@ -78,11 +78,12 @@ const statusColors = {
 interface SuiteBoardProps {
   onSelectSuite?: (suiteId: string, suiteData?: any) => void;
   reloadTrigger?: number;
-  selectedDate?: Date;
-  onDateChange?: (date: Date) => void;
+  filterDate?: Date;
+  onFilterDateChange?: (date: Date) => void;
+  suites?: ResourceWithReservations[];
 }
 
-const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, selectedDate, onDateChange }) => {
+const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, filterDate, onFilterDateChange, suites: propSuites }) => {
   // Use ref to track previous filter state to prevent unnecessary API calls
   const prevFilter = React.useRef<any>(null);
   const [suites, setSuites] = useState<Array<{
@@ -102,7 +103,7 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
     suiteType: 'all',
     status: 'all',
     search: '',
-    date: selectedDate || new Date()
+    date: filterDate || new Date()
   });
 
   useEffect(() => {
@@ -111,14 +112,14 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
     // No timer-based auto-refresh
   }, [reloadTrigger]);
   
-  // Update filter date when selectedDate prop changes
+  // Update filter date when filterDate prop changes
   useEffect(() => {
-    if (selectedDate) {
-      setFilter(prev => ({ ...prev, date: selectedDate }));
+    if (filterDate) {
+      setFilter(prev => ({ ...prev, date: filterDate }));
       // Don't call loadSuites() here as it will use the previous filter state
       // The filter state update will trigger the next useEffect
     }
-  }, [selectedDate]);
+  }, [filterDate]);
   
   // Load suites whenever filter changes
   useEffect(() => {
@@ -436,8 +437,8 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
                 // Update the filter with the new date
                 setFilter({ ...filter, date: newDate });
                 // Notify parent component about date change
-                if (onDateChange) {
-                  onDateChange(newDate);
+                if (onFilterDateChange) {
+                  onFilterDateChange(newDate);
                 }
                 // loadSuites will be called by the filter useEffect
               }

@@ -25,6 +25,7 @@ import SuiteBoard from '../../components/suites/SuiteBoard';
 import { resourceService } from '../../services';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
 import { determineSuiteStatus, isSuiteOccupied } from '../../utils/suiteUtils';
+import { useSuiteData } from '../../hooks/useSuiteData';
 
 const SuitesPage: React.FC = () => {
   const [selectedSuiteId, setSelectedSuiteId] = useState<string | null>(null);
@@ -264,8 +265,8 @@ const SuitesPage: React.FC = () => {
           <SuiteBoard 
             onSelectSuite={handleSelectSuite} 
             reloadTrigger={reloadTrigger}
-            selectedDate={filterDate}
-            onDateChange={handleFilterDateChange}
+            filterDate={filterDate}
+            onFilterDateChange={handleFilterDateChange}
           />
         </Paper>
       </Box>
