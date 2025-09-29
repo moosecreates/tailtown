@@ -693,10 +693,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         return;
       }
       
-      // Show add-ons dialog for any service that might have add-ons
-      if (result?.reservationId) {
+      // Show add-ons dialog only if showAddOns prop is true
+      if (showAddOns && result?.reservationId) {
         console.log('Reservation created successfully, showing add-ons dialog');
         console.log('ReservationForm: Reservation ID for add-ons:', result.reservationId);
+        console.log('ReservationForm: showAddOns =', showAddOns);
         
         // Set reservation ID for add-ons dialog
         setNewReservationId(result.reservationId);
@@ -717,7 +718,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           handleReset();
         }
       } else {
-        console.log('Not showing add-ons dialog - no reservation ID returned');
+        console.log('Not showing add-ons dialog - showAddOns:', showAddOns, 'reservationId:', result?.reservationId);
         handleReset();
       }
     } catch (error: any) {
