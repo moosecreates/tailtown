@@ -72,7 +72,7 @@ export const updateReservation = catchAsync(async (
       return await prisma.reservation.findFirst({
         where: {
           id,
-          // organizationId removed as it's not in the schema
+          tenantId: tenantId
         } as ExtendedReservationWhereInput,
         include: {
           customer: {
@@ -145,7 +145,7 @@ export const updateReservation = catchAsync(async (
         return await prisma.customer.findFirst({
           where: {
             id: customerId,
-            // organizationId removed as it's not in the schema
+            tenantId: tenantId
           } as ExtendedCustomerWhereInput
         });
       },
@@ -170,7 +170,7 @@ export const updateReservation = catchAsync(async (
         return await prisma.pet.findFirst({
           where: {
             id: petId,
-            // organizationId removed as it's not in the schema
+            tenantId: tenantId
           } as ExtendedPetWhereInput
         });
       },
@@ -194,7 +194,8 @@ export const updateReservation = catchAsync(async (
       async () => {
         return await prisma.service.findFirst({
           where: {
-            id: serviceId
+            id: serviceId,
+            tenantId: tenantId
           }
         });
       },
@@ -276,8 +277,9 @@ export const updateReservation = catchAsync(async (
   }
   
   if (determinedSuiteType) {
-    // Use type assertion to handle potential schema mismatches
-    (updateData as any).suiteType = determinedSuiteType;
+    // Note: suiteType is not a field in the Reservation model
+    // The suite type is determined by the resource assigned to the reservation
+    logger.info(`Suite type ${determinedSuiteType} determined but not stored directly on reservation`, { requestId });
   }
   
   // Handle resource assignment
@@ -290,7 +292,7 @@ export const updateReservation = catchAsync(async (
         return await prisma.resource.findFirst({
           where: {
             id: assignedResourceId,
-            // organizationId removed as it's not in the schema
+            tenantId: tenantId
           } as ExtendedResourceWhereInput
         });
       },
@@ -321,7 +323,7 @@ export const updateReservation = catchAsync(async (
     }
     
     updateData.resourceId = assignedResourceId;
-  } else if (determinedSuiteType && !existingReservation.resourceId && parsedStartDate && parsedEndDate) {
+  } else if (determinedSuiteType && !assignedResourceId && !existingReservation.resourceId && parsedStartDate && parsedEndDate) {
     // Try to auto-assign a resource if none was specified but we have a suite type
     logger.info(`Attempting to auto-assign a resource for suite type: ${determinedSuiteType}`, { requestId });
     
@@ -329,8 +331,8 @@ export const updateReservation = catchAsync(async (
       // First get all resources matching the suite type
       const resources = await prisma.resource.findMany({
         where: {
-          // organizationId removed as it's not in the schema,
-          type: determinedSuiteType
+          type: determinedSuiteType,
+          tenantId: tenantId
         } as ExtendedResourceWhereInput
       });
       
@@ -407,7 +409,7 @@ export const updateReservation = catchAsync(async (
       const reservationToUpdate = await prisma.reservation.findFirst({
         where: {
           id,
-          // organizationId removed as it's not in the schema
+          tenantId: tenantId
         } as ExtendedReservationWhereInput,
         select: { id: true }
       });

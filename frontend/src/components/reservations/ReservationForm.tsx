@@ -657,9 +657,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       }
       
       if (requiresSuiteType) {
-        // Always include the suiteType field for DAYCARE or BOARDING services
-        formData.suiteType = effectiveSuiteType;
-        
+        // Note: suiteType is not stored in the database, it's determined by the resource type
         // Only set resourceId if a specific suite is selected and it's not empty
         if (selectedSuiteId && selectedSuiteId.trim() !== '') {
           formData.resourceId = selectedSuiteId;
@@ -671,12 +669,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           // Don't explicitly set resourceId to null, as this can cause issues with the backend
           // The backend will handle auto-assignment if resourceId is undefined
           console.log('Not setting resourceId, allowing backend to auto-assign');
-        }
-        
-        // Double-check that we're sending a valid suiteType
-        if (!formData.suiteType || !['VIP_SUITE', 'STANDARD_PLUS_SUITE', 'STANDARD_SUITE'].includes(formData.suiteType)) {
-          console.log('Invalid or missing suiteType, defaulting to STANDARD_SUITE');
-          formData.suiteType = 'STANDARD_SUITE';
         }
         
         // If we have initialData with a kennelId but are not using it as resourceId,
