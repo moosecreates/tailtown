@@ -62,13 +62,14 @@ jobs:
     - name: Comment test results on PR
       if: github.event_name == 'pull_request'
       uses: actions/github-script@v6
+      continue-on-error: true
       with:
         script: |
           const fs = require('fs');
-          const testResults = 'Tests passed! ✅';
+          const testResults = 'Tests completed! ✅';
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: `## Test Results\n\n${testResults}\n\nAll timezone and dashboard-calendar sync tests passed successfully.`
+            body: `## Test Results\n\n${testResults}\n\nFrontend tests have completed. Check the Actions tab for detailed results.`
           });
