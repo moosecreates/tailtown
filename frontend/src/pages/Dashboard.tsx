@@ -20,6 +20,8 @@ const Dashboard = () => {
   const [outCount, setOutCount] = useState<number | null>(null);
   const [overnightCount, setOvernightCount] = useState<number | null>(null);
   const [todayRevenue, setTodayRevenue] = useState<number | null>(null);
+  const [appointmentFilter, setAppointmentFilter] = useState<'in' | 'out' | 'all'>('in'); // Default to incoming
+  
   // Use proper type definitions for API responses
   type ReservationResponse = {
     status?: string;
@@ -42,8 +44,38 @@ const Dashboard = () => {
   };
   
   const [upcomingReservations, setUpcomingReservations] = useState<any[]>([]);
+  const [allReservations, setAllReservations] = useState<any[]>([]); // Store all reservations for filtering
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Filter appointments based on check-in or check-out status
+   */
+  const filterAppointments = (filter: 'in' | 'out' | 'all', reservationsList?: any[]) => {
+    const reservationsToFilter = reservationsList || allReservations;
+    const today = new Date();
+    const formattedToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    let filtered = reservationsToFilter;
+    
+    if (filter === 'in') {
+      // Show only check-ins (reservations starting today)
+      filtered = reservationsToFilter.filter((res: any) => {
+        const startDateStr = res.startDate.split('T')[0];
+        return startDateStr === formattedToday;
+      });
+    } else if (filter === 'out') {
+      // Show only check-outs (reservations ending today)
+      filtered = reservationsToFilter.filter((res: any) => {
+        const endDateStr = res.endDate.split('T')[0];
+        return endDateStr === formattedToday;
+      });
+    }
+    // 'all' shows everything (no filtering)
+    
+    setUpcomingReservations(filtered);
+    setAppointmentFilter(filter);
+  };
 
   /**
  * Loads all dashboard data including metrics and upcoming reservations.
@@ -264,7 +296,12 @@ const loadData = async () => {
       );
       
       console.log('Reservations with pet details:', reservationsWithPetDetails);
-      setUpcomingReservations(reservationsWithPetDetails);
+      
+      // Store all reservations for filtering
+      setAllReservations(reservationsWithPetDetails);
+      
+      // Apply initial filter (default to 'in')
+      filterAppointments('in', reservationsWithPetDetails);
       
       // Process revenue data from API response
       console.log('Today\'s revenue full response:', revenue);
@@ -410,6 +447,14 @@ const loadData = async () => {
             <Box key={index}>
               <Paper
                 elevation={2}
+                onClick={() => {
+                  // Make IN and OUT boxes clickable to filter appointments
+                  if (index === 0) { // IN box
+                    filterAppointments('in');
+                  } else if (index === 1) { // OUT box
+                    filterAppointments('out');
+                  }
+                }}
                 sx={{
                   p: 3,
                   display: 'flex',
@@ -418,9 +463,16 @@ const loadData = async () => {
                   borderRadius: 2,
                   position: 'relative',
                   overflow: 'hidden',
+                  cursor: index === 0 || index === 1 ? 'pointer' : 'default',
+                  border: (index === 0 && appointmentFilter === 'in') || (index === 1 && appointmentFilter === 'out') 
+                    ? '2px solid' 
+                    : '2px solid transparent',
+                  borderColor: index === 0 ? 'primary.main' : 'secondary.main',
                   '&:hover': {
-                    boxShadow: 6,
+                    boxShadow: index === 0 || index === 1 ? 8 : 6,
+                    transform: index === 0 || index === 1 ? 'translateY(-2px)' : 'none',
                   },
+                  transition: 'all 0.2s ease-in-out',
                 }}
               >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -468,7 +520,17 @@ const loadData = async () => {
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr' }, gap: 3 }}>
           <Card elevation={2} sx={{ borderRadius: 2, height: '100%', flexGrow: 1 }}>
             <CardHeader 
-              title="Today's Appointments" 
+              title={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="h6">Today's Appointments</Typography>
+                  <Chip 
+                    label={appointmentFilter === 'in' ? 'Check-Ins' : appointmentFilter === 'out' ? 'Check-Outs' : 'All'}
+                    size="small"
+                    color={appointmentFilter === 'in' ? 'primary' : appointmentFilter === 'out' ? 'secondary' : 'default'}
+                    sx={{ ml: 1 }}
+                  />
+                </Box>
+              }
               action={
                 <Button 
                   component={Link} 
