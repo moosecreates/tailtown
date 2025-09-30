@@ -2,7 +2,7 @@
 
 ## Overview
 
-These tests ensure that the dashboard metrics (In, Out, Overnight counts) always match what's displayed on the calendar for the same date.
+These tests ensure that the dashboard metrics (In, Out, Overnight counts) always match what's displayed on the calendar for the same date. They also validate correct timezone handling to prevent UTC vs local time bugs.
 
 ## Running the Tests
 
@@ -15,6 +15,9 @@ npm test
 
 # Run only dashboard-calendar sync tests
 npm test dashboard-calendar-sync
+
+# Run only timezone handling tests
+npm test timezone-handling
 
 # Run tests in watch mode
 npm test -- --watch
@@ -38,6 +41,12 @@ npm test -- --watch
 - Ensures all active reservations on calendar are accounted for in dashboard
 - Validates that dashboard metrics cover all calendar entries
 
+### 5. **Timezone Handling** ⭐ NEW
+- Validates correct conversion from UTC timestamps to local dates
+- Prevents bugs like "6:48pm local = next day" (UTC midnight crossing)
+- Tests edge cases: midnight crossings, DST transitions, cross-timezone consistency
+- Ensures dashboard and calendar use identical date extraction logic
+
 ## Test Scenarios
 
 ### Standard Cases
@@ -50,16 +59,21 @@ npm test -- --watch
 - ✅ Reservations spanning multiple days
 - ✅ Overlapping reservations
 - ✅ Reservations with different statuses
+- ✅ Midnight crossings (11:59pm vs 12:01am)
+- ✅ Daylight saving time transitions
+- ✅ UTC timestamps that cross date boundaries in local time
 
 ## Validation Rules
 
 The tests enforce these key rules:
 
 1. **Every reservation on the calendar must be counted in at least one dashboard metric**
-2. **IN count must equal the number of reservations starting today**
-3. **OUT count must equal the number of reservations ending today**
+2. **IN count must equal the number of reservations starting today (local timezone)**
+3. **OUT count must equal the number of reservations ending today (local timezone)**
 4. **OVERNIGHT count must equal active reservations ending after today**
 5. **Calendar occupancy = all reservations overlapping with today**
+6. **Date extraction must use Date objects, NOT string splitting on 'T'** ⭐
+7. **Dashboard and calendar must use identical date extraction logic** ⭐
 
 ## Example Test Output
 
@@ -77,8 +91,19 @@ Dashboard Metrics Validation Rules
   ✓ should ensure IN + OVERNIGHT >= total calendar occupancy
   ✓ should ensure calendar occupancy includes all dashboard categories
 
-Test Suites: 1 passed, 1 total
-Tests:       9 passed, 9 total
+Timezone Handling
+  ✓ should correctly extract local date from UTC timestamp
+  ✓ should NOT use split on T for date extraction
+  ✓ should correctly identify check-outs on a given day
+  ✓ should correctly identify check-ins on a given day
+  ✓ should handle midnight crossings correctly
+  ✓ should handle daylight saving time transitions
+  ✓ should handle different timezones consistently
+  ✓ should use consistent date formatting across the app
+  ✓ should pad single-digit months and days with zeros
+
+Test Suites: 2 passed, 2 total
+Tests:       18 passed, 18 total
 ```
 
 ## Debugging Failed Tests
