@@ -59,15 +59,17 @@ const Dashboard = () => {
     let filtered = reservationsToFilter;
     
     if (filter === 'in') {
-      // Show only check-ins (reservations starting today)
+      // Show only check-ins (reservations starting today in local timezone)
       filtered = reservationsToFilter.filter((res: any) => {
-        const startDateStr = res.startDate.split('T')[0];
+        const startDate = new Date(res.startDate);
+        const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
         return startDateStr === formattedToday;
       });
     } else if (filter === 'out') {
-      // Show only check-outs (reservations ending today)
+      // Show only check-outs (reservations ending today in local timezone)
       filtered = reservationsToFilter.filter((res: any) => {
-        const endDateStr = res.endDate.split('T')[0];
+        const endDate = new Date(res.endDate);
+        const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
         return endDateStr === formattedToday;
       });
     }
@@ -178,9 +180,13 @@ const loadData = async () => {
       
       if (reservations.length > 0) {
         reservations.forEach((reservation: any) => {
-          // Parse dates and normalize to local date strings for comparison
-          const startDateStr = reservation.startDate.split('T')[0]; // YYYY-MM-DD
-          const endDateStr = reservation.endDate.split('T')[0]; // YYYY-MM-DD
+          // Parse dates and convert to local timezone for accurate day comparison
+          const startDate = new Date(reservation.startDate);
+          const endDate = new Date(reservation.endDate);
+          
+          // Get local date strings (YYYY-MM-DD)
+          const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+          const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
           const todayStr = formattedToday; // YYYY-MM-DD
           
           console.log('Processing reservation:', {
