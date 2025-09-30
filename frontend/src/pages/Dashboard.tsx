@@ -95,10 +95,11 @@ const loadData = async () => {
       console.log('Date range for reservations:', yesterdayFormatted, 'to', formattedTomorrow);
       
       // Make separate calls to get exactly what we need
-      // Get ALL reservations that overlap with today (not just starting today)
+      // Get reservations for today's date - the backend will return all reservations
+      // that overlap with this date (start <= date AND end >= date)
       const [allReservations, upcoming, revenue] = await Promise.all([
-        // Get reservations that are active on today's date (start <= today AND end >= today)
-        reservationService.getAllReservations(1, 200, 'startDate', 'asc', activeStatuses),
+        // Get reservations active on today's date
+        reservationService.getAllReservations(1, 200, 'startDate', 'asc', activeStatuses, formattedToday),
         reservationService.getAllReservations(1, 10, 'startDate', 'asc', 'CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED', formattedToday),
         reservationService.getTodayRevenue()
       ]);
