@@ -151,8 +151,11 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
         const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
         const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
         if (!isNaN(startOfDay.getTime()) && !isNaN(endOfDay.getTime())) {
-          filter.startDate = { gte: startOfDay, lte: endOfDay };
-          logger.info(`Filtering reservations for date: ${dateStr}, using start: ${startOfDay.toISOString()} and end: ${endOfDay.toISOString()}`, { requestId });
+          // Filter for reservations that are ACTIVE on this date
+          // This means: startDate <= endOfDay AND endDate >= startOfDay
+          filter.startDate = { lte: endOfDay };
+          filter.endDate = { gte: startOfDay };
+          logger.info(`Filtering reservations active on date: ${dateStr}, using start: ${startOfDay.toISOString()} and end: ${endOfDay.toISOString()}`, { requestId });
         } else {
           logger.warn(`Invalid date filter format`, { requestId, dateParam });
           warnings.push(`Invalid date filter: ${dateParam}, ignoring this filter`);
