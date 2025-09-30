@@ -109,25 +109,39 @@ const loadData = async () => {
       let outCount = 0;
       let overnightCount = 0;
       
+      console.log('=== DASHBOARD DATA LOADING (v2) ===');
       console.log('All reservations response:', allReservations);
+      console.log('Response type:', typeof allReservations);
+      console.log('Has data?:', !!allReservations?.data);
+      console.log('Data type:', typeof allReservations?.data);
       
       let reservations: any[] = [];
       
       // Handle different response structures
       if (allReservations && allReservations.data) {
+        console.log('Data is:', Array.isArray(allReservations.data) ? 'array' : 'object');
+        
         if (Array.isArray(allReservations.data)) {
           // Direct array in data field
           reservations = allReservations.data;
+          console.log('Using direct array, length:', reservations.length);
         } else if (typeof allReservations.data === 'object' && allReservations.data !== null) {
           // Check for nested reservations array
           const dataObj = allReservations.data as any;
+          console.log('Data object keys:', Object.keys(dataObj));
           if (dataObj.reservations && Array.isArray(dataObj.reservations)) {
             reservations = dataObj.reservations;
+            console.log('Using nested reservations array, length:', reservations.length);
+          } else {
+            console.warn('No reservations array found in data object');
           }
         }
+      } else {
+        console.warn('No data in response or response is null');
       }
       
-      console.log('Processing all reservations:', reservations.length);
+      console.log('Final reservations array length:', reservations.length);
+      console.log('Today formatted:', formattedToday);
       
       if (reservations.length > 0) {
         reservations.forEach((reservation: any) => {
