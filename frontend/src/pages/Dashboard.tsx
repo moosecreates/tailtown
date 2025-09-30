@@ -470,10 +470,9 @@ const loadData = async () => {
                   position: 'relative',
                   overflow: 'hidden',
                   cursor: index === 0 || index === 1 ? 'pointer' : 'default',
-                  border: (index === 0 && appointmentFilter === 'in') || (index === 1 && appointmentFilter === 'out') 
-                    ? '2px solid' 
-                    : 'none',
-                  borderColor: index === 0 ? 'primary.main' : 'secondary.main',
+                  opacity: (index === 0 && appointmentFilter === 'in') || (index === 1 && appointmentFilter === 'out') 
+                    ? 1 
+                    : (index === 0 || index === 1) ? 0.7 : 1,
                 }}
               >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
