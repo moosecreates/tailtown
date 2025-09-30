@@ -131,36 +131,12 @@ const loadData = async () => {
       
       if (reservations.length > 0) {
         reservations.forEach((reservation: any) => {
-          const reservationStart = new Date(reservation.startDate);
-          const reservationEnd = new Date(reservation.endDate);
+          // Parse dates and normalize to local date strings for comparison
+          const startDateStr = reservation.startDate.split('T')[0]; // YYYY-MM-DD
+          const endDateStr = reservation.endDate.split('T')[0]; // YYYY-MM-DD
+          const todayStr = formattedToday; // YYYY-MM-DD
           
-          // Normalize dates to midnight for accurate day comparison
-          const startDate = new Date(reservationStart);
-          startDate.setHours(0, 0, 0, 0);
-          
-          const endDate = new Date(reservationEnd);
-          endDate.setHours(0, 0, 0, 0);
-          
-          const todayDate = new Date(today);
-          todayDate.setHours(0, 0, 0, 0);
-          
-          const tomorrowDate = new Date(tomorrow);
-          tomorrowDate.setHours(0, 0, 0, 0);
-          
-          // Get date strings for logging
-          const startDateStr = startDate.toISOString().split('T')[0];
-          const endDateStr = endDate.toISOString().split('T')[0];
-          const todayStr = todayDate.toISOString().split('T')[0];
-          
-          // Check if reservation is active today (overlaps with today)
-          const isActiveToday = startDate <= todayDate && endDate >= todayDate;
-          
-          if (!isActiveToday) {
-            // Skip reservations that don't overlap with today
-            return;
-          }
-          
-          console.log('Processing active reservation:', {
+          console.log('Processing reservation:', {
             id: reservation.id,
             customer: reservation.customer?.firstName + ' ' + reservation.customer?.lastName,
             pet: reservation.pet?.name,
@@ -170,20 +146,31 @@ const loadData = async () => {
             todayStr
           });
           
+          // Check if reservation is active today (overlaps with today)
+          const isActiveToday = startDateStr <= todayStr && endDateStr >= todayStr;
+          
+          if (!isActiveToday) {
+            // Skip reservations that don't overlap with today
+            console.log('Skipping - not active today');
+            return;
+          }
+          
+          console.log('Active reservation found!');
+          
           // IN: Reservations checking in today (start date = today)
-          if (startDate.getTime() === todayDate.getTime()) {
+          if (startDateStr === todayStr) {
             inCount++;
             console.log('IN count incremented for reservation:', reservation.id, reservation.pet?.name);
           }
           
           // OUT: Reservations checking out today (end date = today)
-          if (endDate.getTime() === todayDate.getTime()) {
+          if (endDateStr === todayStr) {
             outCount++;
             console.log('OUT count incremented for reservation:', reservation.id, reservation.pet?.name);
           }
           
           // OVERNIGHT: Reservations staying overnight (active today AND end date is after today)
-          if (endDate.getTime() > todayDate.getTime()) {
+          if (endDateStr > todayStr) {
             overnightCount++;
             console.log('OVERNIGHT count incremented for reservation:', reservation.id, reservation.pet?.name);
           }
