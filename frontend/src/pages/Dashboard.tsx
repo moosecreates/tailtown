@@ -95,9 +95,10 @@ const loadData = async () => {
       console.log('Date range for reservations:', yesterdayFormatted, 'to', formattedTomorrow);
       
       // Make separate calls to get exactly what we need
-      const [todayStarting, upcoming, revenue] = await Promise.all([
-        // Get reservations starting today (for IN count)
-        reservationService.getAllReservations(1, 100, 'startDate', 'asc', activeStatuses, formattedToday),
+      // Get ALL reservations that overlap with today (not just starting today)
+      const [allReservations, upcoming, revenue] = await Promise.all([
+        // Get reservations that are active on today's date (start <= today AND end >= today)
+        reservationService.getAllReservations(1, 200, 'startDate', 'asc', activeStatuses),
         reservationService.getAllReservations(1, 10, 'startDate', 'asc', 'CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED', formattedToday),
         reservationService.getTodayRevenue()
       ]);
@@ -108,69 +109,83 @@ const loadData = async () => {
       let outCount = 0;
       let overnightCount = 0;
       
-      console.log('Today starting reservations response:', todayStarting);
+      console.log('All reservations response:', allReservations);
       
       let reservations: any[] = [];
       
       // Handle different response structures
-      if (todayStarting && todayStarting.data) {
-        if (Array.isArray(todayStarting.data)) {
+      if (allReservations && allReservations.data) {
+        if (Array.isArray(allReservations.data)) {
           // Direct array in data field
-          reservations = todayStarting.data;
-        } else if (typeof todayStarting.data === 'object' && todayStarting.data !== null) {
+          reservations = allReservations.data;
+        } else if (typeof allReservations.data === 'object' && allReservations.data !== null) {
           // Check for nested reservations array
-          const dataObj = todayStarting.data as any;
+          const dataObj = allReservations.data as any;
           if (dataObj.reservations && Array.isArray(dataObj.reservations)) {
             reservations = dataObj.reservations;
           }
         }
       }
       
-      console.log('Processing reservations:', reservations.length);
+      console.log('Processing all reservations:', reservations.length);
       
       if (reservations.length > 0) {
-        
-        // Since we filtered by today's date, all reservations START today
-        // So IN count = total reservations
-        inCount = reservations.length;
-        console.log('IN count set to total reservations starting today:', inCount);
-        
         reservations.forEach((reservation: any) => {
           const reservationStart = new Date(reservation.startDate);
           const reservationEnd = new Date(reservation.endDate);
           
-          // Convert to local timezone for comparison
-          const startDateLocal = new Date(reservationStart.getTime() - (reservationStart.getTimezoneOffset() * 60000));
-          const endDateLocal = new Date(reservationEnd.getTime() - (reservationEnd.getTimezoneOffset() * 60000));
+          // Normalize dates to midnight for accurate day comparison
+          const startDate = new Date(reservationStart);
+          startDate.setHours(0, 0, 0, 0);
           
-          // Get local date strings (YYYY-MM-DD)
-          const startDateStr = startDateLocal.toISOString().split('T')[0];
-          const endDateStr = endDateLocal.toISOString().split('T')[0];
-          const todayStr = formattedToday; // Already in YYYY-MM-DD format
+          const endDate = new Date(reservationEnd);
+          endDate.setHours(0, 0, 0, 0);
           
-          console.log('Processing reservation:', {
+          const todayDate = new Date(today);
+          todayDate.setHours(0, 0, 0, 0);
+          
+          const tomorrowDate = new Date(tomorrow);
+          tomorrowDate.setHours(0, 0, 0, 0);
+          
+          // Get date strings for logging
+          const startDateStr = startDate.toISOString().split('T')[0];
+          const endDateStr = endDate.toISOString().split('T')[0];
+          const todayStr = todayDate.toISOString().split('T')[0];
+          
+          // Check if reservation is active today (overlaps with today)
+          const isActiveToday = startDate <= todayDate && endDate >= todayDate;
+          
+          if (!isActiveToday) {
+            // Skip reservations that don't overlap with today
+            return;
+          }
+          
+          console.log('Processing active reservation:', {
             id: reservation.id,
             customer: reservation.customer?.firstName + ' ' + reservation.customer?.lastName,
             pet: reservation.pet?.name,
             service: reservation.service?.name,
-            startDate: reservation.startDate,
-            endDate: reservation.endDate,
             startDateStr,
             endDateStr,
-            todayStr,
-            timezone: 'Local timezone adjusted'
+            todayStr
           });
           
-          // Out: Reservations ending today  
-          if (endDateStr === todayStr) {
-            outCount++;
-            console.log('OUT count incremented for reservation:', reservation.id, reservation.customer?.firstName, reservation.pet?.name);
+          // IN: Reservations checking in today (start date = today)
+          if (startDate.getTime() === todayDate.getTime()) {
+            inCount++;
+            console.log('IN count incremented for reservation:', reservation.id, reservation.pet?.name);
           }
           
-          // Overnight: Reservations that start today but end after today
-          if (endDateStr > todayStr) {
+          // OUT: Reservations checking out today (end date = today)
+          if (endDate.getTime() === todayDate.getTime()) {
+            outCount++;
+            console.log('OUT count incremented for reservation:', reservation.id, reservation.pet?.name);
+          }
+          
+          // OVERNIGHT: Reservations staying overnight (active today AND end date is after today)
+          if (endDate.getTime() > todayDate.getTime()) {
             overnightCount++;
-            console.log('OVERNIGHT count incremented for reservation:', reservation.id, reservation.customer?.firstName, reservation.pet?.name);
+            console.log('OVERNIGHT count incremented for reservation:', reservation.id, reservation.pet?.name);
           }
         });
       }
