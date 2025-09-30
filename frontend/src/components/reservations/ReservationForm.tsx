@@ -1225,7 +1225,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       
       {/* Add-Ons Dialog - only shown after successful reservation creation when showAddOns is true */}
       <AddOnSelectionDialog
-        open={addOnsDialogOpen && !!newReservationId && !!selectedService}
+        open={addOnsDialogOpen && !!newReservationId && !!selectedServiceId}
         onClose={() => {
           console.log('Closing add-ons dialog');
           setAddOnsDialogOpen(false);
@@ -1233,7 +1233,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           handleReset();
         }}
         reservationId={newReservationId}
-        serviceId={selectedService}
+        serviceId={selectedServiceId}
         onAddOnsAdded={handleAddOnsAdded}
       />
     </LocalizationProvider>
