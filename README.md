@@ -1,5 +1,8 @@
 # Tailtown Pet Resort Management System
 
+![CI Status](https://github.com/moosecreates/tailtown/workflows/Continuous%20Integration/badge.svg)
+![Frontend Tests](https://github.com/moosecreates/tailtown/workflows/Frontend%20Tests/badge.svg)
+
 A modern, full-featured management system for pet resorts, providing comprehensive tools for reservations, customer management, and pet care services.
 
 ## Recent Updates (September 2025)
