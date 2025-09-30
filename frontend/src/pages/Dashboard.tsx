@@ -466,13 +466,8 @@ const loadData = async () => {
                   cursor: index === 0 || index === 1 ? 'pointer' : 'default',
                   border: (index === 0 && appointmentFilter === 'in') || (index === 1 && appointmentFilter === 'out') 
                     ? '2px solid' 
-                    : '2px solid transparent',
+                    : 'none',
                   borderColor: index === 0 ? 'primary.main' : 'secondary.main',
-                  '&:hover': {
-                    boxShadow: index === 0 || index === 1 ? 8 : 6,
-                    transform: index === 0 || index === 1 ? 'translateY(-2px)' : 'none',
-                  },
-                  transition: 'all 0.2s ease-in-out',
                 }}
               >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
