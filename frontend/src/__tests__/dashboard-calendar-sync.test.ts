@@ -3,6 +3,8 @@
  * 
  * These tests ensure that the dashboard metrics (In, Out, Overnight counts)
  * always match what's displayed on the calendar for the same date.
+ * 
+ * IMPORTANT: These tests also verify timezone handling to prevent UTC vs local time bugs.
  */
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
@@ -46,41 +48,43 @@ const mockReservations = [
 /**
  * Calculate dashboard metrics from reservations
  * This should match the logic in Dashboard.tsx
+ * USES CORRECT TIMEZONE HANDLING
  */
 function calculateDashboardMetrics(reservations: any[], targetDate: Date) {
   let inCount = 0;
   let outCount = 0;
   let overnightCount = 0;
   
-  const todayDate = new Date(targetDate);
-  todayDate.setHours(0, 0, 0, 0);
+  // Format target date as YYYY-MM-DD in local timezone
+  const todayStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
   
   reservations.forEach((reservation: any) => {
+    // Convert to Date objects and extract local date strings
     const startDate = new Date(reservation.startDate);
-    startDate.setHours(0, 0, 0, 0);
-    
     const endDate = new Date(reservation.endDate);
-    endDate.setHours(0, 0, 0, 0);
+    
+    const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+    const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
     
     // Check if reservation is active today
-    const isActiveToday = startDate <= todayDate && endDate >= todayDate;
+    const isActiveToday = startDateStr <= todayStr && endDateStr >= todayStr;
     
     if (!isActiveToday) {
       return;
     }
     
     // IN: Checking in today
-    if (startDate.getTime() === todayDate.getTime()) {
+    if (startDateStr === todayStr) {
       inCount++;
     }
     
     // OUT: Checking out today
-    if (endDate.getTime() === todayDate.getTime()) {
+    if (endDateStr === todayStr) {
       outCount++;
     }
     
     // OVERNIGHT: Staying overnight (active today AND ends after today)
-    if (endDate.getTime() > todayDate.getTime()) {
+    if (endDateStr > todayStr) {
       overnightCount++;
     }
   });
@@ -91,20 +95,22 @@ function calculateDashboardMetrics(reservations: any[], targetDate: Date) {
 /**
  * Calculate calendar occupancy from reservations
  * This should match the logic in KennelCalendar/useKennelData
+ * USES CORRECT TIMEZONE HANDLING
  */
 function calculateCalendarOccupancy(reservations: any[], targetDate: Date) {
-  const todayDate = new Date(targetDate);
-  todayDate.setHours(0, 0, 0, 0);
+  // Format target date as YYYY-MM-DD in local timezone
+  const todayStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
   
   const activeReservations = reservations.filter((reservation: any) => {
+    // Convert to Date objects and extract local date strings
     const startDate = new Date(reservation.startDate);
-    startDate.setHours(0, 0, 0, 0);
-    
     const endDate = new Date(reservation.endDate);
-    endDate.setHours(0, 0, 0, 0);
+    
+    const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+    const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
     
     // Reservation is active if it overlaps with today
-    return startDate <= todayDate && endDate >= todayDate;
+    return startDateStr <= todayStr && endDateStr >= todayStr;
   });
   
   return {
