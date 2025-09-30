@@ -67,6 +67,11 @@ interface ReservationFormProps {
    * If provided, only services matching these categories will be shown
    */
   serviceCategories?: string[];
+  
+  /**
+   * Optional callback to close the parent form/dialog
+   */
+  onClose?: () => void;
 }
 
 /**
@@ -90,7 +95,7 @@ interface ReservationFormProps {
  * />
  * ```
  */
-const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData, defaultDates, showAddOns = false, serviceCategories }) => {
+const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData, defaultDates, showAddOns = false, serviceCategories, onClose }) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -914,11 +919,19 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                   if (service && service.duration) {
                     setCurrentServiceDuration(service.duration);
                     
-                    // Update end date based on service duration if we have a start date
+                    // Update end date based on service type
                     if (startDate) {
                       const newEndDate = new Date(startDate.getTime());
-                      // Add the service duration in minutes to the start date
-                      newEndDate.setMinutes(newEndDate.getMinutes() + service.duration);
+                      
+                      // For BOARDING services (overnight), set to 5pm next day instead of adding duration
+                      if (service.serviceCategory === 'BOARDING') {
+                        newEndDate.setDate(newEndDate.getDate() + 1); // Next day
+                        newEndDate.setHours(17, 0, 0, 0); // 5:00 PM
+                      } else {
+                        // For other services (DAYCARE, GROOMING), add the service duration
+                        newEndDate.setMinutes(newEndDate.getMinutes() + service.duration);
+                      }
+                      
                       setEndDate(newEndDate);
                     }
                   }
@@ -1078,11 +1091,20 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                   
                   setStartDate(newValue);
                   
-                  // Update end date based on service duration when start date changes
+                  // Update end date based on service type when start date changes
                   if (currentServiceDuration) {
                     const newEndDate = new Date(newValue.getTime());
-                    // Add the service duration in minutes to the start date
-                    newEndDate.setMinutes(newEndDate.getMinutes() + currentServiceDuration);
+                    const service = services.find(s => s.id === selectedService);
+                    
+                    // For BOARDING services (overnight), set to 5pm next day
+                    if (service?.serviceCategory === 'BOARDING') {
+                      newEndDate.setDate(newEndDate.getDate() + 1); // Next day
+                      newEndDate.setHours(17, 0, 0, 0); // 5:00 PM
+                    } else {
+                      // For other services, add the service duration in minutes
+                      newEndDate.setMinutes(newEndDate.getMinutes() + currentServiceDuration);
+                    }
+                    
                     setEndDate(newEndDate);
                   }
                 }}
@@ -1102,11 +1124,20 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                   
                   setStartDate(updatedDate);
                   
-                  // Update end date based on service duration when time changes
+                  // Update end date based on service type when time changes
                   if (currentServiceDuration) {
                     const newEndDate = new Date(updatedDate.getTime());
-                    // Add the service duration in minutes
-                    newEndDate.setMinutes(newEndDate.getMinutes() + currentServiceDuration);
+                    const service = services.find(s => s.id === selectedService);
+                    
+                    // For BOARDING services (overnight), set to 5pm next day
+                    if (service?.serviceCategory === 'BOARDING') {
+                      newEndDate.setDate(newEndDate.getDate() + 1); // Next day
+                      newEndDate.setHours(17, 0, 0, 0); // 5:00 PM
+                    } else {
+                      // For other services, add the service duration in minutes
+                      newEndDate.setMinutes(newEndDate.getMinutes() + currentServiceDuration);
+                    }
+                    
                     setEndDate(newEndDate);
                   }
                 }}
@@ -1231,6 +1262,10 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           setAddOnsDialogOpen(false);
           // Reset the form after closing the dialog
           handleReset();
+          // Close the parent form/dialog if callback provided
+          if (onClose) {
+            onClose();
+          }
         }}
         reservationId={newReservationId}
         serviceId={selectedServiceId}

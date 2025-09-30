@@ -192,19 +192,23 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
       if (selectedReservation) {
         // Update existing reservation
         result = await reservationService.updateReservation(selectedReservation.id, formData);
+        
+        // For updates, close the form immediately
+        setIsFormOpen(false);
+        setSelectedKennel(null);
+        setSelectedDate(null);
+        setSelectedReservation(null);
       } else {
         // Create new reservation
         result = await reservationService.createReservation(formData);
+        
+        // For new reservations, DON'T close the form yet
+        // The ReservationForm will handle closing after add-ons dialog is complete
+        // We only refresh the calendar data here
       }
       
       // Refresh the calendar data
       refreshData();
-      
-      // Close the form
-      setIsFormOpen(false);
-      setSelectedKennel(null);
-      setSelectedDate(null);
-      setSelectedReservation(null);
       
       // Notify parent component if callback provided
       if (onEventUpdate && result) {
@@ -301,6 +305,7 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
             selectedDate={selectedDate}
             selectedReservation={selectedReservation}
             onSubmit={handleFormSubmit}
+            onClose={handleFormClose}
             error={formError}
           />
         </DialogContent>

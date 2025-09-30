@@ -8,6 +8,7 @@ interface ReservationFormWrapperProps {
   selectedDate: { start: Date; end: Date } | null;
   selectedReservation: Reservation | null;
   onSubmit: (formData: any) => Promise<{reservationId?: string} | void>;
+  onClose?: () => void;
   error?: string | null;
 }
 
@@ -20,6 +21,7 @@ const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = memo(({
   selectedDate, 
   selectedReservation, 
   onSubmit,
+  onClose,
   error
 }) => {
   // If we don't have the required data, show loading
@@ -55,6 +57,7 @@ const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = memo(({
       defaultDates={selectedDate}
       showAddOns={true}
       serviceCategories={['BOARDING', 'DAYCARE']}
+      onClose={onClose}
     />
   );
 });
