@@ -156,6 +156,8 @@ const loadData = async () => {
             customer: reservation.customer?.firstName + ' ' + reservation.customer?.lastName,
             pet: reservation.pet?.name,
             service: reservation.service?.name,
+            startDate: reservation.startDate,
+            endDate: reservation.endDate,
             startDateStr,
             endDateStr,
             todayStr
