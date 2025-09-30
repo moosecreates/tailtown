@@ -119,21 +119,39 @@ const KennelGrid: React.FC<KennelGridProps> = memo(({
               >
                 Kennel
               </TableCell>
-              {days.map((day, index) => (
-                <TableCell
-                  key={index}
-                  align="center"
-                  sx={{
-                    minWidth: viewType === 'day' ? 200 : 100,
-                    fontWeight: 'bold',
-                    backgroundColor: 'primary.main',
-                    color: 'primary.contrastText',
-                    borderLeft: '1px solid rgba(224, 224, 224, 1)'
-                  }}
-                >
-                  {formatDayHeader(day)}
-                </TableCell>
-              ))}
+              {days.map((day, index) => {
+                // Check if this day is today
+                const today = new Date();
+                const isToday = day.getDate() === today.getDate() && 
+                               day.getMonth() === today.getMonth() && 
+                               day.getFullYear() === today.getFullYear();
+                
+                return (
+                  <TableCell
+                    key={index}
+                    align="center"
+                    sx={{
+                      minWidth: viewType === 'day' ? 200 : 100,
+                      fontWeight: 'bold',
+                      backgroundColor: isToday ? 'secondary.main' : 'primary.main',
+                      color: 'primary.contrastText',
+                      borderLeft: '1px solid rgba(224, 224, 224, 1)',
+                      position: 'relative',
+                      '&::after': isToday ? {
+                        content: '""',
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: '3px',
+                        backgroundColor: 'warning.main'
+                      } : {}
+                    }}
+                  >
+                    {formatDayHeader(day)}
+                  </TableCell>
+                );
+              })}
             </TableRow>
           </TableHead>
 
