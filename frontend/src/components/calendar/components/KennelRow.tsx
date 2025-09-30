@@ -91,7 +91,7 @@ const KennelRow: React.FC<KennelRowProps> = memo(({
     // Add subtle highlight for today's column
     if (isToday) {
       backgroundColor = backgroundColor === 'inherit' 
-        ? 'rgba(156, 39, 176, 0.08)' // Light purple for today if empty
+        ? 'rgba(25, 118, 210, 0.04)' // Very light blue for today if empty
         : backgroundColor; // Keep existing color if occupied
     }
 
@@ -99,8 +99,8 @@ const KennelRow: React.FC<KennelRowProps> = memo(({
       backgroundColor,
       cursor,
       borderBottom: border,
-      borderLeft: isToday ? '2px solid #9c27b0' : border,
-      borderRight: isToday ? '2px solid #9c27b0' : 'none',
+      borderLeft: isToday ? '2px solid rgba(25, 118, 210, 0.3)' : border,
+      borderRight: isToday ? '2px solid rgba(25, 118, 210, 0.3)' : 'none',
       p: 0.5,
       height: 45,
       position: 'relative' as const,
@@ -108,17 +108,7 @@ const KennelRow: React.FC<KennelRowProps> = memo(({
         backgroundColor: occupied && reservation
           ? `${getStatusColor(reservation.status)}44` // Slightly darker on hover
           : 'rgba(0, 0, 0, 0.08)',
-      },
-      // Add a subtle indicator at the top of today's cells
-      '&::before': isToday ? {
-        content: '""',
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: '2px',
-        backgroundColor: '#9c27b0'
-      } : {}
+      }
     };
   };
 

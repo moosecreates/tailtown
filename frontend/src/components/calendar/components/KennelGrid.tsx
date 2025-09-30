@@ -132,8 +132,8 @@ const KennelGrid: React.FC<KennelGridProps> = memo(({
                     align="center"
                     sx={{
                       minWidth: viewType === 'day' ? 200 : 100,
-                      fontWeight: 'bold',
-                      backgroundColor: isToday ? 'secondary.main' : 'primary.main',
+                      fontWeight: isToday ? 'bold' : 'bold',
+                      backgroundColor: 'primary.main',
                       color: 'primary.contrastText',
                       borderLeft: '1px solid rgba(224, 224, 224, 1)',
                       position: 'relative',
@@ -144,7 +144,7 @@ const KennelGrid: React.FC<KennelGridProps> = memo(({
                         left: 0,
                         right: 0,
                         height: '3px',
-                        backgroundColor: 'warning.main'
+                        backgroundColor: 'rgba(255, 255, 255, 0.5)'
                       } : {}
                     }}
                   >
