@@ -76,7 +76,7 @@ export const getAllResources = async (
     const tenantId = (req.headers['x-tenant-id'] as string) || 'dev';
     
     // Extract query parameters
-    const { sortBy, sortOrder } = req.query;
+    const { sortBy, sortOrder, type } = req.query;
     
     // Build the query with tenant filter
     const query: any = {
@@ -96,6 +96,23 @@ export const getAllResources = async (
         }
       }
     };
+    
+    // Add type filter if specified
+    if (type) {
+      const typeStr = type as string;
+      // Handle comma-separated types or single type
+      if (typeStr.includes(',')) {
+        const types = typeStr.split(',').map(t => t.trim().toUpperCase());
+        query.where.type = { in: types };
+      } else {
+        // Single type - handle 'suite' as a wildcard for all suite types
+        if (typeStr.toLowerCase() === 'suite') {
+          query.where.type = { in: ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'] };
+        } else {
+          query.where.type = typeStr.toUpperCase();
+        }
+      }
+    }
     
     // Add ordering if specified
     if (sortBy && sortOrder) {
