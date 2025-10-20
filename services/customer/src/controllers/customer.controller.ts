@@ -18,8 +18,13 @@ export const getAllCustomers = async (
     const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
     const tags = req.query.tags ? (req.query.tags as string).split(',') : undefined;
     
-    // Build where condition
-    const where: any = {};
+    // Get tenant ID from header or default to 'dev'
+    const tenantId = (req.headers['x-tenant-id'] as string) || 'dev';
+    
+    // Build where condition with tenant filter
+    const where: any = {
+      tenantId,
+    };
     if (isActive !== undefined) {
       where.isActive = isActive;
     }
