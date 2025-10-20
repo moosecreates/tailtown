@@ -38,7 +38,7 @@ const steps = [
 // Define the order data structure
 interface OrderData {
   customer: Customer | null;
-  pet: Pet | null;
+  pets: Pet[];
   reservation: {
     startDate: Date | null;
     endDate: Date | null;
@@ -95,7 +95,7 @@ const OrderEntry: React.FC = () => {
   // Initialize order data with empty values
   const [orderData, setOrderData] = useState<OrderData>({
     customer: null,
-    pet: null,
+    pets: [],
     reservation: {
       startDate: null,
       endDate: null,
@@ -136,7 +136,7 @@ const OrderEntry: React.FC = () => {
     setCreatedInvoiceId(null);
     setOrderData({
       customer: null,
-      pet: null,
+      pets: [],
       reservation: {
         startDate: null,
         endDate: null,
@@ -171,11 +171,11 @@ const OrderEntry: React.FC = () => {
   };
 
   // Handle customer and pet selection
-  const handleCustomerUpdate = (customer: Customer, pet: Pet) => {
+  const handleCustomerUpdate = (customer: Customer, pets: Pet[]) => {
     setOrderData({
       ...orderData,
       customer: customer,
-      pet: pet,
+      pets: pets,
     });
     handleNext();
   };
@@ -323,37 +323,44 @@ const OrderEntry: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      if (!orderData.customer || !orderData.pet) {
-        throw new Error('Customer and pet information is required');
+      if (!orderData.customer || orderData.pets.length === 0) {
+        throw new Error('Customer and at least one pet are required');
       }
       
-      // Step 1: Create the reservation
+      // Step 1: Create reservations (one per pet)
       console.log('Order data for reservation creation:', {
         customer: orderData.customer,
-        pet: orderData.pet,
+        pets: orderData.pets,
         reservation: orderData.reservation
       });
       
-      const reservationData: any = {
-        customerId: orderData.customer.id,
-        petId: orderData.pet.id,
-        serviceId: orderData.reservation.serviceId,
-        startDate: orderData.reservation.startDate ? new Date(orderData.reservation.startDate).toISOString() : new Date().toISOString(),
-        endDate: orderData.reservation.endDate ? new Date(orderData.reservation.endDate).toISOString() : new Date().toISOString(),
-        status: orderData.reservation.status as 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW',
-        notes: orderData.reservation.notes || ''
-      };
+      const createdReservations = [];
       
-      // Only include resourceId if it's not empty
-      if (orderData.reservation.resourceId && orderData.reservation.resourceId !== '') {
-        reservationData.resourceId = orderData.reservation.resourceId;
+      for (const pet of orderData.pets) {
+        const reservationData: any = {
+          customerId: orderData.customer.id,
+          petId: pet.id,
+          serviceId: orderData.reservation.serviceId,
+          startDate: orderData.reservation.startDate ? new Date(orderData.reservation.startDate).toISOString() : new Date().toISOString(),
+          endDate: orderData.reservation.endDate ? new Date(orderData.reservation.endDate).toISOString() : new Date().toISOString(),
+          status: orderData.reservation.status as 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW',
+          notes: orderData.reservation.notes || ''
+        };
+        
+        // Only include resourceId if it's not empty
+        if (orderData.reservation.resourceId && orderData.reservation.resourceId !== '') {
+          reservationData.resourceId = orderData.reservation.resourceId;
+        }
+        
+        console.log(`Creating reservation for pet ${pet.name}:`, reservationData);
+        
+        const reservation = await reservationService.createReservation(reservationData);
+        console.log(`Reservation created for ${pet.name}:`, reservation);
+        createdReservations.push(reservation);
       }
       
-      console.log('Final reservation data being sent:', reservationData);
-      
-      const reservation = await reservationService.createReservation(reservationData);
-      console.log('Reservation created successfully:', reservation);
-      setCreatedReservationId(reservation.id);
+      // Store the first reservation ID for reference
+      setCreatedReservationId(createdReservations[0].id);
       
       // Step 2: Create the invoice
       // Calculate the base service price (total subtotal minus add-ons)
@@ -370,7 +377,7 @@ const OrderEntry: React.FC = () => {
       
       const invoiceData = {
         customerId: orderData.customer.id,
-        reservationId: reservation.id,
+        reservationId: createdReservations[0].id, // Link to first reservation
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Due in 7 days
         status: 'DRAFT' as 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED' | 'REFUNDED',
         subtotal: orderData.invoice.subtotal,
@@ -378,16 +385,16 @@ const OrderEntry: React.FC = () => {
         taxAmount: orderData.invoice.taxAmount,
         discount: orderData.invoice.discount,
         total: orderData.invoice.total,
-        notes: orderData.invoice.notes,
+        notes: `${orderData.invoice.notes}${orderData.pets.length > 1 ? ` (${orderData.pets.length} pets: ${orderData.pets.map(p => p.name).join(', ')})` : ''}`,
         lineItems: [
-          // Add main service as a line item
-          {
-            description: "Reservation Service",
+          // Add main service as a line item for each pet
+          ...orderData.pets.map(pet => ({
+            description: `Reservation Service - ${pet.name}`,
             quantity: 1,
-            unitPrice: baseServicePrice,
-            amount: baseServicePrice,
+            unitPrice: baseServicePrice / orderData.pets.length,
+            amount: baseServicePrice / orderData.pets.length,
             taxable: true
-          },
+          })),
           // Add each add-on as a line item
           ...orderData.addOns.map(addon => ({
             description: addon.name,
@@ -487,7 +494,7 @@ const OrderEntry: React.FC = () => {
           <CustomerSelection 
             onContinue={handleCustomerUpdate} 
             initialCustomer={orderData.customer}
-            initialPet={orderData.pet}
+            initialPets={orderData.pets}
           />
         );
       case 1:
@@ -495,7 +502,7 @@ const OrderEntry: React.FC = () => {
           <ReservationCreation 
             onContinue={handleReservationUpdate} 
             customer={orderData.customer}
-            pet={orderData.pet}
+            pet={orderData.pets[0] || null}
             initialReservation={orderData.reservation}
           />
         );
@@ -605,7 +612,7 @@ const OrderEntry: React.FC = () => {
                     variant="contained"
                     onClick={handleNext}
                     disabled={
-                      (activeStep === 0 && (!orderData.customer || !orderData.pet)) ||
+                      (activeStep === 0 && (!orderData.customer || orderData.pets.length === 0)) ||
                       (activeStep === 1 && !orderData.reservation.serviceId) ||
                       loading
                     }
