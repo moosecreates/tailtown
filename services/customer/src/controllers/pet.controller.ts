@@ -55,15 +55,21 @@ export const getAllPets = async (
     const search = String(req.query.search || '');
     const skip = (page - 1) * limit;
     
-    // Only search name and breed, type is an enum and needs exact match
-    const where = search
-      ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' as const } },
-            { breed: { contains: search, mode: 'insensitive' as const } }
-          ],
-        }
-      : {};
+    // Get tenant ID from header or default to 'dev'
+    const tenantId = (req.headers['x-tenant-id'] as string) || 'dev';
+    
+    // Build where clause with tenant filter
+    const where: any = {
+      tenantId,
+    };
+    
+    // Add search filter if provided
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' as const } },
+        { breed: { contains: search, mode: 'insensitive' as const } }
+      ];
+    }
     
     const [pets, total] = await prisma.$transaction([
       prisma.pet.findMany({
