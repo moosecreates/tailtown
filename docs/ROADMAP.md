@@ -11,15 +11,31 @@ This document combines the overall project roadmap and the reservation service r
 - **Fixed CORS issues** across all services
 - **Smart date validation** and error handling
 
-## Current Focus: Bug Fixes and Calendar Enhancements (October 2025)
+## Current Focus: Bug Fixes, Calendar Enhancements & Critical Features (October 2025)
 
-### 🔥 Immediate Priorities
+### 🔥 Immediate Priorities (High Priority)
+
+#### Critical Bug Fixes
 - **Multi-Pet Selection Fix** - Allow selecting multiple pets for single reservation
 - **Optional Add-Ons Fix** - Make add-ons truly optional in order process
+- **Pet Icons Fix** - Fix broken or missing pet icons throughout the application
 - **Calendar Functionality** - Fix grooming and training calendars
 - **Drag-and-Drop Calendar** - Enable moving reservations between dates/times
+
+#### Revenue & Customer Experience
+- **Online Customer Booking Portal** - Self-service booking workflow for customers (web-based)
+- **Credit Card Integration (CardConnect)** - Integrated payment processing for online and in-person transactions
 - **Retail POS System** - Point of sale for retail items and packages
+- **High Demand Pricing** - Dynamic pricing based on demand, seasonality, and capacity
+
+#### Operations & Hardware
+- **Collar/Name Tag Printing** - Direct printing of pet collar tags and kennel cards
+- **Area-Specific Checklists** - Customizable checklists for different areas (kennel, grooming, training, etc.)
 - **Comprehensive Reports Page** - Advanced reporting for financials, customers, pets, marketing, and operations
+
+#### Infrastructure & Integration
+- **AWS Migration** - Migrate to cloud infrastructure (AWS) for production deployment
+- **Import Tools (Gingr & Others)** - Data migration tools to import from other pet management systems
 
 ## Previous Focus: Stability and Maintenance (August 2025)
 
@@ -143,9 +159,23 @@ This document combines the overall project roadmap and the reservation service r
 - 🔲 **Optional add-ons workflow** - Make add-ons truly optional in order process
 - 🔲 **Functional grooming calendar** - Fix and enhance grooming-specific calendar features
 - 🔲 **Functional training calendar** - Fix and enhance training-specific calendar features
+- 🔲 **Pet Icons Fix** - Fix broken or missing pet icons throughout the application
+- 🔲 **Online Customer Booking Portal** - Self-service booking workflow for customers
+  - Customer account creation and login
+  - Browse available services and time slots
+  - Select pets and add-ons
+  - Real-time availability checking
+  - Online payment processing
+  - Booking confirmation and email notifications
+  - Manage existing reservations
+- 🔲 **Area-Specific Checklists** - Customizable checklists for different operational areas
+  - Kennel check-in/check-out checklists
+  - Grooming service checklists
+  - Training session checklists
+  - Daily facility checklists
+  - Custom checklist templates
 - 🔲 Batch operations for reservations (e.g., check-in multiple pets at once)
 - 🔲 Advanced filtering and search capabilities
-- 🔲 Customer portal for self-service booking
 - 🔲 Email notifications for reservation status changes
 - 🔲 Mobile-responsive design improvements
 - 🔲 Dark mode support
@@ -153,8 +183,25 @@ This document combines the overall project roadmap and the reservation service r
 - 🔲 Permission levels and restrictions for users
 - 🔲 **Recent checkouts tracking** - Keep track of recent pet checkouts for staff reference
 
-### Business Operations
+### Business Operations & Revenue
+- 🔲 **CardConnect Payment Integration** - Integrated credit card processing
+  - Real-time payment processing
+  - PCI-compliant card storage
+  - Recurring payment support
+  - Payment reporting and reconciliation
+  - Refund and void capabilities
+- 🔲 **High Demand Pricing** - Dynamic pricing based on demand and capacity
+  - Seasonal pricing rules
+  - Peak time surcharges
+  - Capacity-based pricing
+  - Special event pricing
+  - Automated price adjustments
 - 🔲 **Retail Items & Packages** - Point of sale system for retail products and service packages
+  - Inventory management
+  - Product catalog
+  - Package deals and bundles
+  - Quick-sale items
+  - Retail reporting
 - 🔲 **Deposits & Wait-list Management** - Handle reservation deposits and waiting lists
 - 🔲 **Standing Reservations** - Recurring/repeating reservation system
 - 🔲 **Coupons & Discounts** - Comprehensive coupon and promotional code system
@@ -197,7 +244,12 @@ This document combines the overall project roadmap and the reservation service r
 - 🔲 **Multi-tenant Vaccine Policies** - Different vaccine requirements per tenant/location
 
 ### Hardware Integration
-- 🔲 **Name Tag Printer Integration** - Direct printing of pet name tags and kennel cards
+- 🔲 **Collar/Name Tag Printer Integration** - Direct printing of pet collar tags and kennel cards
+  - Zebra printer support
+  - Custom tag templates
+  - Batch printing capabilities
+  - QR code integration for pet tracking
+  - Kennel card printing
 - 🔲 **Receipt Printer Integration** - Point of sale receipt printing
 - 🔲 **Barcode/QR Code System** - Pet identification and tracking
 
@@ -213,7 +265,22 @@ This document combines the overall project roadmap and the reservation service r
 - 🔲 Embeddable widgets for customer websites
 
 ### Infrastructure and Scaling
-- 🔲 Migration to hosted servers
+- 🔲 **AWS Migration** - Complete migration to Amazon Web Services
+  - EC2 instances for application servers
+  - RDS for PostgreSQL database
+  - S3 for file storage and backups
+  - CloudFront CDN for static assets
+  - Route 53 for DNS management
+  - Load balancing and auto-scaling
+  - VPC configuration and security groups
+  - CloudWatch monitoring and alerting
+- 🔲 **Data Migration Tools** - Import from other pet management systems
+  - Gingr import tool with field mapping
+  - Generic CSV import with validation
+  - Data transformation and cleanup
+  - Duplicate detection and merging
+  - Import history and rollback
+  - Bulk data validation tools
 - 🔲 Cloud infrastructure optimization
 - 🔲 Website integration components for customer online ordering
 - 🔲 Global content delivery network (CDN)
@@ -325,49 +392,74 @@ Throughout all phases, we will address the following ongoing concerns:
 - 🔲 Cash amount paid after discount can have strange partial penny issues
 - 🔲 Add feeding schedule to kennel cards with weekly dates automatically added
 
-### New Issues Identified (September 2025)
+### New Issues Identified (September-October 2025)
 - 🔲 **Multi-Pet Selection**: When creating new reservation, can't select multiple pets at the same time
 - 🔲 **Optional Add-Ons**: Suggested add-ons need to be optional - currently no way to continue without an add-on in cart
+- 🔲 **Pet Icons**: Pet icons are broken or missing throughout the application
 - 🔲 **Grooming Calendar**: Grooming calendar is currently non-functional
 - 🔲 **Training Calendar**: Training calendar is currently non-functional
 
 ## Implementation Timeline
 
-### Immediate Priority (October 2025)
-| Feature/Task | Status | Estimated Completion | Priority |
-|--------------|--------|---------------------|----------|
-| Complete Order System | ✅ Completed (Sep 19, 2025) | - | High |
-| Multi-Pet Selection Bug Fix | 🔲 Planned | October 5, 2025 | High |
-| Optional Add-Ons Bug Fix | 🔲 Planned | October 5, 2025 | High |
-| Grooming Calendar Fix | 🔲 Planned | October 12, 2025 | High |
-| Training Calendar Fix | 🔲 Planned | October 12, 2025 | High |
-| Drag-and-Drop Calendar | 🔲 Planned | October 19, 2025 | High |
+### Phase 1: Critical Bug Fixes (October 2025 - Week 1-2)
+| Feature/Task | Status | Estimated Completion | Priority | Effort |
+|--------------|--------|---------------------|----------|--------|
+| Multi-Pet Selection Bug Fix | 🔲 Planned | October 25, 2025 | Critical | 2-3 days |
+| Optional Add-Ons Bug Fix | 🔲 Planned | October 25, 2025 | Critical | 1-2 days |
+| Pet Icons Fix | 🔲 Planned | October 27, 2025 | High | 1 day |
+| Grooming Calendar Fix | 🔲 Planned | October 30, 2025 | High | 2-3 days |
+| Training Calendar Fix | 🔲 Planned | October 30, 2025 | High | 2-3 days |
 
-### Short Term (November 2025)
-| Feature/Task | Status | Estimated Completion | Priority |
-|--------------|--------|---------------------|----------|
-| Retail Items & POS | 🔲 Planned | November 15, 2025 | High |
-| Vaccine Requirements Admin | 🔲 Planned | November 22, 2025 | High |
-| Comprehensive Reports Page | 🔲 Planned | November 25, 2025 | High |
-| Deposits & Wait-list | 🔲 Planned | November 30, 2025 | Medium |
-| Testing Infrastructure | 🔲 Planned | November 30, 2025 | High |
+### Phase 2: Calendar & UX Enhancements (November 2025 - Week 1-2)
+| Feature/Task | Status | Estimated Completion | Priority | Effort |
+|--------------|--------|---------------------|----------|--------|
+| Drag-and-Drop Calendar | 🔲 Planned | November 8, 2025 | High | 1-2 weeks |
+| Area-Specific Checklists | 🔲 Planned | November 15, 2025 | High | 1 week |
 
-### Medium Term (December 2025 - January 2026)
-| Feature/Task | Status | Estimated Completion | Priority |
-|--------------|--------|---------------------|----------|
-| Standing Reservations | 🔲 Planned | December 15, 2025 | Medium |
-| Group Classes Enhancement | 🔲 Planned | December 22, 2025 | Medium |
-| Coupons System | 🔲 Planned | January 10, 2026 | Medium |
-| Name Tag Printer Integration | 🔲 Planned | January 15, 2026 | Medium |
-| Contracts Management | 🔲 Planned | January 31, 2026 | Medium |
+### Phase 3: Revenue & Payment Features (November 2025 - Week 3-4)
+| Feature/Task | Status | Estimated Completion | Priority | Effort |
+|--------------|--------|---------------------|----------|--------|
+| CardConnect Integration | 🔲 Planned | November 22, 2025 | Critical | 1-2 weeks |
+| Retail Items & POS | 🔲 Planned | November 29, 2025 | High | 2 weeks |
+| High Demand Pricing | 🔲 Planned | December 6, 2025 | High | 1 week |
 
-### Long Term (Q1-Q2 2026)
-| Feature/Task | Status | Estimated Completion | Priority |
-|--------------|--------|---------------------|----------|
-| Recent Checkouts Tracking | 🔲 Planned | February 15, 2026 | Low |
-| Performance Optimization | 🔲 Planned | March 1, 2026 | Medium |
-| Advanced Analytics | 🔲 Planned | March 31, 2026 | Medium |
-| Customer Portal | 🔲 Planned | April 30, 2026 | Medium |
+### Phase 4: Customer Portal & Booking (December 2025)
+| Feature/Task | Status | Estimated Completion | Priority | Effort |
+|--------------|--------|---------------------|----------|--------|
+| Online Customer Booking Portal | 🔲 Planned | December 20, 2025 | Critical | 3-4 weeks |
+| Customer Account Management | 🔲 Planned | December 20, 2025 | High | Included |
+| Email Notifications | 🔲 Planned | December 20, 2025 | High | 1 week |
+
+### Phase 5: Hardware & Operations (January 2026)
+| Feature/Task | Status | Estimated Completion | Priority | Effort |
+|--------------|--------|---------------------|----------|--------|
+| Collar/Name Tag Printing | 🔲 Planned | January 10, 2026 | High | 1-2 weeks |
+| Comprehensive Reports Page | 🔲 Planned | January 24, 2026 | High | 2 weeks |
+| Vaccine Requirements Admin | 🔲 Planned | January 31, 2026 | Medium | 1 week |
+
+### Phase 6: Infrastructure & Migration (February-March 2026)
+| Feature/Task | Status | Estimated Completion | Priority | Effort |
+|--------------|--------|---------------------|----------|--------|
+| AWS Migration Planning | 🔲 Planned | February 7, 2026 | Critical | 1 week |
+| AWS Infrastructure Setup | 🔲 Planned | February 21, 2026 | Critical | 2 weeks |
+| AWS Deployment & Testing | 🔲 Planned | March 7, 2026 | Critical | 2 weeks |
+| Production Cutover | 🔲 Planned | March 14, 2026 | Critical | 1 week |
+
+### Phase 7: Data Migration & Integration (March-April 2026)
+| Feature/Task | Status | Estimated Completion | Priority | Effort |
+|--------------|--------|---------------------|----------|--------|
+| Gingr Import Tool | 🔲 Planned | March 28, 2026 | High | 2 weeks |
+| Generic CSV Import | 🔲 Planned | April 11, 2026 | Medium | 1 week |
+| Data Validation Tools | 🔲 Planned | April 18, 2026 | Medium | 1 week |
+
+### Phase 8: Additional Features (April-June 2026)
+| Feature/Task | Status | Estimated Completion | Priority | Effort |
+|--------------|--------|---------------------|----------|--------|
+| Deposits & Wait-list | 🔲 Planned | April 30, 2026 | Medium | 2 weeks |
+| Standing Reservations | 🔲 Planned | May 15, 2026 | Medium | 2 weeks |
+| Coupons System | 🔲 Planned | May 30, 2026 | Medium | 2 weeks |
+| Group Classes Enhancement | 🔲 Planned | June 15, 2026 | Medium | 2 weeks |
+| Contracts Management | 🔲 Planned | June 30, 2026 | Medium | 2 weeks |
 
 ## Monitoring and Evaluation
 
