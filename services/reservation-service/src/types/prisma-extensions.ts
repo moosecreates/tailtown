@@ -77,7 +77,7 @@ export interface ExtendedCustomerSelect extends Prisma.CustomerSelect {
 }
 
 // Interface for creating ReservationAddOn with tenant isolation
-export interface ExtendedReservationAddOnCreateInput extends Prisma.ReservationAddOnCreateInput, TenantFields {}
+export type ExtendedReservationAddOnCreateInput = Prisma.ReservationAddOnCreateInput & TenantFields;
 
 /**
  * This mapping allows us to use type assertions to override Prisma's generated types

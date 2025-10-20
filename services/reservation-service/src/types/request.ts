@@ -1,5 +1,5 @@
 import { Request } from 'express';
 
-export interface TenantRequest extends Request {
+export interface TenantRequest extends Omit<Request, 'tenantId'> {
   tenantId?: string;
 }
