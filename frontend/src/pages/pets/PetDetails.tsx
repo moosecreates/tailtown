@@ -21,9 +21,8 @@ import {
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import VaccinationStatus from '../../components/VaccinationStatus';
-// Pet icon components temporarily disabled
-// import PetIconSelector from '../../components/pets/PetIconSelector';
-// import PetIconDisplay from '../../components/pets/PetIconDisplay';
+import PetIconSelector from '../../components/pets/PetIconSelector';
+import PetIconDisplay from '../../components/pets/PetIconDisplay';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { Pet, petService } from '../../services/petService';
 import { customerService } from '../../services/customerService';
@@ -68,7 +67,8 @@ const PetDetails = () => {
     vetPhone: null,
     customerId: '',
     isActive: true,
-    // petIcons and iconNotes removed - not supported in current schema
+    petIcons: [],
+    iconNotes: {},
     vaccinationStatus: undefined,
     vaccineExpirations: undefined
   });
@@ -496,12 +496,11 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
           
           <Typography variant="h6" gutterBottom>Additional Information</Typography>
 
-          {/* Pet Icons temporarily disabled - database schema doesn't support them */}
-          <Box sx={{ mb: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
-            <Typography variant="body2" color="text.secondary">
-              Pet icons feature is temporarily unavailable
-            </Typography>
-          </Box>
+          {/* Pet Icons Selector */}
+          <PetIconSelector
+            selectedIcons={pet.petIcons || []}
+            onChange={(icons) => setPet({ ...pet, petIcons: icons })}
+          />
 
           <Box sx={{ display: 'grid', gap: 2 }}>
             {/* Medical Information */}
