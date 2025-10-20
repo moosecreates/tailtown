@@ -193,14 +193,13 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
         allergies: pet.allergies,
         vetName: pet.vetName,
         vetPhone: pet.vetPhone,
-        // Pet icons not supported in current database schema
+        petIcons: pet.petIcons || [],
+        iconNotes: pet.iconNotes || {},
         vaccinationStatus: pet.vaccinationStatus || {},
         vaccineExpirations: pet.vaccineExpirations || {},
         customerId: pet.customerId,
         isActive: pet.isActive
       };
-
-      // Pet icons and notes are now stored in the database with the pet data
 
       if (isNewPet) {
         await petService.createPet(cleanPetData as Omit<Pet, 'id'>);
