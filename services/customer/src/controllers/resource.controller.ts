@@ -72,11 +72,17 @@ export const getAllResources = async (
   next: NextFunction
 ) => {
   try {
+    // Get tenant ID from header or default to 'dev'
+    const tenantId = (req.headers['x-tenant-id'] as string) || 'dev';
+    
     // Extract query parameters
     const { sortBy, sortOrder } = req.query;
     
-    // Build the query
+    // Build the query with tenant filter
     const query: any = {
+      where: {
+        tenantId,
+      },
       include: {
         availabilitySlots: {
           where: {
