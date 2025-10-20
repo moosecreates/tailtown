@@ -23,15 +23,15 @@ import { petService, Pet } from '../../services/petService';
 import { useNavigate } from 'react-router-dom';
 
 interface CustomerSelectionProps {
-  onContinue: (customer: Customer, pet: Pet) => void;
+  onContinue: (customer: Customer, pets: Pet[]) => void;
   initialCustomer: Customer | null;
-  initialPet: Pet | null;
+  initialPets: Pet[];
 }
 
 const CustomerSelection: React.FC<CustomerSelectionProps> = ({
   onContinue,
   initialCustomer,
-  initialPet,
+  initialPets,
 }) => {
   const navigate = useNavigate();
   
@@ -44,7 +44,7 @@ const CustomerSelection: React.FC<CustomerSelectionProps> = ({
   
   // State for pet selection
   const [customerPets, setCustomerPets] = useState<Pet[]>([]);
-  const [selectedPet, setSelectedPet] = useState<Pet | null>(initialPet);
+  const [selectedPets, setSelectedPets] = useState<Pet[]>(initialPets);
   const [petsLoading, setPetsLoading] = useState(false);
   const [petError, setPetError] = useState<string | null>(null);
 
@@ -77,7 +77,7 @@ const CustomerSelection: React.FC<CustomerSelectionProps> = ({
     const loadPets = async () => {
       if (!selectedCustomer) {
         setCustomerPets([]);
-        setSelectedPet(null);
+        setSelectedPets([]);
         return;
       }
       
@@ -89,11 +89,15 @@ const CustomerSelection: React.FC<CustomerSelectionProps> = ({
         
         // If there's only one pet, select it automatically
         if (response.data?.length === 1) {
-          setSelectedPet(response.data[0]);
-        } else if (initialPet && response.data?.some(pet => pet.id === initialPet.id)) {
-          setSelectedPet(initialPet);
+          setSelectedPets([response.data[0]]);
+        } else if (initialPets.length > 0 && response.data) {
+          // Keep previously selected pets that still exist
+          const validPets = initialPets.filter(initPet => 
+            response.data.some(pet => pet.id === initPet.id)
+          );
+          setSelectedPets(validPets);
         } else {
-          setSelectedPet(null);
+          setSelectedPets([]);
         }
       } catch (error) {
         console.error('Error loading pets:', error);
@@ -104,30 +108,30 @@ const CustomerSelection: React.FC<CustomerSelectionProps> = ({
     };
 
     loadPets();
-  }, [selectedCustomer, initialPet]);
+  }, [selectedCustomer, initialPets]);
 
   // Handle customer selection
   const handleCustomerChange = (event: React.SyntheticEvent, value: Customer | null) => {
     setSelectedCustomer(value);
   };
 
-  // Handle pet selection
-  const handlePetChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    const petId = event.target.value as string;
-    const pet = customerPets.find(p => p.id === petId) || null;
-    setSelectedPet(pet);
+  // Handle pet selection (multi-select)
+  const handlePetChange = (event: any) => {
+    const selectedIds = event.target.value as string[];
+    const pets = customerPets.filter(p => selectedIds.includes(p.id));
+    setSelectedPets(pets);
   };
 
   // Handle continuing to next step
   const handleContinue = () => {
-    if (selectedCustomer && selectedPet) {
-      onContinue(selectedCustomer, selectedPet);
+    if (selectedCustomer && selectedPets.length > 0) {
+      onContinue(selectedCustomer, selectedPets);
     } else {
       if (!selectedCustomer) {
         setCustomerError('Please select a customer');
       }
-      if (!selectedPet) {
-        setPetError('Please select a pet');
+      if (selectedPets.length === 0) {
+        setPetError('Please select at least one pet');
       }
     }
   };
@@ -235,17 +239,18 @@ const CustomerSelection: React.FC<CustomerSelectionProps> = ({
       
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
         <Typography variant="subtitle1" gutterBottom>
-          Pet
+          Pets (Select one or more)
         </Typography>
         
         <FormControl fullWidth size="small" disabled={!selectedCustomer || petsLoading}>
-          <InputLabel id="pet-select-label">Select Pet</InputLabel>
+          <InputLabel id="pet-select-label">Select Pets</InputLabel>
           <Select
             labelId="pet-select-label"
             id="pet-select"
-            value={selectedPet?.id || ''}
-            label="Select Pet"
-            onChange={handlePetChange as any}
+            multiple
+            value={selectedPets.map(p => p.id)}
+            label="Select Pets"
+            onChange={handlePetChange}
             startAdornment={
               <InputAdornment position="start">
                 <PetsIcon />
@@ -258,6 +263,13 @@ const CustomerSelection: React.FC<CustomerSelectionProps> = ({
                 </InputAdornment>
               ) : null
             }
+            renderValue={(selected) => {
+              const selectedIds = selected as string[];
+              const names = customerPets
+                .filter(p => selectedIds.includes(p.id))
+                .map(p => p.name);
+              return names.join(', ');
+            }}
           >
             {customerPets.map((pet) => (
               <MenuItem key={pet.id} value={pet.id}>
@@ -268,26 +280,33 @@ const CustomerSelection: React.FC<CustomerSelectionProps> = ({
           </Select>
         </FormControl>
         
-        {selectedPet && (
-          <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid #e0e0e0' }}>
-            <Typography variant="subtitle2">
-              {selectedPet.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Type: {selectedPet.type}
-              {selectedPet.breed ? `, Breed: ${selectedPet.breed}` : ''}
-            </Typography>
-            {selectedPet.gender && (
-              <Typography variant="body2" color="text.secondary">
-                Gender: {selectedPet.gender}
-                {selectedPet.isNeutered ? ' (Neutered/Spayed)' : ''}
-              </Typography>
-            )}
-            {selectedPet.specialNeeds && (
-              <Typography variant="body2" color="text.secondary">
-                Special Needs: {selectedPet.specialNeeds}
-              </Typography>
-            )}
+        {selectedPets.length > 0 && (
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {selectedPets.map((pet) => (
+              <Box 
+                key={pet.id}
+                sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid #e0e0e0' }}
+              >
+                <Typography variant="subtitle2">
+                  {pet.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Type: {pet.type}
+                  {pet.breed ? `, Breed: ${pet.breed}` : ''}
+                </Typography>
+                {pet.gender && (
+                  <Typography variant="body2" color="text.secondary">
+                    Gender: {pet.gender}
+                    {pet.isNeutered ? ' (Neutered/Spayed)' : ''}
+                  </Typography>
+                )}
+                {pet.specialNeeds && (
+                  <Typography variant="body2" color="text.secondary">
+                    Special Needs: {pet.specialNeeds}
+                  </Typography>
+                )}
+              </Box>
+            ))}
           </Box>
         )}
       </Paper>
@@ -297,9 +316,9 @@ const CustomerSelection: React.FC<CustomerSelectionProps> = ({
           variant="contained"
           color="primary"
           onClick={handleContinue}
-          disabled={!selectedCustomer || !selectedPet}
+          disabled={!selectedCustomer || selectedPets.length === 0}
         >
-          Continue
+          Continue {selectedPets.length > 0 && `(${selectedPets.length} pet${selectedPets.length > 1 ? 's' : ''})`}
         </Button>
       </Box>
     </Box>
