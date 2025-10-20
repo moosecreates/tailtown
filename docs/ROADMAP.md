@@ -393,7 +393,11 @@ Throughout all phases, we will address the following ongoing concerns:
 - 🔲 Add feeding schedule to kennel cards with weekly dates automatically added
 
 ### New Issues Identified (September-October 2025)
-- 🔲 **Multi-Pet Selection**: When creating new reservation, can't select multiple pets at the same time
+- ✅ **Multi-Pet Selection**: When creating new reservation, can't select multiple pets at the same time (Fixed October 20, 2025)
+  - Updated CustomerSelection component to support multi-select dropdown
+  - Modified OrderEntry to handle pets array and create one reservation per pet
+  - Invoice automatically splits service price across pets and lists each pet
+  - Staff can now book multiple pets from same customer in single order
 - 🔲 **Optional Add-Ons**: Suggested add-ons need to be optional - currently no way to continue without an add-on in cart
 - ✅ **Pet Icons**: Pet icons are broken or missing throughout the application (Fixed October 20, 2025)
   - Added petIcons and iconNotes fields to database schema
@@ -407,7 +411,7 @@ Throughout all phases, we will address the following ongoing concerns:
 ### Phase 1: Critical Bug Fixes (October 2025 - Week 1-2)
 | Feature/Task | Status | Estimated Completion | Priority | Effort |
 |--------------|--------|---------------------|----------|--------|
-| Multi-Pet Selection Bug Fix | 🔲 Planned | October 25, 2025 | Critical | 2-3 days |
+| Multi-Pet Selection Bug Fix | ✅ **COMPLETED** (Oct 20, 2025) | - | Critical | 2-3 days |
 | Optional Add-Ons Bug Fix | 🔲 Planned | October 25, 2025 | Critical | 1-2 days |
 | Pet Icons Fix | ✅ **COMPLETED** (Oct 20, 2025) | - | High | 1 day |
 | Grooming Calendar Fix | 🔲 Planned | October 30, 2025 | High | 2-3 days |
