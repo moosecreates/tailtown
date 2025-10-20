@@ -62,14 +62,14 @@
 - Grid-based kennel calendar for efficient boarding and daycare management
 
 ## Configuration Notes
-- Customer Service runs on port 3003
+- Customer Service runs on port 4004
 - Reservation Service runs on port 4003
 - Frontend connects to services via the API service layer:
-  - Customer Service: http://localhost:3003
+  - Customer Service: http://localhost:4004
   - Reservation Service: http://localhost:4003
 - The frontend .env file should be updated to use the correct service URLs:
   ```
-  REACT_APP_API_URL=http://localhost:3003
+  REACT_APP_API_URL=http://localhost:4004
   REACT_APP_RESERVATION_API_URL=http://localhost:4003
   ```
 - PostgreSQL database runs on port 5433 with credentials postgres:postgres
@@ -102,8 +102,11 @@
    ```
 
 ## Known Issues
-- There's a discrepancy between the frontend .env configuration (port 3002) and the actual backend port (3003), but this doesn't affect functionality as the application uses a hardcoded port in api.ts
 - Some TypeScript linting warnings remain to be addressed
+- Multi-pet selection not working in new reservation flow
+- Add-ons are required instead of optional in order process
+- Pet icons may not display correctly in some areas
+- Grooming and training calendars need functionality fixes
 
 ## Recent Test Improvements
 
