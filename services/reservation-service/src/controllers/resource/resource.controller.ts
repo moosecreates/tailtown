@@ -104,12 +104,12 @@ export const getAllResources = catchAsync(async (req: TenantRequest, res: Respon
   // Add type filter if provided
   if (req.query.type) {
     try {
-      // Handle both single type and multiple types (array)
-      if (Array.isArray(req.query.type)) {
-        // Convert string types to ResourceType enum values
-        const validTypes = req.query.type
-          .map(t => String(t))
-          .filter(t => Object.values(ResourceType).includes(t as ResourceType));
+      const typeStr = String(req.query.type);
+      
+      // Handle comma-separated types or single type
+      if (typeStr.includes(',')) {
+        const types = typeStr.split(',').map(t => t.trim().toUpperCase());
+        const validTypes = types.filter(t => Object.values(ResourceType).includes(t as ResourceType));
         
         if (validTypes.length > 0) {
           whereConditions.type = {
@@ -117,15 +117,23 @@ export const getAllResources = catchAsync(async (req: TenantRequest, res: Respon
           };
           logger.debug(`Multiple types filter applied: ${JSON.stringify(whereConditions.type)}`);
         } else {
-          logger.warn(`No valid resource types found in filter: ${JSON.stringify(req.query.type)}`);
+          logger.warn(`No valid resource types found in filter: ${JSON.stringify(types)}`);
         }
       } else {
-        const typeStr = String(req.query.type);
-        if (Object.values(ResourceType).includes(typeStr as ResourceType)) {
-          whereConditions.type = typeStr as ResourceType;
-          logger.debug(`Single type filter applied: ${whereConditions.type}`);
+        // Single type - handle 'suite' as a wildcard for all suite types
+        if (typeStr.toLowerCase() === 'suite') {
+          whereConditions.type = {
+            in: [ResourceType.STANDARD_SUITE, ResourceType.STANDARD_PLUS_SUITE, ResourceType.VIP_SUITE]
+          };
+          logger.debug(`Suite wildcard filter applied: all suite types`);
         } else {
-          logger.warn(`Invalid resource type in filter: ${typeStr}`);
+          const upperType = typeStr.toUpperCase();
+          if (Object.values(ResourceType).includes(upperType as ResourceType)) {
+            whereConditions.type = upperType as ResourceType;
+            logger.debug(`Single type filter applied: ${whereConditions.type}`);
+          } else {
+            logger.warn(`Invalid resource type in filter: ${typeStr}`);
+          }
         }
       }
     } catch (error) {
