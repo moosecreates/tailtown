@@ -324,10 +324,6 @@ const schemaDefinition: SchemaDefinition = {
     }
   ]
 };
-    schemaLogger.error(`Error checking if index exists: ${error instanceof Error ? error.message : String(error)}`);
-    return false;
-  }
-}
 
 /**
  * Get critical columns that should exist for a specific table
@@ -447,14 +443,10 @@ CREATE TABLE IF NOT EXISTS "${table.name}" (
   );
   
   if (primaryKeyColumn) {
-    sql += `,
-
-  CONSTRAINT "${table.name}_pkey" PRIMARY KEY ("${primaryKeyColumn.name}")`;
+    sql += `,\n\n  CONSTRAINT "${table.name}_pkey" PRIMARY KEY ("${primaryKeyColumn.name}")`;
   }
   
-  sql += '
-);
-';
+  sql += '\n);\n';
   
   return sql;
 }
@@ -529,19 +521,16 @@ function generateMigrationScript(
   
   // Create missing tables
   if (missingTables.length > 0) {
-    sql += '-- Creating missing tables
-';
+    sql += '-- Creating missing tables\n';
     missingTables.forEach(tableName => {
-      sql += generateTableCreationSQL(tableName) + '
-';
+      sql += generateTableCreationSQL(tableName) + '\n';
     });
   }
   
   // Add missing columns
   const existingTables = Object.keys(missingColumns);
   if (existingTables.length > 0) {
-    sql += '-- Adding missing columns to existing tables
-';
+    sql += '-- Adding missing columns to existing tables\n';
     existingTables.forEach(tableName => {
       const table = schemaDefinition.tables.find(t => t.name === tableName);
       if (!table) return;
@@ -555,34 +544,28 @@ function generateMigrationScript(
           columnDef += ` DEFAULT ${column.defaultValue}`;
         }
         
-        sql += `ALTER TABLE "${tableName}" ADD COLUMN IF NOT EXISTS "${columnName}" ${columnDef};
-`;
+        sql += `ALTER TABLE "${tableName}" ADD COLUMN IF NOT EXISTS "${columnName}" ${columnDef};\n`;
       });
-      sql += '
-';
+      sql += '\n';
     });
   }
   
   // Create missing indexes
   if (Object.keys(missingIndexes).length > 0) {
-    sql += '-- Creating missing indexes
-';
+    sql += '-- Creating missing indexes\n';
     Object.keys(missingIndexes).forEach(tableName => {
       sql += generateIndexCreationSQL(tableName);
     });
-    sql += '
-';
+    sql += '\n';
   }
   
   // Create missing relationships
   if (Object.keys(missingRelationships).length > 0) {
-    sql += '-- Creating missing relationships
-';
+    sql += '-- Creating missing relationships\n';
     Object.keys(missingRelationships).forEach(tableName => {
       sql += generateRelationshipSQL(tableName);
     });
-    sql += '
-';
+    sql += '\n';
   }
   
   return sql;
@@ -609,6 +592,9 @@ async function indexExists(prisma: PrismaClient, tableName: string, indexName: s
     
     return result[0].exists;
   } catch (error) {
+    schemaLogger.error(`Error checking if index exists: ${error instanceof Error ? error.message : String(error)}`);
+    return false;
+  }
 }
 
 /**
