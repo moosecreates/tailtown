@@ -72,6 +72,8 @@ model Pet {
   vetName            String?
   vetPhone           String?
   profilePhoto       String?
+  petIcons           Json?           // Array of icon IDs for quick visual reference
+  iconNotes          Json?           // Custom notes for generic flag icons
   isActive           Boolean         @default(true)
   lastCheckIn        DateTime?
   createdAt          DateTime        @default(now())
