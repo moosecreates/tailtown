@@ -396,6 +396,9 @@ Throughout all phases, we will address the following ongoing concerns:
 - 🔲 **Multi-Pet Selection**: When creating new reservation, can't select multiple pets at the same time
 - 🔲 **Optional Add-Ons**: Suggested add-ons need to be optional - currently no way to continue without an add-on in cart
 - ✅ **Pet Icons**: Pet icons are broken or missing throughout the application (Fixed October 20, 2025)
+  - Added petIcons and iconNotes fields to database schema
+  - Fixed tenantId filtering in getAllPets and getAllCustomers controllers
+  - All APIs now returning data correctly with multi-tenant support
 - 🔲 **Grooming Calendar**: Grooming calendar is currently non-functional
 - 🔲 **Training Calendar**: Training calendar is currently non-functional
 
