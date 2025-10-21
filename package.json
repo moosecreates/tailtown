@@ -18,6 +18,9 @@
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report",
     "test:all": "npm run test && npm run test:e2e",
+    "coverage": "./scripts/generate-coverage-report.sh",
+    "coverage:badge": "node scripts/coverage-badge.js",
+    "coverage:open": "open frontend/coverage/lcov-report/index.html && open services/reservation-service/coverage/lcov-report/index.html",
     "build": "lerna run build"
   },
   "engines": {
