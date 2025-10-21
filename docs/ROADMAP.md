@@ -101,9 +101,10 @@ This document combines the overall project roadmap and the reservation service r
 - Time-period filters use `getDateFilter()` with day/week/month/year/all/custom and operate on invoice `issueDate`.
 - Counts by service/add-on include only currently active items.
 ### Infrastructure
-- ✅ Microservices architecture implementation (Completed August 2025)
+- ✅ Microservices architecture implementation (Completed August 2025, Updated October 2025)
   - Customer service (port 4004)
   - Reservation service (port 4003)
+  - Payment service (port 4005) - Added October 21, 2025
   - Frontend application (port 3000)
   - Shared PostgreSQL database (port 5433)
 - ✅ Service communication via RESTful APIs (Completed August 2025)
@@ -184,12 +185,18 @@ This document combines the overall project roadmap and the reservation service r
 - 🔲 **Recent checkouts tracking** - Keep track of recent pet checkouts for staff reference
 
 ### Business Operations & Revenue
-- 🔲 **CardConnect Payment Integration** - Integrated credit card processing
-  - Real-time payment processing
-  - PCI-compliant card storage
-  - Recurring payment support
-  - Payment reporting and reconciliation
-  - Refund and void capabilities
+- ✅ **CardConnect Payment Integration** - Integrated credit card processing (Completed October 21, 2025)
+  - ✅ Real-time payment processing with CardConnect REST API
+  - ✅ Authorization and capture operations
+  - ✅ Refund and void capabilities
+  - ✅ Transaction inquiry
+  - ✅ PCI-compliant practices (card masking, secure logging)
+  - ✅ Test environment configured with UAT credentials
+  - ✅ Rate limiting and security headers
+  - ✅ Comprehensive API documentation
+  - 🔲 Frontend integration (pending)
+  - 🔲 Payment reporting and reconciliation (pending)
+  - 🔲 Recurring payment support (pending)
 - 🔲 **High Demand Pricing** - Dynamic pricing based on demand and capacity
   - Seasonal pricing rules
   - Peak time surcharges
@@ -469,7 +476,8 @@ Throughout all phases, we will address the following ongoing concerns:
 ### Phase 3: Revenue & Payment Features (November 2025 - Week 3-4)
 | Feature/Task | Status | Estimated Completion | Priority | Effort |
 |--------------|--------|---------------------|----------|--------|
-| CardConnect Integration | 🔲 Planned | November 22, 2025 | Critical | 1-2 weeks |
+| CardConnect Integration (Backend) | ✅ **COMPLETED** (Oct 21, 2025) | - | Critical | 1 week |
+| CardConnect Integration (Frontend) | 🔲 Planned | November 22, 2025 | Critical | 1 week |
 | Retail Items & POS | 🔲 Planned | November 29, 2025 | High | 2 weeks |
 | High Demand Pricing | 🔲 Planned | December 6, 2025 | High | 1 week |
 
