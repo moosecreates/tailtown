@@ -419,6 +419,15 @@ Throughout all phases, we will address the following ongoing concerns:
   - Added event listeners to refresh calendar after checkout completion
   - Fixed missing suiteType field - now sent to backend for auto-assignment
   - Added sessionStorage flag to trigger calendar refresh after navigation
+- ✅ **Dashboard & Kennel Assignment Improvements** (Fixed October 21, 2025)
+  - **Dashboard Data Loading**: Increased API limit from 10 to 250 reservations to show all daily appointments
+  - **Backend Limit**: Updated reservation service max limit from 100 to 500 to support high-volume days
+  - **Mandatory Kennel Assignment**: Boarding/daycare reservations now require kennel assignment (manual or auto-assign)
+  - **Edit Mode Availability**: When editing reservations, current kennel shows as available (prevents false conflicts)
+  - **Color Coding on All Forms**: Added availability indicators to single-pet and edit reservation forms
+  - **Prevents Overbooking**: All reservation forms now check real-time availability and disable occupied kennels
+  - **Multi-Pet Validation**: System validates all pets have kennel assignments before allowing submission
+  - **Auto-Assignment Support**: Empty kennel selection triggers backend auto-assignment to available kennels
 - 🔲 **Optional Add-Ons**: Suggested add-ons need to be optional - currently no way to continue without an add-on in cart
 - ✅ **Pet Icons**: Pet icons are broken or missing throughout the application (Fixed October 20, 2025)
   - Added petIcons and iconNotes fields to database schema

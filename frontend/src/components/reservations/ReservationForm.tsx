@@ -607,10 +607,19 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           const occupied = new Set<string>();
           response.data.resources.forEach((result: any) => {
             if (!result.isAvailable) {
-              occupied.add(result.resourceId);
+              // Check if this conflict is with the current reservation being edited
+              const isCurrentReservation = initialData?.id && 
+                result.conflictingReservations?.some((r: any) => r.id === initialData.id);
+              
+              // Only mark as occupied if it's NOT the current reservation
+              if (!isCurrentReservation) {
+                occupied.add(result.resourceId);
+              } else {
+                console.log(`Kennel ${result.resourceId} is occupied by current reservation (editing mode) - allowing selection`);
+              }
             }
           });
-          console.log(`Found ${occupied.size} occupied suites out of ${suiteIds.length} total`);
+          console.log(`Found ${occupied.size} occupied suites out of ${suiteIds.length} total (excluding current reservation if editing)`);
           setOccupiedSuiteIds(occupied);
         }
       } catch (error) {
@@ -620,7 +629,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     };
 
     checkAvailability();
-  }, [startDate, endDate, availableSuites]);
+  }, [startDate, endDate, availableSuites, initialData?.id]);
 
   /**
    * Handle proceeding to checkout instead of creating reservation immediately
@@ -701,6 +710,37 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       setError('Please fill in all required fields');
       setLoading(false);
       return;
+    }
+    
+    // Validate kennel assignment for boarding/daycare services
+    const selectedServiceObj = services.find(s => s.id === selectedService);
+    const requiresSuiteType = selectedServiceObj && 
+      (selectedServiceObj.serviceCategory === 'DAYCARE' || 
+       selectedServiceObj.serviceCategory === 'BOARDING');
+    
+    if (requiresSuiteType) {
+      const petsToBook = selectedPets.length > 0 ? selectedPets : [selectedPet];
+      const hasMultiplePets = petsToBook.length > 1;
+      
+      if (hasMultiplePets) {
+        // For multiple pets, check that each pet has a kennel assigned (or auto-assign is selected)
+        const unassignedPets = petsToBook.filter(petId => {
+          const assignment = petSuiteAssignments[petId];
+          return assignment === undefined; // Empty string means auto-assign, which is OK
+        });
+        
+        if (unassignedPets.length > 0) {
+          const petNames = unassignedPets.map(petId => {
+            const pet = pets.find(p => p.id === petId);
+            return pet?.name || 'Unknown';
+          }).join(', ');
+          setError(`Please assign kennels for all pets or select "Auto-assign": ${petNames}`);
+          setLoading(false);
+          return;
+        }
+      }
+      // For single pet, selectedSuiteId can be empty (auto-assign) or have a value
+      // No validation needed as auto-assign is acceptable
     }
 
     // Store service ID for later use with add-ons
@@ -972,28 +1012,39 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               }
               
               // When pets are selected, pre-assign kennels intelligently
-              if (petIds.length > 1 && selectedSuiteId) {
-                // First pet gets the initially selected kennel
-                const newAssignments: {[key: string]: string} = {
-                  [petIds[0]]: selectedSuiteId
-                };
+              if (petIds.length > 1) {
+                const newAssignments: {[key: string]: string} = {};
                 
-                // Find the index of the selected suite
-                const selectedSuiteIndex = availableSuites.findIndex(s => s.id === selectedSuiteId);
-                
-                // Assign subsequent pets to next available suites
-                for (let i = 1; i < petIds.length; i++) {
-                  const nextSuiteIndex = selectedSuiteIndex + i;
-                  if (nextSuiteIndex < availableSuites.length) {
-                    newAssignments[petIds[i]] = availableSuites[nextSuiteIndex].id;
+                if (selectedSuiteId) {
+                  // First pet gets the initially selected kennel
+                  newAssignments[petIds[0]] = selectedSuiteId;
+                  
+                  // Find the index of the selected suite
+                  const selectedSuiteIndex = availableSuites.findIndex(s => s.id === selectedSuiteId);
+                  
+                  // Assign subsequent pets to next available suites
+                  for (let i = 1; i < petIds.length; i++) {
+                    const nextSuiteIndex = selectedSuiteIndex + i;
+                    if (nextSuiteIndex < availableSuites.length) {
+                      newAssignments[petIds[i]] = availableSuites[nextSuiteIndex].id;
+                    } else {
+                      // If we run out of adjacent kennels, set to empty string for auto-assign
+                      newAssignments[petIds[i]] = '';
+                    }
                   }
+                } else {
+                  // No kennel selected initially, set all to auto-assign
+                  petIds.forEach(petId => {
+                    newAssignments[petId] = '';
+                  });
                 }
                 
                 setPetSuiteAssignments(newAssignments);
-                console.log('Auto-assigned kennels for multiple pets:', newAssignments);
+              } else if (petIds.length === 0) {
+                // Clear assignments when no pets are selected
+                setPetSuiteAssignments({});
               }
             }}
-            disabled={!selectedCustomer}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -1264,11 +1315,26 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                         {suiteError ? (
                           <MenuItem disabled>{suiteError}</MenuItem>
                         ) : availableSuites.length > 0 ? (
-                          availableSuites.map(suite => (
-                            <MenuItem key={suite.id} id={`suite-option-${suite.id}`} value={suite.id}>
-                              {suite.name || `Suite #${suite.attributes?.suiteNumber || suite.id.substring(0, 8)}`}
-                            </MenuItem>
-                          ))
+                          availableSuites.map(suite => {
+                            const isOccupied = occupiedSuiteIds.has(suite.id);
+                            const displayName = suite.name || `Suite #${suite.attributes?.suiteNumber || suite.id.substring(0, 8)}`;
+                            return (
+                              <MenuItem 
+                                key={suite.id} 
+                                id={`suite-option-${suite.id}`} 
+                                value={suite.id}
+                                disabled={isOccupied}
+                                sx={{
+                                  color: isOccupied ? '#d32f2f' : '#2e7d32',
+                                  opacity: isOccupied ? 0.6 : 1
+                                }}
+                              >
+                                {isOccupied ? '🔴 ' : '🟢 '}
+                                {displayName}
+                                {isOccupied && ' (Occupied)'}
+                              </MenuItem>
+                            );
+                          })
                         ) : (
                           <MenuItem disabled>No suites available</MenuItem>
                         )}

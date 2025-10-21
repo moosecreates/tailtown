@@ -31,6 +31,7 @@ export default function ReservationEdit() {
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
+  const [occupiedResourceIds, setOccupiedResourceIds] = useState<Set<string>>(new Set());
   type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW';
 
   const [formData, setFormData] = useState({
@@ -79,6 +80,57 @@ export default function ReservationEdit() {
 
     fetchData();
   }, [id]);
+
+  // Check availability when dates change
+  useEffect(() => {
+    const checkAvailability = async () => {
+      if (!formData.startDate || !formData.endDate || resources.length === 0) {
+        setOccupiedResourceIds(new Set());
+        return;
+      }
+
+      try {
+        const resourceIds = resources.map(r => r.id);
+        
+        // Format dates as YYYY-MM-DD
+        const formatDate = (date: Date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        
+        const response = await resourceService.batchCheckResourceAvailability(
+          resourceIds,
+          formatDate(formData.startDate),
+          formatDate(formData.endDate)
+        );
+
+        if (response?.status === 'success' && response?.data?.resources) {
+          const occupied = new Set<string>();
+          response.data.resources.forEach((result: any) => {
+            if (!result.isAvailable) {
+              // Check if this conflict is with the current reservation being edited
+              const isCurrentReservation = id && 
+                result.conflictingReservations?.some((r: any) => r.id === id);
+              
+              // Only mark as occupied if it's NOT the current reservation
+              if (!isCurrentReservation) {
+                occupied.add(result.resourceId);
+              }
+            }
+          });
+          console.log(`Found ${occupied.size} occupied resources (excluding current reservation)`);
+          setOccupiedResourceIds(occupied);
+        }
+      } catch (error) {
+        console.error('Error checking availability:', error);
+        setOccupiedResourceIds(new Set());
+      }
+    };
+
+    checkAvailability();
+  }, [formData.startDate, formData.endDate, resources, id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,11 +265,24 @@ export default function ReservationEdit() {
                 <MenuItem value="">
                   <em>Select a kennel/suite</em>
                 </MenuItem>
-                {resources.map((resource) => (
-                  <MenuItem key={resource.id} value={resource.id}>
-                    {resource.name} ({resource.type})
-                  </MenuItem>
-                ))}
+                {resources.map((resource) => {
+                  const isOccupied = occupiedResourceIds.has(resource.id);
+                  return (
+                    <MenuItem 
+                      key={resource.id} 
+                      value={resource.id}
+                      disabled={isOccupied}
+                      sx={{
+                        color: isOccupied ? '#d32f2f' : '#2e7d32',
+                        opacity: isOccupied ? 0.6 : 1
+                      }}
+                    >
+                      {isOccupied ? '🔴 ' : '🟢 '}
+                      {resource.name} ({resource.type})
+                      {isOccupied && ' (Occupied)'}
+                    </MenuItem>
+                  );
+                })}
               </Select>
             </FormControl>
 

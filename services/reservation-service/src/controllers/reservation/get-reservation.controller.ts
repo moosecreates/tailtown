@@ -62,7 +62,7 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
   
   if (req.query.limit) {
     const parsedLimit = parseInt(req.query.limit as string);
-    if (!isNaN(parsedLimit) && parsedLimit > 0 && parsedLimit <= 100) {
+    if (!isNaN(parsedLimit) && parsedLimit > 0 && parsedLimit <= 500) {
       limit = parsedLimit;
     } else {
       logger.warn(`Invalid limit parameter`, { requestId, limit: req.query.limit });

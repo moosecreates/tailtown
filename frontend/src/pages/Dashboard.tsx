@@ -16,11 +16,13 @@ import PetNameWithIcons from '../components/pets/PetNameWithIcons';
  * Shows reservation counts (In, Out, Overnight), revenue, and recent activity.
  */
 const Dashboard = () => {
+  console.log('🔄 Dashboard component loaded - v2.0');
   const [inCount, setInCount] = useState<number | null>(null);
   const [outCount, setOutCount] = useState<number | null>(null);
   const [overnightCount, setOvernightCount] = useState<number | null>(null);
   const [todayRevenue, setTodayRevenue] = useState<number | null>(null);
-  const [appointmentFilter, setAppointmentFilter] = useState<'in' | 'out' | 'all'>('in'); // Default to incoming
+  const [appointmentFilter, setAppointmentFilter] = useState<'in' | 'out' | 'all'>('all'); // Default to show all appointments
+  console.log('📊 Initial filter set to:', appointmentFilter);
   
   // Use proper type definitions for API responses
   type ReservationResponse = {
@@ -47,6 +49,8 @@ const Dashboard = () => {
   const [allReservations, setAllReservations] = useState<any[]>([]); // Store all reservations for filtering
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  console.log('🎬 RENDER - upcomingReservations.length:', upcomingReservations.length, 'loading:', loading, 'filter:', appointmentFilter);
 
   /**
    * Filter appointments based on check-in or check-out status
@@ -55,6 +59,12 @@ const Dashboard = () => {
     const reservationsToFilter = reservationsList || allReservations;
     const today = new Date();
     const formattedToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
+    console.log('🔍 Filtering appointments:', {
+      filter,
+      totalReservations: reservationsToFilter.length,
+      formattedToday
+    });
     
     let filtered = reservationsToFilter;
     
@@ -74,6 +84,16 @@ const Dashboard = () => {
       });
     }
     // 'all' shows everything (no filtering)
+    
+    console.log('✅ Filtered result:', {
+      filter,
+      filteredCount: filtered.length,
+      sampleReservation: filtered[0] ? {
+        customer: filtered[0].customer?.firstName,
+        pet: filtered[0].pet?.name,
+        startDate: filtered[0].startDate
+      } : 'none'
+    });
     
     setUpcomingReservations(filtered);
     setAppointmentFilter(filter);
@@ -131,10 +151,11 @@ const loadData = async () => {
       // Make separate calls to get exactly what we need
       // Get reservations for today's date - the backend will return all reservations
       // that overlap with this date (start <= date AND end >= date)
+      console.log('🚀 USING LIMIT 250 - NEW CODE VERSION 3.0');
       const [allReservations, upcoming, revenue] = await Promise.all([
         // Get reservations active on today's date
-        reservationService.getAllReservations(1, 200, 'startDate', 'asc', activeStatuses, formattedToday),
-        reservationService.getAllReservations(1, 10, 'startDate', 'asc', 'CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED', formattedToday),
+        reservationService.getAllReservations(1, 250, 'startDate', 'asc', activeStatuses, formattedToday),
+        reservationService.getAllReservations(1, 250, 'startDate', 'asc', 'CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED', formattedToday),
         reservationService.getTodayRevenue()
       ]);
       console.log('API calls completed');
@@ -306,8 +327,13 @@ const loadData = async () => {
       // Store all reservations for filtering
       setAllReservations(reservationsWithPetDetails);
       
-      // Apply initial filter (default to 'in')
-      filterAppointments('in', reservationsWithPetDetails);
+      console.log('💾 Stored all reservations, count:', reservationsWithPetDetails.length);
+      
+      // Apply initial filter (default to 'all' to show all appointments)
+      console.log('🎯 About to filter with "all", data length:', reservationsWithPetDetails.length);
+      filterAppointments('all', reservationsWithPetDetails);
+      
+      console.log('✨ Filter complete, upcomingReservations should be set');
       
       // Process revenue data from API response
       console.log('Today\'s revenue full response:', revenue);
@@ -521,14 +547,31 @@ const loadData = async () => {
           <Card elevation={2} sx={{ borderRadius: 2, height: '100%', flexGrow: 1 }}>
             <CardHeader 
               title={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                   <Typography variant="h6">Today's Appointments</Typography>
-                  <Chip 
-                    label={appointmentFilter === 'in' ? 'Check-Ins' : appointmentFilter === 'out' ? 'Check-Outs' : 'All'}
-                    size="small"
-                    color={appointmentFilter === 'in' ? 'primary' : appointmentFilter === 'out' ? 'secondary' : 'default'}
-                    sx={{ ml: 1 }}
-                  />
+                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    <Chip 
+                      label="All"
+                      size="small"
+                      color={appointmentFilter === 'all' ? 'primary' : 'default'}
+                      onClick={() => filterAppointments('all')}
+                      sx={{ cursor: 'pointer' }}
+                    />
+                    <Chip 
+                      label="Check-Ins"
+                      size="small"
+                      color={appointmentFilter === 'in' ? 'primary' : 'default'}
+                      onClick={() => filterAppointments('in')}
+                      sx={{ cursor: 'pointer' }}
+                    />
+                    <Chip 
+                      label="Check-Outs"
+                      size="small"
+                      color={appointmentFilter === 'out' ? 'secondary' : 'default'}
+                      onClick={() => filterAppointments('out')}
+                      sx={{ cursor: 'pointer' }}
+                    />
+                  </Box>
                 </Box>
               }
               action={
@@ -580,7 +623,13 @@ const loadData = async () => {
                     </Box>
                     
                     {upcomingReservations.map((reservation) => {
-                      // Pet icons will display here once assigned to pets
+                      // Debug logging
+                      console.log('Rendering reservation:', {
+                        id: reservation.id,
+                        customer: reservation.customer,
+                        pet: reservation.pet,
+                        service: reservation.service
+                      });
                       
                       return (
                       <Box 
@@ -600,20 +649,24 @@ const loadData = async () => {
                         to={`/reservations/${reservation.id}`}
                         style={{ textDecoration: 'none', color: 'inherit' }}
                       >
-                        <Typography variant="body2" align="left">{reservation.customer?.firstName} {reservation.customer?.lastName}</Typography>
+                        <Typography variant="body2" align="left">
+                          {reservation.customer?.firstName || 'Unknown'} {reservation.customer?.lastName || 'Customer'}
+                        </Typography>
                         <Box sx={{ textAlign: 'left' }}>
                           <PetNameWithIcons
                             petName={reservation.pet?.name || 'Unknown Pet'}
-                            petIcons={reservation.pet?.petIcons}
-                            iconNotes={reservation.pet?.iconNotes}
-                            petType={reservation.pet?.type}
+                            petIcons={reservation.pet?.petIcons || []}
+                            iconNotes={reservation.pet?.iconNotes || {}}
+                            petType={reservation.pet?.type || 'UNKNOWN'}
                             profilePhoto={reservation.pet?.profilePhoto}
                             size="small"
                             nameVariant="body2"
                             showPhoto={true}
                           />
                         </Box>
-                        <Typography variant="body2" align="left">{reservation.service?.name}</Typography>
+                        <Typography variant="body2" align="left">
+                          {reservation.service?.name || 'Unknown Service'}
+                        </Typography>
                         <Typography variant="body2" align="left">
                           {new Date(reservation.startDate).toLocaleDateString()}
                           {reservation.startDate !== reservation.endDate ? 
