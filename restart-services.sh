@@ -1,38 +1,35 @@
 #!/bin/bash
-# Simple restart script for Tailtown services
 
-# Activate NVM
-source ~/.nvm/nvm.sh
+echo "🔄 Restarting Tailtown Services..."
+echo ""
 
-# Define colors
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Kill any existing services
+echo "Stopping existing services..."
+lsof -ti :4004 | xargs kill -9 2>/dev/null
+lsof -ti :4003 | xargs kill -9 2>/dev/null
+lsof -ti :3000 | xargs kill -9 2>/dev/null
+sleep 2
 
-echo -e "${GREEN}=== Tailtown Service Restart ===${NC}"
-echo -e "${YELLOW}To stop servers: Press Ctrl+C in each terminal window${NC}"
-echo
+# Start Customer Service (Terminal 1)
+echo "Starting Customer Service on port 4004..."
+osascript -e 'tell app "Terminal" to do script "cd /Users/robweinstein/CascadeProjects/tailtown/services/customer && echo \"Starting Customer Service...\" && npm run dev"'
+sleep 3
 
-# Instructions for manual restart
-echo -e "${GREEN}1. Start reservation service (Terminal 1):${NC}"
-echo -e "   cd $(pwd)/services/reservation-service"
-echo -e "   source ~/.nvm/nvm.sh"
-echo -e "   npm run dev"
-echo
-echo -e "${GREEN}2. Start customer service (Terminal 2):${NC}"
-echo -e "   cd $(pwd)/services/customer"
-echo -e "   source ~/.nvm/nvm.sh"
-echo -e "   npm run dev"
-echo
-echo -e "${GREEN}3. Start frontend (Terminal 3):${NC}"
-echo -e "   cd $(pwd)/frontend"
-echo -e "   source ~/.nvm/nvm.sh"
-echo -e "   npm start"
-echo
-echo -e "${GREEN}4. Set tenant ID in browser console:${NC}"
-echo -e "   localStorage.setItem('tailtown_tenant_id', 'dev')"
-echo
-echo -e "${YELLOW}Note: If a service won't start due to port in use:${NC}"
-echo -e "   kill -9 \$(lsof -ti tcp:3000) 2>/dev/null || true  # For frontend"
-echo -e "   kill -9 \$(lsof -ti tcp:4003) 2>/dev/null || true  # For reservation"
-echo -e "   kill -9 \$(lsof -ti tcp:4004) 2>/dev/null || true  # For customer"
+# Start Reservation Service (Terminal 2)
+echo "Starting Reservation Service on port 4003..."
+osascript -e 'tell app "Terminal" to do script "cd /Users/robweinstein/CascadeProjects/tailtown/services/reservation-service && echo \"Starting Reservation Service...\" && npm run dev"'
+sleep 3
+
+# Start Frontend (Terminal 3)
+echo "Starting Frontend on port 3000..."
+osascript -e 'tell app "Terminal" to do script "cd /Users/robweinstein/CascadeProjects/tailtown/frontend && echo \"Starting Frontend...\" && npm start"'
+
+echo ""
+echo "✅ All services starting in separate terminal windows!"
+echo ""
+echo "📍 Service URLs:"
+echo "   - Frontend: http://localhost:3000"
+echo "   - Customer Service: http://localhost:4004"
+echo "   - Reservation Service: http://localhost:4003"
+echo ""
+echo "⏳ Please wait 10-15 seconds for services to fully start..."

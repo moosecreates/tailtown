@@ -249,6 +249,9 @@ const CheckoutPage: React.FC = () => {
         } 
       }));
       
+      // Store flag in sessionStorage to trigger refresh when calendar loads
+      sessionStorage.setItem('refreshCalendar', 'true');
+      
     } catch (err: any) {
       console.error('Checkout error:', err);
       
@@ -289,6 +292,14 @@ const CheckoutPage: React.FC = () => {
           </Typography>
           <Button 
             variant="contained" 
+            color="primary" 
+            onClick={() => navigate('/calendar')}
+            sx={{ mt: 2, mr: 2 }}
+          >
+            View Calendar
+          </Button>
+          <Button 
+            variant="outlined" 
             color="primary" 
             onClick={() => navigate('/dashboard')}
             sx={{ mt: 2 }}

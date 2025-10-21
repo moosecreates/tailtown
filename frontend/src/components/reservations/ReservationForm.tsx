@@ -104,6 +104,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   const [customerSearchResults, setCustomerSearchResults] = useState<Customer[]>([]);
   const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false);
   const [selectedPet, setSelectedPet] = useState<string>('');
+  const [selectedPets, setSelectedPets] = useState<string[]>([]);
+  const [petSuiteAssignments, setPetSuiteAssignments] = useState<{[petId: string]: string}>({});
+  const [occupiedSuiteIds, setOccupiedSuiteIds] = useState<Set<string>>(new Set());
   const [selectedService, setSelectedService] = useState<string>('');
   const [selectedSuiteType, setSelectedSuiteType] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('CONFIRMED');
@@ -278,6 +281,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   const handleCustomerChange = async (customerId: string) => {
     setSelectedCustomer(customerId);
     setSelectedPet(''); // Reset pet selection when customer changes
+    setSelectedPets([]); // Reset multiple pet selection when customer changes
+    setPetSuiteAssignments({}); // Reset suite assignments when customer changes
     
     // Immediately load pets for the selected customer
     if (customerId) {
@@ -449,91 +454,112 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       setDropdownReady(false); // Reset dropdown ready state
       try {
         setSuiteLoading(true);
-        // Get all resources of the selected type
-        const response = await resourceService.getAllResources(
-          undefined, // page
-          undefined, // limit
-          undefined, // sortBy
-          undefined, // sortOrder
-          selectedSuiteType // type filter
-        );
-        
         let suites: Resource[] = [];
         
-        if (response?.status === 'success' && response?.data) {
-          suites = response.data;
+        // Get all suite types when multiple pets are selected, otherwise just the selected type
+        if (selectedPets.length > 1) {
+          // Fetch all suite types separately and combine
+          const suiteTypes = ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'];
+          const responses = await Promise.all(
+            suiteTypes.map(type => 
+              resourceService.getAllResources(
+                1, // page
+                500, // limit - get all suites (we have ~165 total)
+                'name', // sortBy
+                'asc', // sortOrder
+                type // type filter
+              )
+            )
+          );
           
-          // If we're editing an existing reservation, make sure to include the current resource
-          // even if it's not available (e.g., it's currently booked)
-          const effectiveResourceId = initialData?.resourceId || initialData?.kennelId;
+          // Combine all suites from all responses
+          responses.forEach(response => {
+            if (response?.status === 'success' && response?.data) {
+              suites = [...suites, ...response.data];
+            }
+          });
           
-          if (effectiveResourceId) {
-            const resourceExists = suites.some(suite => suite.id === effectiveResourceId);
-            console.log('Does resource exist in suites?', resourceExists, 'Resource ID:', effectiveResourceId);
-            
-            if (!resourceExists) {
-              try {
-                console.log('Fetching specific resource with ID:', effectiveResourceId);
-                const resourceResponse = await resourceService.getResource(effectiveResourceId);
-                console.log('Resource response:', resourceResponse);
+          console.log(`Loaded ${suites.length} total suites across all types for multi-pet selection`);
+        } else {
+          // Single pet - just fetch the selected type
+          const response = await resourceService.getAllResources(
+            1, // page
+            500, // limit - get all suites
+            'name', // sortBy
+            'asc', // sortOrder
+            selectedSuiteType // type filter
+          );
+          
+          if (response?.status === 'success' && response?.data) {
+            suites = response.data;
+          }
+        }
+        
+        // If we're editing an existing reservation, make sure to include the current resource
+        // even if it's not available (e.g., it's currently booked)
+        const effectiveResourceId = initialData?.resourceId || initialData?.kennelId;
+        
+        if (effectiveResourceId) {
+          const resourceExists = suites.some(suite => suite.id === effectiveResourceId);
+          console.log('Does resource exist in suites?', resourceExists, 'Resource ID:', effectiveResourceId);
+          
+          if (!resourceExists) {
+            try {
+              console.log('Fetching specific resource with ID:', effectiveResourceId);
+              const resourceResponse = await resourceService.getResource(effectiveResourceId);
+              console.log('Resource response:', resourceResponse);
+              
+              if (resourceResponse?.status === 'success' && resourceResponse?.data) {
+                const resourceData = resourceResponse.data;
                 
-                if (resourceResponse?.status === 'success' && resourceResponse?.data) {
-                  const resourceData = resourceResponse.data;
-                  
-                  // Only add it if it matches the selected suite type
-                  const resourceType = resourceData.type || resourceData.attributes?.suiteType;
-                  console.log('Resource type from API:', resourceType, 'Selected type:', selectedSuiteType);
-                  
-                  if (resourceType === selectedSuiteType) {
-                    console.log('Adding resource to suites list:', resourceData);
-                    suites.push(resourceData);
-                  }
+                // Only add it if it matches the selected suite type
+                const resourceType = resourceData.type || resourceData.attributes?.suiteType;
+                console.log('Resource type from API:', resourceType, 'Selected type:', selectedSuiteType);
+                
+                if (resourceType === selectedSuiteType) {
+                  console.log('Adding resource to suites list:', resourceData);
+                  suites.push(resourceData);
                 }
-              } catch (err) {
-                console.error('Error fetching specific resource:', err);
               }
+            } catch (err) {
+              console.error('Error fetching specific resource:', err);
             }
           }
+        }
+        
+        // First update available suites
+        setAvailableSuites(suites);
+        
+        // Mark that suite options are available if we have suites
+        selectsWithOptions.current.suiteId = suites.length > 0;
+        
+        // If we have initialData with a resourceId or kennelId, check if it's valid
+        const resourceToCheck = initialData?.resourceId || initialData?.kennelId;
+        
+        if (resourceToCheck) {
+          console.log('Checking if resource/kennel exists in suites:', resourceToCheck);
+          // Check if the resource ID exists in the available suites
+          const suiteExists = suites.some(suite => suite.id === resourceToCheck);
           
-          // First update available suites
-          setAvailableSuites(suites);
-          
-          // Mark that suite options are available if we have suites
-          selectsWithOptions.current.suiteId = suites.length > 0;
-          
-          // If we have initialData with a resourceId or kennelId, check if it's valid
-          const resourceToCheck = initialData?.resourceId || initialData?.kennelId;
-          
-          if (resourceToCheck) {
-            console.log('Checking if resource/kennel exists in suites:', resourceToCheck);
-            // Check if the resource ID exists in the available suites
-            const suiteExists = suites.some(suite => suite.id === resourceToCheck);
+          if (suiteExists) {
+            console.log('Resource/kennel found in suites, setting selected suite ID:', resourceToCheck);
+            // Only set the suite ID if it exists in the available suites
+            setSelectedSuiteId(resourceToCheck);
             
-            if (suiteExists) {
-              console.log('Resource/kennel found in suites, setting selected suite ID:', resourceToCheck);
-              // Only set the suite ID if it exists in the available suites
-              setSelectedSuiteId(resourceToCheck);
-              
-              // Only set dropdown ready after both suites and selection are set
-              setTimeout(() => {
-                setDropdownReady(true);
-                console.log('Dropdown ready flag set');
-              }, 100);
-            } else {
-              console.log('Resource/kennel not found in available suites, clearing selection');
-              // If the resource doesn't exist, clear the selection
-              setSelectedSuiteId('');
+            // Only set dropdown ready after both suites and selection are set
+            setTimeout(() => {
               setDropdownReady(true);
-            }
+              console.log('Dropdown ready flag set');
+            }, 100);
           } else {
-            // Clear the selection if no resource ID was provided
+            console.log('Resource/kennel not found in available suites, clearing selection');
+            // If the resource doesn't exist, clear the selection
             setSelectedSuiteId('');
             setDropdownReady(true);
           }
         } else {
-          setAvailableSuites([]);
-          setSuiteError('Failed to load available suites');
-          selectsWithOptions.current.suiteId = false;
+          // Clear the selection if no resource ID was provided
+          setSelectedSuiteId('');
           setDropdownReady(true);
         }
       } catch (error) {
@@ -548,7 +574,53 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     };
     
     loadAvailableSuites();
-  }, [selectedSuiteType, initialData]);
+  }, [selectedSuiteType, initialData, selectedPets.length]);
+
+  // Check availability for all suites when dates change
+  useEffect(() => {
+    const checkAvailability = async () => {
+      if (!startDate || !endDate || availableSuites.length === 0) {
+        setOccupiedSuiteIds(new Set());
+        return;
+      }
+
+      try {
+        // Check availability for all suites
+        const suiteIds = availableSuites.map(s => s.id);
+        
+        // Format dates as YYYY-MM-DD for the API
+        const formatDate = (date: Date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        
+        const response = await resourceService.batchCheckResourceAvailability(
+          suiteIds,
+          formatDate(startDate),
+          formatDate(endDate)
+        );
+
+        if (response?.status === 'success' && response?.data?.resources) {
+          // Find which suites are occupied (not available)
+          const occupied = new Set<string>();
+          response.data.resources.forEach((result: any) => {
+            if (!result.isAvailable) {
+              occupied.add(result.resourceId);
+            }
+          });
+          console.log(`Found ${occupied.size} occupied suites out of ${suiteIds.length} total`);
+          setOccupiedSuiteIds(occupied);
+        }
+      } catch (error) {
+        console.error('Error checking suite availability:', error);
+        setOccupiedSuiteIds(new Set());
+      }
+    };
+
+    checkAvailability();
+  }, [startDate, endDate, availableSuites]);
 
   /**
    * Handle proceeding to checkout instead of creating reservation immediately
@@ -625,7 +697,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     setLoading(true); // Set loading state while we process the form
 
     // Validate all required fields
-    if (!selectedCustomer || !selectedPet || !selectedService || !startDate || !endDate) {
+    if (!selectedCustomer || (selectedPets.length === 0 && !selectedPet) || !selectedService || !startDate || !endDate) {
       setError('Please fill in all required fields');
       setLoading(false);
       return;
@@ -638,16 +710,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     }
     
     try {
-      // Create the form data object
-      const formData: any = {
-        customerId: selectedCustomer,
-        petId: selectedPet,
-        serviceId: selectedService,
-        startDate: startDate ? startDate.toISOString() : null,
-        endDate: endDate ? endDate.toISOString() : null,
-        status: selectedStatus,
-        notes: '', // Add empty notes as it's expected by the backend
-      };
+      // Determine which pets to create reservations for
+      const petsToBook = selectedPets.length > 0 ? selectedPets : [selectedPet];
+      const hasMultiplePets = petsToBook.length > 1;
+      
+      console.log(`Creating reservations for ${petsToBook.length} pet(s):`, petsToBook);
       
       // Handle resource selection based on suite type
       const selectedServiceObj = services.find(s => s.id === selectedService);
@@ -661,34 +728,58 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         effectiveSuiteType = 'STANDARD_SUITE';
       }
       
-      if (requiresSuiteType) {
-        // Note: suiteType is not stored in the database, it's determined by the resource type
-        // Only set resourceId if a specific suite is selected and it's not empty
-        if (selectedSuiteId && selectedSuiteId.trim() !== '') {
-          formData.resourceId = selectedSuiteId;
-          // Log for debugging
-          console.log('Sending reservation with resourceId:', selectedSuiteId);
-      console.log('ReservationForm: Current selectedSuiteId state:', selectedSuiteId);
-      console.log('ReservationForm: Available suites:', availableSuites.map(s => ({id: s.id, name: s.name})));
-        } else {
-          // Don't explicitly set resourceId to null, as this can cause issues with the backend
-          // The backend will handle auto-assignment if resourceId is undefined
-          console.log('Not setting resourceId, allowing backend to auto-assign');
-        }
+      // Create reservations for each pet
+      const results = [];
+      for (let i = 0; i < petsToBook.length; i++) {
+        const petId = petsToBook[i];
+        const isFirstPet = i === 0;
         
-        // If we have initialData with a kennelId but are not using it as resourceId,
-        // include it as a separate field for backward compatibility
-        if (initialData?.kennelId && initialData.kennelId !== selectedSuiteId) {
-          console.log('Including kennelId for backward compatibility:', initialData.kennelId);
+        // Get the suite assignment for this pet
+        const assignedSuiteId = hasMultiplePets ? petSuiteAssignments[petId] : selectedSuiteId;
+        
+        // Create the form data object for this pet
+        const formData: any = {
+          customerId: selectedCustomer,
+          petId: petId,
+          serviceId: selectedService,
+          startDate: startDate ? startDate.toISOString() : null,
+          endDate: endDate ? endDate.toISOString() : null,
+          status: selectedStatus,
+          notes: hasMultiplePets ? `Multi-pet reservation (${i + 1} of ${petsToBook.length})` : '',
+        };
+        
+        if (requiresSuiteType) {
+          // Send suite type to backend for auto-assignment
+          formData.suiteType = effectiveSuiteType;
+          
+          // Assign the specific resource for this pet
+          if (assignedSuiteId && assignedSuiteId.trim() !== '') {
+            formData.resourceId = assignedSuiteId;
+            console.log(`Assigning resource ${assignedSuiteId} to pet ${petId}`);
+          } else {
+            console.log(`No suite assigned for pet ${petId} - backend will auto-assign with suiteType: ${effectiveSuiteType}`);
+          }
+          
+          // If we have initialData with a kennelId but are not using it as resourceId,
+          // include it as a separate field for backward compatibility
+          if (initialData?.kennelId && initialData.kennelId !== assignedSuiteId) {
+            console.log('Including kennelId for backward compatibility:', initialData.kennelId);
+          }
+        }
+
+        // Call the parent component's onSubmit function with our form data
+        console.log(`ReservationForm: Submitting reservation ${i + 1}/${petsToBook.length} for pet ${petId}`, formData);
+        
+        const result = await onSubmit(formData);
+        console.log(`ReservationForm: Result from onSubmit for pet ${petId}:`, result);
+        
+        if (result) {
+          results.push(result);
         }
       }
-
-      // Call the parent component's onSubmit function with our form data
-      console.log('ReservationForm: Submitting form data to parent', formData);
-      console.log('ReservationForm: showAddOns =', showAddOns);
       
-      const result = await onSubmit(formData);
-      console.log('ReservationForm: Result from onSubmit:', result);
+      // Use the first result for add-ons dialog
+      const result = results[0];
       
       // If the result is undefined, it means there was an error in the parent component
       // The parent component will display the error, so we don't need to reset the form
@@ -744,6 +835,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     if (!initialData) {
       // Keep the customer selected but reset other fields
       setSelectedPet('');
+      setSelectedPets([]);
       setSelectedService('');
       setSelectedSuiteType('');
       setSelectedSuiteId('');
@@ -862,39 +954,63 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             sx={{ mb: 1 }}
           />
 
-          <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-            <InputLabel id="pet-label" shrink={true}>Pet</InputLabel>
-            <Select
-              labelId="pet-label"
-              id="pet-select"
-              value={selectsWithOptions.current.pet && pets.some(p => p.id === selectedPet) ? selectedPet : ""}
-              label="Pet"
-              onChange={(e) => {
-                const value = e.target.value || '';
-                setSelectedPet(value);
-              }}
-              required
-              disabled={!selectedCustomer}
-              displayEmpty
-              notched
-              // Add proper ARIA attributes to fix accessibility warning
-              inputProps={{
-                'aria-label': 'Select a pet',
-                'aria-hidden': 'false'
-              }}
-            >
-              <MenuItem value="" disabled>Select a pet</MenuItem>
-              {pets.length > 0 ? (
-                pets.map((pet) => (
-                  <MenuItem key={pet.id} value={pet.id}>
-                    {pet.name} ({pet.type})
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>No pets available</MenuItem>
-              )}
-            </Select>
-          </FormControl>
+          <Autocomplete
+            multiple
+            id="pet-select"
+            options={pets}
+            getOptionLabel={(option: Pet) => `${option.name} (${option.type})`}
+            value={pets.filter(p => selectedPets.includes(p.id))}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            onChange={(event, newValue: Pet[]) => {
+              const petIds = newValue.map(p => p.id);
+              setSelectedPets(petIds);
+              // Also update single pet for backward compatibility
+              if (petIds.length > 0) {
+                setSelectedPet(petIds[0]);
+              } else {
+                setSelectedPet('');
+              }
+              
+              // When pets are selected, pre-assign kennels intelligently
+              if (petIds.length > 1 && selectedSuiteId) {
+                // First pet gets the initially selected kennel
+                const newAssignments: {[key: string]: string} = {
+                  [petIds[0]]: selectedSuiteId
+                };
+                
+                // Find the index of the selected suite
+                const selectedSuiteIndex = availableSuites.findIndex(s => s.id === selectedSuiteId);
+                
+                // Assign subsequent pets to next available suites
+                for (let i = 1; i < petIds.length; i++) {
+                  const nextSuiteIndex = selectedSuiteIndex + i;
+                  if (nextSuiteIndex < availableSuites.length) {
+                    newAssignments[petIds[i]] = availableSuites[nextSuiteIndex].id;
+                  }
+                }
+                
+                setPetSuiteAssignments(newAssignments);
+                console.log('Auto-assigned kennels for multiple pets:', newAssignments);
+              }
+            }}
+            disabled={!selectedCustomer}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Pet(s)"
+                size="small"
+                placeholder={pets.length > 0 ? "Select one or more pets" : "No pets available"}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                helperText="You can select multiple pets for the same reservation"
+                error={selectedPets.length === 0 && selectedPet === ''}
+              />
+            )}
+            size="small"
+            sx={{ mb: 1 }}
+            noOptionsText="No pets available for this customer"
+          />
 
           <FormControl fullWidth size="small" sx={{ mb: 1 }}>
             <InputLabel id="service-label" shrink={true}>Service</InputLabel>
@@ -995,8 +1111,107 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                   </Select>
                 </FormControl>
                 
-                {/* Kennel/Suite Number Selection */}
-                {requiresSuiteType && selectedSuiteType && (
+                {/* Kennel/Suite Number Selection - Per Pet when multiple pets selected */}
+                {(() => {
+                  console.log('Per-pet kennel check:', {
+                    requiresSuiteType,
+                    selectedSuiteType,
+                    selectedPetsLength: selectedPets.length,
+                    selectedPets,
+                    shouldShow: requiresSuiteType && selectedSuiteType && selectedPets.length > 1
+                  });
+                  return null;
+                })()}
+                {requiresSuiteType && selectedSuiteType && selectedPets.length > 1 && (
+                  <Box sx={{ mt: 2, mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
+                      Assign Kennels for Each Pet:
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                      The first pet is pre-assigned to the initially selected kennel. Subsequent pets are suggested to adjacent kennels.
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+                      🟢 Available • 🟡 Selected for another pet • 🔴 Occupied by existing reservation
+                    </Typography>                    {selectedPets.map((petId, index) => {
+                      const pet = pets.find(p => p.id === petId);
+                      const isFirstPet = index === 0;
+                      
+                      return (
+                        <Autocomplete
+                          key={petId}
+                          size="small"
+                          options={[{ id: '', name: 'Auto-assign' }, ...availableSuites]}
+                          value={availableSuites.find(s => s.id === petSuiteAssignments[petId]) || { id: '', name: 'Auto-assign' }}
+                          isOptionEqualToValue={(option, value) => option.id === value.id}
+                          onChange={(event, newValue) => {
+                            const suiteId = newValue?.id || '';
+                            console.log(`Assigning kennel ${suiteId} to pet ${pet?.name}`);
+                            setPetSuiteAssignments(prev => ({
+                              ...prev,
+                              [petId]: suiteId
+                            }));
+                          }}
+                          getOptionLabel={(option) => {
+                            if (!option.id) return 'Auto-assign';
+                            return option.name || `Suite #${(option as any).attributes?.suiteNumber || option.id.substring(0, 8)}`;
+                          }}
+                          getOptionDisabled={(option) => {
+                            if (!option.id) return false; // Auto-assign is always enabled
+                            // Check if assigned to another pet in this booking
+                            const isAssignedToOtherPet = Object.entries(petSuiteAssignments).some(
+                              ([assignedPetId, assignedSuiteId]) => 
+                                assignedPetId !== petId && assignedSuiteId === option.id
+                            );
+                            // Check if occupied by existing reservation
+                            const isOccupied = occupiedSuiteIds.has(option.id);
+                            return isAssignedToOtherPet || isOccupied;
+                          }}
+                          renderOption={(props, option) => {
+                            if (!option.id) {
+                              return <li {...props}><em>Auto-assign</em></li>;
+                            }
+                            const isAssignedToOtherPet = Object.entries(petSuiteAssignments).some(
+                              ([assignedPetId, assignedSuiteId]) => 
+                                assignedPetId !== petId && assignedSuiteId === option.id
+                            );
+                            const isOccupied = occupiedSuiteIds.has(option.id);
+                            const displayName = option.name || `Suite #${(option as any).attributes?.suiteNumber || option.id.substring(0, 8)}`;
+                            
+                            return (
+                              <li {...props} style={{
+                                color: isOccupied ? '#d32f2f' : isAssignedToOtherPet ? '#ff9800' : '#2e7d32',
+                                opacity: (isAssignedToOtherPet || isOccupied) ? 0.6 : 1
+                              }}>
+                                {isOccupied && '🔴 '}
+                                {isAssignedToOtherPet && !isOccupied && '🟡 '}
+                                {!isOccupied && !isAssignedToOtherPet && '🟢 '}
+                                {displayName}
+                                {isOccupied && ' (Occupied)'}
+                                {isAssignedToOtherPet && !isOccupied && ' (Selected for another pet)'}
+                              </li>
+                            );
+                          }}
+                          disabled={suiteLoading}
+                          loading={suiteLoading}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label={`Kennel for ${pet?.name || `Pet ${index + 1}`}${isFirstPet ? ' (Initially selected)' : ''}`}
+                              placeholder="Type to search..."
+                              InputLabelProps={{
+                                shrink: true,
+                              }}
+                            />
+                          )}
+                          sx={{ mt: 1, mb: 1 }}
+                        />
+                      );
+                    })}
+                  </Box>
+                )}
+                
+                {/* Kennel/Suite Number Selection - Single Pet */}
+                {requiresSuiteType && selectedSuiteType && selectedPets.length <= 1 && (
                   <FormControl fullWidth required margin="normal">
                     <InputLabel id="kennel-number-label">Kennel/Suite Number</InputLabel>
                     {suiteLoading ? (

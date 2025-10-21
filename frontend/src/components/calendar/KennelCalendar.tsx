@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Box,
   Dialog,
@@ -237,6 +237,39 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
   const handleTodayClick = useCallback(() => {
     setCurrentDate(new Date());
   }, []);
+
+  // Listen for checkout completion and refresh calendar
+  useEffect(() => {
+    // Check if we need to refresh on mount (after checkout redirect)
+    const shouldRefresh = sessionStorage.getItem('refreshCalendar');
+    if (shouldRefresh === 'true') {
+      console.log('Calendar mounted after checkout, refreshing...');
+      sessionStorage.removeItem('refreshCalendar');
+      // Small delay to ensure component is fully mounted
+      setTimeout(() => {
+        refreshData();
+      }, 500);
+    }
+
+    const handleCheckoutComplete = () => {
+      console.log('Checkout completed, refreshing calendar...');
+      refreshData();
+    };
+
+    const handleReservationComplete = () => {
+      console.log('Reservation completed, refreshing calendar...');
+      refreshData();
+    };
+
+    // Listen for both events
+    window.addEventListener('reservation-created', handleCheckoutComplete);
+    document.addEventListener('reservationComplete', handleReservationComplete);
+
+    return () => {
+      window.removeEventListener('reservation-created', handleCheckoutComplete);
+      document.removeEventListener('reservationComplete', handleReservationComplete);
+    };
+  }, [refreshData]);
 
   // Memoize the dialog title
   const dialogTitle = useMemo(() => {

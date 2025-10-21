@@ -398,6 +398,27 @@ Throughout all phases, we will address the following ongoing concerns:
   - Modified OrderEntry to handle pets array and create one reservation per pet
   - Invoice automatically splits service price across pets and lists each pet
   - Staff can now book multiple pets from same customer in single order
+- ✅ **Multi-Pet Suite Assignment**: Multiple pets were being assigned to same suite causing conflicts (Fixed October 20, 2025)
+  - Modified OrderEntry to auto-assign separate suites for multiple pets
+  - Backend conflict detection prevents double-booking of suites
+  - For multiple pets, system now lets backend auto-assign available suites
+  - Single pet reservations still allow manual suite selection
+- ✅ **Calendar Multi-Pet Selection UI**: Calendar reservation form only allowed one pet at a time (Fixed October 20, 2025)
+  - Changed pet dropdown to multi-select Autocomplete component
+  - Added selectedPets state array to track multiple selections
+  - Updated form submission to create one reservation per selected pet
+  - **Per-pet kennel selection**: Shows individual kennel selector for each pet when multiple selected
+  - **Smart pre-filling**: First pet gets initially selected kennel, subsequent pets get adjacent kennels
+  - **Color-coded availability**: 🟢 Available • 🟡 Selected for another pet • 🔴 Occupied by existing reservation
+  - **Real-time availability checking**: Queries backend to check which kennels are occupied for selected dates
+  - **Searchable dropdowns**: Autocomplete with type-to-search for easy selection from all ~165 kennels
+  - **All kennel types shown**: Displays Standard, Standard Plus, and VIP suites when multiple pets selected
+  - Users can manually assign specific kennels to each pet or choose "Auto-assign"
+  - Prevents double-booking: Can't assign same kennel to multiple pets or occupied kennels
+  - Removed HTML5 `required` attribute that was blocking multi-select validation
+  - Added event listeners to refresh calendar after checkout completion
+  - Fixed missing suiteType field - now sent to backend for auto-assignment
+  - Added sessionStorage flag to trigger calendar refresh after navigation
 - 🔲 **Optional Add-Ons**: Suggested add-ons need to be optional - currently no way to continue without an add-on in cart
 - ✅ **Pet Icons**: Pet icons are broken or missing throughout the application (Fixed October 20, 2025)
   - Added petIcons and iconNotes fields to database schema
@@ -405,6 +426,7 @@ Throughout all phases, we will address the following ongoing concerns:
   - All APIs now returning data correctly with multi-tenant support
 - 🔲 **Grooming Calendar**: Grooming calendar is currently non-functional
 - 🔲 **Training Calendar**: Training calendar is currently non-functional
+- 🔲 **Suite Capacity**: Suites currently have capacity of 1, need option to increase capacity for multi-pet suites
 
 ## Implementation Timeline
 

@@ -336,7 +336,16 @@ const OrderEntry: React.FC = () => {
       
       const createdReservations = [];
       
-      for (const pet of orderData.pets) {
+      // For multiple pets, we need to handle resource assignment differently
+      // If a specific resource was selected and there are multiple pets, 
+      // only assign it to the first pet and let backend auto-assign for others
+      const hasMultiplePets = orderData.pets.length > 1;
+      const hasSpecificResource = orderData.reservation.resourceId && orderData.reservation.resourceId !== '';
+      
+      for (let i = 0; i < orderData.pets.length; i++) {
+        const pet = orderData.pets[i];
+        const isFirstPet = i === 0;
+        
         const reservationData: any = {
           customerId: orderData.customer.id,
           petId: pet.id,
@@ -347,9 +356,17 @@ const OrderEntry: React.FC = () => {
           notes: orderData.reservation.notes || ''
         };
         
-        // Only include resourceId if it's not empty
-        if (orderData.reservation.resourceId && orderData.reservation.resourceId !== '') {
+        // Resource assignment logic for multiple pets:
+        // - If only one pet: assign the selected resource (if any)
+        // - If multiple pets: don't assign specific resource, let backend auto-assign separate suites
+        // This prevents conflicts where multiple pets try to use the same suite
+        if (hasSpecificResource && !hasMultiplePets) {
+          // Single pet - assign the selected resource
           reservationData.resourceId = orderData.reservation.resourceId;
+          console.log(`Assigning resource ${orderData.reservation.resourceId} to ${pet.name}`);
+        } else if (hasMultiplePets) {
+          // Multiple pets - let backend auto-assign to avoid conflicts
+          console.log(`Multiple pets detected - backend will auto-assign separate suites for ${pet.name}`);
         }
         
         console.log(`Creating reservation for pet ${pet.name}:`, reservationData);
