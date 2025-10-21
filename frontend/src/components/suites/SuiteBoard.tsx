@@ -89,13 +89,13 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
   const [suites, setSuites] = useState<Array<{
     id: string;
     name: string;
-    suiteNumber: number;
+    suiteNumber: string | number;
     suiteType: string;
     status: string;
     pet: any;
     owner: any;
-    notes?: string;
-    lastCleaned?: string | Date | null;
+    notes: string;
+    lastCleaned?: string;
   }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -182,15 +182,20 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
           return {
             id: suite.id,
             name: suite.name,
-            suiteNumber: suite.attributes?.suiteNumber || 0,
+            suiteNumber: suite.attributes?.suiteNumber || suite.name || 'N/A',
             suiteType: suiteType, // Use the properly extracted suite type
             status: status,
             pet: pet,
             owner: owner,
-            notes: suite.notes,
+            notes: suite.notes || '',
             lastCleaned: suite.attributes?.lastCleaned
           };
-        }).sort((a: {suiteNumber: number}, b: {suiteNumber: number}) => a.suiteNumber - b.suiteNumber);
+        }).sort((a: {suiteNumber: string | number}, b: {suiteNumber: string | number}) => {
+          // Handle string comparison for suite numbers like "A01", "A02"
+          const aNum = String(a.suiteNumber);
+          const bNum = String(b.suiteNumber);
+          return aNum.localeCompare(bNum, undefined, { numeric: true, sensitivity: 'base' });
+        });
         
         // Apply client-side status filtering if needed
         let filteredResults = suites;
@@ -273,7 +278,7 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
   const renderSuiteCard = (suite: {
     id: string;
     name: string;
-    suiteNumber: number;
+    suiteNumber: string | number;
     suiteType: string;
     status: string;
     pet: any;

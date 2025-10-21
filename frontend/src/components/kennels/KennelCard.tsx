@@ -129,7 +129,7 @@ const StyledTableRowHeaderCell = styled(TableCell)(({ theme }) => ({
 }));
 
 interface KennelCardProps {
-  kennelNumber: number;
+  kennelNumber: number | string;
   suiteType: string;
   petName: string;
   petBreed?: string;

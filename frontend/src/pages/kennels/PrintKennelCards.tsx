@@ -481,33 +481,28 @@ const PrintKennelCards: React.FC = () => {
               const customer = customerData[reservation.customerId];
               const resource = reservation.resource;
               
-              // Only check for pet and customer data, we'll handle missing resource
-              if (!pet || !customer) return null;
-              
               // Extract kennel number from resource attributes
               // Default to a placeholder if not found
-              let kennelNumber = 0;
+              let kennelNumber: string | number = 0;
               let resourceName = 'Unknown';
               let suiteType = 'STANDARD_SUITE';
               
-              // Handle different resource structures
               if (resource) {
                 resourceName = resource.name || 'Unknown';
                 
-                // Try to get suite type
+                // Use the suite.type directly from the database, or fall back to attributes.suiteType, or default to STANDARD_SUITE
                 if (resource.attributes && resource.attributes.suiteType) {
                   suiteType = resource.attributes.suiteType;
                 } else if (resource.type) {
                   suiteType = resource.type;
                 }
                 
-                // Try to get kennel number
+                // Try to get kennel number - prefer full suite number (e.g., "A03") over just the number
                 if (resource.attributes && resource.attributes.suiteNumber) {
                   kennelNumber = resource.attributes.suiteNumber;
                 } else if (resource.name) {
-                  // Try to extract from name as fallback
-                  const match = resource.name.match(/\d+/);
-                  kennelNumber = match ? parseInt(match[0]) : 0;
+                  // Use the full resource name (e.g., "A03") instead of extracting just the number
+                  kennelNumber = resource.name;
                 }
               } else if (reservation.resourceId) {
                 // If we have resourceId but no resource object

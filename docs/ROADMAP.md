@@ -428,6 +428,9 @@ Throughout all phases, we will address the following ongoing concerns:
   - **Prevents Overbooking**: All reservation forms now check real-time availability and disable occupied kennels
   - **Multi-Pet Validation**: System validates all pets have kennel assignments before allowing submission
   - **Auto-Assignment Support**: Empty kennel selection triggers backend auto-assignment to available kennels
+  - **Kennel Board Display**: Fixed kennel numbers to show full identifiers (e.g., "A03") instead of just numeric values
+  - **Print Kennel Cards**: Updated to display complete kennel identifiers with letter prefixes (e.g., "Kennel #A03")
+  - **CI/CD Tests**: Fixed GitHub Actions test failures by adding @emotion dependencies and updating test configuration
 - 🔲 **Optional Add-Ons**: Suggested add-ons need to be optional - currently no way to continue without an add-on in cart
 - ✅ **Pet Icons**: Pet icons are broken or missing throughout the application (Fixed October 20, 2025)
   - Added petIcons and iconNotes fields to database schema
