@@ -189,6 +189,37 @@ export const createReservation = catchAsync(async (req: TenantRequest, res: Resp
     const serviceCategory = serviceDetails.serviceCategory;
     logger.info(`Found service with category: ${serviceCategory}`, { requestId });
     
+    // MANDATORY KENNEL ASSIGNMENT VALIDATION
+    // For BOARDING and DAYCARE services, resourceId is required (or suiteType for auto-assign)
+    const requiresKennel = serviceCategory === 'BOARDING' || serviceCategory === 'DAYCARE';
+    
+    if (requiresKennel) {
+      // Check if resourceId is provided (can be empty string for auto-assign)
+      if (requestedResourceId === null || requestedResourceId === undefined) {
+        // No resourceId provided, check if suiteType is provided for auto-assignment
+        if (!requestedSuiteType) {
+          logger.warn(`Resource assignment required for ${serviceCategory} service`, { requestId });
+          throw AppError.validationError(
+            `Kennel assignment is required for ${serviceCategory} services. ` +
+            `Please provide a resourceId or suiteType for auto-assignment.`
+          );
+        }
+        logger.info(`Auto-assignment requested for ${serviceCategory} with suiteType: ${requestedSuiteType}`, { requestId });
+      } else if (requestedResourceId === '') {
+        // Empty string means auto-assign, suiteType is required
+        if (!requestedSuiteType) {
+          logger.warn(`SuiteType required for auto-assignment of ${serviceCategory} service`, { requestId });
+          throw AppError.validationError(
+            `Suite type is required for auto-assignment of ${serviceCategory} services.`
+          );
+        }
+        logger.info(`Auto-assignment requested for ${serviceCategory} with suiteType: ${requestedSuiteType}`, { requestId });
+      } else {
+        // Specific resourceId provided
+        logger.info(`Specific resource requested for ${serviceCategory}: ${requestedResourceId}`, { requestId });
+      }
+    }
+    
     // Determine suite type based on service category
     if (!determinedSuiteType) {
       determinedSuiteType = determineSuiteType(serviceCategory);

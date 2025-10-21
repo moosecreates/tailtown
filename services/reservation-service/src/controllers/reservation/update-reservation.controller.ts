@@ -15,7 +15,8 @@ import {
   ExtendedCustomerWhereInput,
   ExtendedPetWhereInput,
   ExtendedResourceWhereInput,
-  ExtendedReservationInclude
+  ExtendedReservationInclude,
+  ExtendedServiceWhereInput
 } from '../../types/prisma-extensions';
 import { safeExecutePrismaQuery, prisma } from './utils/prisma-helpers';
 
@@ -280,6 +281,35 @@ export const updateReservation = catchAsync(async (
     // Note: suiteType is not a field in the Reservation model
     // The suite type is determined by the resource assigned to the reservation
     logger.info(`Suite type ${determinedSuiteType} determined but not stored directly on reservation`, { requestId });
+  }
+  
+  // MANDATORY KENNEL ASSIGNMENT VALIDATION FOR UPDATES
+  // Get the service category to check if kennel is required
+  let serviceCategory: string | undefined;
+  
+  if (serviceId) {
+    // New service being assigned
+    const serviceDetails = await prisma.service.findFirst({
+      where: { id: serviceId, tenantId: tenantId } as ExtendedServiceWhereInput
+    });
+    serviceCategory = serviceDetails?.serviceCategory;
+  } else if (existingReservation.serviceId) {
+    // Use existing service
+    const serviceDetails = await prisma.service.findFirst({
+      where: { id: existingReservation.serviceId, tenantId: tenantId } as ExtendedServiceWhereInput
+    });
+    serviceCategory = serviceDetails?.serviceCategory;
+  }
+  
+  const requiresKennel = serviceCategory === 'BOARDING' || serviceCategory === 'DAYCARE';
+  
+  // Check if trying to remove resourceId from a boarding/daycare reservation
+  if (requiresKennel && resourceId === null && existingReservation.resourceId) {
+    logger.warn(`Cannot remove kennel assignment from ${serviceCategory} reservation`, { requestId });
+    throw AppError.validationError(
+      `Cannot remove kennel assignment from ${serviceCategory} reservations. ` +
+      `Kennel assignment is mandatory for this service type.`
+    );
   }
   
   // Handle resource assignment
