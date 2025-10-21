@@ -12,6 +12,12 @@
     "start": "docker-compose up",
     "dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up",
     "test": "lerna run test",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:report": "playwright show-report",
+    "test:all": "npm run test && npm run test:e2e",
     "build": "lerna run build"
   },
   "engines": {
