@@ -1,542 +1,598 @@
 # Tailtown Unified Roadmap
 
-This document combines the overall project roadmap and the reservation service refactoring roadmap to provide a single source of truth for tracking progress across all aspects of the Tailtown Pet Resort Management System.
+**Last Updated**: October 21, 2025
 
-## Recent Major Milestone (September 2025)
+This document provides a prioritized roadmap for the Tailtown Pet Resort Management System, organized by business value and urgency.
 
-### ✅ Complete Order System Implementation (v2.0.0)
-- **Complete 5-step order processing** from customer selection to payment
-- **End-to-end workflow** with invoice generation and payment tracking
-- **Enhanced reservation API** with complete financial data
-- **Fixed CORS issues** across all services
-- **Smart date validation** and error handling
+---
 
-## Current Focus: Bug Fixes, Calendar Enhancements & Critical Features (October 2025)
+## 🔥 Critical Priorities (Immediate - October 2025)
 
-### 🔥 Immediate Priorities (High Priority)
+### Revenue-Critical Features
+1. **CardConnect Frontend Integration** (Backend Complete ✅)
+   - Connect payment UI to CardConnect API
+   - Payment form with card input
+   - Transaction confirmation screens
+   - Payment reporting and reconciliation
+   - **Priority**: Critical | **Effort**: 1 week | **Target**: Oct 28, 2025
 
-#### Critical Bug Fixes
-- **Multi-Pet Selection Fix** - Allow selecting multiple pets for single reservation
-- **Optional Add-Ons Fix** - Make add-ons truly optional in order process
-- **Pet Icons Fix** - Fix broken or missing pet icons throughout the application
-- **Calendar Functionality** - Fix grooming and training calendars
-- **Drag-and-Drop Calendar** - Enable moving reservations between dates/times
+2. **Optional Add-Ons Fix**
+   - Make add-ons truly optional in order process
+   - Allow skipping add-ons without blocking checkout
+   - **Priority**: Critical | **Effort**: 1-2 days | **Target**: Oct 25, 2025
 
-#### Revenue & Customer Experience
-- **Online Customer Booking Portal** - Self-service booking workflow for customers (web-based)
-- **Credit Card Integration (CardConnect)** - Integrated payment processing for online and in-person transactions
-- **Retail POS System** - Point of sale for retail items and packages
-- **High Demand Pricing** - Dynamic pricing based on demand, seasonality, and capacity
+### Calendar & Operations
+3. **Grooming Calendar Fix**
+   - Restore full functionality to grooming calendar
+   - Service category filtering
+   - Reservation creation and editing
+   - **Priority**: High | **Effort**: 2-3 days | **Target**: Oct 30, 2025
 
-#### Operations & Hardware
-- **Collar/Name Tag Printing** - Direct printing of pet collar tags and kennel cards
-- **Area-Specific Checklists** - Customizable checklists for different areas (kennel, grooming, training, etc.)
-- **Comprehensive Reports Page** - Advanced reporting for financials, customers, pets, marketing, and operations
+4. **Training Calendar Fix**
+   - Restore full functionality to training calendar
+   - Service category filtering
+   - Reservation creation and editing
+   - **Priority**: High | **Effort**: 2-3 days | **Target**: Oct 30, 2025
 
-#### Infrastructure & Integration
-- **AWS Migration** - Migrate to cloud infrastructure (AWS) for production deployment
-- **Import Tools (Gingr & Others)** - Data migration tools to import from other pet management systems
+---
 
-## Previous Focus: Stability and Maintenance (August 2025)
+## 🎯 High Priority (November 2025)
 
-- ✅ Schema alignment between services (Completed August 3, 2025)
-  - Synchronized Prisma schemas between customer and reservation services
-  - Fixed field name inconsistencies (e.g., `birthdate` vs `age`)
-  - Removed references to non-existent fields (e.g., `organizationId`)
-  - Implemented shared database approach for consistent schema across services
+### User Experience Enhancements
+1. **Drag-and-Drop Calendar**
+   - Move reservations between dates/times
+   - Drag to reschedule appointments
+   - Visual feedback during drag operations
+   - Conflict detection on drop
+   - **Priority**: High | **Effort**: 1-2 weeks | **Target**: Nov 8, 2025
 
-- ✅ Resource filtering enhancements (Completed August 3, 2025)
-  - Added support for multiple resource type filtering
-  - Implemented proper enum validation for resource types
-  - Improved error handling and logging
-  - Used Prisma's `in` filter for handling multiple types correctly
+2. **Area-Specific Checklists**
+   - Kennel check-in/check-out checklists
+   - Grooming service checklists
+   - Training session checklists
+   - Daily facility checklists
+   - Custom checklist templates
+   - **Priority**: High | **Effort**: 1 week | **Target**: Nov 15, 2025
 
-- ✅ Documentation updates (Completed August 3, 2025)
-  - Updated service architecture documentation
-  - Revised environment variables documentation
-  - Enhanced schema alignment strategy documentation
-  - Updated feature documentation for reservations
-  - Updated project roadmap to reflect current status
+### Revenue Features
+3. **Retail Items & POS System**
+   - Inventory management
+   - Product catalog
+   - Package deals and bundles
+   - Quick-sale items
+   - Retail reporting
+   - **Priority**: High | **Effort**: 2 weeks | **Target**: Nov 29, 2025
 
-- ✅ Shared database approach (Completed August 3, 2025)
-  - Both services now use the same PostgreSQL database
-  - Consistent port configuration (5433) for database access
-  - Improved tenant middleware for development mode
+4. **High Demand Pricing**
+   - Seasonal pricing rules
+   - Peak time surcharges
+   - Capacity-based pricing
+   - Special event pricing
+   - Automated price adjustments
+   - **Priority**: High | **Effort**: 1 week | **Target**: Dec 6, 2025
 
-## Completed Features
+---
 
-### Core Functionality
-- ✅ Basic CRUD operations for all entities (customers, pets, services, resources)
-- ✅ Reservation management with status workflow
-- ✅ Kennel management with occupancy tracking
-- ✅ Calendar integration with FullCalendar
-- ✅ Pet vaccination status tracking
-- ✅ Service duration-based reservation end time calculation
-- ✅ Kennel calendar implementation
-- ✅ Form improvements and accessibility enhancements
+## 🚀 Major Features (December 2025)
 
-### Enhanced User Experience
-- ✅ Staff scheduling and availability management
-- ✅ Standardized time format display (12-hour format with AM/PM)
-- ✅ Unique order number system for reservations (RES-YYYYMMDD-001 format)
+### Customer Self-Service
+1. **Online Customer Booking Portal**
+   - Customer account creation and login
+   - Browse available services and time slots
+   - Select pets and add-ons
+   - Real-time availability checking
+   - Online payment processing
+   - Booking confirmation and email notifications
+   - Manage existing reservations
+   - **Priority**: Critical | **Effort**: 3-4 weeks | **Target**: Dec 20, 2025
 
-### Business Operations
-- ✅ Invoicing and payment processing
-  - Invoice generation for reservations
-  - Payment tracking and history
-  - Invoice details view with line items
-  - Tax calculations with configurable tax rate (7.44%)
-- ✅ Reporting and analytics dashboard (Implemented May 12, 2025)
-- ✅ Service and add-on revenue reporting (Implemented May 12, 2025)
-- ✅ Customer value tracking and reporting (Implemented May 12, 2025)
-- ✅ Configurable settings (e.g., tax rates)
-- ✅ Customer accounts with balance and payment history
-- ✅ Sales add-ons and upselling features
+2. **Email Notifications**
+   - Reservation confirmations
+   - Reminder emails
+   - Status change notifications
+   - Marketing campaigns
+   - **Priority**: High | **Effort**: 1 week | **Target**: Dec 20, 2025
 
-## Analytics & Reporting Notes
+---
 
-- Revenue totals come from invoices, not reservations. Totals sum `Invoice.total` filtered by `issueDate` and `status` not in `CANCELLED`/`REFUNDED`. See `services/customer/src/controllers/analytics.controller.ts` (`getDashboardSummary()`, `getSalesByService()`).
-- To see revenue in reports, create invoices for reservations via the UI (New Order) or `POST /api/invoices` in customer-service. Linking `reservationId` is recommended.
-- Add-on revenue requires reservation add-ons and invoices associated to those reservations; analytics reads add-on amounts from `reservation.addOnServices` on the invoice’s reservation.
-- Time-period filters use `getDateFilter()` with day/week/month/year/all/custom and operate on invoice `issueDate`.
-- Counts by service/add-on include only currently active items.
-### Infrastructure
-- ✅ Microservices architecture implementation (Completed August 2025, Updated October 2025)
-  - Customer service (port 4004)
-  - Reservation service (port 4003)
-  - Payment service (port 4005) - Added October 21, 2025
-  - Frontend application (port 3000)
-  - Shared PostgreSQL database (port 5433)
-- ✅ Service communication via RESTful APIs (Completed August 2025)
-- ✅ Tenant isolation middleware (Completed August 2025)
+## 📊 Reporting & Analytics (January 2026)
 
-### Technical Improvements
-- ✅ Schema alignment and consistency (Completed August 3, 2025)
-- ✅ Code refactoring for maintainability and consistency (Ongoing)
-- ✅ Documentation updates for implemented features (Completed August 3, 2025)
+### Comprehensive Reports Page
+1. **Sales Reports**
+   - Time filters: Day, week, month, MTD, YTD
+   - Year-over-year comparison
+   - Total sales, average transaction
+   - Sales by service type
+   - Payment method breakdown
+   - Growth rates and trending
 
-## Ongoing Refactoring Work
+2. **Financial Reports**
+   - Revenue and profit/loss
+   - Outstanding balances
+   - Payment methods analysis
 
-### Reservation Controller Refactoring 🔄 (In Progress)
+3. **Sales Tax Reports**
+   - Monthly tax collection summaries
+   - Quarterly tax totals
+   - Annual tax summaries
+   - Taxable vs. non-taxable breakdown
+   - Export for accounting software
 
-**Objective:** Enhance the reservation controller with improved validation, error handling, and resource assignment
+4. **Customer Reports**
+   - Customer acquisition and retention
+   - Lifetime value analysis
+   - Demographics and visit frequency
 
-**Tasks:**
-- Fix TypeScript errors in reservation controller
-- Implement contextual validation for reservation fields
-- Add robust resource assignment with conflict detection
-- Enhance logging and error messages
-- Ensure suite type is correctly handled based on service context
-- Implement comprehensive date conflict validation
+5. **Operational Reports**
+   - Staff performance
+   - Resource utilization
+   - Booking patterns
+   - Capacity analysis
 
-**Success Criteria:**
-- Reservation creation works consistently across all service types
-- Proper error messages are returned for invalid inputs
-- Resource conflicts are properly detected and reported
-- Suite type is correctly handled based on service context
+6. **Custom Reports**
+   - User-defined filters
+   - Export capabilities (PDF, CSV, Excel)
 
-### Documentation and Knowledge Transfer 🔄 (Partially Completed August 3, 2025)
+**Priority**: High | **Effort**: 2 weeks | **Target**: Jan 24, 2026
 
-**Completed Tasks:**
-- ✅ Updated service architecture documentation with correct ports and shared database approach
-- ✅ Revised environment variables documentation with proper database configuration
-- ✅ Enhanced schema alignment strategy documentation with recent fixes
-- ✅ Updated feature documentation for reservations and resource filtering
-- ✅ Updated project roadmap to reflect current status and recent work
-- ✅ Documented shared database approach and its benefits
+---
 
-**Remaining Tasks:**
-- Update API documentation with all endpoints and parameters
-- Create developer guides for common tasks
-- Create troubleshooting guides for common issues
-- Document performance considerations and best practices
-- Create video walkthroughs for complex workflows
+## 🖨️ Hardware Integration (January 2026)
 
-## Upcoming Features
+### Collar/Name Tag Printing
+- Zebra printer support
+- Custom tag templates
+- Batch printing capabilities
+- QR code integration for pet tracking
+- Kennel card printing
 
-### Enhanced User Experience
-- 🔲 **Drag-and-drop reservation calendar** - Move reservations between dates/times/resources
-- 🔲 **Multi-pet reservation selection** - Select multiple pets for a single reservation
-- 🔲 **Optional add-ons workflow** - Make add-ons truly optional in order process
-- 🔲 **Functional grooming calendar** - Fix and enhance grooming-specific calendar features
-- 🔲 **Functional training calendar** - Fix and enhance training-specific calendar features
-- 🔲 **Pet Icons Fix** - Fix broken or missing pet icons throughout the application
-- 🔲 **Online Customer Booking Portal** - Self-service booking workflow for customers
-  - Customer account creation and login
-  - Browse available services and time slots
-  - Select pets and add-ons
-  - Real-time availability checking
-  - Online payment processing
-  - Booking confirmation and email notifications
-  - Manage existing reservations
-- 🔲 **Area-Specific Checklists** - Customizable checklists for different operational areas
-  - Kennel check-in/check-out checklists
-  - Grooming service checklists
-  - Training session checklists
-  - Daily facility checklists
-  - Custom checklist templates
-- 🔲 Batch operations for reservations (e.g., check-in multiple pets at once)
-- 🔲 Advanced filtering and search capabilities
-- 🔲 Email notifications for reservation status changes
-- 🔲 Mobile-responsive design improvements
-- 🔲 Dark mode support
-- 🔲 Priority alerts for staff
-- 🔲 Permission levels and restrictions for users
-- 🔲 **Recent checkouts tracking** - Keep track of recent pet checkouts for staff reference
+**Priority**: High | **Effort**: 1-2 weeks | **Target**: Jan 10, 2026
 
-### Business Operations & Revenue
-- ✅ **CardConnect Payment Integration** - Integrated credit card processing (Completed October 21, 2025)
-  - ✅ Real-time payment processing with CardConnect REST API
-  - ✅ Authorization and capture operations
-  - ✅ Refund and void capabilities
-  - ✅ Transaction inquiry
-  - ✅ PCI-compliant practices (card masking, secure logging)
-  - ✅ Test environment configured with UAT credentials
-  - ✅ Rate limiting and security headers
-  - ✅ Comprehensive API documentation
-  - 🔲 Frontend integration (pending)
-  - 🔲 Payment reporting and reconciliation (pending)
-  - 🔲 Recurring payment support (pending)
-- 🔲 **High Demand Pricing** - Dynamic pricing based on demand and capacity
-  - Seasonal pricing rules
-  - Peak time surcharges
-  - Capacity-based pricing
-  - Special event pricing
-  - Automated price adjustments
-- 🔲 **Retail Items & Packages** - Point of sale system for retail products and service packages
-  - Inventory management
-  - Product catalog
-  - Package deals and bundles
-  - Quick-sale items
-  - Retail reporting
-- 🔲 **Deposits & Wait-list Management** - Handle reservation deposits and waiting lists
-- 🔲 **Standing Reservations** - Recurring/repeating reservation system
-- 🔲 **Coupons & Discounts** - Comprehensive coupon and promotional code system
-- 🔲 **Contracts Management** - Digital contract creation, signing, and storage
-- 🔲 **Group Classes** - Multi-week group training classes with enrollment management
-- 🔲 **Comprehensive Reports Page** - Advanced reporting system with multiple report types:
-  - **Sales Reports**: Advanced sales analytics with flexible time period filtering
-    - **Time Filters**: Day, week, month, month-to-date (if current month), year-to-date
-    - **Year-over-Year Comparison**: Compare current period to same period last year
-    - **Metrics**: Total sales, average transaction, sales by service type, payment methods
-    - **Trending**: Growth rates, seasonal patterns, performance indicators
-  - **Financial Reports**: Revenue, profit/loss, payment methods, outstanding balances
-  - **Sales Tax Reports**: Comprehensive tax reporting for compliance and filing
-    - **Monthly Tax Reports**: Month-by-month tax collection summaries
-    - **Quarterly Tax Reports**: Quarterly tax totals for quarterly filing requirements
-    - **Annual Tax Reports**: Year-end tax summaries for annual reporting
-    - **Tax Breakdown**: Taxable vs. non-taxable sales, tax rates applied, exemptions
-    - **Export Options**: Tax reports formatted for accounting software and tax filing
-  - **Customer Reports**: Customer acquisition, retention rates, lifetime value, demographics, visit frequency
-  - **Pet Reports**: Pet demographics, breed analysis, health tracking, service preferences
-  - **Marketing Reports**: Campaign effectiveness, referral tracking, seasonal trends, promotional analysis
-  - **Operational Reports**: Staff performance, resource utilization, booking patterns, capacity analysis
-  - **Service Reports**: Popular services, add-on performance, pricing analysis, duration trends
-  - **Custom Reports**: User-defined filters, date ranges, export capabilities (PDF, CSV, Excel)
-- 🔲 Integration with merchant services
-- 🔲 Inventory management for pet supplies
-- 🔲 Automated reminders for upcoming appointments
-- 🔲 Comprehensive loyalty rewards system
-  - Points accumulation based on services
-  - Tiered membership levels
-  - Reward redemption options
-  - Automated loyalty communications
-- 🔲 Integration with accounting software
-- 🔲 Staff performance metrics
-- 🔲 Multi-location support
+### Receipt Printer Integration
+- Point of sale receipt printing
+- Custom receipt templates
 
-### Admin Settings & Configuration
-- 🔲 **Vaccine Requirements Management** - Admin area to edit and configure required vaccines (multi-tenant support)
-- 🔲 **System Configuration** - Enhanced admin settings for business rules and preferences
-- 🔲 **Multi-tenant Vaccine Policies** - Different vaccine requirements per tenant/location
+**Priority**: Medium | **Effort**: 1 week
 
-### Hardware Integration
-- 🔲 **Collar/Name Tag Printer Integration** - Direct printing of pet collar tags and kennel cards
-  - Zebra printer support
-  - Custom tag templates
-  - Batch printing capabilities
-  - QR code integration for pet tracking
-  - Kennel card printing
-- 🔲 **Receipt Printer Integration** - Point of sale receipt printing
-- 🔲 **Barcode/QR Code System** - Pet identification and tracking
+---
+
+## ⚙️ Admin & Configuration (January 2026)
+
+1. **Vaccine Requirements Management**
+   - Admin area to edit required vaccines
+   - Multi-tenant support
+   - Different policies per location
+   - **Priority**: Medium | **Effort**: 1 week | **Target**: Jan 31, 2026
+
+2. **System Configuration**
+   - Enhanced admin settings
+   - Business rules configuration
+   - Preference management
+
+---
+
+## ☁️ Infrastructure & Deployment (February-March 2026)
+
+### AWS Migration
+1. **Planning Phase**
+   - Architecture design
+   - Cost analysis
+   - Migration strategy
+   - **Target**: Feb 7, 2026
+
+2. **Infrastructure Setup**
+   - EC2 instances for application servers
+   - RDS for PostgreSQL database
+   - S3 for file storage and backups
+   - CloudFront CDN for static assets
+   - Route 53 for DNS management
+   - Load balancing and auto-scaling
+   - VPC configuration and security groups
+   - CloudWatch monitoring and alerting
+   - **Target**: Feb 21, 2026
+
+3. **Deployment & Testing**
+   - Staging environment setup
+   - Performance testing
+   - Security audits
+   - **Target**: Mar 7, 2026
+
+4. **Production Cutover**
+   - Data migration
+   - DNS cutover
+   - Monitoring and support
+   - **Target**: Mar 14, 2026
+
+**Priority**: Critical | **Total Effort**: 6 weeks
+
+---
+
+## 📥 Data Migration Tools (March-April 2026)
+
+### Import from Other Systems
+1. **Gingr Import Tool**
+   - Field mapping
+   - Data transformation
+   - Duplicate detection
+   - **Priority**: High | **Effort**: 2 weeks | **Target**: Mar 28, 2026
+
+2. **Generic CSV Import**
+   - Validation and cleanup
+   - Import history and rollback
+   - **Priority**: Medium | **Effort**: 1 week | **Target**: Apr 11, 2026
+
+3. **Data Validation Tools**
+   - Bulk validation
+   - Error reporting
+   - **Priority**: Medium | **Effort**: 1 week | **Target**: Apr 18, 2026
+
+---
+
+## 💼 Business Operations (April-June 2026)
+
+### Reservation Management
+1. **Deposits & Wait-list Management**
+   - Deposit collection and tracking
+   - Wait-list queue management
+   - Automatic notifications
+   - **Priority**: Medium | **Effort**: 2 weeks | **Target**: Apr 30, 2026
+
+2. **Standing Reservations**
+   - Recurring/repeating reservations
+   - Schedule templates
+   - Bulk management
+   - **Priority**: Medium | **Effort**: 2 weeks | **Target**: May 15, 2026
+
+### Marketing & Promotions
+3. **Coupons & Discounts**
+   - Promotional code system
+   - Discount rules engine
+   - Usage tracking
+   - **Priority**: Medium | **Effort**: 2 weeks | **Target**: May 30, 2026
+
+4. **Loyalty Rewards System**
+   - Points accumulation
+   - Tiered membership levels
+   - Reward redemption
+   - Automated communications
+   - **Priority**: Medium | **Effort**: 2 weeks
+
+### Training & Classes
+5. **Group Classes Enhancement**
+   - Multi-week class management
+   - Enrollment tracking
+   - Class scheduling
+   - **Priority**: Medium | **Effort**: 2 weeks | **Target**: Jun 15, 2026
+
+6. **Contracts Management**
+   - Digital contract creation
+   - E-signature integration
+   - Contract storage and retrieval
+   - **Priority**: Medium | **Effort**: 2 weeks | **Target**: Jun 30, 2026
+
+---
+
+## 🔮 Future Enhancements (2026 and Beyond)
+
+### User Experience
+- Batch operations for reservations (check-in multiple pets)
+- Advanced filtering and search
+- Mobile-responsive design improvements
+- Dark mode support
+- Priority alerts for staff
+- Permission levels and user roles
+- Recent checkouts tracking
 
 ### Advanced Features
-- 🔲 Pet health monitoring and alerts
-- 🔲 AI-powered recommendations for services
-- 🔲 Customer feedback and review system
-- 🔲 Mobile app for customers
-- 🔲 Integration with third-party services (e.g., veterinary systems)
-- 🔲 Automated marketing campaigns
-- 🔲 Advanced business intelligence tools
-- 🔲 API for third-party integrations
-- 🔲 Embeddable widgets for customer websites
+- Pet health monitoring and alerts
+- AI-powered service recommendations
+- Customer feedback and review system
+- Mobile app for customers
+- Integration with veterinary systems
+- Automated marketing campaigns
+- Advanced business intelligence tools
+- API for third-party integrations
+- Embeddable widgets for customer websites
 
-### Infrastructure and Scaling
-- 🔲 **AWS Migration** - Complete migration to Amazon Web Services
-  - EC2 instances for application servers
-  - RDS for PostgreSQL database
-  - S3 for file storage and backups
-  - CloudFront CDN for static assets
-  - Route 53 for DNS management
-  - Load balancing and auto-scaling
-  - VPC configuration and security groups
-  - CloudWatch monitoring and alerting
-- 🔲 **Data Migration Tools** - Import from other pet management systems
-  - Gingr import tool with field mapping
-  - Generic CSV import with validation
-  - Data transformation and cleanup
-  - Duplicate detection and merging
-  - Import history and rollback
-  - Bulk data validation tools
-- 🔲 Cloud infrastructure optimization
-- 🔲 Website integration components for customer online ordering
-- 🔲 Global content delivery network (CDN)
-- 🔲 Automated deployment pipelines
-- 🔲 High-availability configuration
-- 🔲 Disaster recovery planning
+### Infrastructure
+- Cloud infrastructure optimization
+- Global content delivery network (CDN)
+- Automated deployment pipelines
+- High-availability configuration
+- Disaster recovery planning
 
-## Planned Refactoring Work
+### Business Operations
+- Integration with accounting software
+- Staff performance metrics
+- Multi-location support
+- Inventory management for pet supplies
+- Automated appointment reminders
 
-### Performance Optimization ⏱️ (Planned)
+### Hardware
+- Barcode/QR Code system for pet tracking
+- Additional printer integrations
 
-**Objective:** Improve API response times and database query efficiency
+---
 
-**Tasks:**
-- Add database indexes for frequently queried fields
-- Implement query optimization for availability checks
-- Add caching for resource availability results
-- Optimize batch operations for multiple resources
-- Implement pagination for large result sets
-- Add query performance logging and monitoring
+## 🐛 Outstanding Issues
 
-### Testing Infrastructure ✅ (Completed October 21, 2025)
+### Known Bugs
+- 🔲 Cash amount paid after discount can have partial penny issues
+- 🔲 Suite capacity currently limited to 1 (need multi-pet suite support)
+- 🔲 Add feeding schedule to kennel cards with weekly dates
 
-**Objective:** Implement comprehensive testing for the reservation service
+---
 
-**Completed Tasks:**
+## 📈 Monitoring and Success Metrics
+
+### Performance Metrics
+- API response times for critical endpoints
+- Error rates for API requests
+- Database query performance
+- Page load times
+
+### Quality Metrics
+- Test coverage percentage
+- Number of reported bugs
+- Bug resolution time
+- Code review completion rate
+
+### Business Metrics
+- User satisfaction scores
+- Feature adoption rates
+- System uptime percentage
+- Customer booking conversion rate
+
+---
+
+## 🎯 Prioritization Criteria
+
+Features and tasks are prioritized based on:
+
+1. **Business Value** - Revenue impact and customer satisfaction
+2. **User Impact** - Number of users affected and frequency of use
+3. **Technical Complexity** - Development effort and risk
+4. **Dependencies** - Blocking other features or external requirements
+5. **Resource Availability** - Team capacity and expertise
+
+---
+
+## ✅ Completed Features & Milestones
+
+### October 2025
+
+#### Service Startup & Documentation (Oct 21, 2025)
+- ✅ Fixed grooming reservation service startup issues
+- ✅ Created comprehensive service troubleshooting guide
+- ✅ Added quick start documentation
+- ✅ Created documentation index
+
+#### Payment Integration (Oct 21, 2025)
+- ✅ **CardConnect Payment Integration (Backend)**
+  - Real-time payment processing with CardConnect REST API
+  - Authorization and capture operations
+  - Refund and void capabilities
+  - Transaction inquiry
+  - PCI-compliant practices (card masking, secure logging)
+  - Test environment configured with UAT credentials
+  - Rate limiting and security headers
+  - Comprehensive API documentation
+  - Payment service on port 4005
+
+#### Testing Infrastructure (Oct 21, 2025)
 - ✅ Created unit tests for controllers and utilities (28 tests)
 - ✅ Implemented integration tests for API endpoints (12 tests)
 - ✅ Added E2E tests with Playwright (15 tests)
 - ✅ Created test fixtures for different database states
-- ✅ Implemented CI/CD pipeline for automated testing (GitHub Actions)
+- ✅ Implemented CI/CD pipeline with GitHub Actions
 - ✅ Added code coverage reporting (Codecov integration)
 - ✅ Added performance tests with k6 (load, stress, database)
 - ✅ Created comprehensive test documentation
 
-### Frontend Integration ⏱️ (Planned)
+#### Multi-Pet & Kennel Management (Oct 20-21, 2025)
+- ✅ **Multi-Pet Selection Fix**
+  - Updated CustomerSelection component for multi-select
+  - Modified OrderEntry to handle pets array
+  - Invoice splits service price across pets
+  - Staff can book multiple pets in single order
 
-**Objective:** Ensure frontend components work seamlessly with the refactored backend
+- ✅ **Multi-Pet Suite Assignment**
+  - Auto-assign separate suites for multiple pets
+  - Backend conflict detection prevents double-booking
+  - Manual suite selection for single pets
 
-**Tasks:**
-- Update frontend API service to handle new response formats
-- Enhance error handling in frontend components
-- Implement retry logic for transient errors
-- Add loading states for asynchronous operations
-- Update form validation to match backend requirements
-- Implement comprehensive end-to-end testing
+- ✅ **Calendar Multi-Pet Selection UI**
+  - Multi-select Autocomplete for pets
+  - Per-pet kennel selection with color-coded availability
+  - Real-time availability checking
+  - Searchable dropdowns for ~165 kennels
+  - Prevents double-booking
 
-## Technical Debt and Improvements
+- ✅ **Dashboard & Kennel Assignment Improvements**
+  - Increased API limit to 250 reservations
+  - Backend max limit increased to 500
+  - Mandatory kennel assignment for boarding/daycare
+  - Edit mode shows current kennel as available
+  - Color coding on all forms
+  - Multi-pet validation
+  - Fixed kennel number display (e.g., "A03")
+  - Updated print kennel cards with full identifiers
 
-Throughout all phases, we will address the following ongoing concerns:
+- ✅ **Pet Icons Fix**
+  - Added petIcons and iconNotes fields to schema
+  - Fixed tenantId filtering in controllers
+  - Multi-tenant support working correctly
 
-- ✅ Comprehensive test coverage (unit, integration, and end-to-end tests) - Completed October 21, 2025
-  - 55 automated tests (28 unit, 12 integration, 15 E2E)
-  - Performance tests with k6 (load, stress, database)
-  - CI/CD integration with GitHub Actions
-  - Code coverage tracking with Codecov
-- 🔲 Performance optimization for large datasets
-- 🔲 Security audits and improvements
-- 🔲 Accessibility compliance (WCAG 2.1 AA)
-- ✅ DevOps improvements (CI/CD, monitoring, logging) - Partially completed October 21, 2025
-  - GitHub Actions workflows for testing
-  - Coverage reporting and badges
-  - Performance monitoring with k6
+### September 2025
 
-## Environment-Specific Considerations
+#### Complete Order System (v2.0.0)
+- ✅ **End-to-End Order Processing**
+  - Complete 5-step order workflow
+  - Customer search and selection
+  - Pet selection with automatic loading
+  - Service selection with real-time pricing
+  - Add-on services with quantity and pricing
+  - Invoice generation with line items and tax
+  - Payment processing with multiple methods
+  - Order completion with status tracking
 
-### Development Environment
-- ✅ Shared database configuration (Completed August 3, 2025)
-  - PostgreSQL on port 5433
-  - Consistent database URL format across services
-  - Schema synchronization between services
-- ✅ Service port standardization (Completed August 3, 2025)
+- ✅ **Order System Features**
+  - 5-step wizard interface
+  - Real-time validation
+  - Dynamic pricing with tax and discounts
+  - Smart date handling
+  - Resource assignment with conflict prevention
+  - Invoice integration
+
+- ✅ **Technical Fixes**
+  - Fixed CORS configuration across services
+  - Proper tenant ID middleware
+  - Fixed date validation errors
+  - Enhanced API response parsing
+  - Comprehensive error handling
+
+#### Calendar & Reservation Fixes (Sept 22-23, 2025)
+- ✅ **Reservation Edit Form Data Loading**
+  - Enhanced data fetching with complete reservation data
+  - Fixed API endpoint URLs
+  - Proper response structure handling
+  - Graceful fallback logic
+
+- ✅ **Calendar Reservation Display**
+  - Fixed duplicate reservation creation
+  - Extended availability check to full date range
+  - Resolved race condition between loadKennels/loadReservations
+  - Updated isKennelOccupied to prioritize availability data
+  - Automatic calendar refresh after checkout
+
+### August 2025
+
+#### Infrastructure & Schema (Aug 3, 2025)
+- ✅ **Schema Alignment**
+  - Synchronized Prisma schemas between services
+  - Fixed field name inconsistencies
+  - Removed non-existent field references
+  - Shared database approach
+
+- ✅ **Resource Filtering Enhancements**
+  - Multiple resource type filtering support
+  - Proper enum validation
+  - Improved error handling
+  - Prisma `in` filter implementation
+
+- ✅ **Shared Database Approach**
+  - Both services use same PostgreSQL database
+  - Consistent port configuration (5433)
+  - Improved tenant middleware for development
+
+- ✅ **Service Port Standardization**
   - Customer service: 4004
   - Reservation service: 4003
   - Frontend: 3000
-- ✅ Enhanced tenant middleware for development mode (Completed August 3, 2025)
-- 🔲 Improved developer tooling
-- 🔲 Streamlined local setup process
-- 🔲 Better debugging capabilities
-- 🔲 Comprehensive API documentation
 
-### Test Environment
-- 🔲 Automated test data generation
-- 🔲 Performance testing infrastructure
-- 🔲 Integration test environment
-- 🔲 User acceptance testing framework
+#### Bug Fixes (Aug 10, 2025)
+- ✅ Kennel calendar loads all ~165 suites with pagination
+- ✅ Reservations UI parses nested response correctly
+- ✅ Reservation service includes service relation in all responses
+- ✅ Frontend displays service names instead of 'Unknown'
 
-### Production Environment
-- 🔲 Scalable infrastructure
-- 🔲 Backup and disaster recovery
-- 🔲 Monitoring and alerting
-- 🔲 High availability configuration
+### May 2025
 
-## Bug Fixes
+#### Analytics & Reporting (May 12, 2025)
+- ✅ **Reporting and Analytics Dashboard**
+  - Dashboard summary with key metrics
+  - Service revenue reporting
+  - Customer value tracking
+  - Time period filtering (day/week/month/year/all)
 
-### Recent Fixes (August 2025)
-- ✅ Fixed resource filtering to correctly handle multiple resource types (Fixed August 3, 2025)
-- ✅ Fixed Prisma schema mismatches between customer and reservation services (Fixed August 3, 2025)
-- ✅ Fixed field name inconsistencies (`birthdate` vs `age` in Pet model) (Fixed August 3, 2025)
-- ✅ Removed references to non-existent `organizationId` field (Fixed August 3, 2025)
-- ✅ Fixed database connection issues by using consistent port 5433 (Fixed August 3, 2025)
-- ✅ Kennel calendar now loads all ~165 suites by paginating `/api/resources` via `resourceService.getSuites()` (Fixed August 10, 2025)
-- ✅ Reservations UI updated to parse nested response `{ data: { reservations: [...] }, pagination }` and render safely (Fixed August 10, 2025)
-- ✅ Reservation-service now includes the `service` relation in all reservation responses (list/get/create/update); frontend displays service name instead of 'Unknown' (Fixed August 10, 2025)
+- ✅ **Staff Scheduling Improvements**
+  - Compact time format (minutes only when needed)
+  - Starting assignment location display
+  - Fixed duplicate shift creation
 
-### Previous Fixes
-- ✅ New Customer under New Order doesn't accept text (Fixed May 6, 2025)
-- ✅ New orders are displaying all kennels and not taking availability into account (Fixed May 6, 2025)
-- ✅ Total price under reservation details is not reflecting the add ons and discounts (Fixed May 6, 2025)
-- ✅ Staff scheduling now uses compact time format (minutes only shown when needed) (Fixed May 12, 2025)
-- ✅ Staff schedule now shows starting assignment location (Fixed May 12, 2025)
-- ✅ Fixed duplicate shift creation when updating staff schedules (Fixed May 12, 2025)
-- ✅ Add-on sales are now working on all reservation types (Fixed May 11, 2025)
-- ✅ Fixed service deletion issues with active reservations (Fixed May 12, 2025)
-- ✅ Improved service management UI by simplifying deactivation workflow (Fixed May 12, 2025)
+- ✅ **Service Management**
+  - Fixed service deletion with active reservations
+  - Simplified deactivation workflow
 
-### Outstanding Issues
-- 🔲 Cash amount paid after discount can have strange partial penny issues
-- 🔲 Add feeding schedule to kennel cards with weekly dates automatically added
+#### Order & Reservation Fixes (May 6-11, 2025)
+- ✅ New Customer under New Order accepts text input
+- ✅ New orders respect kennel availability
+- ✅ Total price reflects add-ons and discounts
+- ✅ Add-on sales working on all reservation types
 
-### New Issues Identified (September-October 2025)
-- ✅ **Multi-Pet Selection**: When creating new reservation, can't select multiple pets at the same time (Fixed October 20, 2025)
-  - Updated CustomerSelection component to support multi-select dropdown
-  - Modified OrderEntry to handle pets array and create one reservation per pet
-  - Invoice automatically splits service price across pets and lists each pet
-  - Staff can now book multiple pets from same customer in single order
-- ✅ **Multi-Pet Suite Assignment**: Multiple pets were being assigned to same suite causing conflicts (Fixed October 20, 2025)
-  - Modified OrderEntry to auto-assign separate suites for multiple pets
-  - Backend conflict detection prevents double-booking of suites
-  - For multiple pets, system now lets backend auto-assign available suites
-  - Single pet reservations still allow manual suite selection
-- ✅ **Calendar Multi-Pet Selection UI**: Calendar reservation form only allowed one pet at a time (Fixed October 20, 2025)
-  - Changed pet dropdown to multi-select Autocomplete component
-  - Added selectedPets state array to track multiple selections
-  - Updated form submission to create one reservation per selected pet
-  - **Per-pet kennel selection**: Shows individual kennel selector for each pet when multiple selected
-  - **Smart pre-filling**: First pet gets initially selected kennel, subsequent pets get adjacent kennels
-  - **Color-coded availability**: 🟢 Available • 🟡 Selected for another pet • 🔴 Occupied by existing reservation
-  - **Real-time availability checking**: Queries backend to check which kennels are occupied for selected dates
-  - **Searchable dropdowns**: Autocomplete with type-to-search for easy selection from all ~165 kennels
-  - **All kennel types shown**: Displays Standard, Standard Plus, and VIP suites when multiple pets selected
-  - Users can manually assign specific kennels to each pet or choose "Auto-assign"
-  - Prevents double-booking: Can't assign same kennel to multiple pets or occupied kennels
-  - Removed HTML5 `required` attribute that was blocking multi-select validation
-  - Added event listeners to refresh calendar after checkout completion
-  - Fixed missing suiteType field - now sent to backend for auto-assignment
-  - Added sessionStorage flag to trigger calendar refresh after navigation
-- ✅ **Dashboard & Kennel Assignment Improvements** (Fixed October 21, 2025)
-  - **Dashboard Data Loading**: Increased API limit from 10 to 250 reservations to show all daily appointments
-  - **Backend Limit**: Updated reservation service max limit from 100 to 500 to support high-volume days
-  - **Mandatory Kennel Assignment**: Boarding/daycare reservations now require kennel assignment (manual or auto-assign)
-  - **Edit Mode Availability**: When editing reservations, current kennel shows as available (prevents false conflicts)
-  - **Color Coding on All Forms**: Added availability indicators to single-pet and edit reservation forms
-  - **Prevents Overbooking**: All reservation forms now check real-time availability and disable occupied kennels
-  - **Multi-Pet Validation**: System validates all pets have kennel assignments before allowing submission
-  - **Auto-Assignment Support**: Empty kennel selection triggers backend auto-assignment to available kennels
-  - **Kennel Board Display**: Fixed kennel numbers to show full identifiers (e.g., "A03") instead of just numeric values
-  - **Print Kennel Cards**: Updated to display complete kennel identifiers with letter prefixes (e.g., "Kennel #A03")
-  - **CI/CD Tests**: Fixed GitHub Actions test failures by adding @emotion dependencies and updating test configuration
-- 🔲 **Optional Add-Ons**: Suggested add-ons need to be optional - currently no way to continue without an add-on in cart
-- ✅ **Pet Icons**: Pet icons are broken or missing throughout the application (Fixed October 20, 2025)
-  - Added petIcons and iconNotes fields to database schema
-  - Fixed tenantId filtering in getAllPets and getAllCustomers controllers
-  - All APIs now returning data correctly with multi-tenant support
-- 🔲 **Grooming Calendar**: Grooming calendar is currently non-functional
-- 🔲 **Training Calendar**: Training calendar is currently non-functional
-- 🔲 **Suite Capacity**: Suites currently have capacity of 1, need option to increase capacity for multi-pet suites
+### Core Functionality (Earlier)
 
-## Implementation Timeline
+#### Basic Features
+- ✅ CRUD operations for all entities
+- ✅ Reservation management with status workflow
+- ✅ Kennel management with occupancy tracking
+- ✅ Calendar integration with FullCalendar
+- ✅ Pet vaccination status tracking
+- ✅ Service duration-based end time calculation
+- ✅ Kennel calendar implementation
+- ✅ Form improvements and accessibility
 
-### Phase 1: Critical Bug Fixes (October 2025 - Week 1-2)
-| Feature/Task | Status | Estimated Completion | Priority | Effort |
-|--------------|--------|---------------------|----------|--------|
-| Multi-Pet Selection Bug Fix | ✅ **COMPLETED** (Oct 20, 2025) | - | Critical | 2-3 days |
-| Optional Add-Ons Bug Fix | 🔲 Planned | October 25, 2025 | Critical | 1-2 days |
-| Pet Icons Fix | ✅ **COMPLETED** (Oct 20, 2025) | - | High | 1 day |
-| Grooming Calendar Fix | 🔲 Planned | October 30, 2025 | High | 2-3 days |
-| Training Calendar Fix | 🔲 Planned | October 30, 2025 | High | 2-3 days |
+#### Business Operations
+- ✅ **Invoicing and Payment Processing**
+  - Invoice generation for reservations
+  - Payment tracking and history
+  - Invoice details with line items
+  - Tax calculations (7.44% configurable)
 
-### Phase 2: Calendar & UX Enhancements (November 2025 - Week 1-2)
-| Feature/Task | Status | Estimated Completion | Priority | Effort |
-|--------------|--------|---------------------|----------|--------|
-| Drag-and-Drop Calendar | 🔲 Planned | November 8, 2025 | High | 1-2 weeks |
-| Area-Specific Checklists | 🔲 Planned | November 15, 2025 | High | 1 week |
+- ✅ **Customer Management**
+  - Customer accounts with balance
+  - Payment history tracking
+  - Sales add-ons and upselling
 
-### Phase 3: Revenue & Payment Features (November 2025 - Week 3-4)
-| Feature/Task | Status | Estimated Completion | Priority | Effort |
-|--------------|--------|---------------------|----------|--------|
-| CardConnect Integration (Backend) | ✅ **COMPLETED** (Oct 21, 2025) | - | Critical | 1 week |
-| CardConnect Integration (Frontend) | 🔲 Planned | November 22, 2025 | Critical | 1 week |
-| Retail Items & POS | 🔲 Planned | November 29, 2025 | High | 2 weeks |
-| High Demand Pricing | 🔲 Planned | December 6, 2025 | High | 1 week |
+- ✅ **Staff Management**
+  - Staff scheduling
+  - Availability management
+  - Standardized time format (12-hour with AM/PM)
 
-### Phase 4: Customer Portal & Booking (December 2025)
-| Feature/Task | Status | Estimated Completion | Priority | Effort |
-|--------------|--------|---------------------|----------|--------|
-| Online Customer Booking Portal | 🔲 Planned | December 20, 2025 | Critical | 3-4 weeks |
-| Customer Account Management | 🔲 Planned | December 20, 2025 | High | Included |
-| Email Notifications | 🔲 Planned | December 20, 2025 | High | 1 week |
+- ✅ **Reservation System**
+  - Unique order number system (RES-YYYYMMDD-001)
+  - Configurable settings (tax rates)
 
-### Phase 5: Hardware & Operations (January 2026)
-| Feature/Task | Status | Estimated Completion | Priority | Effort |
-|--------------|--------|---------------------|----------|--------|
-| Collar/Name Tag Printing | 🔲 Planned | January 10, 2026 | High | 1-2 weeks |
-| Comprehensive Reports Page | 🔲 Planned | January 24, 2026 | High | 2 weeks |
-| Vaccine Requirements Admin | 🔲 Planned | January 31, 2026 | Medium | 1 week |
+#### Infrastructure
+- ✅ **Microservices Architecture**
+  - Customer service (port 4004)
+  - Reservation service (port 4003)
+  - Payment service (port 4005)
+  - Frontend application (port 3000)
+  - Shared PostgreSQL database (port 5433)
 
-### Phase 6: Infrastructure & Migration (February-March 2026)
-| Feature/Task | Status | Estimated Completion | Priority | Effort |
-|--------------|--------|---------------------|----------|--------|
-| AWS Migration Planning | 🔲 Planned | February 7, 2026 | Critical | 1 week |
-| AWS Infrastructure Setup | 🔲 Planned | February 21, 2026 | Critical | 2 weeks |
-| AWS Deployment & Testing | 🔲 Planned | March 7, 2026 | Critical | 2 weeks |
-| Production Cutover | 🔲 Planned | March 14, 2026 | Critical | 1 week |
+- ✅ **Service Communication**
+  - RESTful APIs
+  - Tenant isolation middleware
+  - Service health checks
 
-### Phase 7: Data Migration & Integration (March-April 2026)
-| Feature/Task | Status | Estimated Completion | Priority | Effort |
-|--------------|--------|---------------------|----------|--------|
-| Gingr Import Tool | 🔲 Planned | March 28, 2026 | High | 2 weeks |
-| Generic CSV Import | 🔲 Planned | April 11, 2026 | Medium | 1 week |
-| Data Validation Tools | 🔲 Planned | April 18, 2026 | Medium | 1 week |
+#### Technical Improvements
+- ✅ Schema alignment and consistency
+- ✅ Code refactoring for maintainability
+- ✅ Comprehensive documentation
+- ✅ DevOps improvements (CI/CD, monitoring)
+- ✅ Comprehensive test coverage (55 automated tests)
 
-### Phase 8: Additional Features (April-June 2026)
-| Feature/Task | Status | Estimated Completion | Priority | Effort |
-|--------------|--------|---------------------|----------|--------|
-| Deposits & Wait-list | 🔲 Planned | April 30, 2026 | Medium | 2 weeks |
-| Standing Reservations | 🔲 Planned | May 15, 2026 | Medium | 2 weeks |
-| Coupons System | 🔲 Planned | May 30, 2026 | Medium | 2 weeks |
-| Group Classes Enhancement | 🔲 Planned | June 15, 2026 | Medium | 2 weeks |
-| Contracts Management | 🔲 Planned | June 30, 2026 | Medium | 2 weeks |
+---
 
-## Monitoring and Evaluation
+## 📝 Notes
 
-Throughout the development and refactoring projects, we will monitor the following metrics:
+### Analytics & Reporting Implementation
+- Revenue totals come from invoices, not reservations
+- Totals sum `Invoice.total` filtered by `issueDate` and status
+- Create invoices via New Order UI or `POST /api/invoices`
+- Link `reservationId` for proper reporting
+- Add-on revenue requires reservation add-ons and linked invoices
+- Time-period filters use `getDateFilter()` on invoice `issueDate`
 
-- API response times for critical endpoints
-- Error rates for API requests
-- Test coverage percentage
-- Number of reported bugs
-- User satisfaction with the reservation system
+### Development Environment
+- PostgreSQL on port 5433
+- Consistent database URL format across services
+- Schema synchronization between services
+- Enhanced tenant middleware for development mode
 
-Regular reviews will be conducted to ensure the project is on track and meeting its objectives.
+---
 
-## Prioritization Criteria
-
-Features and tasks will be prioritized based on:
-
-1. Business value
-2. User impact
-3. Technical complexity
-4. Dependencies
-5. Resource availability
+**Last Updated**: October 21, 2025  
+**Version**: 3.0  
+**Next Review**: November 1, 2025
