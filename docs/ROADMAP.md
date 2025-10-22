@@ -6,23 +6,33 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 
 ---
 
-## 🔥 Critical Priorities (Immediate - October 2025)
-
-_All critical priorities for October 2025 have been completed! 🎉_
-
----
 
 ## 🎯 High Priority (November 2025)
 
+### Operations & Customer Experience
+1. **Comprehensive Check-In Process**
+   - Customizable check-in questionnaire system
+   - Feeding schedules and portion amounts
+   - Time zone differences for medication/feeding
+   - Dietary preferences (probiotics, food toppers, supplements)
+   - Special instructions and behavioral notes
+   - Emergency contact verification and updates
+   - Digital service agreement signing
+   - Photo upload for pet identification
+   - Medical history review and updates
+   - Vaccination record verification
+   - Check-in summary report for staff
+   - **Priority**: Critical | **Effort**: 2-3 weeks | **Target**: Nov 22, 2025
+
 ### User Experience Enhancements
-1. **Drag-and-Drop Calendar**
+2. **Drag-and-Drop Calendar**
    - Move reservations between dates/times
    - Drag to reschedule appointments
    - Visual feedback during drag operations
    - Conflict detection on drop
    - **Priority**: High | **Effort**: 1-2 weeks | **Target**: Nov 8, 2025
 
-2. **Area-Specific Checklists**
+3. **Area-Specific Checklists**
    - Kennel check-in/check-out checklists
    - Grooming service checklists
    - Training session checklists
@@ -31,7 +41,7 @@ _All critical priorities for October 2025 have been completed! 🎉_
    - **Priority**: High | **Effort**: 1 week | **Target**: Nov 15, 2025
 
 ### Revenue Features
-3. **Retail Items & POS System**
+4. **Retail Items & POS System**
    - Inventory management
    - Product catalog
    - Package deals and bundles
@@ -39,7 +49,7 @@ _All critical priorities for October 2025 have been completed! 🎉_
    - Retail reporting
    - **Priority**: High | **Effort**: 2 weeks | **Target**: Nov 29, 2025
 
-4. **High Demand Pricing**
+5. **High Demand Pricing**
    - Seasonal pricing rules
    - Peak time surcharges
    - Capacity-based pricing
