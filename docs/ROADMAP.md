@@ -299,7 +299,6 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 ## 🐛 Outstanding Issues
 
 ### Known Bugs
-- 🔲 Cash amount paid after discount can have partial penny issues
 - 🔲 Suite capacity currently limited to 1 (need multi-pet suite support)
 - 🔲 Add feeding schedule to kennel cards with weekly dates
 
@@ -342,6 +341,12 @@ Features and tasks are prioritized based on:
 ## ✅ Completed Features & Milestones
 
 ### October 2025
+
+#### Bug Fixes (Oct 21, 2025)
+- ✅ **Cash Amount Paid After Discount Fix**
+  - Fixed partial penny rounding issues in cash payments
+  - Proper decimal handling for discounted amounts
+  - Accurate payment calculations
 
 #### Calendar Fixes (Oct 21, 2025)
 - ✅ **Grooming Calendar Fix**
