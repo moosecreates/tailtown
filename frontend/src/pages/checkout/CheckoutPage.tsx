@@ -125,20 +125,36 @@ const CheckoutPage: React.FC = () => {
       const createdReservations = [];
       for (const item of cartItems) {
         let reservation;
+        let isExistingReservation = false;
         
-        // Check if this is an existing reservation (from add-ons dialog)
+        // Check if this is an existing reservation (from grooming/training calendar)
         if (item.id && item.id.startsWith('reservation-')) {
           const existingReservationId = item.id.replace('reservation-', '');
-          console.log('Using existing reservation:', existingReservationId);
+          console.log('Checking for existing reservation:', existingReservationId);
           
-          try {
-            // Get the existing reservation
-            reservation = await reservationService.getReservationById(existingReservationId);
-            console.log('Found existing reservation:', reservation);
-          } catch (error) {
-            console.error('Error fetching existing reservation:', error);
-            // If we can't find the existing reservation, create a new one
-            reservation = null;
+          // Only try to fetch if the ID looks like a UUID (not a timestamp)
+          if (existingReservationId.includes('-') && existingReservationId.length > 20) {
+            try {
+              // Get the existing reservation
+              const response: any = await reservationService.getReservationById(existingReservationId);
+              console.log('Found existing reservation:', response);
+              
+              // Handle different response formats
+              if (response?.data) {
+                reservation = response.data;
+              } else {
+                reservation = response;
+              }
+              
+              isExistingReservation = true;
+              console.log('Using existing reservation, will update status after payment');
+            } catch (error) {
+              console.error('Error fetching existing reservation:', error);
+              // If we can't find the existing reservation, create a new one
+              reservation = null;
+            }
+          } else {
+            console.log('ID appears to be a timestamp, will create new reservation');
           }
         }
         
@@ -161,12 +177,20 @@ const CheckoutPage: React.FC = () => {
           };
           
           console.log('Creating new reservation:', reservationData);
-          reservation = await reservationService.createReservation(reservationData);
+          const response: any = await reservationService.createReservation(reservationData);
+          
+          // Handle different response formats
+          if (response?.data) {
+            reservation = response.data;
+          } else {
+            reservation = response;
+          }
         }
         
         createdReservations.push({
           reservation,
-          originalItem: item
+          originalItem: item,
+          isExistingReservation
         });
       }
       
@@ -231,6 +255,21 @@ const CheckoutPage: React.FC = () => {
         await invoiceService.updateInvoice(invoice.id, { 
           status: 'PAID' as 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED' | 'REFUNDED' 
         });
+        
+        // Step 5: Update reservation status to CONFIRMED for existing reservations (grooming/training)
+        for (const { reservation, isExistingReservation } of createdReservations) {
+          if (isExistingReservation && reservation?.id) {
+            console.log('Updating reservation status to CONFIRMED:', reservation.id);
+            try {
+              await reservationService.updateReservation(reservation.id, {
+                status: 'CONFIRMED' as 'CONFIRMED' | 'PENDING' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
+              });
+            } catch (error) {
+              console.error('Error updating reservation status:', error);
+              // Don't fail the checkout if status update fails
+            }
+          }
+        }
       }
       
       console.log('Checkout completed successfully');

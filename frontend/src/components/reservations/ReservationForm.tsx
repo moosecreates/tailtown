@@ -632,8 +632,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   }, [startDate, endDate, availableSuites, initialData?.id]);
 
   /**
-   * Handle proceeding to checkout instead of creating reservation immediately
-   * Adds the reservation details to the shopping cart and navigates to checkout
+   * Handle proceeding to checkout
+   * For grooming/training services: Creates the reservation first, then adds to cart with real ID
+   * For boarding/daycare services: Adds reservation details to cart (reservation created during checkout)
    */
   const handleProceedToCheckout = async () => {
     setError('');
@@ -659,9 +660,46 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         return;
       }
       
+      // Check if this is a grooming or training service
+      const isGroomingOrTraining = selectedServiceObj.serviceCategory === 'GROOMING' || 
+                                    selectedServiceObj.serviceCategory === 'TRAINING';
+      
+      let reservationId: string | undefined;
+      
+      // For grooming/training, create the reservation first
+      if (isGroomingOrTraining && onSubmit) {
+        console.log('Creating grooming/training reservation before checkout...');
+        
+        const formData: any = {
+          customerId: selectedCustomer,
+          petId: selectedPet,
+          serviceId: selectedService,
+          startDate: startDate ? startDate.toISOString() : null,
+          endDate: endDate ? endDate.toISOString() : null,
+          status: 'PENDING', // Set as PENDING until payment is complete
+          notes: '',
+        };
+        
+        try {
+          // Call onSubmit to create the reservation
+          const result = await onSubmit(formData);
+          console.log('Reservation created:', result);
+          
+          if (result?.reservationId) {
+            reservationId = result.reservationId;
+            console.log('Using real reservation ID:', reservationId);
+          } else {
+            throw new Error('Failed to create reservation');
+          }
+        } catch (error) {
+          console.error('Error creating reservation:', error);
+          throw error;
+        }
+      }
+      
       // Create cart item with reservation details
       const cartItem = {
-        id: `reservation-${Date.now()}`, // Temporary ID for cart
+        id: reservationId ? `reservation-${reservationId}` : `reservation-${Date.now()}`,
         price: selectedServiceObj.price || 0,
         quantity: 1,
         serviceName: selectedServiceObj.name,
