@@ -5,9 +5,49 @@
 
 A modern, full-featured management system for pet resorts, providing comprehensive tools for reservations, customer management, and pet care services.
 
+## Recent Updates (October 2025)
+
+### ✅ LATEST FIX: Grooming Reservation Service Startup (October 21, 2025)
+
+#### Issue Resolved
+- **Problem**: Grooming calendar unable to load reservations, showing `ERR_CONNECTION_REFUSED` errors
+- **Root Cause**: Reservation service (port 4003) was not running while frontend and customer service were operational
+- **Impact**: Grooming calendar completely non-functional, unable to view or create reservations
+
+#### Technical Solution Implemented
+1. **Service Status Verification**: Identified that reservation service had stopped
+2. **Port Conflict Resolution**: Cleared misleading `EADDRINUSE` errors
+3. **Clean Service Restart**: Started reservation service with explicit PORT configuration
+4. **Health Check Verification**: Confirmed all services operational and communicating properly
+
+#### Result
+- ✅ **Reservation Service**: Running on port 4003 with database connectivity
+- ✅ **Grooming Calendar**: Fully functional with reservation loading and creation
+- ✅ **API Endpoints**: All reservation endpoints responding correctly with tenant support
+- ✅ **Service Category Filtering**: Proper filtering of grooming vs boarding/daycare reservations
+
+#### Quick Service Startup Reference
+```bash
+# Check service status
+lsof -i :3000  # Frontend
+lsof -i :4003  # Reservation service
+lsof -i :4004  # Customer service
+
+# Start reservation service
+cd services/reservation-service
+source ~/.nvm/nvm.sh && PORT=4003 npm run dev
+
+# Verify health
+curl http://localhost:4003/health
+```
+
+**Documentation**: See [Service Startup Troubleshooting Guide](docs/troubleshooting/SERVICE-STARTUP-GUIDE.md) for comprehensive service management instructions.
+
+---
+
 ## Recent Updates (September 2025)
 
-### ✅ LATEST FIX: Reservation Edit Form Data Loading (September 23, 2025)
+### ✅ Reservation Edit Form Data Loading (September 23, 2025)
 
 #### Issue Resolved
 - **Problem**: Reservation edit form fields were not pre-populating when clicking on existing reservations in the calendar
