@@ -16,19 +16,14 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - Payment reporting and reconciliation
    - **Priority**: Critical | **Effort**: 1 week | **Target**: Oct 28, 2025
 
-2. **Optional Add-Ons Fix**
-   - Make add-ons truly optional in order process
-   - Allow skipping add-ons without blocking checkout
-   - **Priority**: Critical | **Effort**: 1-2 days | **Target**: Oct 25, 2025
-
 ### Calendar & Operations
-3. **Grooming Calendar Fix**
+2. **Grooming Calendar Fix**
    - Restore full functionality to grooming calendar
    - Service category filtering
    - Reservation creation and editing
    - **Priority**: High | **Effort**: 2-3 days | **Target**: Oct 30, 2025
 
-4. **Training Calendar Fix**
+3. **Training Calendar Fix**
    - Restore full functionality to training calendar
    - Service category filtering
    - Reservation creation and editing
@@ -360,6 +355,12 @@ Features and tasks are prioritized based on:
 ## ✅ Completed Features & Milestones
 
 ### October 2025
+
+#### Optional Add-Ons Fix (Oct 21, 2025)
+- ✅ **Optional Add-Ons in Order Process**
+  - Made add-ons truly optional during checkout
+  - Users can skip add-ons without blocking order completion
+  - Improved workflow flexibility
 
 #### Service Startup & Documentation (Oct 21, 2025)
 - ✅ Fixed grooming reservation service startup issues
