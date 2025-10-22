@@ -16,19 +16,6 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - Payment reporting and reconciliation
    - **Priority**: Critical | **Effort**: 1 week | **Target**: Oct 28, 2025
 
-### Calendar & Operations
-2. **Grooming Calendar Fix**
-   - Restore full functionality to grooming calendar
-   - Service category filtering
-   - Reservation creation and editing
-   - **Priority**: High | **Effort**: 2-3 days | **Target**: Oct 30, 2025
-
-3. **Training Calendar Fix**
-   - Restore full functionality to training calendar
-   - Service category filtering
-   - Reservation creation and editing
-   - **Priority**: High | **Effort**: 2-3 days | **Target**: Oct 30, 2025
-
 ---
 
 ## 🎯 High Priority (November 2025)
@@ -355,6 +342,19 @@ Features and tasks are prioritized based on:
 ## ✅ Completed Features & Milestones
 
 ### October 2025
+
+#### Calendar Fixes (Oct 21, 2025)
+- ✅ **Grooming Calendar Fix**
+  - Restored full functionality to grooming calendar
+  - Service category filtering working correctly
+  - Reservation creation and editing operational
+  - Fixed service startup issues preventing calendar from loading
+
+- ✅ **Training Calendar Fix**
+  - Restored full functionality to training calendar
+  - Service category filtering working correctly
+  - Reservation creation and editing operational
+  - Specialized calendar component functioning properly
 
 #### Optional Add-Ons Fix (Oct 21, 2025)
 - ✅ **Optional Add-Ons in Order Process**
