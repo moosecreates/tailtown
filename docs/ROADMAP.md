@@ -148,7 +148,11 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - Admin area to edit required vaccines
    - Multi-tenant support
    - Different policies per location
-   - **Priority**: Medium | **Effort**: 1 week | **Target**: Jan 31, 2026
+   - Customer vaccine record upload (photos and PDFs)
+   - Document storage and retrieval system
+   - Vaccine expiration tracking and alerts
+   - Staff verification workflow for uploaded records
+   - **Priority**: Medium | **Effort**: 2 weeks | **Target**: Jan 31, 2026
 
 2. **System Configuration**
    - Enhanced admin settings
