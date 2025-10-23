@@ -110,7 +110,8 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
     loadSuites();
     // Reload suites when reloadTrigger changes (or on mount)
     // No timer-based auto-refresh
-  }, [reloadTrigger]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reloadTrigger]); // loadSuites defined below, stable function
   
   // Update filter date when filterDate prop changes
   useEffect(() => {
@@ -129,7 +130,8 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
       loadSuites();
       prevFilter.current = { ...filter };
     }
-  }, [filter.suiteType, filter.status, filter.search, filter.date]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter.suiteType, filter.status, filter.search, filter.date]); // loadSuites defined below, stable function
 
   const loadSuites = async () => {
     // Prevent function from being called during render
