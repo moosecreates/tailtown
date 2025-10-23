@@ -88,15 +88,6 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
         // Filter reservations by service category if specified
         let filteredReservations = response.data;
         if (serviceCategories && serviceCategories.length > 0) {
-          // First, log all reservations to see what we're working with
-          
-          // If we have reservations, log the first one's service details to debug
-          if (response.data.length > 0) {
-              service: response.data[0].service,
-              serviceId: response.data[0].serviceId
-            });
-          }
-          
           // Filter reservations by service category
           filteredReservations = response.data.filter(reservation => {
             // If we don't have service categories to filter by, include all reservations
@@ -366,11 +357,6 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
       // Get the service to determine if we should show add-ons
       // We'll need to check the service type to determine if add-ons are applicable
       // For now, we'll show add-ons for all services to ensure they're available
-      
-      // Open the add-on dialog for all services to ensure add-ons are available
-        reservationId: updatedReservation.id,
-        serviceId: updatedReservation.serviceId
-      });
       
       // Set a small timeout to ensure the dialog opens after the form closes
       setTimeout(() => {
