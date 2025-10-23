@@ -10,6 +10,7 @@ This directory contains all project-wide documentation for the Tailtown Pet Reso
   - [Current State](./CURRENT_STATE.md) - Overview of the current system state and features
   - [Roadmap](./ROADMAP.md) - Future development plans
   - [Home](./Home.md) - Project introduction and overview
+  - [Quick Start](./QUICK-START.md) - 5-minute setup guide
 
 - **Architecture Documentation** (`/docs/architecture/`)
   - [Architecture Overview](./architecture/Architecture.md) - System architecture overview
@@ -33,6 +34,9 @@ This directory contains all project-wide documentation for the Tailtown Pet Reso
   - [Environment Variables](./operations/Environment-Variables.md) - Documentation of environment variables
   - [DevOps](./operations/DevOps.md) - Deployment and operations guide
   - [Setup Guide](./operations/SETUP.md) - Comprehensive setup instructions for development
+
+- **Developer Tools** (`/mcp-server/`)
+  - [MCP RAG Server](../mcp-server/README.md) - AI-enhanced code search with semantic indexing
 
 - **Changelog** (`/docs/changelog/`)
   - [Changelog](./changelog/CHANGELOG.md) - Comprehensive release notes and change history

@@ -27,11 +27,13 @@ These tools must be installed on your system:
    createdb tailtown_dev
    ```
 
-## Backend Setup (Customer Service)
+## Backend Setup
+
+### Customer Service (Port 4004)
 
 1. **Install dependencies**:
    ```bash
-   cd /Users/robweinstein/CascadeProjects/tailtown/services/customer
+   cd services/customer
    npm install
    ```
 
@@ -47,31 +49,90 @@ These tools must be installed on your system:
    npx ts-node src/tests/scripts/seed-services.ts
    ```
 
-3. **Start the backend server**:
+3. **Start the customer service**:
    ```bash
+   source ~/.nvm/nvm.sh
    npm run dev
    ```
-   The server should start on http://localhost:3002
+   The server should start on http://localhost:4004
+
+### Reservation Service (Port 4003)
+
+1. **Install dependencies**:
+   ```bash
+   cd services/reservation-service
+   npm install
+   ```
+
+2. **Database setup**:
+   ```bash
+   # Generate Prisma client
+   npx prisma generate
+   
+   # Run migrations
+   npx prisma migrate deploy
+   ```
+
+3. **Start the reservation service**:
+   ```bash
+   source ~/.nvm/nvm.sh
+   PORT=4003 npm run dev
+   ```
+   The server should start on http://localhost:4003
 
 ## Frontend Setup
 
 1. **Install dependencies**:
    ```bash
-   cd /Users/robweinstein/CascadeProjects/tailtown/frontend
+   cd frontend
    npm install
    ```
 
 2. **Start the development server**:
    ```bash
+   source ~/.nvm/nvm.sh
    npm start
    ```
    The frontend should start on http://localhost:3000
+
+## MCP RAG Server Setup (Optional)
+
+The MCP RAG server provides AI-enhanced code search for Windsurf/Cascade.
+
+1. **Install Python dependencies**:
+   ```bash
+   cd mcp-server
+   pip install -r requirements.txt
+   ```
+
+2. **Configure Windsurf/Cascade**:
+   Edit `~/.codeium/windsurf/mcp_config.json`:
+   ```json
+   {
+     "mcpServers": {
+       "local-rag": {
+         "command": "python3",
+         "args": ["/path/to/tailtown/mcp-server/server.py"],
+         "env": {
+           "PYTHONPATH": "/path/to/tailtown/mcp-server",
+           "TAILTOWN_ROOT": "/path/to/tailtown"
+         }
+       }
+     }
+   }
+   ```
+
+3. **Restart Windsurf** to load the MCP server
+
+4. **Verify**: Use `mcp0_list_indexed_files()` in Windsurf
+
+See [MCP Server README](../../mcp-server/README.md) for complete documentation.
 
 ## Running Tests
 
 1. **Run all tests**:
    ```bash
-   cd /Users/robweinstein/CascadeProjects/tailtown/services/customer
+   cd services/customer
    npm test
    ```
 
@@ -95,17 +156,17 @@ These tools must be installed on your system:
 ## Testing with Postman
 
 1. Import the Postman collection from:
-   `/Users/robweinstein/CascadeProjects/tailtown/services/customer/src/tests/postman/tailtown-services-api.postman_collection.json`
+   `services/customer/src/tests/postman/tailtown-services-api.postman_collection.json`
 
 2. Configure a Postman environment with:
-   - `baseUrl`: `http://localhost:3002`
+   - `baseUrl`: `http://localhost:4004`
 
 3. Use the collection to test all service endpoints
 
 ## Manual Testing Steps
 
 For manual testing without Postman, follow the test plan at:
-`/Users/robweinstein/CascadeProjects/tailtown/services/customer/src/tests/manual-test-plan.md`
+`services/customer/src/tests/manual-test-plan.md`
 
 ## Troubleshooting
 

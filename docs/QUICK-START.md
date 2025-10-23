@@ -105,7 +105,6 @@ docker ps | grep postgres
 
 # Connect to database
 psql -h localhost -p 5433 -U postgres -d customer
-psql -h localhost -p 5434 -U postgres -d reservation
 
 # Run migrations
 cd services/customer
@@ -164,7 +163,7 @@ docker ps | grep postgres
 docker start tailtown-postgres
 
 # Verify connection
-psql -h localhost -p 5434 -U postgres -d reservation -c "SELECT 1;"
+psql -h localhost -p 5433 -U postgres -d customer -c "SELECT 1;"
 ```
 
 ### Frontend Shows Errors
@@ -177,12 +176,35 @@ npm start
 
 ---
 
+## 🤖 MCP RAG Server (Optional)
+
+The MCP RAG server provides AI-enhanced code search capabilities for Windsurf/Cascade.
+
+### Quick Setup
+```bash
+# Install Python dependencies
+cd mcp-server
+pip install -r requirements.txt
+
+# Configure in Windsurf
+# Edit ~/.codeium/windsurf/mcp_config.json
+# See mcp-server/README.md for full configuration
+
+# Test it works
+# In Windsurf, try: mcp0_list_indexed_files()
+```
+
+**Documentation**: See [MCP Server README](../mcp-server/README.md) for complete setup.
+
+---
+
 ## 📚 Documentation
 
 - **[Service Startup Guide](troubleshooting/SERVICE-STARTUP-GUIDE.md)** - Detailed troubleshooting
 - **[Architecture Overview](architecture/OVERVIEW.md)** - System design
 - **[API Documentation](api/README.md)** - API endpoints
 - **[Development Guide](development/GUIDE.md)** - Development workflow
+- **[MCP Server Setup](../mcp-server/README.md)** - AI-enhanced code search
 
 ---
 

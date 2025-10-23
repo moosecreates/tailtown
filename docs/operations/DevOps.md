@@ -12,12 +12,19 @@ source ~/.nvm/nvm.sh
 
 2. Starting Services
 ```bash
-# Start backend first
+# Start customer service (Terminal 1)
 cd services/customer
+source ~/.nvm/nvm.sh
 npm run dev
 
-# Start frontend second
+# Start reservation service (Terminal 2)
+cd services/reservation-service
+source ~/.nvm/nvm.sh
+PORT=4003 npm run dev
+
+# Start frontend (Terminal 3)
 cd frontend
+source ~/.nvm/nvm.sh
 npm start
 ```
 
@@ -28,8 +35,11 @@ npm start
 # Check frontend server (port 3000)
 lsof -i :3000
 
-# Check backend server (port 3002)
-lsof -i :3002
+# Check customer service (port 4004)
+lsof -i :4004
+
+# Check reservation service (port 4003)
+lsof -i :4003
 ```
 
 #### Killing Processes
@@ -44,9 +54,11 @@ kill -9 58875
 ### Best Practices
 
 1. Server Start Order
-   - Always start backend before frontend
-   - Wait for backend to fully initialize before starting frontend
-   - Verify both servers are running before testing
+   - Start customer service first (port 4004)
+   - Start reservation service second (port 4003)
+   - Start frontend last (port 3000)
+   - Wait for each service to fully initialize before starting the next
+   - Verify all three services are running before testing
 
 2. Process Management
    - Always check for existing processes before starting servers
