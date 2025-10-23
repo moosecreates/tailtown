@@ -15,6 +15,11 @@ export interface AddOnService {
   serviceId?: string;
 }
 
+export enum DepositType {
+  PERCENTAGE = 'PERCENTAGE',
+  FIXED_AMOUNT = 'FIXED_AMOUNT'
+}
+
 export interface Service {
   id: string;
   name: string;
@@ -26,6 +31,9 @@ export interface Service {
   requiresStaff: boolean;
   notes?: string;
   isActive: boolean;
+  depositRequired?: boolean;
+  depositType?: DepositType;
+  depositAmount?: number;
   createdAt?: string;
   updatedAt?: string;
   availableAddOns?: AddOnService[];
