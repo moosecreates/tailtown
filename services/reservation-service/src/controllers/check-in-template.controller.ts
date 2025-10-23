@@ -218,6 +218,15 @@ export const updateTemplate = async (req: Request, res: Response) => {
     const tenantId = req.headers['x-tenant-id'] as string || 'dev';
     const { name, description, isActive, isDefault, sections } = req.body;
 
+    console.log('=== UPDATE TEMPLATE REQUEST ===');
+    console.log('Template ID:', id);
+    console.log('Tenant ID:', tenantId);
+    console.log('Request body keys:', Object.keys(req.body));
+    console.log('Sections count:', sections?.length || 0);
+    if (sections && sections.length > 0) {
+      console.log('First section:', JSON.stringify(sections[0], null, 2));
+    }
+
     // Verify template exists and belongs to tenant
     const existing = await prisma.checkInTemplate.findFirst({
       where: { id, tenantId }
@@ -239,47 +248,70 @@ export const updateTemplate = async (req: Request, res: Response) => {
     }
 
     // Update basic fields first
+    console.log('Step 1: Updating basic fields...');
     await prisma.checkInTemplate.update({
       where: { id },
       data: {
-        name,
-        description,
-        isActive,
-        isDefault
+        name: name || existing.name,
+        description: description !== undefined ? description : existing.description,
+        isActive: isActive !== undefined ? isActive : existing.isActive,
+        isDefault: isDefault !== undefined ? isDefault : existing.isDefault
       }
     });
+    console.log('Step 1: Basic fields updated successfully');
 
     // If sections are provided, delete existing sections and recreate
-    if (sections) {
-      // Delete existing sections (cascade will delete questions)
+    if (sections && Array.isArray(sections)) {
+      console.log('Step 2: Deleting existing sections...');
+      
+      // First, get all sections for this template
+      const existingSections = await prisma.checkInSection.findMany({
+        where: { templateId: id },
+        include: { questions: true }
+      });
+      
+      // Delete responses for all questions in these sections
+      for (const section of existingSections) {
+        for (const question of section.questions) {
+          await prisma.checkInResponse.deleteMany({
+            where: { questionId: question.id }
+          });
+        }
+      }
+      
+      // Now delete the sections (cascade will delete questions)
       await prisma.checkInSection.deleteMany({
         where: { templateId: id }
       });
+      console.log('Step 2: Existing sections deleted');
 
+      console.log('Step 3: Creating new sections...');
       // Create new sections with questions
-      await prisma.checkInTemplate.update({
-        where: { id },
-        data: {
-          sections: {
-            create: sections.map((section: any, sectionIndex: number) => ({
-              title: section.title,
-              description: section.description,
-              order: section.order || sectionIndex + 1,
-              questions: {
-                create: section.questions?.map((question: any, questionIndex: number) => ({
-                  questionText: question.questionText,
-                  questionType: question.questionType,
-                  options: question.options || null,
-                  isRequired: question.isRequired || false,
-                  order: question.order || questionIndex + 1,
-                  placeholder: question.placeholder || null,
-                  helpText: question.helpText || null
-                })) || []
-              }
-            }))
+      for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
+        const section = sections[sectionIndex];
+        console.log(`Creating section ${sectionIndex + 1}/${sections.length}: ${section.title}`);
+        
+        await prisma.checkInSection.create({
+          data: {
+            templateId: id,
+            title: section.title,
+            description: section.description || null,
+            order: section.order || sectionIndex + 1,
+            questions: {
+              create: (section.questions || []).map((question: any, questionIndex: number) => ({
+                questionText: question.questionText,
+                questionType: question.questionType,
+                options: question.options || null,
+                isRequired: question.isRequired || false,
+                order: question.order || questionIndex + 1,
+                placeholder: question.placeholder || null,
+                helpText: question.helpText || null
+              }))
+            }
           }
-        }
-      });
+        });
+      }
+      console.log('Step 3: All sections created successfully');
     }
 
     // Fetch and return the updated template
@@ -301,11 +333,19 @@ export const updateTemplate = async (req: Request, res: Response) => {
       status: 'success',
       data: template
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating check-in template:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack
+    });
     res.status(500).json({
       status: 'error',
-      message: 'Failed to update check-in template'
+      message: 'Failed to update check-in template',
+      error: error.message,
+      details: error.meta
     });
   }
 };

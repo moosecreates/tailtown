@@ -82,8 +82,16 @@ const CheckInTemplateManager: React.FC = () => {
   const handleSaveTemplate = async (template: any) => {
     try {
       if (template.id) {
-        // Update existing template
-        await checkInService.updateTemplate(template.id, template);
+        // Update existing template - only send necessary fields
+        const updateData = {
+          name: template.name,
+          description: template.description,
+          isActive: template.isActive,
+          isDefault: template.isDefault,
+          sections: template.sections
+        };
+        console.log('Saving template:', template.id, updateData);
+        await checkInService.updateTemplate(template.id, updateData);
       } else {
         // Create new template
         await checkInService.createTemplate(template);
@@ -92,7 +100,8 @@ const CheckInTemplateManager: React.FC = () => {
       setSelectedTemplate(null);
       setError(null);
     } catch (err: any) {
-      setError('Failed to save template: ' + (err.message || 'Unknown error'));
+      console.error('Save error:', err);
+      setError('Failed to save template: ' + (err.response?.data?.error || err.message || 'Unknown error'));
     }
   };
 
