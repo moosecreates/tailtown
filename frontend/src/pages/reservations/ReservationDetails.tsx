@@ -68,15 +68,10 @@ const ReservationDetails = () => {
     }
   };
 
-  const handleCheckIn = async () => {
-    try {
-      if (!id) return;
-      await reservationService.updateReservation(id, { status: 'CHECKED_IN' });
-      await fetchReservation();
-    } catch (error) {
-      console.error('Error checking in reservation:', error);
-      setError('Failed to check in reservation');
-    }
+  const handleCheckIn = () => {
+    // Navigate to the new check-in workflow instead of just updating status
+    if (!id) return;
+    navigate(`/check-in/${id}`);
   };
 
   const handleCheckOut = async () => {
