@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Paper,
   Typography,
@@ -61,7 +61,7 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
   }, [startDate]);
   
   // Fetch schedules for the current date range
-  const fetchSchedules = async () => {
+  const fetchSchedules = useCallback(async () => {
     setLoading(true);
     try {
       let fetchedSchedules;
@@ -96,11 +96,11 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
     } finally {
       setLoading(false);
     }
-  };
+  }, [staffId, startDate, endDate]);
   
   useEffect(() => {
     fetchSchedules();
-  }, [currentDate, staffId]);
+  }, [fetchSchedules]);
   
   const handlePreviousWeek = () => {
     setCurrentDate(subWeeks(currentDate, 1));

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Button, Typography, Paper, CircularProgress, Alert } from '@mui/material';
 import { reservationApi } from '../../services/api';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
@@ -12,7 +12,7 @@ const ApiTester: React.FC = () => {
   const [result, setResult] = useState<any>(null);
   const [apiUrl, setApiUrl] = useState<string>(process.env.REACT_APP_RESERVATION_API_URL || 'http://localhost:4003');
 
-  const testApi = async () => {
+  const testApi = useCallback(async () => {
     setLoading(true);
     setError(null);
     setResult(null);
@@ -42,12 +42,12 @@ const ApiTester: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Automatically run the test on component mount
   useEffect(() => {
     testApi();
-  }, []);
+  }, [testApi]);
 
   return (
     <Box sx={{ p: 3 }}>
