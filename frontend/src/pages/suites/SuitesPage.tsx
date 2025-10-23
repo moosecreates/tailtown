@@ -142,7 +142,6 @@ const SuitesPage: React.FC = () => {
       // Fetch the suite details from the API with the current date
       const response = await resourceService.getResource(suiteId, formattedDate);
       if (response?.status === 'success' && response?.data) {
-        console.log('Suite details received from API:', response.data);
         
         // Use the utility function to determine if the suite is occupied
         const suiteStatus = determineSuiteStatus(response.data);
@@ -150,9 +149,6 @@ const SuitesPage: React.FC = () => {
         
         // Set the occupied status based on the determined status
         setIsOccupied(occupied);
-        console.log(`Suite ${suiteId} status: ${suiteStatus}`);
-        console.log(`Suite ${suiteId} is occupied: ${occupied}`);
-        console.log('Reservations:', response.data.reservations);
         
         // Store the suite details as received from the API
         setSuiteDetails(response.data);
@@ -176,7 +172,6 @@ const SuitesPage: React.FC = () => {
     })
       .then(response => {
         if (response?.status === 'success' && response?.data) {
-          console.log('Suite marked as cleaned:', response.data);
           setSuiteDetails({
             ...suiteDetails,
             attributes: {
@@ -320,11 +315,6 @@ const SuitesPage: React.FC = () => {
                   const calculatedStatus = determineSuiteStatus(suiteDetails);
                   const finalStatus = isKnownOccupied ? 'OCCUPIED' : calculatedStatus;
                   
-                  console.log('Suite details modal - suite ID:', suiteDetails.id);
-                  console.log('Suite details modal - is known occupied:', isKnownOccupied);
-                  console.log('Suite details modal - calculated status:', calculatedStatus);
-                  console.log('Suite details modal - final status:', finalStatus);
-                  console.log('Suite details modal - reservations:', suiteDetails.reservations);
                   
                   // Return the appropriate chip based on the status
                   if (finalStatus === 'OCCUPIED' || isKnownOccupied) {

@@ -85,15 +85,12 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
       setError(null);
       setSelectedAddOns([]); // Reset selected add-ons when loading new ones
       
-      console.log('AddOnSelectionDialog: Loading add-ons for service ID:', serviceId);
       
       // First try to find add-ons specifically for this service
       const addOns = await addonService.getAllAddOns(serviceId);
       
-      console.log('AddOnSelectionDialog: Loaded add-ons:', addOns);
       
       if (addOns.length === 0) {
-        console.log('AddOnSelectionDialog: No add-ons found for this service, showing all available add-ons');
         // If no add-ons found for this specific service, get all add-ons
         const allAddOns = await addonService.getAllAddOns();
         setAvailableAddOns(allAddOns);
@@ -111,7 +108,6 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
   // Load available add-on services when the dialog opens
   useEffect(() => {
     if (open && serviceId) {
-      console.log('AddOnSelectionDialog: Dialog opened, loading add-ons for service ID:', serviceId);
       loadAddOns();
     }
   }, [open, serviceId, loadAddOns]);
@@ -185,7 +181,6 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
           addOns: [] // No add-ons selected
         };
         
-        console.log('Adding reservation to cart and redirecting to checkout:', cartItem);
         
         // Add to cart and navigate to checkout
         addItem(cartItem);
@@ -213,7 +208,6 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
         quantity: addon.quantity
       }));
       
-      console.log('AddOnSelectionDialog: Sending add-on data to backend:', addOnData);
       
       // Save add-ons to the reservation using the reservation service
       await reservationService.addAddOnsToReservation(reservationId, addOnData);
@@ -253,7 +247,6 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
           }))
         };
         
-        console.log('Adding reservation with add-ons to cart and redirecting to checkout:', cartItem);
         
         // Add to cart and navigate to checkout
         addItem(cartItem);
@@ -322,7 +315,6 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
       keepMounted={false}
       TransitionProps={{
         onEnter: () => {
-          console.log('AddOnSelectionDialog: Dialog entering');
         }
       }}
     >

@@ -41,11 +41,9 @@ const Resources: React.FC = () => {
 
   const debouncedFilter = useMemo(
     () => debounce((term: string, type: string) => {
-      console.log('Filtering resources:', { resources: resources.length, term, type });
       try {
         // First check if we have any resources
         if (resources.length === 0) {
-          console.log('No resources to filter');
           setFilteredResources([]);
           return;
         }
@@ -69,7 +67,6 @@ const Resources: React.FC = () => {
           return matchesType && matchesSearch;
         });
         
-        console.log('Filtered resources:', filtered.length);
         setFilteredResources(filtered);
       } catch (error) {
         console.error('Error filtering resources:', error);
@@ -80,8 +77,6 @@ const Resources: React.FC = () => {
   );
 
   useEffect(() => {
-    console.log('Running filter with:', { searchTerm, filterType });
-    console.log('Current resources:', resources.length);
     debouncedFilter(searchTerm, filterType);
     return () => {
       debouncedFilter.cancel();
@@ -90,13 +85,10 @@ const Resources: React.FC = () => {
 
   const loadResources = useCallback(async () => {
     try {
-      console.log('Loading resources...');
       const response = await resourceManagement.getAllResources();
-      console.log('Resources response:', response);
       
       // Direct response from the service should already be the data array
       if (Array.isArray(response)) {
-        console.log('Setting resources from array:', response.length);
         setResources(response);
       } else {
         console.error('Invalid resources response format:', response);
@@ -149,7 +141,6 @@ const Resources: React.FC = () => {
   const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
 
   useEffect(() => {
-    console.log('Resources changed, updating filtered resources:', resources.length);
     setFilteredResources(resources);
   }, [resources]);
 

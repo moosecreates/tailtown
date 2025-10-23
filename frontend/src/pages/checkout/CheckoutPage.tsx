@@ -119,7 +119,6 @@ const CheckoutPage: React.FC = () => {
     setError(null);
     
     try {
-      console.log('Processing checkout for items:', cartItems);
       
       // Step 1: Handle reservations for each cart item
       const createdReservations = [];
@@ -130,14 +129,12 @@ const CheckoutPage: React.FC = () => {
         // Check if this is an existing reservation (from grooming/training calendar)
         if (item.id && item.id.startsWith('reservation-')) {
           const existingReservationId = item.id.replace('reservation-', '');
-          console.log('Checking for existing reservation:', existingReservationId);
           
           // Only try to fetch if the ID looks like a UUID (not a timestamp)
           if (existingReservationId.includes('-') && existingReservationId.length > 20) {
             try {
               // Get the existing reservation
               const response: any = await reservationService.getReservationById(existingReservationId);
-              console.log('Found existing reservation:', response);
               
               // Handle different response formats
               if (response?.data) {
@@ -147,14 +144,12 @@ const CheckoutPage: React.FC = () => {
               }
               
               isExistingReservation = true;
-              console.log('Using existing reservation, will update status after payment');
             } catch (error) {
               console.error('Error fetching existing reservation:', error);
               // If we can't find the existing reservation, create a new one
               reservation = null;
             }
           } else {
-            console.log('ID appears to be a timestamp, will create new reservation');
           }
         }
         
@@ -176,7 +171,6 @@ const CheckoutPage: React.FC = () => {
             notes: item.notes || '',
           };
           
-          console.log('Creating new reservation:', reservationData);
           const response: any = await reservationService.createReservation(reservationData);
           
           // Handle different response formats
@@ -233,7 +227,6 @@ const CheckoutPage: React.FC = () => {
         lineItems: invoiceLineItems
       };
       
-      console.log('Creating invoice:', invoiceData);
       const invoice = await invoiceService.createInvoice(invoiceData);
       
       // Step 3: Process payment (only if invoice was created successfully)
@@ -248,7 +241,6 @@ const CheckoutPage: React.FC = () => {
           notes: `Payment processed via ${paymentMethod}`
         };
         
-        console.log('Processing payment:', paymentData);
         await paymentService.createPayment(paymentData);
         
         // Step 4: Update invoice status to PAID
@@ -259,7 +251,6 @@ const CheckoutPage: React.FC = () => {
         // Step 5: Update reservation status to CONFIRMED for existing reservations (grooming/training)
         for (const { reservation, isExistingReservation } of createdReservations) {
           if (isExistingReservation && reservation?.id) {
-            console.log('Updating reservation status to CONFIRMED:', reservation.id);
             try {
               await reservationService.updateReservation(reservation.id, {
                 status: 'CONFIRMED' as 'CONFIRMED' | 'PENDING' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'
@@ -272,7 +263,6 @@ const CheckoutPage: React.FC = () => {
         }
       }
       
-      console.log('Checkout completed successfully');
       
       // Process successful payment
       setSuccess(true);

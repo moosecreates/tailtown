@@ -202,7 +202,6 @@ const OrderEntry: React.FC = () => {
             petCount: 1 // Default to 1 pet
           };
           
-          console.log('Checking for price rules with:', priceRequest);
           const priceResponse = await priceRuleService.calculatePrice(priceRequest);
           
           if (priceResponse && priceResponse.data) {
@@ -214,7 +213,6 @@ const OrderEntry: React.FC = () => {
               const discountedPrice = priceResponse.data.finalPrice;
               discount = originalPrice - discountedPrice;
               
-              console.log(`Applied price rules resulted in a discount of ${discount}`);
             }
           }
         } catch (err) {
@@ -258,16 +256,11 @@ const OrderEntry: React.FC = () => {
     const servicePrice = orderData.reservation.price || 0;
     
     // Log the prices to help with debugging
-    console.log('Service price:', servicePrice);
-    console.log('Add-on total:', addOnTotal);
     
     const subtotal = servicePrice + addOnTotal;
     const taxAmount = subtotal * orderData.invoice.taxRate;
     const total = subtotal + taxAmount - (orderData.invoice.discount || 0);
     
-    console.log('Calculated subtotal:', subtotal);
-    console.log('Add-ons included:', addOns);
-    console.log('Calculated total:', total);
     
     setOrderData({
       ...orderData,
@@ -327,7 +320,6 @@ const OrderEntry: React.FC = () => {
       }
       
       // Step 1: Create reservations (one per pet)
-      console.log('Order data for reservation creation:', {
         customer: orderData.customer,
         pets: orderData.pets,
         reservation: orderData.reservation
@@ -364,12 +356,10 @@ const OrderEntry: React.FC = () => {
           reservationData.resourceId = orderData.reservation.resourceId;
         } else if (hasMultiplePets) {
           // Multiple pets - let backend auto-assign to avoid conflicts
-          console.log(`Multiple pets detected - backend will auto-assign separate suites for ${pet.name}`);
         }
         
         
         const reservation = await reservationService.createReservation(reservationData);
-        console.log(`Reservation created for ${pet.name}:`, reservation);
         createdReservations.push(reservation);
       }
       
@@ -382,9 +372,6 @@ const OrderEntry: React.FC = () => {
       const baseServicePrice = orderData.invoice.subtotal - addOnTotal;
       
       // Log values for debugging
-      console.log('Creating invoice with data:');
-      console.log('Base service price:', baseServicePrice);
-      console.log('Add-on total:', addOnTotal);
       
       const invoiceData = {
         customerId: orderData.customer.id,

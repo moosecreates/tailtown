@@ -233,38 +233,31 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
     if (!filter.search) return true;
     
     const searchTerm = filter.search.toLowerCase();
-    console.log(`Filtering suite ${suite.name} with search term: ${searchTerm}`);
     
     // Search in suite name and number
     if (suite.name.toLowerCase().includes(searchTerm)) {
-      console.log(`Suite ${suite.name} matched by name`);
       return true;
     }
     
     if (String(suite.suiteNumber).includes(searchTerm)) {
-      console.log(`Suite ${suite.name} matched by suite number`);
       return true;
     }
     
     // Search in pet info if available
     if (suite.pet?.name?.toLowerCase().includes(searchTerm)) {
-      console.log(`Suite ${suite.name} matched by pet name: ${suite.pet.name}`);
       return true;
     }
     
     if (suite.pet?.type?.toLowerCase().includes(searchTerm)) {
-      console.log(`Suite ${suite.name} matched by pet type: ${suite.pet.type}`);
       return true;
     }
     
     // Search in owner info if available
     if (suite.owner?.firstName?.toLowerCase().includes(searchTerm)) {
-      console.log(`Suite ${suite.name} matched by owner first name: ${suite.owner.firstName}`);
       return true;
     }
     
     if (suite.owner?.lastName?.toLowerCase().includes(searchTerm)) {
-      console.log(`Suite ${suite.name} matched by owner last name: ${suite.owner.lastName}`);
       return true;
     }
     
@@ -274,7 +267,6 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
 
   const handleCleanSuite = (suiteId: string) => {
     // Implementation would call API to mark suite as cleaned
-    console.log('Mark suite as cleaned:', suiteId);
   };
 
   const renderSuiteCard = (suite: {
@@ -386,7 +378,6 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
           size="small"
           value={filter.search}
           onChange={(e) => {
-            console.log('Search term changed to:', e.target.value);
             setFilter({ ...filter, search: e.target.value });
           }}
           InputProps={{
@@ -406,7 +397,6 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
             value={filter.suiteType}
             label="Suite Type"
             onChange={(e) => {
-              console.log('Suite type filter changed to:', e.target.value);
               setFilter({ ...filter, suiteType: e.target.value });
             }}
           >
@@ -423,7 +413,6 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
             value={filter.status}
             label="Status"
             onChange={(e) => {
-              console.log('Status filter changed to:', e.target.value);
               setFilter({ ...filter, status: e.target.value });
             }}
           >

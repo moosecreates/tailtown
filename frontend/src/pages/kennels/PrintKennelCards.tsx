@@ -36,7 +36,6 @@ const PrintKennelCards: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
     // Use the current date for initialization
     const today = new Date();
-    console.log('Initializing with today\'s date:', today);
     return today;
   });
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
@@ -65,13 +64,11 @@ const PrintKennelCards: React.FC = () => {
   // Initialize component on mount
   useEffect(() => {
     if (isInitializing || initialized || initializationRef.current) {
-      console.log('Already initializing or initialized, skipping');
       return;
     }
     
     initializationRef.current = true;
     
-    console.log('Component mounted, initializing with today\'s date');
     setIsInitializing(true);
     const today = new Date();
     setSelectedDate(today);
@@ -83,7 +80,6 @@ const PrintKennelCards: React.FC = () => {
         setError(null);
         
         const formattedDate = format(today, 'yyyy-MM-dd');
-        console.log(`Initial load for date ${formattedDate}`);
         
         const response = await reservationService.getAllReservations(
           1, 500, 'startDate', 'asc', '', formattedDate
@@ -128,7 +124,6 @@ const PrintKennelCards: React.FC = () => {
   // Wrapped in useCallback to maintain stable reference
   const loadReservations = useCallback(async () => {
     if (!selectedDate) {
-      console.log('No date selected, using today\'s date');
       // If no date is selected, use today's date
       setSelectedDate(new Date());
       return; // The useEffect will trigger this function again with the new date
@@ -141,7 +136,6 @@ const PrintKennelCards: React.FC = () => {
       // Format date for API
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       
-      console.log('Current date object:', selectedDate);
       
       // Fetch reservations for the selected date, regardless of status
       // Use a larger limit to ensure we get all reservations
@@ -264,7 +258,6 @@ const PrintKennelCards: React.FC = () => {
       
       // Log the reservation service type to help with debugging
       const serviceType = res.serviceType || 'Unknown';
-      console.log(`Reservation ${res.id} has service type: ${serviceType}`);
       
       return true;
     });
@@ -276,7 +269,6 @@ const PrintKennelCards: React.FC = () => {
   
   // Handle date change
   const handleDateChange = (date: Date | null) => {
-    console.log('Date changed to:', date);
     setSelectedDate(date);
   };
   
@@ -534,7 +526,6 @@ const PrintKennelCards: React.FC = () => {
               
               // Reduced logging to prevent console spam
               if (resource === null || resource === undefined) {
-                console.log(`Assigned kennel ${kennelNumber} to reservation ${reservation.id}`);
               }
               
               // Get pet icons

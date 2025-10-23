@@ -50,7 +50,6 @@ interface CalendarProps {
  * @component
  * @example
  * ```tsx
- * <Calendar onEventUpdate={(reservation) => console.log('Updated:', reservation)} />
  * ```
  */
 const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, calendarTitle }) => {
@@ -66,7 +65,6 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
   
   // Debug function to manually open add-on dialog
   const debugOpenAddOnDialog = (reservationId: string, serviceId: string) => {
-    console.log('Calendar: Manually opening add-on dialog with:', { reservationId, serviceId });
     setCurrentReservationId(reservationId);
     setCurrentServiceId(serviceId);
     setIsAddOnDialogOpen(true);
@@ -75,8 +73,6 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
 
   const loadReservations = useCallback(async () => {
     try {
-      console.log('Calendar: Loading reservations...');
-      console.log('Calendar: Filtering by service categories:', serviceCategories);
       
       // Get all relevant reservations (PENDING, CONFIRMED or CHECKED_IN)
       // We don't filter by date to ensure we see all current reservations
@@ -88,17 +84,14 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
         'PENDING,CONFIRMED,CHECKED_IN' // status - include pending reservations too
       );
       
-      console.log('Calendar: Got response:', response);
       if (response?.status === 'success' && Array.isArray(response?.data)) {
         // Filter reservations by service category if specified
         let filteredReservations = response.data;
         if (serviceCategories && serviceCategories.length > 0) {
           // First, log all reservations to see what we're working with
-          console.log('Calendar: All reservations:', response.data);
           
           // If we have reservations, log the first one's service details to debug
           if (response.data.length > 0) {
-            console.log('Calendar: First reservation service details:', {
               service: response.data[0].service,
               serviceId: response.data[0].serviceId
             });
@@ -135,7 +128,6 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
             return false;
           });
           
-          console.log('Calendar: Filtered reservations by service category:', filteredReservations.length);
         }
         
         const calendarEvents = filteredReservations.map(reservation => ({
@@ -149,7 +141,6 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
           }
         }));
         
-        console.log('Calendar: Created calendar events:', calendarEvents.length);
         setEvents(calendarEvents);
         return calendarEvents;
       } else {
@@ -271,7 +262,6 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
 
   // Handle date selection in the calendar
   const handleDateSelect = (selectInfo: DateSelectArg) => {
-    console.log('Calendar: Date selected:', selectInfo);
     
     // Create a default end time (1 hour after start)
     const startDate = new Date(selectInfo.start);
@@ -299,17 +289,14 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
 
   // Handle clicking on an existing event
   const handleEventClick = (clickInfo: EventClickArg) => {
-    console.log('Calendar: Event clicked:', clickInfo);
     
     // Get the reservation from the event's extendedProps
     const reservation = clickInfo.event.extendedProps?.reservation;
     
     if (reservation) {
-      console.log('Calendar: Found reservation in event:', reservation);
       
       // Make sure we have complete reservation data
       if (reservation.id) {
-        console.log('Calendar: Setting selected event with ID:', reservation.id);
         setSelectedEvent(reservation);
         setSelectedDate(null);
         setIsFormOpen(true);
@@ -324,7 +311,6 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
   // Handle form submission for creating or updating a reservation
   const handleFormSubmit = async (formData: any) => {
     try {
-      console.log('Calendar: Submitting form data:', formData);
       
       let updatedReservation: Reservation;
       let updatedEvents = [...events];
@@ -332,9 +318,7 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
       // Check if we're editing an existing reservation
       if (selectedEvent) {
         // Update existing reservation
-        console.log('Calendar: Updating existing reservation:', selectedEvent.id);
         updatedReservation = await reservationService.updateReservation(selectedEvent.id, formData);
-        console.log('Calendar: Updated reservation:', updatedReservation);
         
         // Find and update the event in the events array
         const eventIndex = updatedEvents.findIndex(event => event.id === selectedEvent.id);
@@ -352,9 +336,7 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
         }
       } else {
         // Create new reservation
-        console.log('Calendar: Creating new reservation');
         updatedReservation = await reservationService.createReservation(formData);
-        console.log('Calendar: Created reservation:', updatedReservation);
         
         // Add the new event to the events array
         updatedEvents.push({
@@ -384,10 +366,8 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
       // Get the service to determine if we should show add-ons
       // We'll need to check the service type to determine if add-ons are applicable
       // For now, we'll show add-ons for all services to ensure they're available
-      console.log('Calendar: Service for reservation:', updatedReservation.service);
       
       // Open the add-on dialog for all services to ensure add-ons are available
-      console.log('Calendar: Opening add-on dialog for reservation:', {
         reservationId: updatedReservation.id,
         serviceId: updatedReservation.serviceId
       });

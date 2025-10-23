@@ -161,7 +161,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           filteredServices = filteredServices.filter((service: any) => 
             serviceCategories.includes(service.serviceCategory)
           );
-          console.log(`ReservationForm: Filtered services to ${filteredServices.length} services for categories:`, serviceCategories);
         }
         
         setServices(filteredServices);
@@ -171,11 +170,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         selectsWithOptions.current.suiteType = true;
 
         if (initialData) {
-          console.log('ReservationForm: Processing initialData:', initialData);
-          console.log('ReservationForm: initialData keys:', Object.keys(initialData));
-          console.log('ReservationForm: initialData.customerId:', initialData.customerId);
-          console.log('ReservationForm: initialData.petId:', initialData.petId);
-          console.log('ReservationForm: initialData.serviceId:', initialData.serviceId);
           // Set dates if they exist in initialData
           if (initialData.startDate) {
             setStartDate(new Date(initialData.startDate));
@@ -190,9 +184,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           
           // Set customer ID if it exists in the customers list
           const customersList = customersResponse.data || [];
-          console.log('ReservationForm: Available customers:', customersList.length, 'Looking for customerId:', initialData.customerId);
           if (initialData.customerId && customersList.some((c: Customer) => c.id === initialData.customerId)) {
-            console.log('ReservationForm: Found customer, setting selectedCustomer');
             setSelectedCustomer(initialData.customerId);
             
             // Load pets for the selected customer
@@ -203,9 +195,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               selectsWithOptions.current.pet = petsData.length > 0;
               
               // Only set pet ID if it exists in the pets list
-              console.log('ReservationForm: Available pets:', petsData.length, 'Looking for petId:', initialData.petId);
               if (initialData.petId && petsData.some(p => p.id === initialData.petId)) {
-                console.log('ReservationForm: Found pet, setting selectedPet');
                 setSelectedPet(initialData.petId);
               }
             } catch (err) {
@@ -216,12 +206,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           
           // Only set service ID if it exists in the services list
           const servicesList = servicesResponse.data || [];
-          console.log('ReservationForm: Available services:', servicesList.length, 'Looking for serviceId:', initialData.serviceId);
           if (initialData.serviceId && servicesList.some((s: Service) => s.id === initialData.serviceId)) {
-            console.log('ReservationForm: Found service, setting selectedService');
             setSelectedService(initialData.serviceId);
           } else {
-            console.log('ReservationForm: Service not found in list');
           }
           
           // Mark that initial data has been loaded
@@ -235,7 +222,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             // Fetch resource details to get the suite type
             try {
               const resourceResponse = await resourceService.getResource(effectiveResourceId);
-              console.log('Resource details fetched:', resourceResponse);
               
               if (resourceResponse.data) {
                 const resourceType = resourceResponse.data.type;
@@ -440,8 +426,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   // Monitor add-ons dialog state changes
   useEffect(() => {
     if (addOnsDialogOpen && newReservationId) {
-      console.log('AddOns dialog is now open for reservation:', newReservationId);
-      console.log('AddOns dialog service ID:', selectedServiceId);
       // No longer forcing refresh - this was causing an infinite loop
     }
   }, [addOnsDialogOpen, newReservationId, selectedServiceId]);
@@ -479,7 +463,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             }
           });
           
-          console.log(`Loaded ${suites.length} total suites across all types for multi-pet selection`);
         } else {
           // Single pet - just fetch the selected type
           const response = await resourceService.getAllResources(
@@ -501,23 +484,18 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         
         if (effectiveResourceId) {
           const resourceExists = suites.some(suite => suite.id === effectiveResourceId);
-          console.log('Does resource exist in suites?', resourceExists, 'Resource ID:', effectiveResourceId);
           
           if (!resourceExists) {
             try {
-              console.log('Fetching specific resource with ID:', effectiveResourceId);
               const resourceResponse = await resourceService.getResource(effectiveResourceId);
-              console.log('Resource response:', resourceResponse);
               
               if (resourceResponse?.status === 'success' && resourceResponse?.data) {
                 const resourceData = resourceResponse.data;
                 
                 // Only add it if it matches the selected suite type
                 const resourceType = resourceData.type || resourceData.attributes?.suiteType;
-                console.log('Resource type from API:', resourceType, 'Selected type:', selectedSuiteType);
                 
                 if (resourceType === selectedSuiteType) {
-                  console.log('Adding resource to suites list:', resourceData);
                   suites.push(resourceData);
                 }
               }
@@ -537,22 +515,18 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         const resourceToCheck = initialData?.resourceId || initialData?.kennelId;
         
         if (resourceToCheck) {
-          console.log('Checking if resource/kennel exists in suites:', resourceToCheck);
           // Check if the resource ID exists in the available suites
           const suiteExists = suites.some(suite => suite.id === resourceToCheck);
           
           if (suiteExists) {
-            console.log('Resource/kennel found in suites, setting selected suite ID:', resourceToCheck);
             // Only set the suite ID if it exists in the available suites
             setSelectedSuiteId(resourceToCheck);
             
             // Only set dropdown ready after both suites and selection are set
             setTimeout(() => {
               setDropdownReady(true);
-              console.log('Dropdown ready flag set');
             }, 100);
           } else {
-            console.log('Resource/kennel not found in available suites, clearing selection');
             // If the resource doesn't exist, clear the selection
             setSelectedSuiteId('');
             setDropdownReady(true);
@@ -615,11 +589,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               if (!isCurrentReservation) {
                 occupied.add(result.resourceId);
               } else {
-                console.log(`Kennel ${result.resourceId} is occupied by current reservation (editing mode) - allowing selection`);
               }
             }
           });
-          console.log(`Found ${occupied.size} occupied suites out of ${suiteIds.length} total (excluding current reservation if editing)`);
           setOccupiedSuiteIds(occupied);
         }
       } catch (error) {
@@ -668,7 +640,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       
       // For grooming/training, create the reservation first
       if (isGroomingOrTraining && onSubmit) {
-        console.log('Creating grooming/training reservation before checkout...');
         
         const formData: any = {
           customerId: selectedCustomer,
@@ -683,11 +654,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         try {
           // Call onSubmit to create the reservation
           const result = await onSubmit(formData);
-          console.log('Reservation created:', result);
           
           if (result?.reservationId) {
             reservationId = result.reservationId;
-            console.log('Using real reservation ID:', reservationId);
           } else {
             throw new Error('Failed to create reservation');
           }
@@ -717,7 +686,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         addOns: [] // Will be handled in checkout if needed
       };
       
-      console.log('Adding reservation to cart:', cartItem);
       
       // Add to shopping cart
       addItem(cartItem);
@@ -784,7 +752,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     // Store service ID for later use with add-ons
     if (selectedService) {
       setSelectedServiceId(selectedService);
-      console.log('ReservationForm: Stored service ID for add-ons:', selectedService);
     }
     
     try {
@@ -792,7 +759,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       const petsToBook = selectedPets.length > 0 ? selectedPets : [selectedPet];
       const hasMultiplePets = petsToBook.length > 1;
       
-      console.log(`Creating reservations for ${petsToBook.length} pet(s):`, petsToBook);
       
       // Handle resource selection based on suite type
       const selectedServiceObj = services.find(s => s.id === selectedService);
@@ -833,23 +799,18 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           // Assign the specific resource for this pet
           if (assignedSuiteId && assignedSuiteId.trim() !== '') {
             formData.resourceId = assignedSuiteId;
-            console.log(`Assigning resource ${assignedSuiteId} to pet ${petId}`);
           } else {
-            console.log(`No suite assigned for pet ${petId} - backend will auto-assign with suiteType: ${effectiveSuiteType}`);
           }
           
           // If we have initialData with a kennelId but are not using it as resourceId,
           // include it as a separate field for backward compatibility
           if (initialData?.kennelId && initialData.kennelId !== assignedSuiteId) {
-            console.log('Including kennelId for backward compatibility:', initialData.kennelId);
           }
         }
 
         // Call the parent component's onSubmit function with our form data
-        console.log(`ReservationForm: Submitting reservation ${i + 1}/${petsToBook.length} for pet ${petId}`, formData);
         
         const result = await onSubmit(formData);
-        console.log(`ReservationForm: Result from onSubmit for pet ${petId}:`, result);
         
         if (result) {
           results.push(result);
@@ -862,27 +823,21 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       // If the result is undefined, it means there was an error in the parent component
       // The parent component will display the error, so we don't need to reset the form
       if (result === undefined) {
-        console.log('ReservationForm: Form submission failed - error handled by parent');
         setLoading(false);
         return;
       }
       
       // Show add-ons dialog only if showAddOns prop is true
       if (showAddOns && result?.reservationId) {
-        console.log('Reservation created successfully, showing add-ons dialog');
-        console.log('ReservationForm: Reservation ID for add-ons:', result.reservationId);
-        console.log('ReservationForm: showAddOns =', showAddOns);
         
         // Set reservation ID for add-ons dialog
         setNewReservationId(result.reservationId);
         
         // Make sure we set the selectedServiceId for the add-ons dialog
         if (selectedService) {
-          console.log('Setting selected service ID for add-ons dialog:', selectedService);
           setSelectedServiceId(selectedService);
           
           // Open the add-ons dialog immediately
-          console.log('Opening add-ons dialog');
           setAddOnsDialogOpen(true);
           
           // Don't reset the form yet - we'll do it after add-ons are handled
@@ -892,7 +847,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           handleReset();
         }
       } else {
-        console.log('Not showing add-ons dialog - showAddOns:', showAddOns, 'reservationId:', result?.reservationId);
         handleReset();
       }
     } catch (error: any) {
@@ -922,7 +876,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     }
     // Reset form state
     setError('');
-    console.log('Form reset after successful submission');
   };
 
   /**
@@ -1115,7 +1068,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               }}
               onChange={(e) => {
                 const serviceId = e.target.value;
-                console.log('ReservationForm: Service selection changed from', selectedService, 'to', serviceId);
                 setSelectedService(serviceId);
                 
                 // Find the selected service to get its duration
@@ -1202,7 +1154,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 
                 {/* Kennel/Suite Number Selection - Per Pet when multiple pets selected */}
                 {(() => {
-                  console.log('Per-pet kennel check:', {
                     requiresSuiteType,
                     selectedSuiteType,
                     selectedPetsLength: selectedPets.length,
@@ -1234,7 +1185,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                           isOptionEqualToValue={(option, value) => option.id === value.id}
                           onChange={(event, newValue) => {
                             const suiteId = newValue?.id || '';
-                            console.log(`Assigning kennel ${suiteId} to pet ${pet?.name}`);
                             setPetSuiteAssignments(prev => ({
                               ...prev,
                               [petId]: suiteId
@@ -1331,7 +1281,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                         label="Kennel/Suite Number"
                         onChange={e => {
                           const newSuiteId = e.target.value || '';
-                          console.log('ReservationForm: Kennel selection changed from', selectedSuiteId, 'to', newSuiteId);
                           setSelectedSuiteId(newSuiteId);
                         }}
                         inputProps={{
@@ -1577,7 +1526,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       <AddOnSelectionDialog
         open={addOnsDialogOpen && !!newReservationId && !!selectedServiceId}
         onClose={() => {
-          console.log('Closing add-ons dialog');
           setAddOnsDialogOpen(false);
           // Reset the form after closing the dialog
           handleReset();
