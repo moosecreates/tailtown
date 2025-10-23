@@ -258,7 +258,7 @@ const loadData = useCallback(async () => {
 
 ## Files Fixed
 
-### ✅ Completed
+### ✅ Completed (7 files - 17.5%)
 
 1. **useDashboardData.ts** (Dashboard hook)
    - Fixed infinite loop (hundreds of API calls → 2)
@@ -273,22 +273,42 @@ const loadData = useCallback(async () => {
    - **Impact**: No more React warnings
 
 3. **AnalyticsDashboard.tsx**
-   - Wrapped loadData in useCallback
+   - Wrapped loadData in useCallback with [period] deps
    - Added loadData to useEffect deps
    - **Impact**: Proper dependency tracking
 
-### 🔄 In Progress
-
 4. **CustomerValueReport.tsx**
-   - Has similar pattern to AnalyticsDashboard
-   - Needs loadData wrapped in useCallback
+   - Wrapped loadData in useCallback with [period] deps
+   - Wrapped filterCustomers in useCallback with [searchTerm, customers] deps
+   - **Impact**: Both data loading and filtering optimized
 
 5. **Services.tsx**
-   - loadServices missing from deps
+   - Wrapped loadServices in useCallback with empty deps
+   - Added loadServices to useEffect deps
+   - **Impact**: Stable service loading
 
 6. **Resources.tsx**
-   - loadResources missing from deps
-   - debouncedFilter dependency issue
+   - Wrapped loadResources in useCallback with empty deps
+   - Added loadResources to useEffect deps
+   - **Impact**: Stable resource loading
+
+7. **Pets.tsx**
+   - Wrapped loadPets in useCallback with [initialLoad] deps
+   - Wrapped debouncedSearch in useMemo with [loadPets] deps
+   - Added all deps to both useEffects
+   - **Impact**: Complex debounced search properly optimized
+
+### 🔄 Next Priority Files
+
+8. **Customers.tsx**
+   - Has debounced search pattern similar to Pets
+   - Needs loadCustomers wrapped in useCallback
+
+9. **CustomerDetails.tsx**
+   - fetchCustomer missing from deps
+
+10. **PetDetails.tsx**
+    - loadData missing from deps
 
 ### ⏳ Pending
 
