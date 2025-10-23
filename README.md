@@ -7,6 +7,50 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ## Recent Updates (October 2025)
 
+### ✅ NEW: Check-In Workflow & Template Management (October 23, 2025)
+
+#### Feature Overview
+- **Complete Check-In System**: Full 5-step check-in workflow for boarding reservations
+- **Admin Template Manager**: Configure check-in questionnaires without code changes
+- **Pre-populated Options**: Manage medication methods and common belongings
+- **Flexible Configuration**: Set fields as required/optional, add custom questions
+
+#### Check-In Workflow Features
+1. **Step 1: Questionnaire** - Dynamic questions from templates (contact info, feeding, medical)
+2. **Step 2: Medications** - Track medications with dosage, frequency, and administration method
+3. **Step 3: Belongings** - Inventory personal items with quick-add buttons
+4. **Step 4: Service Agreement** - Digital signature capture for boarding agreement
+5. **Step 5: Review & Complete** - Summary and final submission
+
+#### Admin Configuration Interface
+- **Template Editor**: Create/edit check-in templates with sections and questions
+- **Question Types**: Text, Long Text, Yes/No, Multiple Choice, Time, Date
+- **Required/Optional**: Control validation for each field
+- **Pre-populated Options Manager**:
+  - Medication Methods: Oral, Topical, Injection, Eye Drops, Ear Drops, Other
+  - Common Belongings: Collar, Leash, Toy, Bedding, Food, Bowl, Medication, Treats
+- **Access**: Settings → Check-In Templates or `/admin/check-in-templates`
+
+#### Technical Implementation
+- **Frontend**: React components with Material-UI, signature pad integration
+- **Backend**: Prisma models for templates, check-ins, medications, belongings
+- **Database**: PostgreSQL with shared database pattern
+- **API Endpoints**: RESTful API with `/api` prefix for all operations
+- **Automated Tests**: Comprehensive test coverage for API endpoints
+
+#### Quick Start
+```bash
+# Access check-in for a reservation
+/check-in/:reservationId
+
+# Configure templates (Admin)
+Settings → Check-In Templates
+```
+
+**Documentation**: See [Database Setup Guide](docs/operations/database-setup.md) for schema synchronization and seeding instructions.
+
+---
+
 ### 🤖 NEW: MCP RAG Server for AI-Enhanced Development (October 22, 2025)
 
 #### Feature Overview
@@ -229,6 +273,8 @@ curl http://localhost:4003/health
 - **Resources**: Manage suites, equipment, and facility resources
 - **Staff Scheduling**: Employee schedules and work assignments
 - **Users**: Employee accounts and permissions management
+- **Marketing**: SMS and email marketing campaigns
+- **Check-In Templates**: Configure check-in questionnaires and pre-populated options
 - **Price Rules**: Discount rules and pricing policies
 - **General Settings**: System configuration and preferences
 
@@ -252,6 +298,16 @@ curl http://localhost:4003/health
 - Consistent reservation experience across all service types
 - Unique order number system for easy reference (format: RES-YYYYMMDD-001)
 - Comprehensive add-on services management
+
+### Check-In System
+- 5-step check-in workflow for boarding reservations
+- Dynamic questionnaire from configurable templates
+- Medication tracking with administration methods
+- Personal belongings inventory with quick-add buttons
+- Digital service agreement with signature capture
+- Complete check-in summary and review
+- Admin template manager for customization
+- Pre-populated options configuration
 
 ### Invoicing and Payments
 - Automatic invoice generation for reservations

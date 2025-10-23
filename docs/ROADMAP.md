@@ -1,6 +1,6 @@
 # Tailtown Unified Roadmap
 
-**Last Updated**: October 21, 2025
+**Last Updated**: October 23, 2025
 
 This document provides a prioritized roadmap for the Tailtown Pet Resort Management System, organized by business value and urgency.
 
@@ -350,6 +350,41 @@ Features and tasks are prioritized based on:
 
 ### October 2025
 
+#### Check-In System & Template Management (Oct 23, 2025)
+- ✅ **Complete Check-In Workflow**
+  - 5-step check-in process (Questionnaire, Medications, Belongings, Agreement, Review)
+  - Dynamic questionnaire from configurable templates
+  - Medication tracking with administration methods
+  - Personal belongings inventory with quick-add buttons
+  - Digital service agreement with signature capture
+  - Complete check-in summary and review page
+
+- ✅ **Admin Template Manager**
+  - Template editor with sections and questions
+  - Question types: Text, Long Text, Yes/No, Multiple Choice, Time, Date
+  - Set fields as required/optional
+  - Add placeholder text and help text
+  - Multiple choice with custom answer options
+  - Set default templates and activate/deactivate
+
+- ✅ **Pre-populated Options Configuration**
+  - Medication administration methods manager
+  - Common belongings items manager
+  - Add/edit/delete options without code changes
+  - Emoji icon support for belongings
+
+- ✅ **Database & API**
+  - Prisma models for templates, check-ins, medications, belongings
+  - RESTful API endpoints with /api prefix
+  - Database schema synchronization
+  - Seed scripts for default templates
+  - Comprehensive automated tests
+
+- ✅ **Documentation**
+  - Database setup and migration guide
+  - API endpoint documentation
+  - Admin interface usage guide
+
 #### Payment Integration (Oct 21, 2025)
 - ✅ **CardConnect Frontend Integration**
   - Connected payment UI to CardConnect API
@@ -616,6 +651,6 @@ Features and tasks are prioritized based on:
 
 ---
 
-**Last Updated**: October 21, 2025  
-**Version**: 3.0  
+**Last Updated**: October 23, 2025  
+**Version**: 3.1  
 **Next Review**: November 1, 2025
