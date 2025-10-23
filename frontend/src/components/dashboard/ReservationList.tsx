@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress, List, ListItem, ListItemText } from '@mui/material';
+import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress, List, ListItem } from '@mui/material';
 import { Link } from 'react-router-dom';
 import PetNameWithIcons from '../pets/PetNameWithIcons';
 
@@ -157,42 +157,37 @@ const ReservationList: React.FC<ReservationListProps> = ({
                   }
                 }}
               >
-                <ListItemText
-                  disableTypography
-                  primary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {reservation.pet && (
-                        <PetNameWithIcons
-                          petName={reservation.pet.name}
-                          petIcons={reservation.pet.petIcons}
-                          petType={reservation.pet.type as any}
-                          profilePhoto={reservation.pet.profilePhoto}
-                          size="medium"
-                          showPhoto={true}
-                          nameVariant="body2"
-                        />
-                      )}
-                      <Typography variant="caption" color="text.secondary" component="span">
-                        • {reservation.customer?.firstName} {reservation.customer?.lastName}
-                      </Typography>
-                    </Box>
-                  }
-                  secondary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                      <Typography variant="caption" color="text.secondary" component="span">
-                        {formatTime(reservation.startDate)}
-                      </Typography>
-                      {reservation.service?.name && (
-                        <>
-                          <Typography variant="caption" color="text.secondary" component="span">•</Typography>
-                          <Typography variant="caption" color="text.secondary" component="span">
-                            {reservation.service.name}
-                          </Typography>
-                        </>
-                      )}
-                    </Box>
-                  }
-                />
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {reservation.pet && (
+                      <PetNameWithIcons
+                        petName={reservation.pet.name}
+                        petIcons={reservation.pet.petIcons}
+                        petType={reservation.pet.type as any}
+                        profilePhoto={reservation.pet.profilePhoto}
+                        size="medium"
+                        showPhoto={true}
+                        nameVariant="body2"
+                      />
+                    )}
+                    <Typography variant="caption" color="text.secondary">
+                      • {reservation.customer?.firstName} {reservation.customer?.lastName}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 5 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {formatTime(reservation.startDate)}
+                    </Typography>
+                    {reservation.service?.name && (
+                      <>
+                        <Typography variant="caption" color="text.secondary">•</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {reservation.service.name}
+                        </Typography>
+                      </>
+                    )}
+                  </Box>
+                </Box>
                 <Chip 
                   label={reservation.status} 
                   color={getStatusColor(reservation.status)}
