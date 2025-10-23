@@ -25,12 +25,14 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - **Status**: ✅ COMPLETE | **Completed**: Oct 23, 2025 (Ahead of schedule!)
 
 ### User Experience Enhancements
-2. **Drag-and-Drop Calendar**
-   - Move reservations between dates/times
-   - Drag to reschedule appointments
-   - Visual feedback during drag operations
-   - Conflict detection on drop
-   - **Priority**: High | **Effort**: 1-2 weeks | **Target**: Nov 8, 2025
+2. **✅ Drag-and-Drop Calendar** - **COMPLETE** (Oct 23, 2025)
+   - ✅ Move reservations between dates/times
+   - ✅ Drag to reschedule appointments
+   - ✅ Visual feedback during drag operations
+   - ✅ Automatic save to database on drop
+   - ✅ Resize events to change duration
+   - ✅ Automatic revert on save failure
+   - **Status**: ✅ COMPLETE | **Completed**: Oct 23, 2025 (2 weeks ahead of schedule!)
 
 3. **Area-Specific Checklists**
    - Kennel check-in/check-out checklists
@@ -349,6 +351,26 @@ Features and tasks are prioritized based on:
 ## ✅ Completed Features & Milestones
 
 ### October 2025
+
+#### Drag-and-Drop Calendar (Oct 23, 2025)
+- ✅ **Interactive Calendar Enhancements**
+  - Drag-and-drop reservations to reschedule
+  - Resize events to change duration
+  - Automatic save to database on drop/resize
+  - Visual feedback during drag operations
+  - Automatic revert on save failure
+  - Works across all calendar views (grooming, training, boarding, daycare)
+
+- ✅ **Technical Implementation**
+  - Added `eventDrop` handler to save date/time changes
+  - Added `eventResize` handler to save duration changes
+  - Integrated with `reservationService.updateReservation()` API
+  - Error handling with automatic UI revert on failure
+  - Calendar refresh after successful updates
+
+- ✅ **Files Modified**
+  - SpecializedCalendar.tsx (grooming/training calendars)
+  - Calendar.tsx (boarding/daycare calendars)
 
 #### Check-In System & Template Management (Oct 23, 2025)
 - ✅ **Complete Check-In Workflow**

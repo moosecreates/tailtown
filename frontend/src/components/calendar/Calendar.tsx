@@ -4,7 +4,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { EventInput, DateSelectArg, EventClickArg } from '@fullcalendar/core';
+import { EventInput, DateSelectArg, EventClickArg, EventDropArg } from '@fullcalendar/core';
 
 import { Box, Paper, Dialog, DialogTitle, DialogContent, Snackbar, Alert } from '@mui/material';
 import { reservationService } from '../../services/reservationService';
@@ -278,6 +278,80 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
     setIsFormOpen(true);
   };
 
+  // Handle event drop (drag and drop)
+  const handleEventDrop = async (dropInfo: EventDropArg) => {
+    try {
+      const reservation = dropInfo.event.extendedProps.reservation as Reservation;
+      if (!reservation) {
+        console.error('No reservation data found in event');
+        dropInfo.revert();
+        return;
+      }
+
+      // Calculate the new start and end dates
+      const newStart = dropInfo.event.start;
+      const newEnd = dropInfo.event.end;
+
+      if (!newStart || !newEnd) {
+        console.error('Invalid dates after drop');
+        dropInfo.revert();
+        return;
+      }
+
+      // Update the reservation with new dates
+      await reservationService.updateReservation(reservation.id, {
+        startDate: newStart.toISOString(),
+        endDate: newEnd.toISOString()
+      });
+
+      // Reload reservations to ensure we have the latest data
+      await loadReservations();
+      
+      console.log('Reservation updated successfully after drag');
+    } catch (error) {
+      console.error('Error updating reservation after drag:', error);
+      // Revert the event to its original position if the update failed
+      dropInfo.revert();
+    }
+  };
+
+  // Handle event resize
+  const handleEventResize = async (resizeInfo: any) => {
+    try {
+      const reservation = resizeInfo.event.extendedProps.reservation as Reservation;
+      if (!reservation) {
+        console.error('No reservation data found in event');
+        resizeInfo.revert();
+        return;
+      }
+
+      // Calculate the new start and end dates
+      const newStart = resizeInfo.event.start;
+      const newEnd = resizeInfo.event.end;
+
+      if (!newStart || !newEnd) {
+        console.error('Invalid dates after resize');
+        resizeInfo.revert();
+        return;
+      }
+
+      // Update the reservation with new dates
+      await reservationService.updateReservation(reservation.id, {
+        startDate: newStart.toISOString(),
+        endDate: newEnd.toISOString()
+      });
+
+      // Reload reservations to ensure we have the latest data
+      await loadReservations();
+      
+      console.log('Reservation updated successfully after resize');
+    } catch (error) {
+      console.error('Error updating reservation after resize:', error);
+      // Revert the event to its original size if the update failed
+      resizeInfo.revert();
+    }
+  };
+
   // Handle clicking on an existing event
   const handleEventClick = (clickInfo: EventClickArg) => {
     
@@ -390,6 +464,8 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
           events={events}
           select={handleDateSelect}
           eventClick={handleEventClick}
+          eventDrop={handleEventDrop}
+          eventResize={handleEventResize}
           height="100%"
           slotMinTime="06:00:00"
           slotMaxTime="20:00:00"
