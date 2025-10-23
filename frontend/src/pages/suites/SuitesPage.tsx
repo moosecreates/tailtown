@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Container, 
   Typography, 
@@ -101,32 +101,32 @@ const SuitesPage: React.FC = () => {
   };
 
   // Fetch live stats from backend on initial load
-  useEffect(() => {
-    const fetchSuiteStats = async () => {
-      try {
-        setLoading(true);
-        // Format date as YYYY-MM-DD for API using local timezone
-        const formattedDate = formatDateToYYYYMMDD(filterDate);
-        const response = await resourceService.getSuiteStats(formattedDate);
-        if (response?.status === 'success' && response?.data) {
-          setStats(response.data);
-        }
-      } catch (error: any) {
-        let msg = 'Could not load suite stats.';
-        if (error?.response) {
-          msg += ` Server responded with status ${error.response.status}: ${error.response.data?.message || error.response.statusText}`;
-        } else if (error?.message) {
-          msg += ` ${error.message}`;
-        }
-        setStatsError(msg);
-        console.error('Error loading suite stats:', error);
-      } finally {
-        setLoading(false);
+  const fetchSuiteStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      // Format date as YYYY-MM-DD for API using local timezone
+      const formattedDate = formatDateToYYYYMMDD(filterDate);
+      const response = await resourceService.getSuiteStats(formattedDate);
+      if (response?.status === 'success' && response?.data) {
+        setStats(response.data);
       }
-    };
+    } catch (error: any) {
+      let msg = 'Could not load suite stats.';
+      if (error?.response) {
+        msg += ` Server responded with status ${error.response.status}: ${error.response.data?.message || error.response.statusText}`;
+      } else if (error?.message) {
+        msg += ` ${error.message}`;
+      }
+      setStatsError(msg);
+      console.error('Error loading suite stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [filterDate]);
 
+  useEffect(() => {
     fetchSuiteStats();
-  }, []);
+  }, [fetchSuiteStats]);
 
   // We've removed the automatic refresh interval that was here previously
   // Now we only refresh data when the user clicks the refresh button or changes the date

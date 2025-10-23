@@ -5,7 +5,7 @@
  * to manage them (add, edit, delete). It's part of the Settings section
  * and provides a table view of all price rules with their key properties.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Container, 
   Typography, 
@@ -48,7 +48,7 @@ const PriceRules: React.FC = () => {
   
   const navigate = useNavigate();
 
-  const fetchPriceRules = async () => {
+  const fetchPriceRules = useCallback(async () => {
     setLoading(true);
     try {
       const response = await priceRuleService.getAllPriceRules({
@@ -65,11 +65,11 @@ const PriceRules: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, rowsPerPage]);
 
   useEffect(() => {
     fetchPriceRules();
-  }, [page, rowsPerPage]);
+  }, [fetchPriceRules, page, rowsPerPage]);
 
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -44,46 +44,45 @@ export default function ReservationEdit() {
     staffNotes: '',
   });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        if (!id) return;
-        
-        // Load reservation, services, and resources in parallel
-        const [reservationData, servicesResponse, resourcesResponse] = await Promise.all([
-          reservationService.getReservationById(id),
-          serviceManagement.getAllServices(),
-          resourceService.getAllResources()
-        ]);
-        
-        setReservation(reservationData);
-        setServices(servicesResponse.data || []);
-        setResources(resourcesResponse.data || []);
-        
-        setFormData({
-          startDate: new Date(reservationData.startDate),
-          endDate: new Date(reservationData.endDate),
-          status: reservationData.status,
-          serviceId: reservationData.service?.id || '',
-          resourceId: reservationData.resource?.id || '',
-          notes: reservationData.notes || '',
-          staffNotes: reservationData.staffNotes || '',
-        });
-        setError(null);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError('Failed to load reservation details');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+  const fetchData = useCallback(async () => {
+    try {
+      if (!id) return;
+      
+      // Load reservation, services, and resources in parallel
+      const [reservationData, servicesResponse, resourcesResponse] = await Promise.all([
+        reservationService.getReservationById(id),
+        serviceManagement.getAllServices(),
+        resourceService.getAllResources()
+      ]);
+      
+      setReservation(reservationData);
+      setServices(servicesResponse.data || []);
+      setResources(resourcesResponse.data || []);
+      
+      setFormData({
+        startDate: new Date(reservationData.startDate),
+        endDate: new Date(reservationData.endDate),
+        status: reservationData.status,
+        serviceId: reservationData.service?.id || '',
+        resourceId: reservationData.resource?.id || '',
+        notes: reservationData.notes || '',
+        staffNotes: reservationData.staffNotes || '',
+      });
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setError('Failed to load reservation details');
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
-  // Check availability when dates change
   useEffect(() => {
-    const checkAvailability = async () => {
+    fetchData();
+  }, [fetchData]);
+
+  // Check availability when dates change
+  const checkAvailability = useCallback(async () => {
       if (!formData.startDate || !formData.endDate || resources.length === 0) {
         setOccupiedResourceIds(new Set());
         return;
@@ -127,10 +126,11 @@ export default function ReservationEdit() {
         console.error('Error checking availability:', error);
         setOccupiedResourceIds(new Set());
       }
-    };
-
-    checkAvailability();
   }, [formData.startDate, formData.endDate, resources, id]);
+
+  useEffect(() => {
+    checkAvailability();
+  }, [checkAvailability]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
