@@ -28,25 +28,32 @@ interface DashboardData extends DashboardMetrics {
  * - Client-side metric calculations (check-ins, check-outs, overnight)
  * - Real-time filtering without re-fetching
  * - Auto-refresh on window focus
- * - Professional logging with context
+ * - UTC-based date comparisons for timezone consistency
  * - Error handling with user-friendly messages
  * 
  * Performance Optimizations:
  * - useCallback with empty deps to prevent infinite loops
- * - Single data fetch on mount
+ * - Single data fetch on mount (fetches all active reservations)
  * - Memoized filter function
- * - Efficient date calculations
+ * - Efficient UTC date calculations
+ * - Client-side filtering (no API calls for filter changes)
+ * 
+ * Date Handling:
+ * - Fetches all active reservations (no server-side date filtering)
+ * - Uses UTC date methods for consistent timezone handling
+ * - Filters check-ins/check-outs based on UTC date comparison
+ * - Default filter shows today's check-ins
  * 
  * @returns {Object} Dashboard data and control functions
- * @returns {number|null} inCount - Number of check-ins today
- * @returns {number|null} outCount - Number of check-outs today
+ * @returns {number|null} inCount - Number of check-ins today (UTC)
+ * @returns {number|null} outCount - Number of check-outs today (UTC)
  * @returns {number|null} overnightCount - Number of overnight guests
  * @returns {number|null} todayRevenue - Total revenue for today
  * @returns {Reservation[]} allReservations - All fetched reservations
  * @returns {Reservation[]} filteredReservations - Filtered reservations based on current filter
  * @returns {boolean} loading - Loading state
  * @returns {string|null} error - Error message if any
- * @returns {'in'|'out'|'all'} appointmentFilter - Current filter state
+ * @returns {'in'|'out'|'all'} appointmentFilter - Current filter state (default: 'in')
  * @returns {Function} filterReservations - Function to change filter
  * @returns {Function} refreshData - Function to manually refresh data
  * 
@@ -122,17 +129,6 @@ export const useDashboardData = () => {
       const today = new Date();
       const formattedToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       
-      console.log('Dashboard loading - Today:', {
-        localDate: today.toString(),
-        formattedToday,
-        utcDate: today.toUTCString()
-      });
-      
-      // Get tomorrow's date
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const formattedTomorrow = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
-      
       const activeStatuses = 'PENDING,CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED,NO_SHOW';
       
       // Fetch all data in parallel - don't filter by date, we'll filter client-side
@@ -151,21 +147,11 @@ export const useDashboardData = () => {
       } else if (resResponse?.data?.reservations && Array.isArray(resResponse.data.reservations)) {
         reservations = resResponse.data.reservations;
       }
-      
-      console.log(`Loaded ${reservations.length} total reservations from API`);
 
       // Calculate metrics
       const checkIns = reservations.filter((res: any) => {
         const startDate = new Date(res.startDate);
         const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
-        console.log('Check-in filter:', {
-          reservationId: res.id,
-          pet: res.pet?.name,
-          startDate: res.startDate,
-          startDateStr,
-          formattedToday,
-          matches: startDateStr === formattedToday
-        });
         return startDateStr === formattedToday;
       }).length;
 

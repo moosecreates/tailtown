@@ -14,6 +14,49 @@ describe('useDashboardData - Timezone Tests', () => {
   });
 
   describe('Date Filtering with Different Timezones', () => {
+    it('should fetch all reservations without server-side date filtering', async () => {
+      const today = new Date();
+      const todayUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate(),
+        12, 0, 0
+      ));
+
+      const mockReservations = [
+        {
+          id: '1',
+          startDate: todayUTC.toISOString(),
+          endDate: new Date(todayUTC.getTime() + 86400000).toISOString(),
+          status: 'CONFIRMED'
+        }
+      ];
+
+      mockReservationService.getAllReservations.mockResolvedValue({
+        data: mockReservations
+      } as any);
+
+      mockReservationService.getTodayRevenue.mockResolvedValue({
+        data: 0
+      } as any);
+
+      const { result } = renderHook(() => useDashboardData());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Verify API was called without date parameter
+      expect(mockReservationService.getAllReservations).toHaveBeenCalledWith(
+        1, 250, 'startDate', 'asc', expect.any(String)
+      );
+      // Should NOT have a 6th parameter (date filter)
+      expect(mockReservationService.getAllReservations).not.toHaveBeenCalledWith(
+        expect.anything(), expect.anything(), expect.anything(), 
+        expect.anything(), expect.anything(), expect.any(String)
+      );
+    });
+
     it('should correctly filter check-ins for today regardless of timezone', async () => {
       // Create a date that is "today" in UTC
       const today = new Date();
