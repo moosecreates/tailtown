@@ -165,7 +165,7 @@ describe('checkInService', () => {
   });
 
   describe('createCheckIn', () => {
-    it('should create check-in with correct data', async () => {
+    it('should create check-in with correct data and /api prefix', async () => {
       const checkInData = {
         reservationId: 'res-123',
         checkInDate: new Date('2025-10-23'),
@@ -187,12 +187,12 @@ describe('checkInService', () => {
       const result = await checkInService.createCheckIn(checkInData as any);
 
       expect(result).toEqual(mockResponse);
-      expect(mockedReservationApi.post).toHaveBeenCalledWith('/check-ins', checkInData);
+      expect(mockedReservationApi.post).toHaveBeenCalledWith('/api/check-ins', checkInData);
     });
   });
 
   describe('getCheckInById', () => {
-    it('should retrieve check-in by ID', async () => {
+    it('should retrieve check-in by ID with /api prefix', async () => {
       const checkInId = 'checkin-123';
       const mockCheckIn = {
         status: 'success',
@@ -211,7 +211,7 @@ describe('checkInService', () => {
       const result = await checkInService.getCheckInById(checkInId);
 
       expect(result).toEqual(mockCheckIn);
-      expect(mockedReservationApi.get).toHaveBeenCalledWith(`/check-ins/${checkInId}`);
+      expect(mockedReservationApi.get).toHaveBeenCalledWith(`/api/check-ins/${checkInId}`);
     });
   });
 
@@ -239,7 +239,7 @@ describe('checkInService', () => {
 
       expect(result).toEqual(mockResponse);
       expect(mockedReservationApi.post).toHaveBeenCalledWith(
-        `/check-ins/${checkInId}/medications`,
+        `/api/check-ins/${checkInId}/medications`,
         medication
       );
     });
@@ -267,7 +267,7 @@ describe('checkInService', () => {
 
       expect(result).toEqual(mockResponse);
       expect(mockedReservationApi.put).toHaveBeenCalledWith(
-        `/check-ins/${checkInId}/belongings/${belongingId}/return`,
+        `/api/check-ins/${checkInId}/belongings/${belongingId}/return`,
         { returnedBy }
       );
     });
@@ -298,7 +298,7 @@ describe('checkInService', () => {
       const result = await checkInService.createServiceAgreement(agreement as any);
 
       expect(result).toEqual(mockResponse);
-      expect(mockedReservationApi.post).toHaveBeenCalledWith('/service-agreements', agreement);
+      expect(mockedReservationApi.post).toHaveBeenCalledWith('/api/service-agreements', agreement);
     });
   });
 });

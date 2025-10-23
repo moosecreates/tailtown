@@ -106,7 +106,7 @@ const checkInService = {
    * Get all check-in templates
    */
   getAllTemplates: async (activeOnly = true) => {
-    const response = await reservationApi.get('/check-in-templates', {
+    const response = await reservationApi.get('/api/check-in-templates', {
       params: { active: activeOnly }
     });
     return response.data;
@@ -116,7 +116,7 @@ const checkInService = {
    * Get a specific template by ID
    */
   getTemplateById: async (id: string) => {
-    const response = await reservationApi.get(`/check-in-templates/${id}`);
+    const response = await reservationApi.get(`/api/check-in-templates/${id}`);
     return response.data;
   },
 
@@ -124,7 +124,7 @@ const checkInService = {
    * Create a new check-in
    */
   createCheckIn: async (checkInData: CheckIn) => {
-    const response = await reservationApi.post('/check-ins', checkInData);
+    const response = await reservationApi.post('/api/check-ins', checkInData);
     return response.data;
   },
 
@@ -132,7 +132,7 @@ const checkInService = {
    * Get check-in by ID
    */
   getCheckInById: async (id: string) => {
-    const response = await reservationApi.get(`/check-ins/${id}`);
+    const response = await reservationApi.get(`/api/check-ins/${id}`);
     return response.data;
   },
 
@@ -140,7 +140,7 @@ const checkInService = {
    * Get check-ins by reservation ID
    */
   getCheckInsByReservation: async (reservationId: string) => {
-    const response = await reservationApi.get('/check-ins', {
+    const response = await reservationApi.get('/api/check-ins', {
       params: { reservationId }
     });
     return response.data;
@@ -150,7 +150,7 @@ const checkInService = {
    * Update a check-in
    */
   updateCheckIn: async (id: string, updates: Partial<CheckIn>) => {
-    const response = await reservationApi.put(`/check-ins/${id}`, updates);
+    const response = await reservationApi.put(`/api/check-ins/${id}`, updates);
     return response.data;
   },
 
@@ -158,7 +158,7 @@ const checkInService = {
    * Add a medication to a check-in
    */
   addMedication: async (checkInId: string, medication: CheckInMedication) => {
-    const response = await reservationApi.post(`/check-ins/${checkInId}/medications`, medication);
+    const response = await reservationApi.post(`/api/check-ins/${checkInId}/medications`, medication);
     return response.data;
   },
 
@@ -166,7 +166,7 @@ const checkInService = {
    * Update a medication
    */
   updateMedication: async (checkInId: string, medicationId: string, medication: CheckInMedication) => {
-    const response = await reservationApi.put(`/check-ins/${checkInId}/medications/${medicationId}`, medication);
+    const response = await reservationApi.put(`/api/check-ins/${checkInId}/medications/${medicationId}`, medication);
     return response.data;
   },
 
@@ -174,7 +174,7 @@ const checkInService = {
    * Delete a medication
    */
   deleteMedication: async (checkInId: string, medicationId: string) => {
-    const response = await reservationApi.delete(`/check-ins/${checkInId}/medications/${medicationId}`);
+    const response = await reservationApi.delete(`/api/check-ins/${checkInId}/medications/${medicationId}`);
     return response.data;
   },
 
@@ -182,7 +182,7 @@ const checkInService = {
    * Mark a belonging as returned
    */
   returnBelonging: async (checkInId: string, belongingId: string, returnedBy: string) => {
-    const response = await reservationApi.put(`/check-ins/${checkInId}/belongings/${belongingId}/return`, {
+    const response = await reservationApi.put(`/api/check-ins/${checkInId}/belongings/${belongingId}/return`, {
       returnedBy
     });
     return response.data;
@@ -200,7 +200,7 @@ const checkInService = {
    * Create a signed service agreement
    */
   createServiceAgreement: async (agreement: ServiceAgreement) => {
-    const response = await reservationApi.post('/service-agreements', agreement);
+    const response = await reservationApi.post('/api/service-agreements', agreement);
     return response.data;
   },
 
@@ -208,7 +208,7 @@ const checkInService = {
    * Get service agreement by check-in ID
    */
   getAgreementByCheckIn: async (checkInId: string) => {
-    const response = await reservationApi.get(`/service-agreements/check-in/${checkInId}`);
+    const response = await reservationApi.get(`/api/service-agreements/check-in/${checkInId}`);
     return response.data;
   }
 };
