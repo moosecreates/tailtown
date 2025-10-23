@@ -18,8 +18,45 @@ interface DashboardData extends DashboardMetrics {
 }
 
 /**
- * Custom hook for managing dashboard data and state
- * Handles data fetching, filtering, and state management
+ * useDashboardData Hook
+ * 
+ * Custom hook for managing all dashboard data fetching, filtering, and state management.
+ * Provides a clean separation between data logic and UI components.
+ * 
+ * Features:
+ * - Parallel API calls for reservations and revenue
+ * - Client-side metric calculations (check-ins, check-outs, overnight)
+ * - Real-time filtering without re-fetching
+ * - Auto-refresh on window focus
+ * - Professional logging with context
+ * - Error handling with user-friendly messages
+ * 
+ * Performance Optimizations:
+ * - useCallback with empty deps to prevent infinite loops
+ * - Single data fetch on mount
+ * - Memoized filter function
+ * - Efficient date calculations
+ * 
+ * @returns {Object} Dashboard data and control functions
+ * @returns {number|null} inCount - Number of check-ins today
+ * @returns {number|null} outCount - Number of check-outs today
+ * @returns {number|null} overnightCount - Number of overnight guests
+ * @returns {number|null} todayRevenue - Total revenue for today
+ * @returns {Reservation[]} allReservations - All fetched reservations
+ * @returns {Reservation[]} filteredReservations - Filtered reservations based on current filter
+ * @returns {boolean} loading - Loading state
+ * @returns {string|null} error - Error message if any
+ * @returns {'in'|'out'|'all'} appointmentFilter - Current filter state
+ * @returns {Function} filterReservations - Function to change filter
+ * @returns {Function} refreshData - Function to manually refresh data
+ * 
+ * @example
+ * const {
+ *   inCount,
+ *   filteredReservations,
+ *   loading,
+ *   filterReservations
+ * } = useDashboardData();
  */
 export const useDashboardData = () => {
   const [metrics, setMetrics] = useState<DashboardMetrics>({
@@ -37,9 +74,17 @@ export const useDashboardData = () => {
 
   /**
    * Filter reservations based on check-in or check-out status
+   * 
+   * Performs client-side filtering for instant updates without API calls.
+   * Compares dates in YYYY-MM-DD format to handle timezone correctly.
+   * 
+   * @param filter - Filter type: 'in' (check-ins), 'out' (check-outs), or 'all'
+   * @param reservations - Optional array to filter (defaults to allReservations)
    */
   const filterReservations = useCallback((filter: 'in' | 'out' | 'all', reservations?: any[]) => {
     const reservationsToFilter = reservations || allReservations;
+    
+    // Get today's date in YYYY-MM-DD format (local timezone)
     const today = new Date();
     const formattedToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     
@@ -60,6 +105,7 @@ export const useDashboardData = () => {
         return endDateStr === formattedToday;
       });
     }
+    // 'all' filter shows everything (no filtering needed)
     
     setFilteredReservations(filtered);
     setAppointmentFilter(filter);

@@ -34,8 +34,35 @@ interface ReservationListProps {
 }
 
 /**
- * ReservationList - Displays upcoming reservations with filtering
- * Shows check-ins, check-outs, or all appointments
+ * ReservationList Component
+ * 
+ * Displays upcoming reservations in a compact, scrollable list optimized for high-volume operations.
+ * Designed to handle 200+ daily reservations efficiently.
+ * 
+ * Features:
+ * - Compact list layout (~60px per item)
+ * - Scrollable container (500px max height)
+ * - Pet avatars with profile photos
+ * - Pet icons (medical/behavioral/dietary alerts)
+ * - Filter buttons (All, Check-Ins, Check-Outs)
+ * - Reservation count badge
+ * - Status chips with color coding
+ * - Hover effects for better UX
+ * 
+ * @param reservations - Array of reservation objects to display
+ * @param loading - Loading state indicator
+ * @param error - Error message if data fetch failed
+ * @param filter - Current filter ('in' | 'out' | 'all')
+ * @param onFilterChange - Callback to change filter
+ * 
+ * @example
+ * <ReservationList
+ *   reservations={filteredReservations}
+ *   loading={loading}
+ *   error={error}
+ *   filter="in"
+ *   onFilterChange={(filter) => setFilter(filter)}
+ * />
  */
 const ReservationList: React.FC<ReservationListProps> = ({
   reservations,
@@ -44,6 +71,11 @@ const ReservationList: React.FC<ReservationListProps> = ({
   filter,
   onFilterChange
 }) => {
+  /**
+   * Maps reservation status to Material-UI chip color
+   * @param status - Reservation status string
+   * @returns Chip color variant
+   */
   const getStatusColor = (status: string): "success" | "warning" | "info" | "error" | "default" => {
     switch(status) {
       case 'CONFIRMED': return 'success';
