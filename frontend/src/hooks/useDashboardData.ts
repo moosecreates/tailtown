@@ -94,14 +94,14 @@ export const useDashboardData = () => {
       // Show only check-ins (reservations starting today)
       filtered = reservationsToFilter.filter((res: any) => {
         const startDate = new Date(res.startDate);
-        const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+        const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
         return startDateStr === formattedToday;
       });
     } else if (filter === 'out') {
       // Show only check-outs (reservations ending today)
       filtered = reservationsToFilter.filter((res: any) => {
         const endDate = new Date(res.endDate);
-        const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+        const endDateStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}`;
         return endDateStr === formattedToday;
       });
     }
@@ -154,21 +154,21 @@ export const useDashboardData = () => {
       // Calculate metrics
       const checkIns = reservations.filter((res: any) => {
         const startDate = new Date(res.startDate);
-        const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+        const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
         return startDateStr === formattedToday;
       }).length;
 
       const checkOuts = reservations.filter((res: any) => {
         const endDate = new Date(res.endDate);
-        const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+        const endDateStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}`;
         return endDateStr === formattedToday;
       }).length;
 
       const overnight = reservations.filter((res: any) => {
         const startDate = new Date(res.startDate);
         const endDate = new Date(res.endDate);
-        const startDateStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
-        const endDateStr = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`;
+        const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
+        const endDateStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}`;
         return startDateStr < formattedToday && endDateStr >= formattedToday;
       }).length;
 
