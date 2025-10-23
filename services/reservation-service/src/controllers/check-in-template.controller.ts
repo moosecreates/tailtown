@@ -216,7 +216,7 @@ export const updateTemplate = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const tenantId = req.headers['x-tenant-id'] as string || 'dev';
-    const { name, description, isActive, isDefault } = req.body;
+    const { name, description, isActive, isDefault, sections } = req.body;
 
     // Verify template exists and belongs to tenant
     const existing = await prisma.checkInTemplate.findFirst({
@@ -238,13 +238,41 @@ export const updateTemplate = async (req: Request, res: Response) => {
       });
     }
 
+    // If sections are provided, delete existing sections and recreate
+    if (sections) {
+      // Delete existing sections (cascade will delete questions)
+      await prisma.checkInSection.deleteMany({
+        where: { templateId: id }
+      });
+    }
+
     const template = await prisma.checkInTemplate.update({
       where: { id },
       data: {
         name,
         description,
         isActive,
-        isDefault
+        isDefault,
+        ...(sections && {
+          sections: {
+            create: sections.map((section: any, sectionIndex: number) => ({
+              title: section.title,
+              description: section.description,
+              order: section.order || sectionIndex + 1,
+              questions: {
+                create: section.questions?.map((question: any, questionIndex: number) => ({
+                  questionText: question.questionText,
+                  questionType: question.questionType,
+                  options: question.options || null,
+                  isRequired: question.isRequired || false,
+                  order: question.order || questionIndex + 1,
+                  placeholder: question.placeholder || null,
+                  helpText: question.helpText || null
+                })) || []
+              }
+            }))
+          }
+        })
       },
       include: {
         sections: {
