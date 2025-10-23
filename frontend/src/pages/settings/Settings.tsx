@@ -17,7 +17,8 @@ import {
   People as UsersIcon,
   AttachMoney as PriceRulesIcon,
   Settings as GeneralIcon,
-  Campaign as MarketingIcon
+  Campaign as MarketingIcon,
+  Assignment as CheckInIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
@@ -58,6 +59,13 @@ const Settings: React.FC = () => {
       icon: <MarketingIcon sx={{ fontSize: 40, color: 'purple' }} />,
       path: '/admin/marketing',
       stats: 'Campaigns: 0'
+    },
+    {
+      title: 'Check-In Templates',
+      description: 'Configure check-in questionnaires, fields, and pre-populated options',
+      icon: <CheckInIcon sx={{ fontSize: 40, color: 'success.main' }} />,
+      path: '/admin/check-in-templates',
+      stats: 'Templates: 1'
     },
     {
       title: 'Price Rules',
