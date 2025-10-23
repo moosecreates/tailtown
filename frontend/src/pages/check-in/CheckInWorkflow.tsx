@@ -170,6 +170,11 @@ const CheckInWorkflow: React.FC = () => {
 
       await checkInService.createServiceAgreement(agreementData);
 
+      // Update reservation status to CHECKED_IN
+      await reservationService.updateReservation(reservationId!, {
+        status: 'CHECKED_IN'
+      });
+
       // Success! Navigate to confirmation
       navigate(`/check-in/${checkInResult.data.id}/complete`);
 
