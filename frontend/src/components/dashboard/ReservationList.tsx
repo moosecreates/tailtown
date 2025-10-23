@@ -1,6 +1,7 @@
 import React from 'react';
-import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress, List, ListItem } from '@mui/material';
+import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress, List, ListItem, IconButton, Tooltip } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PetNameWithIcons from '../pets/PetNameWithIcons';
 
 interface Reservation {
@@ -183,17 +184,40 @@ const ReservationList: React.FC<ReservationListProps> = ({
             {reservations.map((reservation) => (
               <ListItem
                 key={reservation.id}
-                onClick={() => navigate(`/reservations/${reservation.id}`)}
                 sx={{
                   py: 1,
                   px: 2,
-                  cursor: 'pointer',
                   '&:hover': {
                     bgcolor: 'action.hover',
                   }
                 }}
+                secondaryAction={
+                  filter === 'in' && reservation.status === 'CONFIRMED' ? (
+                    <Tooltip title="Start Check-In">
+                      <IconButton
+                        edge="end"
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/check-in/${reservation.id}`);
+                        }}
+                      >
+                        <CheckCircleIcon />
+                      </IconButton>
+                    </Tooltip>
+                  ) : (
+                    <Chip 
+                      label={reservation.status} 
+                      color={getStatusColor(reservation.status)}
+                      size="small"
+                    />
+                  )
+                }
               >
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Box 
+                  sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5, cursor: 'pointer' }}
+                  onClick={() => navigate(`/reservations/${reservation.id}`)}
+                >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     {reservation.pet && (
                       <PetNameWithIcons
@@ -224,12 +248,6 @@ const ReservationList: React.FC<ReservationListProps> = ({
                     )}
                   </Box>
                 </Box>
-                <Chip 
-                  label={reservation.status} 
-                  color={getStatusColor(reservation.status)}
-                  size="small"
-                  sx={{ ml: 1 }}
-                />
               </ListItem>
             ))}
           </List>
