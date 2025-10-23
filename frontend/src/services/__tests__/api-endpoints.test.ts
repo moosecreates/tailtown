@@ -120,11 +120,12 @@ describe('API Endpoint URL Construction', () => {
     invalidEndpoints.forEach(endpoint => {
       it(`should detect invalid endpoint: ${endpoint}`, () => {
         // Should either not start with /api/ or have other issues
-        const isValid = 
-          endpoint.match(/^\/api\//) && 
-          !endpoint.match(/\/\//) && 
-          !endpoint.match(/\/$/) &&
-          endpoint.length > 5;
+        const startsWithApi = endpoint.match(/^\/api\//) !== null;
+        const hasDoubleSlash = endpoint.match(/\/\//) !== null;
+        const hasTrailingSlash = endpoint.match(/\/$/) !== null;
+        const isLongEnough = endpoint.length > 5;
+        
+        const isValid = startsWithApi && !hasDoubleSlash && !hasTrailingSlash && isLongEnough;
         
         expect(isValid).toBe(false);
       });
