@@ -320,11 +320,6 @@ const OrderEntry: React.FC = () => {
       }
       
       // Step 1: Create reservations (one per pet)
-        customer: orderData.customer,
-        pets: orderData.pets,
-        reservation: orderData.reservation
-      });
-      
       const createdReservations = [];
       
       // For multiple pets, we need to handle resource assignment differently
