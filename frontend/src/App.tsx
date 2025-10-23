@@ -72,6 +72,9 @@ const CheckInWorkflow = lazy(() => import('./pages/check-in/CheckInWorkflow'));
 const CheckInComplete = lazy(() => import('./pages/check-in/CheckInComplete'));
 const CheckInTemplateManager = lazy(() => import('./pages/admin/CheckInTemplateManager'));
 
+// Lazy loaded pages - Checkout
+const CheckoutWorkflow = lazy(() => import('./pages/checkout/CheckoutWorkflow'));
+
 // Custom event and utility components
 
 // Custom event for route changes
@@ -152,6 +155,9 @@ const AppRoutes = () => {
         <Route path="/check-in/:reservationId" element={isAuthenticated ? <CheckInWorkflow /> : <Navigate to="/login" />} />
         <Route path="/check-in/:checkInId/complete" element={isAuthenticated ? <CheckInComplete /> : <Navigate to="/login" />} />
         <Route path="/admin/check-in-templates" element={isAuthenticated ? <CheckInTemplateManager /> : <Navigate to="/login" />} />
+        
+        {/* Checkout Routes */}
+        <Route path="/checkout/:reservationId" element={isAuthenticated ? <CheckoutWorkflow /> : <Navigate to="/login" />} />
         
         {/* Debug routes */}
         <Route path="/debug/api" element={<ApiTester />} />
