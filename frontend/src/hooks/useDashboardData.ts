@@ -149,7 +149,7 @@ export const useDashboardData = () => {
       });
 
       setAllReservations(reservations);
-      filterReservations(appointmentFilter, reservations);
+      setFilteredReservations(reservations); // Set initial filtered reservations
       
     } catch (err: any) {
       logger.error('Failed to load dashboard data', { error: err.message });
@@ -157,12 +157,13 @@ export const useDashboardData = () => {
     } finally {
       setLoading(false);
     }
-  }, [appointmentFilter, filterReservations]);
+  }, []); // No dependencies - stable function
 
   // Load data on mount
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   // Refresh on window focus
   useEffect(() => {
@@ -173,7 +174,8 @@ export const useDashboardData = () => {
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [loadData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // loadData is stable, no need in deps
 
   return {
     ...metrics,
