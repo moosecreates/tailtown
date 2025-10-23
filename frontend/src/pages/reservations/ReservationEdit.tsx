@@ -135,10 +135,6 @@ export default function ReservationEdit() {
     e.preventDefault();
     try {
       if (!id) return;
-        ...formData,
-        startDate: formData.startDate.toISOString(),
-        endDate: formData.endDate.toISOString(),
-      });
       const updatedReservation = await reservationService.updateReservation(id, {
         startDate: formData.startDate.toISOString(),
         endDate: formData.endDate.toISOString(),
