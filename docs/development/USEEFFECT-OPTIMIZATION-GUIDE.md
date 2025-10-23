@@ -482,13 +482,29 @@ const loadData = useCallback(async () => {
 
 ---
 
-## Next Steps
+## ⏳ Remaining Work
 
-1. Continue fixing files in priority order
-2. Add useCallback to all data fetching functions
-3. Document any complex dependency logic
-4. Test thoroughly after each change
-5. Update this guide with new patterns
+### Priority #8: Unused Variables Cleanup (Next)
+Based on build output, the following files have unused variable warnings:
+- CustomerValueReport.tsx (setError unused)
+- Services.tsx (TextField, MenuItem, Grid, ServiceCategory, setError, deactivateResult unused)
+- PriceRuleDetailsPage.tsx (loading, response unused)
+- Scheduling.tsx (TextField, startOfWeek, endOfWeek unused)
+- SuitesPage.tsx (DatePicker, LocalizationProvider, AdapterDateFns, AddIcon, isSuiteOccupied, useSuiteData, isOccupied unused)
+- api.ts (AxiosRequestConfig unused)
+- priceRuleService.ts (PriceRuleType unused)
+- reservationService.ts (today unused)
+- resourceService.ts (PaginatedResponse unused)
+
+**Priority**: Low | **Effort**: 1-2 hours | **Impact**: Code cleanliness
+
+### Priority #9: Bundle Size Optimization
+Current bundle: 561.7 kB (gzipped)
+- Implement code splitting
+- Analyze dependencies
+- Consider lazy loading for routes
+
+**Priority**: Medium | **Effort**: 1 week | **Impact**: Performance
 
 ---
 

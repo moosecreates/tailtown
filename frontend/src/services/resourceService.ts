@@ -1,6 +1,5 @@
 import { AxiosResponse } from 'axios';
 import { reservationApi as api } from './api';
-import { PaginatedResponse } from '../types/common';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
 import { ServiceCategory } from '../types/service';
 import { serviceManagement } from './serviceManagement';

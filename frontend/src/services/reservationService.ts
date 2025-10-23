@@ -189,7 +189,6 @@ export const reservationService = {
 
   getTodayRevenue: async (): Promise<{ revenue: number }> => {
     try {
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
       const response: AxiosResponse = await api.get('/api/reservations/revenue/today');
       return response.data;
     } catch (error: any) {
