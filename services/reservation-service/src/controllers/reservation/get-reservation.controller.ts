@@ -224,8 +224,11 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
           // Relations (keep minimal, safe fields)
           customer: {
             select: {
+              id: true,
               firstName: true,
-              lastName: true
+              lastName: true,
+              email: true,
+              phone: true
             }
           },
           pet: {
@@ -348,8 +351,11 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
           // Relations (minimal)
           customer: {
             select: {
+              id: true,
               firstName: true,
-              lastName: true
+              lastName: true,
+              email: true,
+              phone: true
             }
           },
           pet: {
