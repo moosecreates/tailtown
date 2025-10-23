@@ -105,15 +105,10 @@ const ReservationDetailsRedesigned = () => {
     navigate(`/check-in/${id}`);
   };
 
-  const handleCheckOut = async () => {
-    try {
-      if (!id) return;
-      await reservationService.updateReservation(id, { status: 'CHECKED_OUT' });
-      await fetchReservation();
-    } catch (error) {
-      console.error('Error checking out reservation:', error);
-      setError('Failed to check out reservation');
-    }
+  const handleCheckOut = () => {
+    // Navigate to the new checkout workflow
+    if (!id) return;
+    navigate(`/checkout/${id}`);
   };
 
   const {
