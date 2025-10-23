@@ -137,7 +137,7 @@ const BelongingsForm: React.FC<BelongingsFormProps> = ({ belongings, onChange })
               />
             </Grid>
 
-            <Grid item xs={6} md={2}>
+            <Grid item xs={12} md={3}>
               <TextField
                 fullWidth
                 type="number"
@@ -148,27 +148,7 @@ const BelongingsForm: React.FC<BelongingsFormProps> = ({ belongings, onChange })
               />
             </Grid>
 
-            <Grid item xs={6} md={3}>
-              <TextField
-                fullWidth
-                label="Color"
-                value={belonging.color || ''}
-                onChange={(e) => handleUpdateBelonging(index, 'color', e.target.value)}
-                placeholder="e.g., Blue, Red"
-              />
-            </Grid>
-
-            <Grid item xs={12} md={3}>
-              <TextField
-                fullWidth
-                label="Brand"
-                value={belonging.brand || ''}
-                onChange={(e) => handleUpdateBelonging(index, 'brand', e.target.value)}
-                placeholder="e.g., Kong, Ruffwear"
-              />
-            </Grid>
-
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={9}>
               <TextField
                 fullWidth
                 label="Notes"
