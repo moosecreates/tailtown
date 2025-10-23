@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress, List, ListItem } from '@mui/material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import PetNameWithIcons from '../pets/PetNameWithIcons';
 
 interface Reservation {
@@ -71,6 +71,8 @@ const ReservationList: React.FC<ReservationListProps> = ({
   filter,
   onFilterChange
 }) => {
+  const navigate = useNavigate();
+
   /**
    * Maps reservation status to Material-UI chip color
    * @param status - Reservation status string
@@ -181,9 +183,11 @@ const ReservationList: React.FC<ReservationListProps> = ({
             {reservations.map((reservation) => (
               <ListItem
                 key={reservation.id}
+                onClick={() => navigate(`/reservations/${reservation.id}`)}
                 sx={{
                   py: 1,
                   px: 2,
+                  cursor: 'pointer',
                   '&:hover': {
                     bgcolor: 'action.hover',
                   }

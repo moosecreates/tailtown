@@ -70,7 +70,7 @@ export const useDashboardData = () => {
   const [filteredReservations, setFilteredReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [appointmentFilter, setAppointmentFilter] = useState<'in' | 'out' | 'all'>('all');
+  const [appointmentFilter, setAppointmentFilter] = useState<'in' | 'out' | 'all'>('in'); // Default to check-ins
 
   /**
    * Filter reservations based on check-in or check-out status
@@ -195,7 +195,14 @@ export const useDashboardData = () => {
       });
 
       setAllReservations(reservations);
-      setFilteredReservations(reservations); // Set initial filtered reservations
+      
+      // Apply initial filter (check-ins by default)
+      const checkInReservations = reservations.filter((res: any) => {
+        const startDate = new Date(res.startDate);
+        const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
+        return startDateStr === formattedToday;
+      });
+      setFilteredReservations(checkInReservations);
       
     } catch (err: any) {
       logger.error('Failed to load dashboard data', { error: err.message });
