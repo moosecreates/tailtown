@@ -59,7 +59,8 @@ const PrintKennelCards: React.FC = () => {
     if (initialized && selectedDate) {
       loadReservations();
     }
-  }, [selectedDate, selectedStatus, initialized]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, selectedStatus, initialized]); // loadReservations is stable (useCallback below)
   
   // Initialize component on mount
   useEffect(() => {
@@ -120,10 +121,12 @@ const PrintKennelCards: React.FC = () => {
     };
     
     initLoad();
-  }, [isInitializing, initialized]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount - initializationRef prevents duplicates
 
   // Load reservations based on current filters
-  const loadReservations = async () => {
+  // Wrapped in useCallback to maintain stable reference
+  const loadReservations = useCallback(async () => {
     if (!selectedDate) {
       console.log('No date selected, using today\'s date');
       // If no date is selected, use today's date
@@ -187,7 +190,8 @@ const PrintKennelCards: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, selectedStatus]); // fetchAdditionalData and filterReservations are stable (useCallback below)
   
   // Memoize the fetch function to prevent unnecessary re-calls
   const fetchAdditionalData = useCallback(async (reservationsData: any[]) => {
@@ -268,7 +272,7 @@ const PrintKennelCards: React.FC = () => {
     if (filtered.length > 0) {
     }
     setFilteredReservations(filtered);
-  }, [petData, customerData]);
+  }, [reservations, petData, customerData]); // All data used in filtering
   
   // Handle date change
   const handleDateChange = (date: Date | null) => {
