@@ -30,10 +30,7 @@ export const customerService = {
 
   createCustomer: async (customer: Omit<Customer, 'id'>): Promise<Customer> => {
     try {
-      console.log('Making POST request to: /api/customers');
-      console.log('With data:', customer);
       const response = await api.post('/api/customers', customer);
-      console.log('Response:', response);
       if (!response.data?.data) {
         throw new Error('No data in response');
       }
@@ -47,10 +44,7 @@ export const customerService = {
 
   updateCustomer: async (id: string, customer: Partial<Customer>): Promise<Customer> => {
     try {
-      console.log('Making PUT request to: /api/customers/' + id);
-      console.log('With data:', customer);
       const response = await api.put(`/api/customers/${id}`, customer);
-      console.log('Response:', response);
       if (!response.data?.data) {
         throw new Error('No data in response');
       }
@@ -64,7 +58,6 @@ export const customerService = {
 
   deleteCustomer: async (id: string): Promise<void> => {
     try {
-      console.log('Making DELETE request to: /api/customers/' + id + '?permanent=true');
       await api.delete(`/api/customers/${id}?permanent=true`);
     } catch (error: any) {
       console.error('Error in deleteCustomer:', error);

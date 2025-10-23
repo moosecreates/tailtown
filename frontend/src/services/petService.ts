@@ -54,9 +54,7 @@ export interface Pet {
 export const petService = {
   getPetsByCustomer: async (customerId: string): Promise<PaginatedResponse<Pet>> => {
     try {
-      console.log('Getting pets for customer:', customerId);
       const response: AxiosResponse<PaginatedResponse<Pet>> = await api.get(`/api/pets/customer/${customerId}`);
-      console.log('Response:', response);
       return response.data;
     } catch (error: any) {
       console.error('Error in getPetsByCustomer:', error);
@@ -66,7 +64,6 @@ export const petService = {
 
   getAllPets: async (page = 1, limit = 10, search = ''): Promise<PaginatedResponse<Pet>> => {
     try {
-      console.log('Getting all pets...');
       const response: AxiosResponse = await api.get('/api/pets', {
         params: {
           page,
@@ -74,7 +71,6 @@ export const petService = {
           search
         }
       });
-      console.log('Response:', response);
       
       // Return a properly formatted PaginatedResponse
       return {
@@ -101,9 +97,7 @@ export const petService = {
 
   getPetById: async (id: string): Promise<Pet> => {
     try {
-      console.log('Getting pet by id:', id);
       const response: AxiosResponse = await api.get(`/api/pets/${id}`);
-      console.log('Response:', response);
       return response.data?.data;
     } catch (error: any) {
       console.error('Error in getPetById:', error);
@@ -114,9 +108,7 @@ export const petService = {
 
   createPet: async (pet: Omit<Pet, 'id'>): Promise<Pet> => {
     try {
-      console.log('Creating pet:', pet);
       const response: AxiosResponse = await api.post('/api/pets', pet);
-      console.log('Response:', response);
       return response.data?.data;
     } catch (error: any) {
       console.error('Error in createPet:', error);
@@ -127,9 +119,7 @@ export const petService = {
 
   updatePet: async (id: string, pet: Partial<Pet>): Promise<Pet> => {
     try {
-      console.log('Updating pet:', id, pet);
       const response: AxiosResponse = await api.put(`/api/pets/${id}`, pet);
-      console.log('Response:', response);
       return response.data?.data;
     } catch (error: any) {
       console.error('Error in updatePet:', error);
@@ -140,7 +130,6 @@ export const petService = {
 
   deletePet: async (id: string): Promise<void> => {
     try {
-      console.log('Deleting pet:', id);
       await api.delete(`/api/pets/${id}?permanent=true`);
     } catch (error: any) {
       console.error('Error in deletePet:', error);
@@ -154,13 +143,11 @@ export const petService = {
       const formData = new FormData();
       formData.append('photo', file);
 
-      console.log('Uploading pet photo:', id);
       const response: AxiosResponse = await api.post(`/api/pets/${id}/photo`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('Response:', response);
       return response.data?.data;
     } catch (error: any) {
       console.error('Error in uploadPetPhoto:', error);
@@ -171,9 +158,7 @@ export const petService = {
 
   getPetMedicalRecords: async (id: string): Promise<any[]> => {
     try {
-      console.log('Getting pet medical records:', id);
       const response: AxiosResponse = await api.get(`/api/pets/${id}/medical-records`);
-      console.log('Response:', response);
       return response.data?.data || [];
     } catch (error: any) {
       console.error('Error in getPetMedicalRecords:', error);

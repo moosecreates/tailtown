@@ -74,7 +74,6 @@ export const reservationService = {
     date?: string
   ): Promise<{ status: string; data: Reservation[]; totalPages: number; currentPage: number; results: number }> => {
     try {
-      console.log('reservationService: Getting all reservations with date filter:', date);
       const response: AxiosResponse = await api.get('/api/reservations', {
         params: { 
           page, 
@@ -106,9 +105,7 @@ export const reservationService = {
 
   createReservation: async (reservation: Omit<Reservation, 'id'>): Promise<Reservation> => {
     try {
-      console.log('Creating reservation with data:', reservation);
       const response: AxiosResponse = await api.post('/api/reservations', reservation);
-      console.log('Reservation creation response:', response.data);
       
       // Handle different response formats
       let reservationData;
@@ -135,7 +132,6 @@ export const reservationService = {
         throw new Error('No reservation ID returned from server');
       }
       
-      console.log('Successfully extracted reservation data:', reservationData);
       return reservationData;
     } catch (error: any) {
       console.error('Error in createReservation:', error);
@@ -148,9 +144,7 @@ export const reservationService = {
 
   updateReservation: async (id: string, reservation: Partial<Reservation>): Promise<Reservation> => {
     try {
-      console.log('Sending update request:', { id, data: reservation });
       const response: AxiosResponse = await api.patch(`/api/reservations/${id}`, reservation);
-      console.log('Update response:', response.data);
       const payload = response?.data;
       const normalized = (payload?.data?.reservation ?? payload?.data ?? payload?.reservation ?? payload) as Reservation;
       return normalized;
@@ -207,9 +201,7 @@ export const reservationService = {
   // Add add-on services to a reservation
   addAddOnsToReservation: async (reservationId: string, addOns: Array<{ serviceId: string; quantity: number }>): Promise<any> => {
     try {
-      console.log('Adding add-ons to reservation:', { reservationId, addOns });
       const response: AxiosResponse = await api.post(`/api/reservations/${reservationId}/add-ons`, { addOns });
-      console.log('Add-ons response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Error in addAddOnsToReservation:', error);

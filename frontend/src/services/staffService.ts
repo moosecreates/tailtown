@@ -169,7 +169,6 @@ const staffService = {
         specialties: staffData.specialties || []
       };
 
-      console.log('Sending staff data to backend:', formattedData);
       const response = await api.post('/api/staff', formattedData);
       if (response.data && response.data.status === 'success') {
         return response.data.data;
@@ -205,7 +204,6 @@ const staffService = {
         formattedData.isActive = staffData.status === 'Active';
       }
 
-      console.log('Updating staff data:', formattedData);
       const response = await api.put(`/api/staff/${id}`, formattedData);
       if (response.data && response.data.status === 'success') {
         return response.data.data;

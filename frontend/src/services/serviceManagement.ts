@@ -64,7 +64,6 @@ export const serviceManagement = {
         }))
       };
 
-      console.log('Updating service with data:', updatedData);
       
       const response = await api.put(`/api/services/${id}`, updatedData);
       return response.data;
@@ -94,7 +93,6 @@ export const serviceManagement = {
       // But we should handle this gracefully for the user
       if (error.response && error.response.status === 400) {
         // Try to deactivate the service instead
-        console.log('Service could not be deleted, attempting to deactivate instead');
         const deactivateResponse = await api.patch(`/api/services/${id}/deactivate`);
         
         // Return a modified response that indicates what happened
@@ -125,12 +123,10 @@ export const serviceManagement = {
 
   // Get add-ons for a service
   getServiceAddOns: async (id: string) => {
-    console.log('serviceManagement: Getting add-ons for service ID:', id);
     
     try {
       // First, get the service details to check its category
       const serviceDetails = await api.get(`/api/services/${id}`);
-      console.log('serviceManagement: Service details:', serviceDetails.data);
       
       // Extract service category
       let serviceCategory = '';
@@ -142,34 +138,28 @@ export const serviceManagement = {
         }
       }
       
-      console.log(`serviceManagement: Service ${id} has category: ${serviceCategory}`);
       
       // Get the add-ons for this service
       const response = await api.get(`/api/services/${id}/add-ons`);
-      console.log('serviceManagement: Raw add-ons response:', response);
       
       // If this is a grooming service, we should have add-ons
       if (serviceCategory === 'GROOMING') {
-        console.log('serviceManagement: This is a GROOMING service, should have add-ons');
       }
       
       // Handle different response formats
       if (response && response.data) {
         // If the response is an array, return it directly
         if (Array.isArray(response.data)) {
-          console.log(`serviceManagement: Found ${response.data.length} add-ons in array format`);
           return response.data;
         }
         
         // If the response has a data property that's an array, return that
         if (response.data.data && Array.isArray(response.data.data)) {
-          console.log(`serviceManagement: Found ${response.data.data.length} add-ons in nested data format`);
           return response.data.data;
         }
         
         // If the response has an addOns property that's an array, return that
         if (response.data.addOns && Array.isArray(response.data.addOns)) {
-          console.log(`serviceManagement: Found ${response.data.addOns.length} add-ons in addOns property`);
           return response.data.addOns;
         }
         

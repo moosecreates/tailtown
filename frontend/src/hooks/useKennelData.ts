@@ -73,7 +73,6 @@ export const useKennelData = ({
       setLoading(true);
       setError(null);
       
-      console.log('Loading kennels for date:', formatDateToYYYYMMDD(currentDate));
       
       // First, get all resources of type suite
       try {
@@ -91,7 +90,6 @@ export const useKennelData = ({
         
         if (suitesResponse?.status === 'success' && Array.isArray(suitesResponse?.data)) {
           kennelResources = suitesResponse.data;
-          console.log(`Found ${kennelResources.length} suite resources`);
         } else {
           console.error('Could not find suite resources in response');
           setError('Failed to load kennels: Could not find suite resources');
@@ -104,7 +102,6 @@ export const useKennelData = ({
         const startDate = formatDateToYYYYMMDD(days[0]);
         const endDate = formatDateToYYYYMMDD(days[days.length - 1]);
         
-        console.log(`Checking availability for date range: ${startDate} to ${endDate}`);
         
         // Extract resource IDs for batch availability check
         const resourceIds = kennelResources.map((resource: ExtendedResource) => resource.id);
@@ -118,7 +115,6 @@ export const useKennelData = ({
             endDate: endDate
           });
         } else {
-          console.log('No resources found, skipping availability check');
           availabilityResponse = {
             data: {
               resources: [],
@@ -192,7 +188,6 @@ export const useKennelData = ({
         console.error('Error fetching resources:', apiError);
         
         // Fallback to the original availability endpoint
-        console.log('Falling back to availability endpoint');
         
         try {
           const response = await reservationApi.get('/api/resources/availability', {
@@ -255,7 +250,6 @@ export const useKennelData = ({
             console.warn('No kennel data found in any expected format');
             setError('No kennels found. Please check your resource configuration.');
           } else {
-            console.log(`Found ${kennelData.length} kennels`);
             
             // Sort the kennels by suite number
             const sortedKennels = [...kennelData].sort((a: any, b: any) => {

@@ -64,7 +64,6 @@ export const resourceService = {
     try {
       // Use the date provided or get today's date
       const formattedDate = date || formatDateToYYYYMMDD(new Date());
-      console.log(`Fetching resource ${id} for date: ${formattedDate}`);
       
       // Get the resource details with the date parameter to include reservations
       const resourceResponse: AxiosResponse = await api.get(`/api/resources/${id}`, {
@@ -79,7 +78,6 @@ export const resourceService = {
       }
       
       // Direct approach: Fetch all reservations for this specific resource on the given date
-      console.log(`Fetching reservations for resource ${id} with date ${formattedDate}`);
       const reservationsResponse: AxiosResponse = await api.get(`/api/reservations`, {
         params: {
           resourceId: id,
@@ -87,7 +85,6 @@ export const resourceService = {
           status: 'PENDING,CONFIRMED,CHECKED_IN' // Include pending reservations too
         }
       });
-      console.log('Reservations API response:', reservationsResponse.data);
       
       // If we have reservations, add them to the resource
       if (reservationsResponse.data?.status === 'success' && 
@@ -96,11 +93,9 @@ export const resourceService = {
         
         // Replace the reservations with the ones we just fetched
         resourceResponse.data.data.reservations = reservationsResponse.data.data;
-        console.log(`Found ${reservationsResponse.data.data.length} reservations for suite ${id} on date ${formattedDate}`);
       } else {
         // Ensure we have an empty array if no reservations were found
         resourceResponse.data.data.reservations = [];
-        console.log(`No active reservations found for suite ${id} on date ${formattedDate}`);
       }
       
       return resourceResponse.data;
@@ -172,18 +167,15 @@ export const resourceService = {
           allResources = allResources.concat(response.data.data);
           totalPages = response.data.totalPages || 1;
           
-          console.log(`Fetched page ${currentPage} of ${totalPages}, got ${response.data.data.length} resources, total so far: ${allResources.length}`);
           currentPage++; // Increment AFTER processing the response
         } else {
           break; // Exit the loop if we got an invalid response
         }
       } while (currentPage <= totalPages);
       
-      console.log(`Completed fetching all resources. Total: ${allResources.length}`);
       
       // Now fetch reservations for each suite to determine occupancy
       const formattedDate = date || formatDateToYYYYMMDD(new Date());
-      console.log(`Fetching reservations for ${allResources.length} suites on date: ${formattedDate}`);
       
       // Get all reservations for the specified date
       const reservationsResponse = await api.get('/api/reservations', {
@@ -197,7 +189,6 @@ export const resourceService = {
       });
       
       const reservations = reservationsResponse?.data?.data?.reservations || [];
-      console.log(`Found ${reservations.length} reservations for date ${formattedDate}`);
       
       // Attach reservations to each resource
       const resourcesWithReservations: ResourceWithReservations[] = allResources.map(resource => {
@@ -206,7 +197,6 @@ export const resourceService = {
         );
         
         if (resourceReservations.length > 0) {
-          console.log(`Resource ${resource.name} (${resource.id}) has ${resourceReservations.length} reservations`);
         }
         
         return {
@@ -215,7 +205,6 @@ export const resourceService = {
         };
       });
       
-      console.log(`Completed enriching ${resourcesWithReservations.length} resources with reservation data`);
       
       // Return the same structure as the API but with all resources combined and enriched
       return {
@@ -242,7 +231,6 @@ export const resourceService = {
     }
   }> => {
     try {
-      console.log('Fetching suite stats for date:', date);
       
       // Use the same logic as getSuites to get enriched data with reservations
       const suitesResponse = await resourceService.getSuites(undefined, undefined, undefined, date);
@@ -260,7 +248,6 @@ export const resourceService = {
       let needsCleaning = 0;
       
       const suites = suitesResponse.data;
-      console.log(`Calculating stats for ${suites.length} suites with reservation data`);
       
       for (const suite of suites) {
         total++;
@@ -295,7 +282,6 @@ export const resourceService = {
       // Calculate occupancy rate
       const occupancyRate = total > 0 ? Math.round(((occupied + reserved) / total) * 100) : 0;
       
-      console.log(`Stats calculated: Total=${total}, Occupied=${occupied}, Reserved=${reserved}, Available=${available}, Maintenance=${maintenance}, Needs Cleaning=${needsCleaning}, Occupancy Rate=${occupancyRate}%`);
       
 
       return {
