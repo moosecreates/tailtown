@@ -121,6 +121,30 @@ const checkInService = {
   },
 
   /**
+   * Create a new check-in template
+   */
+  createTemplate: async (templateData: Partial<CheckInTemplate>) => {
+    const response = await reservationApi.post('/api/check-in-templates', templateData);
+    return response.data;
+  },
+
+  /**
+   * Update an existing check-in template
+   */
+  updateTemplate: async (id: string, templateData: Partial<CheckInTemplate>) => {
+    const response = await reservationApi.put(`/api/check-in-templates/${id}`, templateData);
+    return response.data;
+  },
+
+  /**
+   * Delete a check-in template
+   */
+  deleteTemplate: async (id: string) => {
+    const response = await reservationApi.delete(`/api/check-in-templates/${id}`);
+    return response.data;
+  },
+
+  /**
    * Create a new check-in
    */
   createCheckIn: async (checkInData: CheckIn) => {

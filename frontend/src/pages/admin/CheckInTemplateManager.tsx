@@ -81,7 +81,13 @@ const CheckInTemplateManager: React.FC = () => {
 
   const handleSaveTemplate = async (template: any) => {
     try {
-      // TODO: Implement save logic
+      if (template.id) {
+        // Update existing template
+        await checkInService.updateTemplate(template.id, template);
+      } else {
+        // Create new template
+        await checkInService.createTemplate(template);
+      }
       await loadTemplates();
       setSelectedTemplate(null);
       setError(null);
