@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -44,6 +44,29 @@ const ResourceDetails: React.FC = () => {
     severity: 'success' as 'success' | 'error'
   });
 
+  const loadResource = useCallback(async () => {
+    if (!id || id === 'new') {
+      return;
+    }
+
+    try {
+      const loadedResource = await resourceManagement.getResourceById(id);
+      if (loadedResource) {
+        setResource(loadedResource);
+      } else {
+        throw new Error('Resource not found');
+      }
+    } catch (err) {
+      console.error('Failed to load resource:', err);
+      setSnackbar({
+        open: true,
+        message: 'Failed to load resource',
+        severity: 'error'
+      });
+      navigate('/resources');
+    }
+  }, [id, navigate]);
+
   useEffect(() => {
     const initializeData = async () => {
       try {
@@ -73,30 +96,7 @@ const ResourceDetails: React.FC = () => {
     };
 
     initializeData();
-  }, [id, navigate]);
-
-  const loadResource = async () => {
-    if (!id || id === 'new') {
-      return;
-    }
-
-    try {
-      const loadedResource = await resourceManagement.getResourceById(id);
-      if (loadedResource) {
-        setResource(loadedResource);
-      } else {
-        throw new Error('Resource not found');
-      }
-    } catch (err) {
-      console.error('Failed to load resource:', err);
-      setSnackbar({
-        open: true,
-        message: 'Failed to load resource',
-        severity: 'error'
-      });
-      navigate('/resources');
-    }
-  };
+  }, [id, navigate, loadResource]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
