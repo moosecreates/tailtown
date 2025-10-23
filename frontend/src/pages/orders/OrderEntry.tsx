@@ -206,7 +206,6 @@ const OrderEntry: React.FC = () => {
           const priceResponse = await priceRuleService.calculatePrice(priceRequest);
           
           if (priceResponse && priceResponse.data) {
-            console.log('Price rule calculation response:', priceResponse.data);
             
             // If there are applied rules, calculate the discount
             if (priceResponse.data.appliedRules && priceResponse.data.appliedRules.length > 0) {
@@ -363,13 +362,11 @@ const OrderEntry: React.FC = () => {
         if (hasSpecificResource && !hasMultiplePets) {
           // Single pet - assign the selected resource
           reservationData.resourceId = orderData.reservation.resourceId;
-          console.log(`Assigning resource ${orderData.reservation.resourceId} to ${pet.name}`);
         } else if (hasMultiplePets) {
           // Multiple pets - let backend auto-assign to avoid conflicts
           console.log(`Multiple pets detected - backend will auto-assign separate suites for ${pet.name}`);
         }
         
-        console.log(`Creating reservation for pet ${pet.name}:`, reservationData);
         
         const reservation = await reservationService.createReservation(reservationData);
         console.log(`Reservation created for ${pet.name}:`, reservation);
@@ -388,9 +385,6 @@ const OrderEntry: React.FC = () => {
       console.log('Creating invoice with data:');
       console.log('Base service price:', baseServicePrice);
       console.log('Add-on total:', addOnTotal);
-      console.log('Subtotal:', orderData.invoice.subtotal);
-      console.log('Tax amount:', orderData.invoice.taxAmount);
-      console.log('Total:', orderData.invoice.total);
       
       const invoiceData = {
         customerId: orderData.customer.id,

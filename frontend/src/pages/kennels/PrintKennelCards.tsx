@@ -99,7 +99,6 @@ const PrintKennelCards: React.FC = () => {
           }
         }
         
-        console.log(`Initial load: ${reservationsData.length} reservations`);
         setReservations(reservationsData);
         
         if (reservationsData.length > 0) {
@@ -139,7 +138,6 @@ const PrintKennelCards: React.FC = () => {
       // Format date for API
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       
-      console.log(`Loading reservations for date ${formattedDate} with status ${selectedStatus}`);
       console.log('Current date object:', selectedDate);
       
       // Fetch reservations for the selected date, regardless of status
@@ -168,11 +166,9 @@ const PrintKennelCards: React.FC = () => {
         }
       }
       
-      console.log(`Loaded ${reservationsData.length} reservations from API`);
       
       // Log the first few reservations for debugging
       if (reservationsData.length > 0) {
-        console.log('Sample reservation data:', reservationsData[0]);
       }
       
       setReservations(reservationsData);
@@ -241,25 +237,21 @@ const PrintKennelCards: React.FC = () => {
     }
     
     // Log all reservations for debugging
-    console.log('All reservations before filtering:', reservationsData);
     
     // For kennel cards, we want to show all reservations that have pet and customer data
     // We'll be more lenient with resource requirements
     const filtered = reservationsData.filter(res => {
       // Check if reservation has pet and customer IDs
       if (!res.petId || !res.customerId) {
-        console.log('Filtering out reservation missing required pet or customer ID:', res.id);
         return false;
       }
       
       // Check if we have the pet and customer data
       if (!petData[res.petId]) {
-        console.log('Filtering out reservation with missing pet data:', res.id);
         return false;
       }
       
       if (!customerData[res.customerId]) {
-        console.log('Filtering out reservation with missing customer data:', res.id);
         return false;
       }
       
@@ -273,9 +265,7 @@ const PrintKennelCards: React.FC = () => {
       return true;
     });
     
-    console.log(`Filtered ${reservationsData.length} reservations down to ${filtered.length} valid kennel reservations`);
     if (filtered.length > 0) {
-      console.log('First filtered reservation:', filtered[0]);
     }
     setFilteredReservations(filtered);
   }, [petData, customerData]);
