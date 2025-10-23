@@ -1153,15 +1153,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 </FormControl>
                 
                 {/* Kennel/Suite Number Selection - Per Pet when multiple pets selected */}
-                {(() => {
-                    requiresSuiteType,
-                    selectedSuiteType,
-                    selectedPetsLength: selectedPets.length,
-                    selectedPets,
-                    shouldShow: requiresSuiteType && selectedSuiteType && selectedPets.length > 1
-                  });
-                  return null;
-                })()}
                 {requiresSuiteType && selectedSuiteType && selectedPets.length > 1 && (
                   <Box sx={{ mt: 2, mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
                     <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
