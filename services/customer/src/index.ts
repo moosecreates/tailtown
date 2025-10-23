@@ -19,6 +19,7 @@ import paymentRoutes from './routes/payment.routes';
 import addonRoutes from './routes/addon.routes';
 // Using fixed analytics routes to avoid schema issues
 import analyticsRoutes from './routes/analytics-fixed.routes';
+import tenantRoutes from './routes/tenant.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 // Load environment variables
@@ -201,6 +202,7 @@ app.get('/test-file/:filename', (req, res) => {
 });
 
 // Routes
+app.use('/api/tenants', tenantRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/pets', petRoutes);
 app.use('/api/reservations', reservationRoutes);

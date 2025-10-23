@@ -26,6 +26,13 @@ const Settings: React.FC = () => {
   
   const adminSections = [
     {
+      title: 'Tenant Management',
+      description: 'Manage multi-tenant accounts, subscriptions, and provisioning',
+      icon: <UsersIcon sx={{ fontSize: 40, color: 'primary.main' }} />,
+      path: '/admin/tenants',
+      stats: 'Active Tenants: 1'
+    },
+    {
       title: 'Services',
       description: 'Manage boarding, daycare, grooming, and training services',
       icon: <ServicesIcon sx={{ fontSize: 40, color: 'primary.main' }} />,
