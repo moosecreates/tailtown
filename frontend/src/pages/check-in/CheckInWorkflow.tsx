@@ -74,8 +74,8 @@ const CheckInWorkflow: React.FC = () => {
 
       // Load reservation
       const resData = await reservationService.getReservationById(reservationId!);
-      setReservation(resData.data);
-      setCustomerName(`${resData.data.customer?.firstName} ${resData.data.customer?.lastName}`);
+      setReservation(resData);
+      setCustomerName(`${resData.customer?.firstName} ${resData.customer?.lastName}`);
 
       // Load check-in template
       const templateData = await checkInService.getDefaultTemplate();
