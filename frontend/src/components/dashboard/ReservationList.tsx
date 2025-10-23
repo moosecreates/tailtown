@@ -1,8 +1,7 @@
 import React from 'react';
-import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress, Avatar, List, ListItem, ListItemAvatar, ListItemText, Badge } from '@mui/material';
+import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress, List, ListItem, ListItemText } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { Pets as PetsIcon } from '@mui/icons-material';
-import PetIconDisplay from '../pets/PetIconDisplay';
+import PetNameWithIcons from '../pets/PetNameWithIcons';
 
 interface Reservation {
   id: string;
@@ -158,26 +157,19 @@ const ReservationList: React.FC<ReservationListProps> = ({
                   }
                 }}
               >
-                <ListItemAvatar>
-                  <Avatar 
-                    src={reservation.pet?.profilePhoto} 
-                    alt={reservation.pet?.name}
-                    sx={{ width: 40, height: 40 }}
-                  >
-                    {!reservation.pet?.profilePhoto && <PetsIcon />}
-                  </Avatar>
-                </ListItemAvatar>
                 <ListItemText
                   disableTypography
                   primary={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2" fontWeight="medium" component="span">
-                        {reservation.pet?.name}
-                      </Typography>
-                      {reservation.pet?.petIcons && Array.isArray(reservation.pet.petIcons) && reservation.pet.petIcons.length > 0 && (
-                        <PetIconDisplay 
-                          iconIds={reservation.pet.petIcons}
-                          size="small"
+                      {reservation.pet && (
+                        <PetNameWithIcons
+                          petName={reservation.pet.name}
+                          petIcons={reservation.pet.petIcons}
+                          petType={reservation.pet.type as any}
+                          profilePhoto={reservation.pet.profilePhoto}
+                          size="medium"
+                          showPhoto={true}
+                          nameVariant="body2"
                         />
                       )}
                       <Typography variant="caption" color="text.secondary" component="span">
