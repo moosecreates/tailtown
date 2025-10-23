@@ -1,7 +1,8 @@
 import React from 'react';
-import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress } from '@mui/material';
+import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress, Avatar, List, ListItem, ListItemAvatar, ListItemText, Badge } from '@mui/material';
 import { Link } from 'react-router-dom';
-import PetNameWithIcons from '../pets/PetNameWithIcons';
+import { Pets as PetsIcon } from '@mui/icons-material';
+import PetIconDisplay from '../pets/PetIconDisplay';
 
 interface Reservation {
   id: string;
@@ -54,13 +55,19 @@ const ReservationList: React.FC<ReservationListProps> = ({
     }
   };
 
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       month: 'short', 
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit'
+      day: 'numeric'
     });
   };
 
@@ -75,7 +82,19 @@ const ReservationList: React.FC<ReservationListProps> = ({
   return (
     <Card>
       <CardHeader 
-        title={getFilterTitle()}
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {getFilterTitle()}
+            {reservations.length > 0 && (
+              <Chip 
+                label={reservations.length} 
+                size="small" 
+                color="primary"
+                variant="outlined"
+              />
+            )}
+          </Box>
+        }
         action={
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Button 
@@ -114,54 +133,82 @@ const ReservationList: React.FC<ReservationListProps> = ({
             No {filter === 'in' ? 'check-ins' : filter === 'out' ? 'check-outs' : 'appointments'} scheduled
           </Typography>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <List 
+            sx={{ 
+              maxHeight: 500, 
+              overflow: 'auto',
+              p: 0,
+              '& .MuiListItem-root': {
+                borderBottom: 1,
+                borderColor: 'divider',
+                '&:last-child': {
+                  borderBottom: 0
+                }
+              }
+            }}
+          >
             {reservations.map((reservation) => (
-              <Box
+              <ListItem
                 key={reservation.id}
                 sx={{
-                  p: 2,
-                  border: 1,
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  py: 1,
+                  px: 2,
                   '&:hover': {
                     bgcolor: 'action.hover',
                   }
                 }}
               >
-                <Box sx={{ flex: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                    {reservation.pet && (
-                      <>
-                        <PetNameWithIcons 
-                          petName={reservation.pet.name}
-                          petIcons={reservation.pet.icons || []}
+                <ListItemAvatar>
+                  <Avatar 
+                    src={reservation.pet?.profileImageUrl} 
+                    alt={reservation.pet?.name}
+                    sx={{ width: 40, height: 40 }}
+                  >
+                    {!reservation.pet?.profileImageUrl && <PetsIcon />}
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2" fontWeight="medium">
+                        {reservation.pet?.name}
+                      </Typography>
+                      {reservation.pet?.icons && reservation.pet.icons.length > 0 && (
+                        <PetIconDisplay 
+                          iconIds={reservation.pet.icons}
+                          size="small"
                         />
-                        <Typography variant="body2" color="text.secondary">
-                          ({reservation.customer?.firstName} {reservation.customer?.lastName})
-                        </Typography>
-                      </>
-                    )}
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    {formatDate(reservation.startDate)} - {formatDate(reservation.endDate)}
-                  </Typography>
-                  {reservation.service?.name && (
-                    <Typography variant="caption" color="text.secondary">
-                      {reservation.service.name}
-                    </Typography>
-                  )}
-                </Box>
+                      )}
+                      <Typography variant="caption" color="text.secondary">
+                        • {reservation.customer?.firstName} {reservation.customer?.lastName}
+                      </Typography>
+                    </Box>
+                  }
+                  secondary={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatTime(reservation.startDate)}
+                      </Typography>
+                      {reservation.service?.name && (
+                        <>
+                          <Typography variant="caption" color="text.secondary">•</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {reservation.service.name}
+                          </Typography>
+                        </>
+                      )}
+                    </Box>
+                  }
+                />
                 <Chip 
                   label={reservation.status} 
                   color={getStatusColor(reservation.status)}
                   size="small"
+                  sx={{ ml: 1 }}
                 />
-              </Box>
+              </ListItem>
             ))}
-          </Box>
+          </List>
         )}
         {reservations.length > 0 && (
           <Box sx={{ mt: 2, textAlign: 'center' }}>
