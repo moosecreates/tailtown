@@ -88,11 +88,7 @@ const Resources: React.FC = () => {
     };
   }, [searchTerm, filterType, debouncedFilter, resources.length]);
 
-  useEffect(() => {
-    loadResources();
-  }, []);
-
-  const loadResources = async () => {
+  const loadResources = useCallback(async () => {
     try {
       console.log('Loading resources...');
       const response = await resourceManagement.getAllResources();
@@ -120,7 +116,11 @@ const Resources: React.FC = () => {
       setResources([]);
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadResources();
+  }, [loadResources]);
 
   const handleDelete = useCallback(async (id: string) => {
     if (window.confirm('Are you sure you want to delete this resource?')) {

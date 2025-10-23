@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -44,11 +44,7 @@ const Services: React.FC = () => {
     severity: 'success' as 'success' | 'error'
   });
 
-  useEffect(() => {
-    loadServices();
-  }, []);
-
-  const loadServices = async () => {
+  const loadServices = useCallback(async () => {
     try {
       const response = await serviceManagement.getAllServices();
       if (Array.isArray(response)) {
@@ -75,7 +71,11 @@ const Services: React.FC = () => {
       setServices([]);
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadServices();
+  }, [loadServices]);
 
   const handleAddService = () => {
     navigate('/services/new');

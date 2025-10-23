@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -263,15 +263,7 @@ const CustomerValueReport = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [period]);
-
-  useEffect(() => {
-    filterCustomers();
-  }, [searchTerm, customers]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -284,9 +276,9 @@ const CustomerValueReport = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
 
-  const filterCustomers = () => {
+  const filterCustomers = useCallback(() => {
     if (!searchTerm.trim()) {
       setFilteredCustomers(customers);
       return;
@@ -301,7 +293,15 @@ const CustomerValueReport = () => {
     
     setFilteredCustomers(filtered);
     setPage(0); // Reset to first page when filtering
-  };
+  }, [searchTerm, customers]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    filterCustomers();
+  }, [filterCustomers]);
 
   const handlePeriodChange = (event: SelectChangeEvent) => {
     setPeriod(event.target.value);
