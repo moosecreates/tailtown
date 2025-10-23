@@ -238,22 +238,28 @@ export const updateTemplate = async (req: Request, res: Response) => {
       });
     }
 
+    // Update basic fields first
+    await prisma.checkInTemplate.update({
+      where: { id },
+      data: {
+        name,
+        description,
+        isActive,
+        isDefault
+      }
+    });
+
     // If sections are provided, delete existing sections and recreate
     if (sections) {
       // Delete existing sections (cascade will delete questions)
       await prisma.checkInSection.deleteMany({
         where: { templateId: id }
       });
-    }
 
-    const template = await prisma.checkInTemplate.update({
-      where: { id },
-      data: {
-        name,
-        description,
-        isActive,
-        isDefault,
-        ...(sections && {
+      // Create new sections with questions
+      await prisma.checkInTemplate.update({
+        where: { id },
+        data: {
           sections: {
             create: sections.map((section: any, sectionIndex: number) => ({
               title: section.title,
@@ -272,8 +278,13 @@ export const updateTemplate = async (req: Request, res: Response) => {
               }
             }))
           }
-        })
-      },
+        }
+      });
+    }
+
+    // Fetch and return the updated template
+    const template = await prisma.checkInTemplate.findUnique({
+      where: { id },
       include: {
         sections: {
           include: {
