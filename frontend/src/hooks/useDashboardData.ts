@@ -122,6 +122,12 @@ export const useDashboardData = () => {
       const today = new Date();
       const formattedToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       
+      console.log('Dashboard loading - Today:', {
+        localDate: today.toString(),
+        formattedToday,
+        utcDate: today.toUTCString()
+      });
+      
       // Get tomorrow's date
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -155,6 +161,14 @@ export const useDashboardData = () => {
       const checkIns = reservations.filter((res: any) => {
         const startDate = new Date(res.startDate);
         const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
+        console.log('Check-in filter:', {
+          reservationId: res.id,
+          pet: res.pet?.name,
+          startDate: res.startDate,
+          startDateStr,
+          formattedToday,
+          matches: startDateStr === formattedToday
+        });
         return startDateStr === formattedToday;
       }).length;
 
