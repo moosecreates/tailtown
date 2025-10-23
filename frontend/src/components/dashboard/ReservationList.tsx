@@ -13,10 +13,10 @@ interface Reservation {
   pet?: {
     id: string;
     name: string;
-    species?: string;
+    type?: string;
     breed?: string;
-    profileImageUrl?: string;
-    icons?: string[];
+    profilePhoto?: string;
+    petIcons?: any; // JSON array of icon IDs
   };
   startDate: string;
   endDate: string;
@@ -160,39 +160,40 @@ const ReservationList: React.FC<ReservationListProps> = ({
               >
                 <ListItemAvatar>
                   <Avatar 
-                    src={reservation.pet?.profileImageUrl} 
+                    src={reservation.pet?.profilePhoto} 
                     alt={reservation.pet?.name}
                     sx={{ width: 40, height: 40 }}
                   >
-                    {!reservation.pet?.profileImageUrl && <PetsIcon />}
+                    {!reservation.pet?.profilePhoto && <PetsIcon />}
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
+                  disableTypography
                   primary={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2" fontWeight="medium">
+                      <Typography variant="body2" fontWeight="medium" component="span">
                         {reservation.pet?.name}
                       </Typography>
-                      {reservation.pet?.icons && reservation.pet.icons.length > 0 && (
+                      {reservation.pet?.petIcons && Array.isArray(reservation.pet.petIcons) && reservation.pet.petIcons.length > 0 && (
                         <PetIconDisplay 
-                          iconIds={reservation.pet.icons}
+                          iconIds={reservation.pet.petIcons}
                           size="small"
                         />
                       )}
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" component="span">
                         • {reservation.customer?.firstName} {reservation.customer?.lastName}
                       </Typography>
                     </Box>
                   }
                   secondary={
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary" component="span">
                         {formatTime(reservation.startDate)}
                       </Typography>
                       {reservation.service?.name && (
                         <>
-                          <Typography variant="caption" color="text.secondary">•</Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="caption" color="text.secondary" component="span">•</Typography>
+                          <Typography variant="caption" color="text.secondary" component="span">
                             {reservation.service.name}
                           </Typography>
                         </>

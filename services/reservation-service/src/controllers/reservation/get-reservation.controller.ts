@@ -230,7 +230,12 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
           },
           pet: {
             select: {
-              name: true
+              id: true,
+              name: true,
+              type: true,
+              breed: true,
+              profilePhoto: true,
+              petIcons: true
             }
           },
           resource: {
@@ -349,7 +354,12 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
           },
           pet: {
             select: {
-              name: true
+              id: true,
+              name: true,
+              type: true,
+              breed: true,
+              profilePhoto: true,
+              petIcons: true
             }
           },
           resource: {
