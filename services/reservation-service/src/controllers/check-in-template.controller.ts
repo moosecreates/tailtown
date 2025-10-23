@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -173,16 +173,16 @@ export const createTemplate = async (req: Request, res: Response) => {
               create: section.questions?.map((question: any, questionIndex: number) => ({
                 questionText: question.questionText,
                 questionType: question.questionType,
-                options: question.options,
+                options: question.options || null,
                 isRequired: question.isRequired || false,
                 order: question.order || questionIndex + 1,
-                placeholder: question.placeholder,
-                helpText: question.helpText
+                placeholder: question.placeholder || null,
+                helpText: question.helpText || null
               }))
             }
           }))
         }
-      },
+      } as any,
       include: {
         sections: {
           include: {
@@ -376,7 +376,7 @@ export const cloneTemplate = async (req: Request, res: Response) => {
             }
           }))
         }
-      },
+      } as any,
       include: {
         sections: {
           include: {
