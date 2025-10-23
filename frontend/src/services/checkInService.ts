@@ -98,7 +98,7 @@ const checkInService = {
    * Get the default check-in template
    */
   getDefaultTemplate: async () => {
-    const response = await reservationApi.get('/check-in-templates/default');
+    const response = await reservationApi.get('/api/check-in-templates/default');
     return response.data;
   },
 
@@ -192,7 +192,7 @@ const checkInService = {
    * Get default service agreement template
    */
   getDefaultAgreementTemplate: async () => {
-    const response = await reservationApi.get('/service-agreement-templates/default');
+    const response = await reservationApi.get('/api/service-agreement-templates/default');
     return response.data;
   },
 
