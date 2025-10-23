@@ -133,16 +133,11 @@ export const useDashboardData = () => {
       tomorrow.setDate(tomorrow.getDate() + 1);
       const formattedTomorrow = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
       
-      // Get yesterday's date for range
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayFormatted = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-      
       const activeStatuses = 'PENDING,CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED,NO_SHOW';
       
-      // Fetch all data in parallel
+      // Fetch all data in parallel - don't filter by date, we'll filter client-side
       const [reservationsResponse, revenueResponse] = await Promise.all([
-        reservationService.getAllReservations(1, 250, 'startDate', 'asc', activeStatuses, yesterdayFormatted),
+        reservationService.getAllReservations(1, 250, 'startDate', 'asc', activeStatuses),
         reservationService.getTodayRevenue()
       ]);
 
@@ -156,6 +151,8 @@ export const useDashboardData = () => {
       } else if (resResponse?.data?.reservations && Array.isArray(resResponse.data.reservations)) {
         reservations = resResponse.data.reservations;
       }
+      
+      console.log(`Loaded ${reservations.length} total reservations from API`);
 
       // Calculate metrics
       const checkIns = reservations.filter((res: any) => {
