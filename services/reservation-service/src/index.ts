@@ -2,6 +2,7 @@ import { createService, tenantMiddleware } from './utils/service';
 import reservationRoutes from './routes/reservation.routes';
 import resourceRoutes from './routes/resourceRoutes';
 import errorTrackingRoutes from './routes/error-tracking.routes';
+import checkInRoutes from './routes/check-in.routes';
 import { PrismaClient } from '@prisma/client';
 
 // Create and configure the reservation service
@@ -21,6 +22,7 @@ app.use(tenantMiddleware({
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/error-tracking', errorTrackingRoutes);
+app.use('/api', checkInRoutes); // Check-in routes include multiple prefixes
 
 // Register error handlers (must be last)
 app.registerErrorHandlers();
