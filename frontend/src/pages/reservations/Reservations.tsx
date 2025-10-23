@@ -72,7 +72,6 @@ const Reservations = () => {
       setLoading(true);
       setError('');
       const dateString = getFormattedDateString(selectedDate);
-      console.log('Loading reservations for date:', dateString);
       const response = await reservationService.getAllReservations(
         page,
         10, // limit
@@ -81,7 +80,6 @@ const Reservations = () => {
         undefined, // status - get all statuses
         getFormattedDateString(selectedDate) // date filter using formatted string
       );
-      console.log('Reservations response:', response);
       // Normalize various possible response shapes
       let reservationsArray: any[] = [];
       let pages = 1;
@@ -244,7 +242,6 @@ const Reservations = () => {
                 value={selectedDate}
                 onChange={(newDate) => {
                   if (newDate) {
-                    console.log('Setting selected date to:', newDate);
                     setSelectedDate(newDate);
                   }
                 }}

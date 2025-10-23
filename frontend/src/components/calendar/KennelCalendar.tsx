@@ -156,11 +156,9 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
     
     if (reservation) {
       // If there's an existing reservation, fetch the complete data
-      console.log('KennelCalendar: Fetching complete reservation data for ID:', reservation.id);
       const completeReservation = await fetchCompleteReservation(reservation.id);
       
       if (completeReservation) {
-        console.log('KennelCalendar: Complete reservation data:', completeReservation);
         setSelectedReservation(completeReservation);
       } else {
         console.warn('KennelCalendar: Could not fetch complete reservation data, using incomplete data');
@@ -243,7 +241,6 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
     // Check if we need to refresh on mount (after checkout redirect)
     const shouldRefresh = sessionStorage.getItem('refreshCalendar');
     if (shouldRefresh === 'true') {
-      console.log('Calendar mounted after checkout, refreshing...');
       sessionStorage.removeItem('refreshCalendar');
       // Small delay to ensure component is fully mounted
       setTimeout(() => {
@@ -252,12 +249,10 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
     }
 
     const handleCheckoutComplete = () => {
-      console.log('Checkout completed, refreshing calendar...');
       refreshData();
     };
 
     const handleReservationComplete = () => {
-      console.log('Reservation completed, refreshing calendar...');
       refreshData();
     };
 

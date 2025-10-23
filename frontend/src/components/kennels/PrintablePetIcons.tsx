@@ -22,14 +22,12 @@ const PrintablePetIcons: React.FC<PrintablePetIconsProps> = ({
   customNotes = {}
 }) => {
   // Log the incoming icon IDs for debugging
-  console.log('PrintablePetIcons received iconIds:', iconIds);
   
   // Ensure we have icons to display - IMPORTANT: don't modify the original array
   let displayIconIds = [...iconIds];
   
   // If no icons provided, add default ones based on pet type
   if (!displayIconIds || displayIconIds.length === 0) {
-    console.log('No icons provided, using defaults for pet type:', petType);
     
     if (petType === 'DOG') {
       displayIconIds = ['medium-size', 'small-group'];
@@ -59,23 +57,19 @@ const PrintablePetIcons: React.FC<PrintablePetIconsProps> = ({
   const { fontSize, spacing } = sizeMap[size];
 
   // Log the display icon IDs before filtering
-  console.log('Display icon IDs before filtering:', displayIconIds);
   
   // Filter out any invalid icon IDs
   const validIconIds = displayIconIds.filter(id => {
     const icon = getIconById(id);
     if (!icon) {
-      console.log(`Icon not found for ID: ${id}`);
       return false;
     }
     return true;
   });
   
-  console.log('Valid icon IDs after filtering:', validIconIds);
   
   // If we still have no valid icons, add a default one
   if (validIconIds.length === 0) {
-    console.log('No valid icons found, adding default medium-size icon');
     validIconIds.push('medium-size');
   }
 

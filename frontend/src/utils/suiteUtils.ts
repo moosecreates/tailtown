@@ -27,7 +27,6 @@ interface ResourceWithReservations extends Resource {
  */
 export const determineSuiteStatus = (suite: ResourceWithReservations): 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' | 'RESERVED' => {
   // Log suite ID and basic info for debugging
-  console.log(`Determining status for suite: ${suite.id}, ${suite.name}`, {
     maintenanceStatus: suite.attributes?.maintenanceStatus,
     hasReservations: suite.reservations ? suite.reservations.length > 0 : false,
     reservationsCount: suite.reservations?.length || 0,
@@ -37,13 +36,11 @@ export const determineSuiteStatus = (suite: ResourceWithReservations): 'AVAILABL
 
   // Check if suite is in maintenance
   if (suite.attributes?.maintenanceStatus === 'MAINTENANCE') {
-    console.log(`Suite ${suite.id} is in MAINTENANCE`);
     return 'MAINTENANCE';
   }
   
   // Check if suite has active reservations
   if (suite.reservations && suite.reservations.length > 0) {
-    console.log(`Suite ${suite.id} has ${suite.reservations.length} reservations:`, 
       suite.reservations.map((res: { id: string; status: string; startDate: string; endDate: string }) => ({ 
         id: res.id, 
         status: res.status, 
@@ -57,7 +54,6 @@ export const determineSuiteStatus = (suite: ResourceWithReservations): 'AVAILABL
     );
     
     if (hasActiveReservation) {
-      console.log(`Suite ${suite.id} is OCCUPIED due to active reservation`);
       return 'OCCUPIED';
     }
     
@@ -67,13 +63,11 @@ export const determineSuiteStatus = (suite: ResourceWithReservations): 'AVAILABL
     );
     
     if (hasUpcomingReservation) {
-      console.log(`Suite ${suite.id} is RESERVED for upcoming stay`);
       return 'RESERVED';
     }
   }
   
   // Default status
-  console.log(`Suite ${suite.id} is AVAILABLE (no active reservations)`);
   return 'AVAILABLE';
 };
 

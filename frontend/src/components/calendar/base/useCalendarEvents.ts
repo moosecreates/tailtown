@@ -79,7 +79,6 @@ export function useCalendarEvents(options: UseCalendarEventsOptions = {}) {
       setError(null);
       
       const targetDate = date || currentDate;
-      console.log(`Loading events for date: ${formatDateToYYYYMMDD(targetDate)}`);
       
       // Build status filter
       const statusFilter = options.statusFilter || 'PENDING,CONFIRMED,CHECKED_IN';
@@ -114,14 +113,12 @@ export function useCalendarEvents(options: UseCalendarEventsOptions = {}) {
             return options.serviceCategories?.some(category => serviceObj.serviceCategory === category) || false;
           });
           
-          console.log(`Filtered reservations by service category: ${filteredReservations.length}`);
         }
         
         // Transform reservations to calendar events
         const transformFn = options.transformEvent || defaultTransformEvent;
         const calendarEvents = filteredReservations.map(transformFn);
         
-        console.log(`Created calendar events: ${calendarEvents.length}`);
         setEvents(calendarEvents);
       } else {
         console.warn('Invalid response format or no reservations found');

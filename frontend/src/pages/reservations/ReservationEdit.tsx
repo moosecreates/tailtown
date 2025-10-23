@@ -119,7 +119,6 @@ export default function ReservationEdit() {
               }
             }
           });
-          console.log(`Found ${occupied.size} occupied resources (excluding current reservation)`);
           setOccupiedResourceIds(occupied);
         }
       } catch (error) {
@@ -136,7 +135,6 @@ export default function ReservationEdit() {
     e.preventDefault();
     try {
       if (!id) return;
-      console.log('Submitting form data:', {
         ...formData,
         startDate: formData.startDate.toISOString(),
         endDate: formData.endDate.toISOString(),
@@ -151,7 +149,6 @@ export default function ReservationEdit() {
         ...(formData.serviceId && { serviceId: formData.serviceId }),
         ...(formData.resourceId && { resourceId: formData.resourceId }),
       } as any);
-      console.log('Updated reservation:', updatedReservation);
       navigate(`/reservations/${id}`);
     } catch (error) {
       console.error('Error updating reservation:', error);
