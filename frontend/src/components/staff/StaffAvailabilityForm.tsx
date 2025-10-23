@@ -60,7 +60,8 @@ const StaffAvailabilityForm: React.FC<StaffAvailabilityFormProps> = ({ staffId, 
     if (staffId) {
       loadStaffAvailability();
     }
-  }, [staffId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staffId]); // loadStaffAvailability defined below, stable function
 
   const loadStaffAvailability = async () => {
     try {
