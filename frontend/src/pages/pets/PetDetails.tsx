@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Typography,
   Container,
@@ -73,33 +73,33 @@ const PetDetails = () => {
     vaccineExpirations: undefined
   });
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Load customers for the dropdown
-        const customersData = await customerService.getAllCustomers();
-        setCustomers(customersData.data || []);
+  const loadData = useCallback(async () => {
+    try {
+      // Load customers for the dropdown
+      const customersData = await customerService.getAllCustomers();
+      setCustomers(customersData.data || []);
 
-        if (!isNewPet) {
-          const petData = await petService.getPetById(id!);
+      if (!isNewPet) {
+        const petData = await petService.getPetById(id!);
 
-          // Format the birthdate from ISO to YYYY-MM-DD for the input field
-          if (petData.birthdate) {
-            petData.birthdate = new Date(petData.birthdate).toISOString().split('T')[0];
-          }
-          
-          // Pet icons and notes are now loaded from the database with the pet data
-          
-          setPet(petData);
+        // Format the birthdate from ISO to YYYY-MM-DD for the input field
+        if (petData.birthdate) {
+          petData.birthdate = new Date(petData.birthdate).toISOString().split('T')[0];
         }
-      } catch (err) {
-        console.error('Error loading data:', err);
-        setError('Failed to load data');
-      } finally {
-        setLoading(false);
+        
+        // Pet icons and notes are now loaded from the database with the pet data
+        
+        setPet(petData);
       }
-    };
+    } catch (err) {
+      console.error('Error loading data:', err);
+      setError('Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  }, [id, isNewPet]);
 
+  useEffect(() => {
     loadData();
 
     // Ensure proper scrolling behavior
@@ -115,7 +115,7 @@ const PetDetails = () => {
     return () => {
       enableScrolling();
     };
-  }, [id, isNewPet]);
+  }, [loadData]);
 
   /**
  * Handles changes to text input fields, with special handling for dates and weights.

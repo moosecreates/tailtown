@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -68,13 +68,7 @@ const ServiceDetails: React.FC = () => {
     severity: 'success' as 'success' | 'error' | 'warning'
   });
 
-  useEffect(() => {
-    if (!isNewService) {
-      loadService();
-    }
-  }, [id]);
-
-  const loadService = async () => {
+  const loadService = useCallback(async () => {
     try {
       // Try to load the service with includeDeleted=true to handle deleted services
       const response = await serviceManagement.getServiceById(id!, true);
@@ -107,7 +101,13 @@ const ServiceDetails: React.FC = () => {
       
       setLoading(false);
     }
-  };
+  }, [id, isNewService]);
+
+  useEffect(() => {
+    if (!isNewService) {
+      loadService();
+    }
+  }, [isNewService, loadService]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;

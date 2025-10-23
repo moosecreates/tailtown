@@ -52,25 +52,25 @@ const Customers = () => {
   const [error, setError] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
-  useEffect(() => {
-    const loadCustomers = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await customerService.getAllCustomers();
-        console.log('Loaded customers:', data);
-        setCustomers(data.data || []);
-        setFilteredCustomers(data.data || []);
-      } catch (err) {
-        console.error('Error loading customers:', err);
-        setError('Failed to load customers. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCustomers();
+  const loadCustomers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await customerService.getAllCustomers();
+      console.log('Loaded customers:', data);
+      setCustomers(data.data || []);
+      setFilteredCustomers(data.data || []);
+    } catch (err) {
+      console.error('Error loading customers:', err);
+      setError('Failed to load customers. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadCustomers();
+  }, [loadCustomers]);
 
   const handleAddNew = useCallback(() => {
     navigate('/customers/new');

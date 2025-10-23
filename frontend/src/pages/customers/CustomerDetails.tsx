@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { 
   Typography, 
   Container, 
@@ -89,31 +89,31 @@ const CustomerDetails: React.FC = () => {
   const [tabValue, setTabValue] = useState<number>(0);
   
   // Fetch customer data
-  useEffect(() => {
-    const fetchCustomer = async () => {
-      if (isNewCustomer) {
-        setCustomer(emptyCustomer);
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        const data = await customerService.getCustomerById(id || '');
-        setCustomer(data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching customer:', error);
-        setSnackbar({
-          open: true,
-          message: 'Failed to load customer data',
-          severity: 'error'
-        });
-        setLoading(false);
-      }
-    };
+  const fetchCustomer = useCallback(async () => {
+    if (isNewCustomer) {
+      setCustomer(emptyCustomer);
+      setLoading(false);
+      return;
+    }
     
-    fetchCustomer();
+    try {
+      const data = await customerService.getCustomerById(id || '');
+      setCustomer(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching customer:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to load customer data',
+        severity: 'error'
+      });
+      setLoading(false);
+    }
   }, [id, isNewCustomer]);
+
+  useEffect(() => {
+    fetchCustomer();
+  }, [fetchCustomer]);
   
   // Handle tab changes
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Typography, Container, Box, Paper, Button, Chip, Divider, CircularProgress, Alert, Menu, MenuItem, Link } from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { reservationService, Reservation } from '../../services/reservationService';
@@ -12,23 +12,22 @@ const ReservationDetails = () => {
   const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
 
-  const fetchReservation = async () => {
+  const fetchReservation = useCallback(async () => {
     try {
       if (!id) return;
       const data = await reservationService.getReservationById(id);
       setReservation(data);
       setError(null);
-    } catch (error) {
-      console.error('Error fetching reservation:', error);
-      setError('Failed to load reservation details');
-    } finally {
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to load reservation');
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchReservation();
-  }, [id]);
+  }, [fetchReservation]);
 
   if (loading) {
     return (
