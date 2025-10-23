@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Container,
   Typography,
@@ -50,7 +50,7 @@ const Pets = () => {
   const [initialLoad, setInitialLoad] = useState(true);
 
 
-  const loadPets = async (pageNum: number, search: string) => {
+  const loadPets = useCallback(async (pageNum: number, search: string) => {
     try {
       setLoading(true);
       const response = await petService.getAllPets(pageNum + 1, PAGE_SIZE, search);
@@ -65,23 +65,26 @@ const Pets = () => {
       setLoading(false);
       if (initialLoad) setInitialLoad(false);
     }
-  };
+  }, [initialLoad]);
 
-  const debouncedSearch = debounce((value: string) => {
-    setPage(0);
-    loadPets(0, value);
-  }, 500);
+  const debouncedSearch = useMemo(
+    () => debounce((value: string) => {
+      setPage(0);
+      loadPets(0, value);
+    }, 500),
+    [loadPets]
+  );
 
   useEffect(() => {
     loadPets(page, searchTerm);
-  }, [page]);
+  }, [page, searchTerm, loadPets]);
 
   useEffect(() => {
     if (!initialLoad) {
       debouncedSearch(searchTerm);
     }
     return () => debouncedSearch.cancel();
-  }, [searchTerm]);
+  }, [searchTerm, initialLoad, debouncedSearch]);
 
   const handleRowClick = (id: string) => {
     navigate(`/pets/${id}`);
