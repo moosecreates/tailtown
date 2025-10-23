@@ -101,7 +101,7 @@ const ServiceDetails: React.FC = () => {
       
       setLoading(false);
     }
-  }, [id, isNewService]);
+  }, [id, isNewService, navigate]);
 
   useEffect(() => {
     if (!isNewService) {

@@ -10,7 +10,7 @@ const ApiTester: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
-  const [apiUrl, setApiUrl] = useState<string>(process.env.REACT_APP_RESERVATION_API_URL || 'http://localhost:4003');
+  const [apiUrl] = useState<string>(process.env.REACT_APP_RESERVATION_API_URL || 'http://localhost:4003');
 
   const testApi = useCallback(async () => {
     setLoading(true);
@@ -42,7 +42,7 @@ const ApiTester: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [apiUrl]);
 
   // Automatically run the test on component mount
   useEffect(() => {

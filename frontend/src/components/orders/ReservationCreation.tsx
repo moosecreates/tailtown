@@ -12,7 +12,6 @@ import {
   MenuItem,
   CircularProgress,
   Alert,
-  Autocomplete,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
@@ -97,7 +96,8 @@ const ReservationCreation: React.FC<ReservationCreationProps> = ({
     };
     
     loadServices();
-  }, []); // Remove selectedService from dependencies to prevent infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount - initialReservation.serviceId is used but intentionally not in deps to avoid re-running
 
   // Load available resources when dates or service changes
   useEffect(() => {
