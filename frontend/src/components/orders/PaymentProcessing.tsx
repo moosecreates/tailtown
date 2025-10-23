@@ -25,6 +25,9 @@ interface PaymentProcessingProps {
   onContinue: (paymentData: any) => void;
   amount: number;
   invoiceId?: string; // Add invoiceId prop
+  depositRequired?: boolean;
+  depositAmount?: number;
+  totalAmount?: number;
   initialPayment: {
     method: string;
     amount: number;
@@ -41,10 +44,16 @@ const PaymentProcessing: React.FC<PaymentProcessingProps> = ({
   onContinue,
   amount,
   invoiceId,
+  depositRequired = false,
+  depositAmount = 0,
+  totalAmount = 0,
   initialPayment,
 }) => {
   // State for payment details
-  const [paymentMethod, setPaymentMethod] = useState<string>(initialPayment.method || 'CREDIT_CARD');
+  const [paymentOption, setPaymentOption] = useState<'deposit' | 'full' | 'skip'>(
+    depositRequired ? 'deposit' : 'full'
+  );
+  const [paymentMethod, setPaymentMethod] = useState<string>(initialPayment.method || 'CASH');
   const [cardNumber, setCardNumber] = useState<string>('');
   const [expiryDate, setExpiryDate] = useState<string>('');
   const [cvv, setCvv] = useState<string>('');
@@ -226,10 +235,75 @@ const PaymentProcessing: React.FC<PaymentProcessingProps> = ({
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
         <Grid container spacing={3}>
           <Grid item xs={12}>
-            <Typography variant="subtitle1" gutterBottom>
-              Invoice Total: {formatCurrency(amount)}
+            <Typography variant="h6" gutterBottom>
+              Invoice Total: {formatCurrency(totalAmount || amount)}
             </Typography>
+            
+            {depositRequired && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'primary.light', borderRadius: 1 }}>
+                <Typography variant="subtitle2" color="primary.contrastText" gutterBottom>
+                  Deposit Required: {formatCurrency(depositAmount)}
+                </Typography>
+                <Typography variant="body2" color="primary.contrastText">
+                  Balance Due at Checkout: {formatCurrency((totalAmount || amount) - depositAmount)}
+                </Typography>
+              </Box>
+            )}
           </Grid>
+          
+          {/* Payment Option Selection */}
+          <Grid item xs={12}>
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
+              Payment Option:
+            </Typography>
+            <FormControl component="fieldset">
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                {depositRequired && (
+                  <Button
+                    variant={paymentOption === 'deposit' ? 'contained' : 'outlined'}
+                    onClick={() => setPaymentOption('deposit')}
+                    sx={{ minWidth: 150 }}
+                  >
+                    Pay Deposit ({formatCurrency(depositAmount)})
+                  </Button>
+                )}
+                <Button
+                  variant={paymentOption === 'full' ? 'contained' : 'outlined'}
+                  onClick={() => setPaymentOption('full')}
+                  sx={{ minWidth: 150 }}
+                >
+                  Pay in Full ({formatCurrency(totalAmount || amount)})
+                </Button>
+                {!depositRequired && (
+                  <Button
+                    variant={paymentOption === 'skip' ? 'contained' : 'outlined'}
+                    color="secondary"
+                    onClick={() => setPaymentOption('skip')}
+                    sx={{ minWidth: 150 }}
+                  >
+                    Skip Payment
+                  </Button>
+                )}
+              </Box>
+            </FormControl>
+          </Grid>
+          
+          {paymentOption !== 'skip' && (
+            <Grid item xs={12}>
+              <Typography variant="h6" color="primary">
+                Amount to Pay Now: {formatCurrency(paymentOption === 'deposit' ? depositAmount : (totalAmount || amount))}
+              </Typography>
+            </Grid>
+          )}
+          
+          {paymentOption === 'skip' && (
+            <Grid item xs={12}>
+              <Alert severity="info">
+                No payment will be processed. The reservation will be created with a pending invoice.
+              </Alert>
+            </Grid>
+          )}
           
           {storeCredit > 0 && (
             <>
@@ -372,15 +446,32 @@ const PaymentProcessing: React.FC<PaymentProcessingProps> = ({
         </Grid>
       </Paper>
       
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSubmitPayment}
-          disabled={loading || success}
-        >
-          {loading ? <CircularProgress size={24} /> : 'Process Payment'}
-        </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 3 }}>
+        {paymentOption === 'skip' ? (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              onContinue({
+                method: 'NONE',
+                amount: 0,
+                status: 'PENDING',
+                notes: 'Payment skipped - no deposit required',
+              });
+            }}
+          >
+            Complete Reservation
+          </Button>
+        ) : (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSubmitPayment}
+            disabled={loading || success}
+          >
+            {loading ? <CircularProgress size={24} /> : `Process Payment (${formatCurrency(paymentOption === 'deposit' ? depositAmount : (totalAmount || amount))})`}
+          </Button>
+        )}
       </Box>
     </Box>
   );

@@ -61,6 +61,9 @@ interface OrderData {
     taxAmount: number;
     discount: number;
     total: number;
+    depositAmount: number;
+    depositRequired: boolean;
+    balanceDue: number;
     notes: string;
   };
   payment: {
@@ -112,6 +115,9 @@ const OrderEntry: React.FC = () => {
       taxAmount: 0,
       discount: 0,
       total: 0,
+      depositAmount: 0,
+      depositRequired: false,
+      balanceDue: 0,
       notes: '',
     },
     payment: {
@@ -153,6 +159,9 @@ const OrderEntry: React.FC = () => {
         taxAmount: 0,
         discount: 0,
         total: 0,
+        depositAmount: 0,
+        depositRequired: false,
+        balanceDue: 0,
         notes: '',
       },
       payment: {
@@ -224,6 +233,27 @@ const OrderEntry: React.FC = () => {
       const taxAmount = (subtotal - discount) * taxRate;
       const total = subtotal - discount + taxAmount;
       
+      // Calculate deposit if required
+      let depositAmount = 0;
+      let depositRequired = false;
+      
+      if (reservationData.service) {
+        depositRequired = reservationData.service.depositRequired || false;
+        
+        if (depositRequired) {
+          const depositType = reservationData.service.depositType;
+          const depositValue = reservationData.service.depositAmount || 0;
+          
+          if (depositType === 'PERCENTAGE') {
+            depositAmount = (total * depositValue) / 100;
+          } else if (depositType === 'FIXED_AMOUNT') {
+            depositAmount = depositValue;
+          }
+        }
+      }
+      
+      const balanceDue = total - depositAmount;
+      
       setOrderData({
         ...orderData,
         reservation: reservationData,
@@ -234,10 +264,13 @@ const OrderEntry: React.FC = () => {
           taxAmount: taxAmount,
           discount: discount,
           total: total,
+          depositAmount: depositAmount,
+          depositRequired: depositRequired,
+          balanceDue: balanceDue,
         },
         payment: {
           ...orderData.payment,
-          amount: total,
+          amount: depositRequired ? depositAmount : total,
         },
       });
       
@@ -523,6 +556,9 @@ const OrderEntry: React.FC = () => {
           <PaymentProcessing 
             onContinue={handlePaymentUpdate} 
             amount={orderData.invoice.total}
+            depositRequired={orderData.invoice.depositRequired}
+            depositAmount={orderData.invoice.depositAmount}
+            totalAmount={orderData.invoice.total}
             initialPayment={orderData.payment}
             invoiceId={createdInvoiceId || undefined} // Pass the invoice ID to the PaymentProcessing component
           />
