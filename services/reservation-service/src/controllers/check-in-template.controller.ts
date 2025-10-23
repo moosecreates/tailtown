@@ -173,11 +173,11 @@ export const createTemplate = async (req: Request, res: Response) => {
               create: section.questions?.map((question: any, questionIndex: number) => ({
                 questionText: question.questionText,
                 questionType: question.questionType,
-                options: question.options || null,
+                options: question.options || undefined,
                 isRequired: question.isRequired || false,
                 order: question.order || questionIndex + 1,
-                placeholder: question.placeholder || null,
-                helpText: question.helpText || null
+                placeholder: question.placeholder || undefined,
+                helpText: question.helpText || undefined
               }))
             }
           }))
@@ -295,17 +295,17 @@ export const updateTemplate = async (req: Request, res: Response) => {
           data: {
             templateId: id,
             title: section.title,
-            description: section.description || null,
+            description: section.description || undefined,
             order: section.order || sectionIndex + 1,
             questions: {
               create: (section.questions || []).map((question: any, questionIndex: number) => ({
                 questionText: question.questionText,
                 questionType: question.questionType,
-                options: question.options || null,
+                options: question.options || undefined,
                 isRequired: question.isRequired || false,
                 order: question.order || questionIndex + 1,
-                placeholder: question.placeholder || null,
-                helpText: question.helpText || null
+                placeholder: question.placeholder || undefined,
+                helpText: question.helpText || undefined
               }))
             }
           }
