@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, BrowserRouter, useLocation } from 'react-router-dom';
 import { Box, CircularProgress, CssBaseline, ThemeProvider } from '@mui/material';
 import theme from './theme';
@@ -7,48 +7,65 @@ import { ShoppingCartProvider } from './contexts/ShoppingCartContext';
 import AccessibilityFix from './components/AccessibilityFix';
 import ScrollFix from './components/ScrollFix';
 import ApiTester from './components/debug/ApiTester';
+import PageLoader from './components/common/PageLoader';
 
 // Layouts
 import MainLayout from './components/layouts/MainLayout';
 import AuthLayout from './components/layouts/AuthLayout';
 
-// Pages
+// Pages - Lazy loaded for code splitting
+// Core pages (loaded immediately)
 import Login from './pages/auth/Login';
 import Dashboard from './pages/Dashboard';
-import Customers from './pages/customers/Customers';
-import CustomerDetails from './pages/customers/CustomerDetails';
-import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard';
-import CustomerValueReport from './pages/analytics/CustomerValueReport';
-import ReportsPage from './pages/reports/ReportsPage';
-import Pets from './pages/pets/Pets';
-import PetDetails from './pages/pets/PetDetails';
-import Reservations from './pages/reservations/Reservations';
-import ReservationDetails from './pages/reservations/ReservationDetails';
-import ReservationEdit from './pages/reservations/ReservationEdit';
-import CalendarPage from './pages/calendar/CalendarPage';
-import GroomingCalendarPage from './pages/calendar/GroomingCalendarPage';
-import TrainingCalendarPage from './pages/calendar/TrainingCalendarPage';
-import Services from './pages/services/Services';
-import ServiceDetails from './pages/services/ServiceDetails';
-import Resources from './pages/resources/Resources';
-// Import price rules components from settings directory
-import PriceRulesPage from './pages/settings/PriceRules';
-import PriceRuleDetailsPage from './pages/settings/PriceRuleDetailsPage';
-import ResourceDetails from './pages/resources/ResourceDetails';
-import SuitesPage from './pages/suites/SuitesPage';
-import Settings from './pages/settings/Settings';
-import Users from './pages/settings/Users';
 import NotFound from './pages/NotFound';
-import PriceRuleRedirect from './components/redirects/PriceRuleRedirect';
-import Scheduling from './pages/staff/Scheduling';
-import OrderEntry from './pages/orders/OrderEntry';
-import CheckoutPage from './pages/checkout/CheckoutPage';
-import PrintKennelCards from './pages/kennels/PrintKennelCards';
 
-// Marketing Pages
-import MarketingHub from './pages/admin/marketing/MarketingHub';
-import SmsMarketing from './pages/admin/marketing/SmsMarketing';
-import EmailMarketing from './pages/admin/marketing/EmailMarketing';
+// Lazy loaded pages - Customer Management
+const Customers = lazy(() => import('./pages/customers/Customers'));
+const CustomerDetails = lazy(() => import('./pages/customers/CustomerDetails'));
+
+// Lazy loaded pages - Analytics & Reports
+const AnalyticsDashboard = lazy(() => import('./pages/analytics/AnalyticsDashboard'));
+const CustomerValueReport = lazy(() => import('./pages/analytics/CustomerValueReport'));
+const ReportsPage = lazy(() => import('./pages/reports/ReportsPage'));
+
+// Lazy loaded pages - Pet Management
+const Pets = lazy(() => import('./pages/pets/Pets'));
+const PetDetails = lazy(() => import('./pages/pets/PetDetails'));
+
+// Lazy loaded pages - Reservations
+const Reservations = lazy(() => import('./pages/reservations/Reservations'));
+const ReservationDetails = lazy(() => import('./pages/reservations/ReservationDetails'));
+const ReservationEdit = lazy(() => import('./pages/reservations/ReservationEdit'));
+
+// Lazy loaded pages - Calendar
+const CalendarPage = lazy(() => import('./pages/calendar/CalendarPage'));
+const GroomingCalendarPage = lazy(() => import('./pages/calendar/GroomingCalendarPage'));
+const TrainingCalendarPage = lazy(() => import('./pages/calendar/TrainingCalendarPage'));
+
+// Lazy loaded pages - Services & Resources
+const Services = lazy(() => import('./pages/services/Services'));
+const ServiceDetails = lazy(() => import('./pages/services/ServiceDetails'));
+const Resources = lazy(() => import('./pages/resources/Resources'));
+const ResourceDetails = lazy(() => import('./pages/resources/ResourceDetails'));
+const SuitesPage = lazy(() => import('./pages/suites/SuitesPage'));
+
+// Lazy loaded pages - Settings & Admin
+const PriceRulesPage = lazy(() => import('./pages/settings/PriceRules'));
+const PriceRuleDetailsPage = lazy(() => import('./pages/settings/PriceRuleDetailsPage'));
+const Settings = lazy(() => import('./pages/settings/Settings'));
+const Users = lazy(() => import('./pages/settings/Users'));
+const PriceRuleRedirect = lazy(() => import('./components/redirects/PriceRuleRedirect'));
+
+// Lazy loaded pages - Staff & Operations
+const Scheduling = lazy(() => import('./pages/staff/Scheduling'));
+const OrderEntry = lazy(() => import('./pages/orders/OrderEntry'));
+const CheckoutPage = lazy(() => import('./pages/checkout/CheckoutPage'));
+const PrintKennelCards = lazy(() => import('./pages/kennels/PrintKennelCards'));
+
+// Lazy loaded pages - Marketing
+const MarketingHub = lazy(() => import('./pages/admin/marketing/MarketingHub'));
+const SmsMarketing = lazy(() => import('./pages/admin/marketing/SmsMarketing'));
+const EmailMarketing = lazy(() => import('./pages/admin/marketing/EmailMarketing'));
 
 // Custom event and utility components
 
@@ -78,14 +95,15 @@ const AppRoutes = () => {
   }
 
   return (
-    <Routes>
-      {/* Auth Routes */}
-      <Route element={<AuthLayout />}>
-        <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
-      </Route>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        {/* Auth Routes */}
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
+        </Route>
 
-      {/* Protected Routes */}
-      <Route element={<MainLayout />}>
+        {/* Protected Routes */}
+        <Route element={<MainLayout />}>
         <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
         <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/customers" element={isAuthenticated ? <Customers /> : <Navigate to="/login" />} />
@@ -132,6 +150,7 @@ const AppRoutes = () => {
       {/* 404 Route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
   );
 }
 
