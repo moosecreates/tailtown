@@ -3,6 +3,12 @@
  * 
  * Provides consistent logging across the application with different log levels,
  * context support, and environment-based filtering.
+ * 
+ * ⚠️ IMPORTANT: This file is duplicated in:
+ * - services/customer/src/utils/logger.ts
+ * - services/reservation-service/src/utils/logger.ts
+ * 
+ * Keep both files synchronized! Run `npm run check:logger-sync` to verify.
  */
 
 // Log levels in order of verbosity
