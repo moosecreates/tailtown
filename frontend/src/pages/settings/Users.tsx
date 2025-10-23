@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Container, 
   Typography, 
@@ -156,11 +156,7 @@ const Users: React.FC = () => {
   };
 
   // Load all staff members when component mounts
-  useEffect(() => {
-    loadStaffMembers();
-  }, []);
-
-  const loadStaffMembers = async () => {
+  const loadStaffMembers = useCallback(async () => {
     try {
       setLoading(true);
       const staffData = await staffService.getAllStaff();
@@ -172,7 +168,11 @@ const Users: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadStaffMembers();
+  }, [loadStaffMembers]);
 
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity });

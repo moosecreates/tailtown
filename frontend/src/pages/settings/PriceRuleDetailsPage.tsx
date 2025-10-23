@@ -5,7 +5,7 @@
  * It provides a form interface for managing all price rule properties
  * including rule type, discount settings, and conditional parameters.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -59,14 +59,7 @@ const PriceRuleDetailsPage: React.FC = () => {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   
-  useEffect(() => {
-    // Only load price rule data if this is an edit (not a new rule)
-    if (id && id !== 'new') {
-      loadPriceRule();
-    }
-  }, [id]);
-  
-  const loadPriceRule = async () => {
+  const loadPriceRule = useCallback(async () => {
     try {
       setLoading(true);
       const response = await priceRuleService.getPriceRuleById(id!);
@@ -106,7 +99,14 @@ const PriceRuleDetailsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    // Only load price rule data if this is an edit (not a new rule)
+    if (id && id !== 'new') {
+      loadPriceRule();
+    }
+  }, [id, loadPriceRule]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
