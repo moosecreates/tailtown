@@ -11,8 +11,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
-  MenuItem,
   Snackbar,
   Alert,
   Paper,
@@ -21,21 +19,20 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow,
-  Grid
+  TableRow
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 import { serviceManagement } from '../../services/serviceManagement';
-import { Service, ServiceCategory } from '../../types/service';
+import { Service } from '../../types/service';
 
 const Services: React.FC = () => {
   const navigate = useNavigate();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
   const [snackbar, setSnackbar] = useState({
@@ -113,7 +110,7 @@ const Services: React.FC = () => {
           console.log('Service could not be deleted, automatically deactivating instead');
           
           // Automatically deactivate the service
-          const deactivateResult = await serviceManagement.deactivateService(serviceToDelete.id);
+          await serviceManagement.deactivateService(serviceToDelete.id);
           
           setSnackbar({
             open: true,

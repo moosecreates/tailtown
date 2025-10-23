@@ -16,21 +16,15 @@ import {
   Stack,
   Chip
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SuiteBoard from '../../components/suites/SuiteBoard';
 import { resourceService } from '../../services';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
-import { determineSuiteStatus, isSuiteOccupied } from '../../utils/suiteUtils';
-import { useSuiteData } from '../../hooks/useSuiteData';
+import { determineSuiteStatus } from '../../utils/suiteUtils';
 
 const SuitesPage: React.FC = () => {
   const [selectedSuiteId, setSelectedSuiteId] = useState<string | null>(null);
   const [suiteDetails, setSuiteDetails] = useState<any>(null);
-  const [isOccupied, setIsOccupied] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   // We'll get the date from the SuiteBoard component instead
   const [filterDate, setFilterDate] = useState<Date>(new Date());
@@ -145,11 +139,6 @@ const SuitesPage: React.FC = () => {
         
         // Use the utility function to determine if the suite is occupied
         const suiteStatus = determineSuiteStatus(response.data);
-        const occupied = suiteStatus === 'OCCUPIED';
-        
-        // Set the occupied status based on the determined status
-        setIsOccupied(occupied);
-        
         // Store the suite details as received from the API
         setSuiteDetails(response.data);
       }
