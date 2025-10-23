@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -75,15 +75,7 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
     setSubtotal(total);
   }, [selectedAddOns]);
   
-  // Load available add-on services when the dialog opens
-  useEffect(() => {
-    if (open && serviceId) {
-      console.log('AddOnSelectionDialog: Dialog opened, loading add-ons for service ID:', serviceId);
-      loadAddOns();
-    }
-  }, [open, serviceId]);
-  
-  const loadAddOns = async () => {
+  const loadAddOns = useCallback(async () => {
     if (!serviceId || !open) {
       return;
     }
@@ -114,7 +106,15 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [serviceId, open]);
+
+  // Load available add-on services when the dialog opens
+  useEffect(() => {
+    if (open && serviceId) {
+      console.log('AddOnSelectionDialog: Dialog opened, loading add-ons for service ID:', serviceId);
+      loadAddOns();
+    }
+  }, [open, serviceId, loadAddOns]);
   
   // Handle adding an add-on service
   const handleAddService = (addon: AddOnService) => {
