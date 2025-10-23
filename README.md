@@ -7,6 +7,55 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ## Recent Updates (October 2025)
 
+### 🤖 NEW: MCP RAG Server for AI-Enhanced Development (October 22, 2025)
+
+#### Feature Overview
+- **AI-Powered Code Search**: Semantic search across entire Tailtown codebase using RAG (Retrieval-Augmented Generation)
+- **Windsurf/Cascade Integration**: Fully integrated MCP (Model Context Protocol) server for AI assistant capabilities
+- **297 Files Indexed**: Complete indexing of code, documentation, schemas, and configuration files
+- **Real-Time Search**: Sub-100ms semantic search with relevance scoring
+
+#### Capabilities
+1. **Semantic Code Search**: Find code by concept, not just keywords
+2. **Documentation Lookup**: Instant access to all technical documentation
+3. **Schema Reference**: Query database models and relationships
+4. **File Context Retrieval**: Get full file contents on demand
+5. **Dynamic Reindexing**: Rebuild index when codebase changes
+
+#### Technical Implementation
+- **Python-Based MCP Server**: Custom server using Model Context Protocol
+- **FAISS Vector Database**: Efficient similarity search with low memory footprint
+- **Sentence Transformers**: all-MiniLM-L6-v2 model for embeddings
+- **Four MCP Tools**: search_codebase, get_file_context, list_indexed_files, reindex
+
+#### Indexed Content
+- **223 Code Files**: TypeScript/JavaScript (frontend + backend services)
+- **67 Documentation Files**: All markdown documentation
+- **5 Configuration Files**: package.json files
+- **2 Schema Files**: Prisma database schemas
+
+#### Quick Start
+```bash
+# Install dependencies
+cd mcp-server
+pip install -r requirements.txt
+
+# Configure in Windsurf
+# Edit ~/.codeium/windsurf/mcp_config.json
+# See mcp-server/README.md for full configuration
+
+# Test search
+mcp0_search_codebase({
+  query: "reservation creation process",
+  filter_type: "code",
+  max_results: 5
+})
+```
+
+**Documentation**: See [MCP Server README](mcp-server/README.md) for complete setup and usage instructions.
+
+---
+
 ### ✅ LATEST FIX: Grooming Reservation Service Startup (October 21, 2025)
 
 #### Issue Resolved
