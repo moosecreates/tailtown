@@ -1,0 +1,331 @@
+import { renderHook, waitFor } from '@testing-library/react';
+import { useDashboardData } from '../useDashboardData';
+import { reservationService } from '../../services/reservationService';
+
+// Mock the services
+jest.mock('../../services/reservationService');
+jest.mock('../../utils/logger');
+
+describe('useDashboardData - Timezone Tests', () => {
+  const mockReservationService = reservationService as jest.Mocked<typeof reservationService>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Date Filtering with Different Timezones', () => {
+    it('should correctly filter check-ins for today regardless of timezone', async () => {
+      // Create a date that is "today" in UTC
+      const today = new Date();
+      const todayUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate(),
+        12, 0, 0 // Noon UTC
+      ));
+
+      // Create a date that is "yesterday" in UTC but might be "today" in some timezones
+      const yesterdayUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate() - 1,
+        23, 0, 0 // 11 PM UTC yesterday
+      ));
+
+      // Create a date that is "tomorrow" in UTC but might be "today" in some timezones
+      const tomorrowUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate() + 1,
+        1, 0, 0 // 1 AM UTC tomorrow
+      ));
+
+      const mockReservations = [
+        {
+          id: '1',
+          startDate: todayUTC.toISOString(),
+          endDate: new Date(todayUTC.getTime() + 86400000).toISOString(),
+          status: 'CONFIRMED'
+        },
+        {
+          id: '2',
+          startDate: yesterdayUTC.toISOString(),
+          endDate: todayUTC.toISOString(),
+          status: 'CONFIRMED'
+        },
+        {
+          id: '3',
+          startDate: tomorrowUTC.toISOString(),
+          endDate: new Date(tomorrowUTC.getTime() + 86400000).toISOString(),
+          status: 'CONFIRMED'
+        }
+      ];
+
+      mockReservationService.getAllReservations.mockResolvedValue({
+        data: mockReservations
+      } as any);
+
+      mockReservationService.getTodayRevenue.mockResolvedValue({
+        data: 0
+      } as any);
+
+      const { result } = renderHook(() => useDashboardData());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Filter for check-ins (starting today)
+      result.current.filterReservations('in');
+
+      await waitFor(() => {
+        // Should only show reservation #1 (starts today in UTC)
+        expect(result.current.filteredReservations).toHaveLength(1);
+        expect(result.current.filteredReservations[0].id).toBe('1');
+      });
+    });
+
+    it('should correctly filter check-outs for today regardless of timezone', async () => {
+      const today = new Date();
+      const todayUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate(),
+        12, 0, 0
+      ));
+
+      const yesterdayUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate() - 1,
+        12, 0, 0
+      ));
+
+      const mockReservations = [
+        {
+          id: '1',
+          startDate: yesterdayUTC.toISOString(),
+          endDate: todayUTC.toISOString(),
+          status: 'CONFIRMED'
+        },
+        {
+          id: '2',
+          startDate: new Date(yesterdayUTC.getTime() - 86400000).toISOString(),
+          endDate: yesterdayUTC.toISOString(),
+          status: 'CONFIRMED'
+        }
+      ];
+
+      mockReservationService.getAllReservations.mockResolvedValue({
+        data: mockReservations
+      } as any);
+
+      mockReservationService.getTodayRevenue.mockResolvedValue({
+        data: 0
+      } as any);
+
+      const { result } = renderHook(() => useDashboardData());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Filter for check-outs (ending today)
+      result.current.filterReservations('out');
+
+      await waitFor(() => {
+        // Should only show reservation #1 (ends today in UTC)
+        expect(result.current.filteredReservations).toHaveLength(1);
+        expect(result.current.filteredReservations[0].id).toBe('1');
+      });
+    });
+
+    it('should correctly calculate overnight count across timezone boundaries', async () => {
+      const today = new Date();
+      const todayUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate(),
+        12, 0, 0
+      ));
+
+      const yesterdayUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate() - 1,
+        12, 0, 0
+      ));
+
+      const tomorrowUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate() + 1,
+        12, 0, 0
+      ));
+
+      const mockReservations = [
+        {
+          id: '1',
+          startDate: yesterdayUTC.toISOString(),
+          endDate: tomorrowUTC.toISOString(),
+          status: 'CONFIRMED'
+        },
+        {
+          id: '2',
+          startDate: todayUTC.toISOString(),
+          endDate: tomorrowUTC.toISOString(),
+          status: 'CONFIRMED'
+        },
+        {
+          id: '3',
+          startDate: yesterdayUTC.toISOString(),
+          endDate: todayUTC.toISOString(),
+          status: 'CONFIRMED'
+        }
+      ];
+
+      mockReservationService.getAllReservations.mockResolvedValue({
+        data: mockReservations
+      } as any);
+
+      mockReservationService.getTodayRevenue.mockResolvedValue({
+        data: 0
+      } as any);
+
+      const { result } = renderHook(() => useDashboardData());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Overnight count should be 1 (only reservation #1 started before today and ends on/after today)
+      expect(result.current.overnightCount).toBe(1);
+    });
+
+    it('should handle edge case: reservation at midnight UTC', async () => {
+      const today = new Date();
+      const midnightTodayUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate(),
+        0, 0, 0 // Exactly midnight
+      ));
+
+      const mockReservations = [
+        {
+          id: '1',
+          startDate: midnightTodayUTC.toISOString(),
+          endDate: new Date(midnightTodayUTC.getTime() + 86400000).toISOString(),
+          status: 'CONFIRMED'
+        }
+      ];
+
+      mockReservationService.getAllReservations.mockResolvedValue({
+        data: mockReservations
+      } as any);
+
+      mockReservationService.getTodayRevenue.mockResolvedValue({
+        data: 0
+      } as any);
+
+      const { result } = renderHook(() => useDashboardData());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should count as check-in today
+      expect(result.current.inCount).toBe(1);
+    });
+
+    it('should handle edge case: reservation ending at 23:59:59 UTC', async () => {
+      const today = new Date();
+      const almostMidnightUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate(),
+        23, 59, 59 // One second before midnight
+      ));
+
+      const yesterdayUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate() - 1,
+        12, 0, 0
+      ));
+
+      const mockReservations = [
+        {
+          id: '1',
+          startDate: yesterdayUTC.toISOString(),
+          endDate: almostMidnightUTC.toISOString(),
+          status: 'CONFIRMED'
+        }
+      ];
+
+      mockReservationService.getAllReservations.mockResolvedValue({
+        data: mockReservations
+      } as any);
+
+      mockReservationService.getTodayRevenue.mockResolvedValue({
+        data: 0
+      } as any);
+
+      const { result } = renderHook(() => useDashboardData());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should NOT count as check-out today (ends before midnight)
+      expect(result.current.outCount).toBe(0);
+    });
+  });
+
+  describe('Timezone Consistency', () => {
+    it('should use UTC dates consistently across all calculations', async () => {
+      const today = new Date();
+      const todayUTC = new Date(Date.UTC(
+        today.getUTCFullYear(),
+        today.getUTCMonth(),
+        today.getUTCDate(),
+        12, 0, 0
+      ));
+
+      const mockReservations = [
+        {
+          id: '1',
+          startDate: todayUTC.toISOString(),
+          endDate: new Date(todayUTC.getTime() + 86400000).toISOString(),
+          status: 'CONFIRMED'
+        }
+      ];
+
+      mockReservationService.getAllReservations.mockResolvedValue({
+        data: mockReservations
+      } as any);
+
+      mockReservationService.getTodayRevenue.mockResolvedValue({
+        data: 100
+      } as any);
+
+      const { result } = renderHook(() => useDashboardData());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Verify counts are consistent
+      expect(result.current.inCount).toBe(1);
+      expect(result.current.outCount).toBe(0);
+      expect(result.current.overnightCount).toBe(0);
+
+      // Verify filtering produces same results
+      result.current.filterReservations('in');
+      
+      await waitFor(() => {
+        expect(result.current.filteredReservations).toHaveLength(1);
+      });
+    });
+  });
+});
