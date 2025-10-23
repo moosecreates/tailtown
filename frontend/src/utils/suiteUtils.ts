@@ -26,14 +26,6 @@ interface ResourceWithReservations extends Resource {
  * @returns Status string: 'OCCUPIED', 'MAINTENANCE', or 'AVAILABLE'
  */
 export const determineSuiteStatus = (suite: ResourceWithReservations): 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' | 'RESERVED' => {
-  // Log suite ID and basic info for debugging
-    maintenanceStatus: suite.attributes?.maintenanceStatus,
-    hasReservations: suite.reservations ? suite.reservations.length > 0 : false,
-    reservationsCount: suite.reservations?.length || 0,
-    // Log first reservation status if it exists
-    firstReservationStatus: suite.reservations?.[0]?.status || 'none'
-  });
-
   // Check if suite is in maintenance
   if (suite.attributes?.maintenanceStatus === 'MAINTENANCE') {
     return 'MAINTENANCE';
@@ -41,13 +33,6 @@ export const determineSuiteStatus = (suite: ResourceWithReservations): 'AVAILABL
   
   // Check if suite has active reservations
   if (suite.reservations && suite.reservations.length > 0) {
-      suite.reservations.map((res: { id: string; status: string; startDate: string; endDate: string }) => ({ 
-        id: res.id, 
-        status: res.status, 
-        startDate: res.startDate,
-        endDate: res.endDate
-      })));
-      
     // Check for active reservations (PENDING, CONFIRMED or CHECKED_IN)
     const hasActiveReservation = suite.reservations.some((res: { status: string }) => 
       ['PENDING', 'CONFIRMED', 'CHECKED_IN'].includes(res.status)
