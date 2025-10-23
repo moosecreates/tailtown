@@ -152,8 +152,6 @@ describe('MedicationForm', () => {
     expect(screen.getByText('Injection')).toBeInTheDocument();
     expect(screen.getByText('Eye Drops')).toBeInTheDocument();
     expect(screen.getByText('Ear Drops')).toBeInTheDocument();
-    expect(screen.getByText('Inhaler')).toBeInTheDocument();
-    expect(screen.getByText('Transdermal Patch')).toBeInTheDocument();
     expect(screen.getByText('Other')).toBeInTheDocument();
   });
 

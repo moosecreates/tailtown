@@ -25,14 +25,11 @@ interface MedicationFormProps {
 }
 
 const ADMINISTRATION_METHODS = [
-  { value: 'ORAL_PILL', label: 'Oral Pill/Tablet' },
-  { value: 'ORAL_LIQUID', label: 'Oral Liquid' },
-  { value: 'TOPICAL', label: 'Topical (Applied to skin)' },
+  { value: 'ORAL', label: 'Oral' },
+  { value: 'TOPICAL', label: 'Topical' },
   { value: 'INJECTION', label: 'Injection' },
   { value: 'EYE_DROPS', label: 'Eye Drops' },
   { value: 'EAR_DROPS', label: 'Ear Drops' },
-  { value: 'INHALER', label: 'Inhaler' },
-  { value: 'TRANSDERMAL_PATCH', label: 'Transdermal Patch' },
   { value: 'OTHER', label: 'Other' }
 ];
 
