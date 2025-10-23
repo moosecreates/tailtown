@@ -257,7 +257,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     };
 
     loadInitialData();
-  }, [initialData]);
+  }, [initialData, serviceCategories]);
 
   /**
    * Handle customer selection change
@@ -349,15 +349,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       }
       
       try {
-        // Define the pet response type just like we did in handleCustomerChange
-        interface PetResponse {
-          status: string;
-          results: number;
-          totalPages: number;
-          currentPage: number;
-          data: Pet[];
-        }
-        
         const response = await petService.getPetsByCustomer(selectedCustomer);
         
         // Extract pets from the response, handling different response structures
@@ -399,7 +390,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     if (initialDataLoaded.current && initialData) {
       loadInitialPets();
     }
-  }, [initialDataLoaded.current, initialData, selectedCustomer, pets]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData, selectedCustomer, pets]); // initialDataLoaded.current is a ref and doesn't need to be in deps
 
   // Reset suiteType and suite override if service changes to a category that doesn't require it
   useEffect(() => {
@@ -776,7 +768,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       const results = [];
       for (let i = 0; i < petsToBook.length; i++) {
         const petId = petsToBook[i];
-        const isFirstPet = i === 0;
         
         // Get the suite assignment for this pet
         const assignedSuiteId = hasMultiplePets ? petSuiteAssignments[petId] : selectedSuiteId;
