@@ -258,7 +258,7 @@ const loadData = useCallback(async () => {
 
 ## Files Fixed
 
-### ✅ Completed (7 files - 17.5%)
+### ✅ Completed (17 files - 42.5%)
 
 1. **useDashboardData.ts** (Dashboard hook)
    - Fixed infinite loop (hundreds of API calls → 2)
@@ -298,17 +298,48 @@ const loadData = useCallback(async () => {
    - Added all deps to both useEffects
    - **Impact**: Complex debounced search properly optimized
 
-### 🔄 Next Priority Files
-
 8. **Customers.tsx**
-   - Has debounced search pattern similar to Pets
-   - Needs loadCustomers wrapped in useCallback
+   - Wrapped loadCustomers in useCallback
+   - Debounced search already optimized
 
 9. **CustomerDetails.tsx**
-   - fetchCustomer missing from deps
+   - Wrapped fetchCustomer in useCallback with [id, isNewCustomer] deps
 
 10. **PetDetails.tsx**
-    - loadData missing from deps
+    - Wrapped loadData in useCallback with [id, isNewPet] deps
+
+11. **ReservationDetails.tsx**
+    - Wrapped fetchReservation in useCallback with [id] deps
+
+12. **ServiceDetails.tsx**
+    - Wrapped loadService in useCallback with [id, isNewService] deps
+
+13. **ResourceDetails.tsx**
+    - Wrapped loadResource in useCallback with [id, navigate] deps
+
+14. **ReservationEdit.tsx**
+    - Wrapped fetchData in useCallback with [id] deps
+    - Wrapped checkAvailability in useCallback with [formData.startDate, formData.endDate, resources, id] deps
+
+15. **SuitesPage.tsx**
+    - Wrapped fetchSuiteStats in useCallback with [filterDate] deps
+
+16. **Scheduling.tsx**
+    - Wrapped fetchStaff in useCallback
+
+17. **PriceRules.tsx**
+    - Wrapped fetchPriceRules in useCallback with [page, rowsPerPage] deps
+
+### 🔄 Next Priority Files
+
+18. **CheckoutPage.tsx**
+    - Payment amount calculation
+
+19. **PaymentStep.tsx**
+    - Payment method initialization
+
+20. **PriceRuleDetailsPage.tsx**
+    - Price rule loading
 
 ### ⏳ Pending
 
