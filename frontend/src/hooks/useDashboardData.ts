@@ -91,7 +91,7 @@ export const useDashboardData = () => {
       // Fetch all data in parallel
       const [reservationsResponse, revenueResponse] = await Promise.all([
         reservationService.getAllReservations(1, 250, 'startDate', 'asc', activeStatuses, yesterdayFormatted),
-        reservationService.getTodayRevenue(formattedToday)
+        reservationService.getTodayRevenue()
       ]);
 
       // Extract reservations from response
