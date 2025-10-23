@@ -70,6 +70,7 @@ const EmailMarketing = lazy(() => import('./pages/admin/marketing/EmailMarketing
 // Lazy loaded pages - Check-In
 const CheckInWorkflow = lazy(() => import('./pages/check-in/CheckInWorkflow'));
 const CheckInComplete = lazy(() => import('./pages/check-in/CheckInComplete'));
+const CheckInTemplateManager = lazy(() => import('./pages/admin/CheckInTemplateManager'));
 
 // Custom event and utility components
 
@@ -150,6 +151,7 @@ const AppRoutes = () => {
         {/* Check-In Routes */}
         <Route path="/check-in/:reservationId" element={isAuthenticated ? <CheckInWorkflow /> : <Navigate to="/login" />} />
         <Route path="/check-in/:checkInId/complete" element={isAuthenticated ? <CheckInComplete /> : <Navigate to="/login" />} />
+        <Route path="/admin/check-in-templates" element={isAuthenticated ? <CheckInTemplateManager /> : <Navigate to="/login" />} />
         
         {/* Debug routes */}
         <Route path="/debug/api" element={<ApiTester />} />
