@@ -34,6 +34,18 @@ Comprehensive check-in system for boarding reservations with customizable questi
      - Permission for appetite incentives (cheese, etc.)
      - Permission for probiotics if upset stomach
    
+   - **Medication Tracking**
+     - Medication name
+     - Dosage amount
+     - Frequency (how often)
+     - Administration method (oral pill, liquid, topical, injection, eye drops, ear drops, inhaler, patch, other)
+     - Time of day for administration
+     - With/without food
+     - Special instructions
+     - Start and end dates
+     - Prescribing veterinarian
+     - Additional notes
+   
    - **Belongings Tracking**
      - Item descriptions (collars, toys, bedding, etc.)
      - Quantity tracking
@@ -163,7 +175,7 @@ model CheckInBelonging {
   checkInId   String
   checkIn     CheckIn @relation(fields: [checkInId], references: [id], onDelete: Cascade)
   
-  itemType    String   // collar, toy, bedding, medication, food, etc.
+  itemType    String   // collar, toy, bedding, food, etc.
   description String
   quantity    Int      @default(1)
   color       String?
@@ -174,6 +186,38 @@ model CheckInBelonging {
   returnedBy  String?
   
   @@index([checkInId])
+}
+
+model CheckInMedication {
+  id                   String           @id @default(uuid())
+  checkInId            String
+  checkIn              CheckIn @relation(fields: [checkInId], references: [id], onDelete: Cascade)
+  
+  medicationName       String
+  dosage               String
+  frequency            String           // e.g., "Twice daily", "Every 8 hours", "As needed"
+  administrationMethod MedicationMethod // ORAL_PILL, ORAL_LIQUID, TOPICAL, INJECTION, etc.
+  timeOfDay            String?          // e.g., "8:00 AM, 8:00 PM"
+  withFood             Boolean          @default(false)
+  specialInstructions  String?
+  startDate            DateTime?
+  endDate              DateTime?
+  prescribingVet       String?
+  notes                String?
+  
+  @@index([checkInId])
+}
+
+enum MedicationMethod {
+  ORAL_PILL
+  ORAL_LIQUID
+  TOPICAL
+  INJECTION
+  EYE_DROPS
+  EAR_DROPS
+  INHALER
+  TRANSDERMAL_PATCH
+  OTHER
 }
 
 model ServiceAgreement {
@@ -254,20 +298,35 @@ model ServiceAgreementTemplate {
    - Auto-save draft responses
    - Validation for required fields
 
-3. **Belongings Inventory**
+3. **Medication Entry**
+   - Add each medication separately
+   - Form fields for each medication:
+     - Medication name
+     - Dosage (e.g., "10mg", "1 tablet", "2 drops")
+     - Frequency (e.g., "Twice daily", "Every 8 hours")
+     - Administration method dropdown
+     - Time(s) of day
+     - Give with food? (checkbox)
+     - Special instructions
+     - Start/end dates (optional)
+     - Prescribing vet (optional)
+   - Medication list summary
+   - Print medication schedule for kennel
+
+4. **Belongings Inventory**
    - Quick-add common items (collar, leash, toy, bedding)
    - Custom item entry
    - Photo upload option
    - Print inventory label
 
-4. **Service Agreement**
+5. **Service Agreement**
    - Display agreement text
    - Initial collection at marked sections
    - Digital signature capture (canvas)
    - Customer name confirmation
    - Email copy to customer
 
-5. **Check-In Summary**
+6. **Check-In Summary**
    - Review all responses
    - Print kennel card with key info
    - Print full check-in report

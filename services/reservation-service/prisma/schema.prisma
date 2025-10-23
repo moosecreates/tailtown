@@ -474,6 +474,7 @@ model CheckIn {
   activities          Activity[]
   responses           CheckInResponse[]
   belongings          CheckInBelonging[]
+  medications         CheckInMedication[]
   agreement           ServiceAgreement?
   pet                 Pet                 @relation(fields: [petId], references: [id])
   reservation         Reservation?        @relation(fields: [reservationId], references: [id])
@@ -560,6 +561,26 @@ model CheckInBelonging {
 
   @@index([checkInId], map: "check_in_belongings_check_in_idx")
   @@map("check_in_belongings")
+}
+
+model CheckInMedication {
+  id                String                @id @default(uuid())
+  checkInId         String
+  medicationName    String
+  dosage            String
+  frequency         String
+  administrationMethod MedicationMethod
+  timeOfDay         String?
+  withFood          Boolean               @default(false)
+  specialInstructions String?
+  startDate         DateTime?
+  endDate           DateTime?
+  prescribingVet    String?
+  notes             String?
+  checkIn           CheckIn               @relation(fields: [checkInId], references: [id], onDelete: Cascade)
+
+  @@index([checkInId], map: "check_in_medications_check_in_idx")
+  @@map("check_in_medications")
 }
 
 model ServiceAgreementTemplate {
@@ -820,6 +841,18 @@ enum QuestionType {
   TIME
   LONG_TEXT
   DATE
+}
+
+enum MedicationMethod {
+  ORAL_PILL
+  ORAL_LIQUID
+  TOPICAL
+  INJECTION
+  EYE_DROPS
+  EAR_DROPS
+  INHALER
+  TRANSDERMAL_PATCH
+  OTHER
 }
 
 enum PriceRuleType {
