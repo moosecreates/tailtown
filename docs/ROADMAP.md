@@ -262,15 +262,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 - Disaster recovery planning
 
 ### Business Operations
-- Integration with accounting software
-- Staff performance metrics
-- Multi-location support
-- Inventory management for pet supplies
 - Automated appointment reminders
-
-### Hardware
-- Barcode/QR Code system for pet tracking
-- Additional printer integrations
 
 ---
 

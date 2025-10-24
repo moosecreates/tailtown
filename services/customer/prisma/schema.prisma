@@ -523,6 +523,7 @@ model PriceRule {
   name              String
   description       String?
   ruleType          PriceRuleType
+  adjustmentType    PriceAdjustmentType        @default(DISCOUNT)
   discountType      DiscountType
   discountValue     Float
   minQuantity       Int?
@@ -711,6 +712,11 @@ enum PriceRuleType {
 enum DiscountType {
   PERCENTAGE
   FIXED_AMOUNT
+}
+
+enum PriceAdjustmentType {
+  DISCOUNT    // Reduces price
+  SURCHARGE   // Increases price
 }
 
 // ============================================
