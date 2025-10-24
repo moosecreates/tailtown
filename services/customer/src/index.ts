@@ -20,6 +20,7 @@ import addonRoutes from './routes/addon.routes';
 // Using fixed analytics routes to avoid schema issues
 import analyticsRoutes from './routes/analytics-fixed.routes';
 import tenantRoutes from './routes/tenant.routes';
+import emailRoutes from './routes/email.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 
@@ -224,6 +225,7 @@ app.use('/api/invoices', requireTenant, invoiceRoutes);
 app.use('/api/payments', requireTenant, paymentRoutes);
 app.use('/api/addons', requireTenant, addonRoutes);
 app.use('/api/analytics', requireTenant, analyticsRoutes);
+app.use('/api/emails', requireTenant, emailRoutes);
 
 // Additional routes without /api prefix for staff (to match frontend API calls)
 app.use('/staff', staffRoutes);
