@@ -53,8 +53,8 @@ export class TenantService {
     status?: TenantStatus;
     isActive?: boolean;
     isPaused?: boolean;
-  }): Promise<Tenant[]> {
-    return prisma.tenant.findMany({
+  }): Promise<any[]> {
+    const tenants = await prisma.tenant.findMany({
       where: {
         ...filters,
         deletedAt: null, // Don't show deleted tenants
@@ -77,6 +77,35 @@ export class TenantService {
         createdAt: 'desc',
       },
     });
+
+    // Add aggregated counts for each tenant
+    const tenantsWithCounts = await Promise.all(
+      tenants.map(async (tenant) => {
+        // Count customers
+        const customerCount = await prisma.customer.count({
+          where: { tenantId: tenant.id },
+        });
+
+        // Count staff/employees
+        const employeeCount = await prisma.staff.count({
+          where: { tenantId: tenant.id },
+        });
+
+        // Count reservations
+        const reservationCount = await prisma.reservation.count({
+          where: { tenantId: tenant.id },
+        });
+
+        return {
+          ...tenant,
+          customerCount,
+          employeeCount,
+          reservationCount,
+        };
+      })
+    );
+
+    return tenantsWithCounts;
   }
 
   /**
