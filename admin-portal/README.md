@@ -72,6 +72,10 @@ REACT_APP_CUSTOMER_SERVICE_URL=http://localhost:4004
 - Tenant App: http://localhost:3000
 - Backend API: http://localhost:4004
 
+**Login Credentials** (Development):
+- Password: `admin123`
+- Can be changed in `.env` file (`REACT_APP_ADMIN_PASSWORD`)
+
 **Production** (Future):
 - Admin Portal: https://admin.tailtown.com
 - Tenant Apps: https://{subdomain}.tailtown.com
