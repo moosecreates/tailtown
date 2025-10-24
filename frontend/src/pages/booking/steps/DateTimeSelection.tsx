@@ -1,0 +1,90 @@
+/**
+ * DateTimeSelection - Step 2: Choose date and time
+ * Mobile-optimized calendar and time picker
+ */
+
+import React, { useState } from 'react';
+import {
+  Box,
+  Button,
+  Typography,
+  Grid,
+  TextField
+} from '@mui/material';
+import {
+  ArrowBack as ArrowBackIcon,
+  ArrowForward as ArrowForwardIcon
+} from '@mui/icons-material';
+
+interface DateTimeSelectionProps {
+  bookingData: any;
+  onNext: () => void;
+  onBack: () => void;
+  onUpdate: (data: any) => void;
+}
+
+const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
+  bookingData,
+  onNext,
+  onBack,
+  onUpdate
+}) => {
+  const [startDate, setStartDate] = useState(bookingData.startDate || '');
+  const [endDate, setEndDate] = useState(bookingData.endDate || '');
+
+  const handleContinue = () => {
+    onUpdate({ startDate, endDate });
+    onNext();
+  };
+
+  return (
+    <Box>
+      <Typography variant="h5" gutterBottom sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
+        When would you like to book?
+      </Typography>
+
+      <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Start Date"
+            type="date"
+            fullWidth
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="End Date"
+            type="date"
+            fullWidth
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
+      </Grid>
+
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
+        <Button
+          variant="outlined"
+          onClick={onBack}
+          startIcon={<ArrowBackIcon />}
+        >
+          Back
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleContinue}
+          disabled={!startDate || !endDate}
+          endIcon={<ArrowForwardIcon />}
+        >
+          Continue
+        </Button>
+      </Box>
+    </Box>
+  );
+};
+
+export default DateTimeSelection;

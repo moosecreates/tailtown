@@ -1,6 +1,7 @@
 import React, { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, BrowserRouter, useLocation } from 'react-router-dom';
 import { Box, CircularProgress, CssBaseline, ThemeProvider } from '@mui/material';
+import { HelmetProvider } from 'react-helmet-async';
 import theme from './theme';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ShoppingCartProvider } from './contexts/ShoppingCartContext';
@@ -77,6 +78,9 @@ const CheckInTemplateManager = lazy(() => import('./pages/admin/CheckInTemplateM
 // Lazy loaded pages - Checkout
 const CheckoutWorkflow = lazy(() => import('./pages/checkout/CheckoutWorkflow'));
 
+// Public Booking Portal
+const BookingPortal = lazy(() => import('./pages/booking/BookingPortal'));
+
 // Custom event and utility components
 
 // Custom event for route changes
@@ -107,6 +111,9 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
+        {/* Public Booking Portal - No authentication required */}
+        <Route path="/book" element={<BookingPortal />} />
+        
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
@@ -177,25 +184,27 @@ const AppRoutes = () => {
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <AccessibilityFix />
-        <ScrollFix />
-        <RouteChangeListener />
-        <AuthProvider>
-          <ShoppingCartProvider>
-            <React.Suspense fallback={
-              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <CircularProgress />
-              </Box>
-            }>
-              <AppRoutes />
-            </React.Suspense>
-          </ShoppingCartProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <AccessibilityFix />
+          <ScrollFix />
+          <RouteChangeListener />
+          <AuthProvider>
+            <ShoppingCartProvider>
+              <React.Suspense fallback={
+                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                  <CircularProgress />
+                </Box>
+              }>
+                <AppRoutes />
+              </React.Suspense>
+            </ShoppingCartProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </HelmetProvider>
   );
 };
 
