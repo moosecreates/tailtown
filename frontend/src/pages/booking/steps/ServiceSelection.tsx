@@ -85,7 +85,8 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({
     onUpdate({
       serviceId: service.id,
       serviceName: service.name,
-      serviceCategory: service.serviceCategory
+      serviceCategory: service.serviceCategory,
+      servicePrice: service.price
     });
   };
 

@@ -1,6 +1,36 @@
-import React from 'react';
-import { Box, Button, Typography } from '@mui/material';
-import { ArrowBack, ArrowForward } from '@mui/icons-material';
+/**
+ * ReviewBooking - Step 6: Review and complete booking
+ * Shows booking summary and handles reservation creation
+ */
+
+import React, { useState } from 'react';
+import {
+  Box,
+  Button,
+  Typography,
+  Card,
+  CardContent,
+  Grid,
+  Divider,
+  Alert,
+  CircularProgress,
+  Chip,
+  FormControlLabel,
+  Checkbox
+} from '@mui/material';
+import {
+  ArrowBack as ArrowBackIcon,
+  CheckCircle as CheckCircleIcon,
+  Person as PersonIcon,
+  Pets as PetsIcon,
+  Event as EventIcon,
+  AttachMoney as MoneyIcon
+} from '@mui/icons-material';
+import { useCustomerAuth } from '../../../contexts/CustomerAuthContext';
+import { serviceManagement } from '../../../services/serviceManagement';
+import { petService } from '../../../services/petService';
+import addonService from '../../../services/addonService';
+import { reservationService } from '../../../services/reservationService';
 
 interface ReviewBookingProps {
   bookingData: any;
@@ -9,17 +39,279 @@ interface ReviewBookingProps {
   onUpdate: (data: any) => void;
 }
 
-const ReviewBooking: React.FC<ReviewBookingProps> = ({ onNext, onBack }) => {
+const ReviewBooking: React.FC<ReviewBookingProps> = ({
+  bookingData,
+  onNext,
+  onBack,
+  onUpdate
+}) => {
+  const { customer } = useCustomerAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+
+  // Calculate totals
+  const servicePrice = bookingData.servicePrice || 0;
+  const addOnTotal = bookingData.addOnTotal || 0;
+  const subtotal = servicePrice + addOnTotal;
+  const tax = subtotal * 0.08; // 8% tax
+  const total = subtotal + tax;
+
+  const handleCompleteBooking = async () => {
+    if (!agreeToTerms) {
+      setError('Please agree to the terms and conditions');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError('');
+
+      // Create reservation
+      const reservationData = {
+        customerId: bookingData.customerId,
+        petId: bookingData.petIds?.[0] || '', // Use first pet as primary
+        serviceId: bookingData.serviceId,
+        startDate: bookingData.startDate,
+        endDate: bookingData.endDate,
+        status: 'PENDING' as const,
+        totalPrice: total,
+        notes: `Booked via customer portal. Pets: ${bookingData.petIds?.length || 0}`,
+      } as any; // Type assertion to handle backend schema differences
+
+      const reservation = await reservationService.createReservation(reservationData);
+      
+      // Store reservation ID for confirmation page
+      onUpdate({ reservationId: reservation.id });
+      
+      // Move to confirmation
+      onNext();
+    } catch (err: any) {
+      console.error('Error creating reservation:', err);
+      setError(err.response?.data?.message || 'Failed to create reservation. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box>
-      <Typography variant="h5" gutterBottom>Review & Pay</Typography>
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Review and payment coming soon...
+      <Typography 
+        variant="h5" 
+        component="h2"
+        gutterBottom
+        sx={{
+          fontSize: { xs: '1.25rem', sm: '1.5rem' },
+          fontWeight: 600,
+          mb: 3
+        }}
+      >
+        Review Your Booking
       </Typography>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-        <Button variant="outlined" onClick={onBack} startIcon={<ArrowBack />}>Back</Button>
-        <Button variant="contained" onClick={onNext} endIcon={<ArrowForward />}>Complete Booking</Button>
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
+
+      <Grid container spacing={3}>
+        {/* Customer Information */}
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <PersonIcon sx={{ mr: 1, color: 'primary.main' }} />
+                <Typography variant="h6">Customer Information</Typography>
+              </Box>
+              <Typography variant="body1" fontWeight={600}>
+                {customer?.firstName} {customer?.lastName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {customer?.email}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {customer?.phone}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Service Details */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <EventIcon sx={{ mr: 1, color: 'primary.main' }} />
+                <Typography variant="h6">Service</Typography>
+              </Box>
+              <Typography variant="body1" fontWeight={600}>
+                {bookingData.serviceName}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                {bookingData.startDate && new Date(bookingData.startDate).toLocaleDateString()}
+                {bookingData.endDate && ` - ${new Date(bookingData.endDate).toLocaleDateString()}`}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Pets */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <PetsIcon sx={{ mr: 1, color: 'primary.main' }} />
+                <Typography variant="h6">Pets</Typography>
+              </Box>
+              <Typography variant="body1">
+                {bookingData.petIds?.length || 0} pet(s) selected
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Add-Ons */}
+        {bookingData.addOnIds && bookingData.addOnIds.length > 0 && (
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Add-Ons ({bookingData.addOnIds.length})
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {bookingData.addOnIds.map((id: string, index: number) => (
+                    <Chip key={id} label={`Add-on ${index + 1}`} color="primary" variant="outlined" />
+                  ))}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
+
+        {/* Price Summary */}
+        <Grid item xs={12}>
+          <Card sx={{ bgcolor: 'primary.50' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <MoneyIcon sx={{ mr: 1, color: 'primary.main' }} />
+                <Typography variant="h6">Price Summary</Typography>
+              </Box>
+              
+              <Box sx={{ mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body1">Service</Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    ${servicePrice.toFixed(2)}
+                  </Typography>
+                </Box>
+                
+                {addOnTotal > 0 && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body1">Add-Ons</Typography>
+                    <Typography variant="body1" fontWeight={600}>
+                      ${addOnTotal.toFixed(2)}
+                    </Typography>
+                  </Box>
+                )}
+                
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary">Subtotal</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    ${subtotal.toFixed(2)}
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">Tax (8%)</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    ${tax.toFixed(2)}
+                  </Typography>
+                </Box>
+                
+                <Divider sx={{ my: 2 }} />
+                
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="h6" color="primary">Total</Typography>
+                  <Typography variant="h6" color="primary" fontWeight={700}>
+                    ${total.toFixed(2)}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Terms and Conditions */}
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={agreeToTerms}
+                    onChange={(e) => setAgreeToTerms(e.target.checked)}
+                    color="primary"
+                  />
+                }
+                label={
+                  <Typography variant="body2">
+                    I agree to the{' '}
+                    <a href="/terms" target="_blank" style={{ color: '#1976d2' }}>
+                      Terms and Conditions
+                    </a>
+                    {' '}and{' '}
+                    <a href="/cancellation-policy" target="_blank" style={{ color: '#1976d2' }}>
+                      Cancellation Policy
+                    </a>
+                  </Typography>
+                }
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Navigation Buttons - Fixed on mobile */}
+      <Box
+        sx={{
+          position: { xs: 'fixed', sm: 'static' },
+          bottom: { xs: 0, sm: 'auto' },
+          left: { xs: 0, sm: 'auto' },
+          right: { xs: 0, sm: 'auto' },
+          p: { xs: 2, sm: 0 },
+          mt: { xs: 0, sm: 4 },
+          bgcolor: { xs: 'background.paper', sm: 'transparent' },
+          boxShadow: { xs: '0 -2px 10px rgba(0,0,0,0.1)', sm: 'none' },
+          zIndex: { xs: 1000, sm: 'auto' },
+          display: 'flex',
+          justifyContent: 'space-between'
+        }}
+      >
+        <Button
+          variant="outlined"
+          size="large"
+          onClick={onBack}
+          startIcon={<ArrowBackIcon />}
+          disabled={loading}
+          sx={{ py: { xs: 1.5, sm: 1.5 } }}
+        >
+          Back
+        </Button>
+        <Button
+          variant="contained"
+          size="large"
+          onClick={handleCompleteBooking}
+          disabled={!agreeToTerms || loading}
+          startIcon={loading ? <CircularProgress size={20} /> : <CheckCircleIcon />}
+          sx={{ py: { xs: 1.5, sm: 1.5 } }}
+        >
+          {loading ? 'Processing...' : 'Complete Booking'}
+        </Button>
       </Box>
+
+      {/* Spacer for fixed button on mobile */}
+      <Box sx={{ display: { xs: 'block', sm: 'none' }, height: 80 }} />
     </Box>
   );
 };
