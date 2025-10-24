@@ -119,10 +119,11 @@ const PriceRules: React.FC = () => {
   };
 
   const getDiscountDisplay = (rule: PriceRule) => {
+    const prefix = rule.adjustmentType === 'SURCHARGE' ? '+' : '-';
     if (rule.discountType === 'PERCENTAGE') {
-      return `${rule.discountValue}%`;
+      return `${prefix}${rule.discountValue}%`;
     } else {
-      return `$${rule.discountValue.toFixed(2)}`;
+      return `${prefix}$${rule.discountValue.toFixed(2)}`;
     }
   };
 
@@ -152,7 +153,7 @@ const PriceRules: React.FC = () => {
         </Box>
 
         <Typography variant="body1" color="text.secondary" paragraph>
-          Manage discount rules for services based on days of the week, multi-day stays, or multiple pets.
+          Manage pricing rules for services. Create discounts to reduce prices or surcharges to increase prices based on days of the week, multi-day stays, or multiple pets.
         </Typography>
 
         {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
