@@ -146,6 +146,28 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ bookingData }
                 </Box>
               </Grid>
             )}
+
+            {bookingData.paymentTransactionId && (
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Payment Method:
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {bookingData.maskedCard || 'Credit Card'}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Transaction ID:
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600}>
+                    {bookingData.paymentTransactionId}
+                  </Typography>
+                </Box>
+              </Grid>
+            )}
           </Grid>
         </CardContent>
       </Card>

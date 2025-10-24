@@ -16,9 +16,9 @@ import {
   CircularProgress,
   Chip,
   FormControlLabel,
-  Checkbox
-} from '@mui/material';
-import {
+  Checkbox,
+  TextField
+} from '@mui/material';import {
   ArrowBack as ArrowBackIcon,
   CheckCircle as CheckCircleIcon,
   Person as PersonIcon,
@@ -31,6 +31,7 @@ import { serviceManagement } from '../../../services/serviceManagement';
 import { petService } from '../../../services/petService';
 import addonService from '../../../services/addonService';
 import { reservationService } from '../../../services/reservationService';
+import { paymentService, CardPaymentRequest } from '../../../services/paymentService';
 
 interface ReviewBookingProps {
   bookingData: any;
@@ -49,6 +50,13 @@ const ReviewBooking: React.FC<ReviewBookingProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  
+  // Payment form state
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvv, setCvv] = useState('');
+  const [cardName, setCardName] = useState(`${customer?.firstName || ''} ${customer?.lastName || ''}`.trim());
 
   // Calculate totals
   const servicePrice = bookingData.servicePrice || 0;
@@ -63,34 +71,72 @@ const ReviewBooking: React.FC<ReviewBookingProps> = ({
       return;
     }
 
+    // Validate payment info
+    if (!cardNumber || !expiry || !cvv) {
+      setError('Please enter complete payment information');
+      return;
+    }
+
     try {
       setLoading(true);
+      setPaymentProcessing(true);
       setError('');
 
-      // Create reservation
+      // Process payment first
+      const paymentRequest: CardPaymentRequest = {
+        amount: total,
+        cardNumber: cardNumber.replace(/\s/g, ''),
+        expiry: expiry.replace('/', ''),
+        cvv,
+        name: cardName,
+        email: customer?.email,
+        address: customer?.address,
+        city: customer?.city,
+        state: customer?.state,
+        zip: customer?.zipCode,
+        orderId: `BOOKING-${Date.now()}`,
+        capture: true,
+      };
+
+      const paymentResult = await paymentService.processCardPayment(paymentRequest);
+
+      if (paymentResult.status !== 'success' || !paymentResult.data?.approved) {
+        setError(paymentResult.data?.responseText || paymentResult.message || 'Payment declined. Please check your card details.');
+        setPaymentProcessing(false);
+        setLoading(false);
+        return;
+      }
+
+      // Payment successful, create reservation
       const reservationData = {
         customerId: bookingData.customerId,
-        petId: bookingData.petIds?.[0] || '', // Use first pet as primary
+        petId: bookingData.petIds?.[0] || '',
         serviceId: bookingData.serviceId,
         startDate: bookingData.startDate,
         endDate: bookingData.endDate,
-        status: 'PENDING' as const,
+        status: 'CONFIRMED' as const,
         totalPrice: total,
-        notes: `Booked via customer portal. Pets: ${bookingData.petIds?.length || 0}`,
-      } as any; // Type assertion to handle backend schema differences
+        notes: `Booked via customer portal. Pets: ${bookingData.petIds?.length || 0}. Payment: ${paymentResult.data?.transactionId}`,
+      } as any;
 
       const reservation = await reservationService.createReservation(reservationData);
       
-      // Store reservation ID for confirmation page
-      onUpdate({ reservationId: reservation.id });
+      // Store reservation and payment info for confirmation
+      onUpdate({ 
+        reservationId: reservation.id,
+        paymentTransactionId: paymentResult.data?.transactionId,
+        paymentAuthCode: paymentResult.data?.authCode,
+        maskedCard: paymentResult.data?.maskedCard,
+      });
       
       // Move to confirmation
       onNext();
     } catch (err: any) {
-      console.error('Error creating reservation:', err);
-      setError(err.response?.data?.message || 'Failed to create reservation. Please try again.');
+      console.error('Error completing booking:', err);
+      setError(err.response?.data?.message || 'Failed to complete booking. Please try again.');
     } finally {
       setLoading(false);
+      setPaymentProcessing(false);
     }
   };
 
@@ -238,6 +284,99 @@ const ReviewBooking: React.FC<ReviewBookingProps> = ({
                   </Typography>
                 </Box>
               </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Payment Information */}
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <MoneyIcon sx={{ mr: 1, color: 'primary.main' }} />
+                <Typography variant="h6">Payment Information</Typography>
+              </Box>
+              
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Card Number"
+                    fullWidth
+                    required
+                    value={cardNumber}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\s/g, '');
+                      if (/^\d{0,16}$/.test(value)) {
+                        // Format as XXXX XXXX XXXX XXXX
+                        const formatted = value.match(/.{1,4}/g)?.join(' ') || value;
+                        setCardNumber(formatted);
+                      }
+                    }}
+                    placeholder="1234 5678 9012 3456"
+                    inputProps={{ maxLength: 19 }}
+                    helperText="Test: 4788250000028291 (Visa Approved)"
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Expiration Date"
+                    fullWidth
+                    required
+                    value={expiry}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/\D/g, '');
+                      if (value.length >= 2) {
+                        value = value.slice(0, 2) + '/' + value.slice(2, 4);
+                      }
+                      if (value.length <= 5) {
+                        setExpiry(value);
+                      }
+                    }}
+                    placeholder="MM/YY"
+                    inputProps={{ maxLength: 5 }}
+                    helperText="Test: 12/25"
+                  />
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="CVV"
+                    fullWidth
+                    required
+                    value={cvv}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      if (value.length <= 4) {
+                        setCvv(value);
+                      }
+                    }}
+                    placeholder="123"
+                    inputProps={{ maxLength: 4 }}
+                    helperText="Test: 123"
+                  />
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <TextField
+                    label="Cardholder Name"
+                    fullWidth
+                    required
+                    value={cardName}
+                    onChange={(e) => setCardName(e.target.value)}
+                    placeholder="John Doe"
+                  />
+                </Grid>
+              </Grid>
+              
+              <Alert severity="info" sx={{ mt: 2 }}>
+                <Typography variant="body2" fontWeight={600}>
+                  Development Mode - Test Cards Available
+                </Typography>
+                <Typography variant="caption">
+                  Visa: 4788250000028291 | Exp: 12/25 | CVV: 123
+                </Typography>
+              </Alert>
             </CardContent>
           </Card>
         </Grid>
