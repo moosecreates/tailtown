@@ -332,25 +332,8 @@ export class TenantService {
       ],
     });
 
-    // Create default add-on services
-    await tx.addOnService.createMany({
-      data: [
-        {
-          tenantId,
-          name: 'Extra Playtime',
-          description: '30 minutes of extra playtime',
-          price: 10.00,
-          isActive: true,
-        },
-        {
-          tenantId,
-          name: 'Nail Trim',
-          description: 'Nail trimming service',
-          price: 15.00,
-          isActive: true,
-        },
-      ],
-    });
+    // Note: Add-on services require a serviceId, so they should be created
+    // after services are set up through the UI
 
     // Create sample resources (kennels)
     const resourceTypes = ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'];

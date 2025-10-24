@@ -62,6 +62,8 @@ const Scheduling = lazy(() => import('./pages/staff/Scheduling'));
 // Lazy loaded pages - Tenant Management
 const TenantList = lazy(() => import('./pages/admin/TenantList'));
 const CreateTenant = lazy(() => import('./pages/admin/CreateTenant'));
+const TenantDetail = lazy(() => import('./pages/admin/TenantDetail'));
+const TenantEdit = lazy(() => import('./pages/admin/TenantEdit'));
 const OrderEntry = lazy(() => import('./pages/orders/OrderEntry'));
 const CheckoutPage = lazy(() => import('./pages/checkout/CheckoutPage'));
 const PrintKennelCards = lazy(() => import('./pages/kennels/PrintKennelCards'));
@@ -153,6 +155,8 @@ const AppRoutes = () => {
         {/* Tenant Management Routes */}
         <Route path="/admin/tenants" element={isAuthenticated ? <TenantList /> : <Navigate to="/login" />} />
         <Route path="/admin/tenants/new" element={isAuthenticated ? <CreateTenant /> : <Navigate to="/login" />} />
+        <Route path="/admin/tenants/:id" element={isAuthenticated ? <TenantDetail /> : <Navigate to="/login" />} />
+        <Route path="/admin/tenants/:id/edit" element={isAuthenticated ? <TenantEdit /> : <Navigate to="/login" />} />
         
         {/* Marketing Routes */}
         <Route path="/admin/marketing" element={isAuthenticated ? <MarketingHub /> : <Navigate to="/login" />} />
