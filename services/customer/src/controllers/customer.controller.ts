@@ -1,12 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
+import { TenantRequest } from '../middleware/tenant.middleware';
 
 const prisma = new PrismaClient();
 
 // Get all customers
 export const getAllCustomers = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -18,8 +19,8 @@ export const getAllCustomers = async (
     const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
     const tags = req.query.tags ? (req.query.tags as string).split(',') : undefined;
     
-    // Get tenant ID from header or default to 'dev'
-    const tenantId = (req.headers['x-tenant-id'] as string) || 'dev';
+    // Use tenant ID from middleware
+    const tenantId = req.tenantId!;
     
     // Build where condition with tenant filter
     const where: any = {
@@ -75,15 +76,19 @@ export const getAllCustomers = async (
 
 // Get a single customer by ID
 export const getCustomerById = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { id } = req.params;
+    const tenantId = req.tenantId!;
     
-    const customer = await prisma.customer.findUnique({
-      where: { id },
+    const customer = await prisma.customer.findFirst({
+      where: { 
+        id,
+        tenantId
+      },
       include: {
         pets: true
       }
@@ -104,7 +109,7 @@ export const getCustomerById = async (
 
 // Get all pets for a customer
 export const getCustomerPets = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -139,12 +144,13 @@ export const getCustomerPets = async (
 
 // Create a new customer
 export const createCustomer = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const customerData = req.body;
+    const tenantId = req.tenantId!;
     console.log('Creating customer with data:', JSON.stringify(customerData, null, 2));
     
     // Create customer with transaction to ensure all related records are created
@@ -173,6 +179,9 @@ export const createCustomer = async (
       
       // Always remove id field for creation - it should be auto-generated
       delete sanitizedCustomerData.id;
+      
+      // Add tenantId to customer data
+      sanitizedCustomerData.tenantId = tenantId;
       
       // Create the customer
       const customer = await prismaClient.customer.create({
@@ -229,7 +238,7 @@ export const createCustomer = async (
 
 // Update a customer
 export const updateCustomer = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -303,7 +312,7 @@ export const updateCustomer = async (
 
 // Delete a customer
 export const deleteCustomer = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -356,7 +365,7 @@ export const deleteCustomer = async (
 
 // Get customer documents
 export const getCustomerDocuments = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -386,7 +395,7 @@ export const getCustomerDocuments = async (
 
 // Upload a customer document
 export const uploadCustomerDocument = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -425,7 +434,7 @@ export const uploadCustomerDocument = async (
 
 // Get customer notification preferences
 export const getCustomerNotificationPreferences = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -456,7 +465,7 @@ export const getCustomerNotificationPreferences = async (
 
 // Update customer notification preferences
 export const updateCustomerNotificationPreferences = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -488,7 +497,7 @@ export const updateCustomerNotificationPreferences = async (
 
 // Get customer invoices
 export const getCustomerInvoices = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -548,7 +557,7 @@ export const getCustomerInvoices = async (
 
 // Get customer payments
 export const getCustomerPayments = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
