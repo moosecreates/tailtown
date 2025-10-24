@@ -58,7 +58,7 @@ app.use(helmet({
 app.use(cors({
   origin: '*', // Allow all origins
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'x-api-key', 'X-API-Key', 'X-Tenant-Subdomain'],
   credentials: true
 }));
 
