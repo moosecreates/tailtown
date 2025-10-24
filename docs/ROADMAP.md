@@ -752,7 +752,7 @@ Features and tasks are prioritized based on:
 ---
 
 **Last Updated**: October 23, 2025  
-**Version**: 3.2  
+**Version**: 3.3  
 **Next Review**: November 1, 2025
 
 ---

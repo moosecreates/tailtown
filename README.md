@@ -7,7 +7,64 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ## Recent Updates (October 2025)
 
-### 🏢 NEW: Multi-Tenancy Management System (October 23, 2025)
+### 📧 NEW: Email Notification System (October 23, 2025)
+
+**Status**: ✅ Production-Ready - SendGrid integration complete
+
+#### Feature Overview
+- **SendGrid Integration**: Professional email delivery service
+- **5 Notification Types**: Automated emails for key customer touchpoints
+- **HTML Templates**: Responsive, branded email designs
+- **Tenant-Aware**: Each tenant sends emails with their business branding
+- **Graceful Fallback**: Works without configuration (logs instead of sending)
+
+#### Email Types
+1. **Reservation Confirmation** - Sent when reservations are created/confirmed
+2. **Reservation Reminder** - Sent before upcoming appointments
+3. **Status Change Notifications** - Check-in, check-out, cancellation, completion
+4. **Welcome Email** - Greeting for new customers
+5. **Custom/Test Emails** - For marketing campaigns and testing
+
+#### Email Features
+- **Professional Design**: Color-coded headers, mobile-responsive layouts
+- **Business Branding**: Includes tenant name, contact info, logo
+- **What-to-Bring Lists**: Helpful checklists for boarding reservations
+- **Confirmation Numbers**: Clear reservation tracking
+- **Pet Names**: Personalized with customer's pet information
+
+#### API Endpoints
+```bash
+GET  /api/emails/config                              # Check SendGrid status
+POST /api/emails/test                                # Send test email
+POST /api/emails/reservation-confirmation/:id        # Confirm reservation
+POST /api/emails/reservation-reminder/:id            # Send reminder
+POST /api/emails/welcome/:customerId                 # Welcome new customer
+```
+
+#### Quick Start
+```bash
+# 1. Get SendGrid API key from https://sendgrid.com
+# 2. Add to services/customer/.env:
+SENDGRID_API_KEY=your_api_key_here
+SENDGRID_FROM_EMAIL=noreply@yourdomain.com
+SENDGRID_FROM_NAME=Your Business Name
+
+# 3. Restart customer service
+cd services/customer
+source ~/.nvm/nvm.sh && npm run dev
+
+# 4. Test it
+curl -X POST http://localhost:4004/api/emails/test \
+  -H "Content-Type: application/json" \
+  -H "X-Tenant-Subdomain: dev" \
+  -d '{"to":"your@email.com","subject":"Test","message":"It works!"}'
+```
+
+**Documentation**: See [Email Notifications Guide](docs/features/email-notifications.md)
+
+---
+
+### 🏢 Multi-Tenancy Management System (October 23, 2025)
 
 **Status**: ✅ Production-Ready - Complete tenant management with security
 
@@ -369,6 +426,17 @@ curl http://localhost:4003/health
 - Payment tracking and history
 - Customer account balance management
 - Invoice status tracking (draft, sent, paid, etc.)
+
+### Email Notifications
+- SendGrid integration for professional email delivery
+- Automated reservation confirmation emails
+- Reminder emails before appointments
+- Status change notifications (check-in, check-out, cancellation)
+- Welcome emails for new customers
+- Custom/test email capability for marketing
+- Responsive HTML templates with business branding
+- Tenant-aware email sending with customization
+- Graceful fallback when SendGrid not configured
 
 ### Environment Setup
 - Each service has its own `.env` file in its respective directory
