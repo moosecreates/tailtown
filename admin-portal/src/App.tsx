@@ -13,6 +13,7 @@ const CreateTenant = lazy(() => import('./pages/tenants/CreateTenant'));
 const TenantDetail = lazy(() => import('./pages/tenants/TenantDetail'));
 const TenantEdit = lazy(() => import('./pages/tenants/TenantEdit'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Analytics = lazy(() => import('./pages/Analytics'));
 
 // Loading component
 const PageLoader = () => (
@@ -90,6 +91,17 @@ function App() {
                   <ProtectedRoute>
                     <Layout>
                       <TenantEdit />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Analytics />
                     </Layout>
                   </ProtectedRoute>
                 }

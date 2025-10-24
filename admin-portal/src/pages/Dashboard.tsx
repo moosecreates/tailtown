@@ -30,7 +30,7 @@ const Dashboard: React.FC = () => {
       description: 'View platform-wide statistics and usage metrics',
       icon: <AnalyticsIcon sx={{ fontSize: 60, color: 'success.main' }} />,
       path: '/analytics',
-      disabled: true,
+      disabled: false,
     },
     {
       title: 'System Settings',
