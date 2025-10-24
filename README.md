@@ -7,7 +7,48 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ## Recent Updates (October 2025)
 
-### 📧 NEW: Email Notification System (October 23, 2025)
+### 💉 NEW: Vaccine Record Upload System (October 24, 2025)
+
+**Status**: ✅ Production-Ready - Complete file upload system for pet vaccination records
+
+#### Feature Overview
+- **Multi-Format Support**: JPG, PNG, GIF, WebP, HEIC, PDF
+- **Secure Storage**: Files stored with tenant isolation
+- **Easy Viewing**: Preview images in dialog, view PDFs in new tab
+- **File Management**: Upload, view, download, and delete records
+- **10MB Limit**: Supports high-quality scans and photos
+
+#### Key Features
+1. **Upload Vaccine Records** - Customers and staff can upload scanned documents
+2. **View Files** - Preview images or view PDFs with one click
+3. **Download Records** - Save files locally for printing or sharing
+4. **Delete Files** - Remove outdated or incorrect uploads
+5. **Metadata Tracking** - Stores filename, size, type, and upload date
+
+#### Supported File Types
+- **Images**: JPEG, PNG, GIF, WebP, HEIC/HEIF (Apple photos)
+- **Documents**: PDF
+
+#### API Endpoints
+```bash
+POST   /api/pets/:petId/vaccine-records/upload           # Upload file
+GET    /api/pets/:petId/vaccine-records                  # List all files
+GET    /api/pets/:petId/vaccine-records/:filename/download  # Download
+DELETE /api/pets/:petId/vaccine-records/:filename        # Delete file
+```
+
+#### Frontend Component
+```tsx
+import VaccineRecordUpload from './components/VaccineRecordUpload';
+
+<VaccineRecordUpload petId="abc123" petName="Max" />
+```
+
+📖 **Full Documentation**: [docs/vaccine-upload.md](docs/vaccine-upload.md)
+
+---
+
+### 📧 Email Notification System (October 23, 2025)
 
 **Status**: ✅ Production-Ready - SendGrid integration complete
 
@@ -394,6 +435,11 @@ curl http://localhost:4003/health
 - Pet profiles with medical history, vaccination records
 - Multiple pets per customer
 - Document storage for forms and agreements
+- **Vaccine Record Upload**: Upload and manage scanned vaccination documents
+  - Multi-format support (JPG, PNG, GIF, WebP, HEIC, PDF)
+  - Preview images in dialog, view PDFs in new tab
+  - Download and delete capabilities
+  - Secure tenant-isolated storage
 
 ### Reservation System
 - Interactive calendar interface
