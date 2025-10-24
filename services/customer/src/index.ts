@@ -21,6 +21,7 @@ import addonRoutes from './routes/addon.routes';
 import analyticsRoutes from './routes/analytics-fixed.routes';
 import tenantRoutes from './routes/tenant.routes';
 import emailRoutes from './routes/email.routes';
+import smsRoutes from './routes/sms.routes';
 import vaccineUploadRoutes from './routes/vaccine-upload.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
@@ -227,6 +228,7 @@ app.use('/api/payments', requireTenant, paymentRoutes);
 app.use('/api/addons', requireTenant, addonRoutes);
 app.use('/api/analytics', requireTenant, analyticsRoutes);
 app.use('/api/emails', requireTenant, emailRoutes);
+app.use('/api/sms', requireTenant, smsRoutes);
 app.use('/api/pets', requireTenant, vaccineUploadRoutes);
 
 // Additional routes without /api prefix for staff (to match frontend API calls)

@@ -7,7 +7,57 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ## Recent Updates (October 2025)
 
-### 💉 NEW: Vaccine Record Upload System (October 24, 2025)
+### 📱 NEW: SMS Notifications with Twilio (October 24, 2025)
+
+**Status**: ✅ Production-Ready - Complete Twilio SMS integration
+
+#### Feature Overview
+- **Twilio Integration**: Professional SMS delivery service
+- **6 Message Types**: Automated texts for appointments, confirmations, and marketing
+- **Phone Validation**: Automatic formatting for US/international numbers
+- **Tenant-Aware**: Each business sends with their own branding
+- **Graceful Fallback**: Works without configuration (logs instead of sending)
+
+#### Message Types
+1. **Appointment Reminders** - Sent before scheduled appointments
+2. **Reservation Confirmations** - Sent when bookings are confirmed
+3. **Welcome Messages** - Sent to new customers
+4. **Check-In Notifications** - Sent when pets are checked in
+5. **Check-Out Notifications** - Sent when pets are ready for pickup
+6. **Marketing Messages** - Promotional campaigns and announcements
+
+#### API Endpoints
+```bash
+GET  /api/sms/config                              # Check Twilio status
+POST /api/sms/test                                # Send test SMS
+POST /api/sms/reservation-reminder/:id            # Send reminder
+POST /api/sms/reservation-confirmation/:id        # Send confirmation
+POST /api/sms/welcome/:customerId                 # Welcome new customer
+POST /api/sms/marketing                           # Send to multiple customers
+POST /api/sms/check-in/:id                        # Check-in notification
+POST /api/sms/check-out/:id                       # Check-out notification
+```
+
+#### Quick Start
+```bash
+# 1. Get Twilio credentials from https://www.twilio.com
+# 2. Add to services/customer/.env:
+TWILIO_ACCOUNT_SID=your_account_sid_here
+TWILIO_AUTH_TOKEN=your_auth_token_here
+TWILIO_PHONE_NUMBER=+1234567890
+BUSINESS_NAME=Your Business Name
+BUSINESS_PHONE=+1234567890
+
+# 3. Restart service
+cd services/customer
+npm run dev
+```
+
+📖 **Full Documentation**: [docs/sms-notifications.md](docs/sms-notifications.md)
+
+---
+
+### 💉 Vaccine Record Upload System (October 24, 2025)
 
 **Status**: ✅ Production-Ready - Complete file upload system for pet vaccination records
 
