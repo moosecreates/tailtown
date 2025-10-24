@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
+import { TenantRequest } from '../middleware/tenant.middleware';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -44,7 +45,7 @@ const upload = multer({
  * @param next - Express next function
  */
 export const getAllPets = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -55,8 +56,8 @@ export const getAllPets = async (
     const search = String(req.query.search || '');
     const skip = (page - 1) * limit;
     
-    // Get tenant ID from header or default to 'dev'
-    const tenantId = (req.headers['x-tenant-id'] as string) || 'dev';
+    // Use tenant ID from middleware
+    const tenantId = req.tenantId!;
     
     // Build where clause with tenant filter
     const where: any = {
@@ -97,15 +98,16 @@ export const getAllPets = async (
 
 // Get a single pet by ID
 export const getPetById = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { id } = req.params;
+    const tenantId = req.tenantId!;
     
-    const pet = await prisma.pet.findUnique({
-      where: { id },
+    const pet = await prisma.pet.findFirst({
+      where: { id, tenantId },
     });
 
     // Photo handling removed as profilePhoto is not in the current schema
@@ -125,7 +127,7 @@ export const getPetById = async (
 
 // Get all reservations for a pet
 export const getPetReservations = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -164,11 +166,12 @@ export const getPetReservations = async (
  * @param next - Express next function
  */
 export const createPet = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    const tenantId = req.tenantId!;
     let petData = { ...req.body };
     
     // Handle empty date strings
@@ -207,14 +210,21 @@ export const createPet = async (
     }
     
     // Check if the customer exists
-    const customer = await prisma.customer.findUnique({
-      where: { id: petData.customerId },
+    const customer = await prisma.customer.findFirst({
+      where: { 
+        id: petData.customerId,
+        tenantId
+      },
     });
     
     if (!customer) {
       return next(new AppError('Customer not found', 404));
     }
     
+    // Add tenantId to pet data
+    petData.tenantId = tenantId;
+    
+    // Create the pet
     const newPet = await prisma.pet.create({
       data: petData,
     });
@@ -237,7 +247,7 @@ export const createPet = async (
  * @param next - Express next function
  */
 export const updatePet = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -308,7 +318,7 @@ export const updatePet = async (
 // Delete a pet
 // Upload a pet's photo
 export const uploadPetPhoto = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -366,7 +376,7 @@ export const uploadPetPhoto = async (
 
 // Get all pets for a customer
 export const getPetsByCustomer = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -400,7 +410,7 @@ export const getPetsByCustomer = async (
 };
 
 export const deletePet = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
