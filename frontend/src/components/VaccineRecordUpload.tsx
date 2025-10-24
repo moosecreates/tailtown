@@ -80,9 +80,18 @@ const VaccineRecordUpload: React.FC<VaccineRecordUploadProps> = ({ petId, petNam
     const file = event.target.files?.[0];
     if (file) {
       // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+      const allowedTypes = [
+        'image/jpeg', 
+        'image/jpg', 
+        'image/png', 
+        'image/gif', 
+        'image/webp', 
+        'image/heic', 
+        'image/heif',
+        'application/pdf'
+      ];
       if (!allowedTypes.includes(file.type)) {
-        setError('Invalid file type. Please upload an image (JPEG, PNG, GIF, WebP) or PDF file.');
+        setError('Invalid file type. Please upload an image (JPEG, PNG, GIF, WebP, HEIC) or PDF file.');
         return;
       }
 
@@ -165,10 +174,16 @@ const VaccineRecordUpload: React.FC<VaccineRecordUploadProps> = ({ petId, petNam
     document.body.removeChild(link);
   };
 
-  // Preview file
+  // Preview/View file
   const handlePreview = (file: VaccineFile) => {
-    setPreviewUrl(file.url);
-    setPreviewOpen(true);
+    // For PDFs, open in new tab
+    if (file.mimeType === 'application/pdf') {
+      window.open(file.url, '_blank');
+    } else {
+      // For images, show in preview dialog
+      setPreviewUrl(file.url);
+      setPreviewOpen(true);
+    }
   };
 
   // Format file size
@@ -214,7 +229,7 @@ const VaccineRecordUpload: React.FC<VaccineRecordUploadProps> = ({ petId, petNam
         {/* Upload Section */}
         <Box sx={{ mb: 3 }}>
           <input
-            accept="image/*,.pdf"
+            accept=".jpg,.jpeg,.png,.gif,.webp,.heic,.heif,.pdf"
             style={{ display: 'none' }}
             id="vaccine-file-input"
             type="file"
@@ -272,14 +287,14 @@ const VaccineRecordUpload: React.FC<VaccineRecordUploadProps> = ({ petId, petNam
                   secondary={
                     <>
                       {formatFileSize(file.size)} • Uploaded {formatDate(file.uploadedAt)}
-                      {file.mimeType.startsWith('image/') && (
-                        <Chip
-                          label="Preview"
-                          size="small"
-                          onClick={() => handlePreview(file)}
-                          sx={{ ml: 1 }}
-                        />
-                      )}
+                      <Chip
+                        label={file.mimeType === 'application/pdf' ? 'View PDF' : 'Preview'}
+                        size="small"
+                        onClick={() => handlePreview(file)}
+                        sx={{ ml: 1, cursor: 'pointer' }}
+                        color="primary"
+                        variant="outlined"
+                      />
                     </>
                   }
                 />
@@ -306,27 +321,33 @@ const VaccineRecordUpload: React.FC<VaccineRecordUploadProps> = ({ petId, petNam
           </List>
         )}
 
-        {/* Preview Dialog */}
+        {/* Preview Dialog for Images */}
         <Dialog
           open={previewOpen}
           onClose={() => setPreviewOpen(false)}
-          maxWidth="md"
+          maxWidth="lg"
           fullWidth
         >
           <DialogTitle>Vaccine Record Preview</DialogTitle>
           <DialogContent>
             {previewUrl && (
-              <Box sx={{ textAlign: 'center' }}>
+              <Box sx={{ textAlign: 'center', p: 2 }}>
                 <img
                   src={previewUrl}
                   alt="Vaccine record"
-                  style={{ maxWidth: '100%', maxHeight: '70vh' }}
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '80vh',
+                    objectFit: 'contain'
+                  }}
                 />
               </Box>
             )}
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setPreviewOpen(false)}>Close</Button>
+            <Button onClick={() => setPreviewOpen(false)} variant="contained">
+              Close
+            </Button>
           </DialogActions>
         </Dialog>
       </CardContent>

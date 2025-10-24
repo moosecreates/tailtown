@@ -40,13 +40,15 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
     'image/png',
     'image/gif',
     'image/webp',
+    'image/heic',
+    'image/heif',
     'application/pdf',
   ];
 
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, GIF, WebP, and PDF files are allowed.'));
+    cb(new Error('Invalid file type. Only JPEG, PNG, GIF, WebP, HEIC, and PDF files are allowed.'));
   }
 };
 
