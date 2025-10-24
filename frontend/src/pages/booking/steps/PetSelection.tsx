@@ -58,7 +58,16 @@ const PetSelection: React.FC<PetSelectionProps> = ({
       setLoadingPets(true);
       const response = await petService.getPetsByCustomer(customerId);
       const pets = response.data || [];
-      setCustomerPets(pets.filter((pet: Pet) => pet.isActive));
+      const activePets = pets.filter((pet: Pet) => pet.isActive);
+      setCustomerPets(activePets);
+      
+      // Auto-select if customer has only one pet
+      if (activePets.length === 1) {
+        const petId = activePets[0].id;
+        setSelectedPetIds([petId]);
+        onUpdate({ petIds: [petId] });
+      }
+      
       setError('');
     } catch (err: any) {
       console.error('Error loading pets:', err);
