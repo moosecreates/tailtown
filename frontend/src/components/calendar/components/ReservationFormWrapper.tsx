@@ -40,6 +40,9 @@ const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = memo(({
     customerId: selectedReservation.customerId,
     petId: selectedReservation.petId,
     serviceId: selectedReservation.serviceId,
+    // Include resourceId/kennelId for kennel assignment
+    resourceId: selectedReservation.resourceId || selectedReservation.resource?.id,
+    kennelId: selectedReservation.resourceId || selectedReservation.resource?.id,
   } : {
     // For new reservations, pre-populate with the selected kennel
     suiteNumber: selectedKennel.suiteNumber || '',

@@ -219,6 +219,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             // Use resourceId or kennelId (from calendar)
             const effectiveResourceId = initialData.resourceId || initialData.kennelId;
             
+            // IMMEDIATELY set the selected suite ID so it's available
+            setSelectedSuiteId(effectiveResourceId);
+            
             // Fetch resource details to get the suite type
             try {
               const resourceResponse = await resourceService.getResource(effectiveResourceId);
@@ -231,9 +234,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 } else if (initialData.suiteType) {
                   setSelectedSuiteType(initialData.suiteType);
                 }
-                
-                // Store the resource ID for later use in form submission
-                setSelectedSuiteId(effectiveResourceId);
               }
             } catch (err) {
               console.error('Error fetching resource details:', err);
