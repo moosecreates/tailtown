@@ -1,6 +1,6 @@
 /**
  * PetSelection - Step 3: Select pets for booking
- * Mobile-optimized pet selection with customer search
+ * Shows only the logged-in customer's pets
  */
 
 import React, { useState, useEffect } from 'react';
@@ -8,7 +8,6 @@ import {
   Box,
   Button,
   Typography,
-  TextField,
   Card,
   CardContent,
   CardActionArea,
@@ -16,19 +15,15 @@ import {
   Chip,
   Avatar,
   CircularProgress,
-  Alert,
-  Autocomplete,
-  Checkbox,
-  FormControlLabel
+  Alert
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
   ArrowForward as ArrowForwardIcon,
   Pets as PetsIcon,
-  Search as SearchIcon,
   CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
-import { customerService } from '../../../services/customerService';
+import { useCustomerAuth } from '../../../contexts/CustomerAuthContext';
 import { petService, Pet } from '../../../services/petService';
 
 interface PetSelectionProps {
@@ -38,48 +33,24 @@ interface PetSelectionProps {
   onUpdate: (data: any) => void;
 }
 
-interface Customer {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string;
-}
-
 const PetSelection: React.FC<PetSelectionProps> = ({
   bookingData,
   onNext,
   onBack,
   onUpdate
 }) => {
-  const [loading, setLoading] = useState(false);
+  const { customer } = useCustomerAuth();
   const [error, setError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerPets, setCustomerPets] = useState<Pet[]>([]);
   const [selectedPetIds, setSelectedPetIds] = useState<string[]>(bookingData.petIds || []);
   const [loadingPets, setLoadingPets] = useState(false);
 
-  // Search customers
-  const handleSearchCustomers = async (query: string) => {
-    if (!query || query.length < 2) {
-      setCustomers([]);
-      return;
+  // Load customer's pets on mount
+  useEffect(() => {
+    if (customer) {
+      loadCustomerPets(customer.id);
     }
-
-    try {
-      setLoading(true);
-      const response = await customerService.searchCustomers(query, 1, 10);
-      setCustomers(response.data || []);
-      setError('');
-    } catch (err: any) {
-      console.error('Error searching customers:', err);
-      setError('Unable to search customers. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [customer]);
 
   // Load customer's pets
   const loadCustomerPets = async (customerId: string) => {
@@ -98,22 +69,6 @@ const PetSelection: React.FC<PetSelectionProps> = ({
     }
   };
 
-  // Handle customer selection
-  const handleCustomerSelect = (customer: Customer | null) => {
-    setSelectedCustomer(customer);
-    setSelectedPetIds([]);
-    if (customer) {
-      loadCustomerPets(customer.id);
-      onUpdate({
-        customerId: customer.id,
-        customerName: `${customer.firstName} ${customer.lastName}`,
-        customerEmail: customer.email,
-        customerPhone: customer.phone
-      });
-    } else {
-      setCustomerPets([]);
-    }
-  };
 
   // Toggle pet selection
   const handlePetToggle = (petId: string) => {
@@ -160,74 +115,25 @@ const PetSelection: React.FC<PetSelectionProps> = ({
         </Alert>
       )}
 
-      {/* Customer Search */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
-          Find Your Account
-        </Typography>
-        <Autocomplete
-          options={customers}
-          getOptionLabel={(option) => 
-            `${option.firstName} ${option.lastName} - ${option.email}`
-          }
-          value={selectedCustomer}
-          onChange={(_, newValue) => handleCustomerSelect(newValue)}
-          onInputChange={(_, newValue) => {
-            setSearchQuery(newValue);
-            handleSearchCustomers(newValue);
-          }}
-          loading={loading}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Search by name, email, or phone"
-              placeholder="Start typing to search..."
-              InputProps={{
-                ...params.InputProps,
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-                endAdornment: (
-                  <>
-                    {loading ? <CircularProgress size={20} /> : null}
-                    {params.InputProps.endAdornment}
-                  </>
-                )
-              }}
-            />
-          )}
-          renderOption={(props, option) => (
-            <Box component="li" {...props}>
-              <Box>
-                <Typography variant="body1">
-                  {option.firstName} {option.lastName}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {option.email} • {option.phone}
-                </Typography>
-              </Box>
-            </Box>
-          )}
-        />
-      </Box>
-
-      {/* Selected Customer Info */}
-      {selectedCustomer && (
+      {/* Customer Info */}
+      {customer && (
         <Card sx={{ mb: 3, bgcolor: 'primary.50', borderLeft: '4px solid', borderColor: 'primary.main' }}>
           <CardContent>
             <Typography variant="subtitle2" color="primary" gutterBottom>
               Booking for:
             </Typography>
             <Typography variant="h6">
-              {selectedCustomer.firstName} {selectedCustomer.lastName}
+              {customer.firstName} {customer.lastName}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {selectedCustomer.email} • {selectedCustomer.phone}
+              {customer.email} • {customer.phone}
             </Typography>
           </CardContent>
         </Card>
       )}
 
       {/* Pet Selection */}
-      {selectedCustomer && (
+      {customer && (
         <Box>
           <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
             Select Pets ({selectedPetIds.length} selected)
@@ -334,24 +240,6 @@ const PetSelection: React.FC<PetSelectionProps> = ({
         </Box>
       )}
 
-      {/* No Customer Selected State */}
-      {!selectedCustomer && (
-        <Box
-          sx={{
-            textAlign: 'center',
-            py: 8,
-            color: 'text.secondary'
-          }}
-        >
-          <PetsIcon sx={{ fontSize: 80, mb: 2, opacity: 0.3 }} />
-          <Typography variant="h6" gutterBottom>
-            Search for a customer to see their pets
-          </Typography>
-          <Typography variant="body2">
-            Use the search box above to find a customer account
-          </Typography>
-        </Box>
-      )}
 
       {/* Navigation Buttons - Fixed on mobile */}
       <Box
@@ -391,7 +279,7 @@ const PetSelection: React.FC<PetSelectionProps> = ({
       </Box>
 
       {/* Spacer for fixed button on mobile */}
-      {selectedCustomer && (
+      {customer && (
         <Box sx={{ display: { xs: 'block', sm: 'none' }, height: 80 }} />
       )}
     </Box>

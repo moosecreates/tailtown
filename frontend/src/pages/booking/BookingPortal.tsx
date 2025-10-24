@@ -24,6 +24,8 @@ import {
   Alert
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
+import { CustomerAuthProvider, useCustomerAuth } from '../../contexts/CustomerAuthContext';
+import CustomerAuth from './CustomerAuth';
 import ServiceSelection from './steps/ServiceSelection';
 import DateTimeSelection from './steps/DateTimeSelection';
 import PetSelection from './steps/PetSelection';
@@ -57,17 +59,19 @@ interface BookingData {
   totalPrice?: number;
 }
 
-const BookingPortal: React.FC = () => {
+const BookingPortalContent: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { customer, isAuthenticated, isLoading: authLoading } = useCustomerAuth();
   
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [bookingData, setBookingData] = useState<BookingData>({});
   const [isEmbedded, setIsEmbedded] = useState(false);
+  const [showAuth, setShowAuth] = useState(!isAuthenticated);
 
   useEffect(() => {
     // Check if running in embedded mode
@@ -79,7 +83,27 @@ const BookingPortal: React.FC = () => {
     if (serviceId) {
       setBookingData(prev => ({ ...prev, serviceId }));
     }
-  }, [searchParams]);
+
+    // Auto-populate customer data when authenticated
+    if (isAuthenticated && customer) {
+      setBookingData(prev => ({
+        ...prev,
+        customerId: customer.id,
+        customerName: `${customer.firstName} ${customer.lastName}`,
+        customerEmail: customer.email,
+        customerPhone: customer.phone,
+        customerFirstName: customer.firstName,
+        customerLastName: customer.lastName,
+        customerAddress: customer.address,
+        customerCity: customer.city,
+        customerState: customer.state,
+        customerZipCode: customer.zipCode,
+        emergencyContact: customer.emergencyContact,
+        emergencyPhone: customer.emergencyPhone
+      }));
+      setShowAuth(false);
+    }
+  }, [searchParams, isAuthenticated, customer]);
 
   const handleNext = () => {
     setActiveStep((prevStep) => prevStep + 1);
@@ -165,6 +189,26 @@ const BookingPortal: React.FC = () => {
         return null;
     }
   };
+
+  // Show auth screen if not authenticated
+  if (authLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (showAuth || !isAuthenticated) {
+    return (
+      <>
+        <Helmet>
+          <title>Sign In | Tailtown Pet Resort</title>
+        </Helmet>
+        <CustomerAuth onSuccess={() => setShowAuth(false)} />
+      </>
+    );
+  }
 
   return (
     <>
@@ -299,6 +343,15 @@ const BookingPortal: React.FC = () => {
         </Container>
       </Box>
     </>
+  );
+};
+
+// Wrapper component with auth provider
+const BookingPortal: React.FC = () => {
+  return (
+    <CustomerAuthProvider>
+      <BookingPortalContent />
+    </CustomerAuthProvider>
   );
 };
 
