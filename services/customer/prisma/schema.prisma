@@ -69,6 +69,7 @@ model Pet {
   idealPlayGroup     PlayGroupType?
   vaccinationStatus  Json?
   vaccineExpirations Json?
+  vaccineRecordFiles Json?           // Array of uploaded vaccine record files
   vetName            String?
   vetPhone           String?
   profilePhoto       String?

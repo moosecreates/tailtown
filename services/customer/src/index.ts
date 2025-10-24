@@ -21,6 +21,7 @@ import addonRoutes from './routes/addon.routes';
 import analyticsRoutes from './routes/analytics-fixed.routes';
 import tenantRoutes from './routes/tenant.routes';
 import emailRoutes from './routes/email.routes';
+import vaccineUploadRoutes from './routes/vaccine-upload.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 
@@ -226,10 +227,14 @@ app.use('/api/payments', requireTenant, paymentRoutes);
 app.use('/api/addons', requireTenant, addonRoutes);
 app.use('/api/analytics', requireTenant, analyticsRoutes);
 app.use('/api/emails', requireTenant, emailRoutes);
+app.use('/api/pets', requireTenant, vaccineUploadRoutes);
 
 // Additional routes without /api prefix for staff (to match frontend API calls)
 app.use('/staff', staffRoutes);
 app.use('/schedules', scheduleRoutes);
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
