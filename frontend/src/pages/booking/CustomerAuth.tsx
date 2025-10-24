@@ -149,8 +149,8 @@ const CustomerAuth: React.FC<CustomerAuthProps> = ({ onSuccess }) => {
           variant="fullWidth"
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
-          <Tab label="Sign In" icon={<LoginIcon />} iconPosition="start" />
-          <Tab label="Create Account" icon={<SignupIcon />} iconPosition="start" />
+          <Tab label="Login" />
+          <Tab label="Create Account" />
         </Tabs>
 
         <CardContent sx={{ p: { xs: 2, sm: 4 } }}>

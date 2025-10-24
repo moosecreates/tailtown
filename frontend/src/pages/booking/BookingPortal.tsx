@@ -14,14 +14,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Container,
-  Stepper,
-  Step,
-  StepLabel,
   Paper,
   useTheme,
   useMediaQuery,
   CircularProgress,
-  Alert
+  Alert,
+  LinearProgress,
+  Typography
 } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 import { CustomerAuthProvider, useCustomerAuth } from '../../contexts/CustomerAuthContext';
@@ -274,32 +273,30 @@ const BookingPortalContent: React.FC = () => {
             </Box>
           )}
 
-          {/* Progress Stepper - Horizontal on desktop, compact on mobile */}
-          {activeStep < 6 && (
-            <Paper 
-              elevation={isEmbedded ? 0 : 2}
-              sx={{ 
-                p: { xs: 2, sm: 3 },
-                mb: 3,
-                bgcolor: isEmbedded ? 'transparent' : 'background.paper'
-              }}
-            >
-              <Stepper 
-                activeStep={activeStep}
-                orientation={isMobile ? 'vertical' : 'horizontal'}
-                sx={{
-                  '& .MuiStepLabel-label': {
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
+          {/* Progress Indicator - Hide in embedded mode */}
+          {!isEmbedded && (
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                  Step {activeStep + 1} of {steps.length}
+                </Typography>
+                <Typography variant="body2" fontWeight={600} sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                  {steps[activeStep]}
+                </Typography>
+              </Box>
+              <LinearProgress 
+                variant="determinate" 
+                value={(activeStep / (steps.length - 1)) * 100}
+                sx={{ 
+                  height: 6, 
+                  borderRadius: 3,
+                  backgroundColor: 'grey.200',
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: 3,
                   }
                 }}
-              >
-                {steps.map((label, index) => (
-                  <Step key={label}>
-                    <StepLabel>{isMobile && index !== activeStep ? '' : label}</StepLabel>
-                  </Step>
-                ))}
-              </Stepper>
-            </Paper>
+              />
+            </Box>
           )}
 
           {/* Error Display */}

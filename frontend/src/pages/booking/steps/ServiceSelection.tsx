@@ -14,14 +14,16 @@ import {
   Chip,
   CircularProgress,
   Alert,
-  Button
+  Button,
+  Avatar
 } from '@mui/material';
 import {
   Hotel as BoardingIcon,
   WbSunny as DaycareIcon,
   ContentCut as GroomingIcon,
   School as TrainingIcon,
-  ArrowForward as ArrowForwardIcon
+  ArrowForward as ArrowForwardIcon,
+  CheckCircle as CheckCircleIcon
 } from '@mui/icons-material';
 import { serviceManagement } from '../../../services/serviceManagement';
 
@@ -199,13 +201,16 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({
                   elevation={selectedService?.id === service.id ? 8 : 2}
                   sx={{
                     height: '100%',
-                    border: selectedService?.id === service.id 
-                      ? `3px solid ${getCategoryColor(category)}`
-                      : 'none',
+                    border: selectedService?.id === service.id
+                      ? '3px solid'
+                      : '1px solid',
+                    borderColor: selectedService?.id === service.id
+                      ? 'primary.main'
+                      : 'divider',
                     transition: 'all 0.2s ease-in-out',
                     '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 6
+                      transform: 'translateY(-2px)',
+                      boxShadow: 4
                     }
                   }}
                 >
@@ -213,7 +218,7 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({
                     onClick={() => handleServiceSelect(service)}
                     sx={{ height: '100%' }}
                   >
-                    <CardContent>
+                    <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                       <Typography 
                         variant="h6" 
                         component="h3"
@@ -223,21 +228,43 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({
                           fontWeight: 600
                         }}
                       >
-                        {service.name}
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                          <Avatar
+                            sx={{
+                              width: { xs: 40, sm: 48 },
+                              height: { xs: 40, sm: 48 },
+                              bgcolor: getCategoryColor(service.serviceCategory),
+                              mr: 1.5,
+                              fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                            }}
+                          >
+                            {getServiceIcon(service.serviceCategory)}
+                          </Avatar>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography 
+                              variant="h6" 
+                              component="h3"
+                              sx={{ fontSize: { xs: '0.95rem', sm: '1.125rem' }, mb: 0.5 }}
+                            >
+                              {service.name}
+                            </Typography>
+                            <Chip
+                              label={service.serviceCategory}
+                              size="small"
+                              sx={{
+                                bgcolor: getCategoryColor(service.serviceCategory),
+                                color: 'white',
+                                fontWeight: 600,
+                                height: { xs: 20, sm: 24 },
+                                fontSize: { xs: '0.65rem', sm: '0.75rem' }
+                              }}
+                            />
+                          </Box>
+                          {selectedService?.id === service.id && (
+                            <CheckCircleIcon color="primary" sx={{ fontSize: { xs: 24, sm: 32 } }} />
+                          )}
+                        </Box>
                       </Typography>
-                      
-                      <Typography 
-                        variant="body2" 
-                        color="text.secondary"
-                        sx={{ 
-                          mb: 2,
-                          minHeight: { xs: 40, sm: 60 },
-                          fontSize: { xs: '0.875rem', sm: '0.875rem' }
-                        }}
-                      >
-                        {service.description}
-                      </Typography>
-
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Chip
                           label={`$${service.price.toFixed(2)}`}
@@ -245,13 +272,6 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({
                           size="small"
                           sx={{ fontWeight: 600 }}
                         />
-                        {selectedService?.id === service.id && (
-                          <Chip
-                            label="Selected"
-                            color="success"
-                            size="small"
-                          />
-                        )}
                       </Box>
                     </CardContent>
                   </CardActionArea>
