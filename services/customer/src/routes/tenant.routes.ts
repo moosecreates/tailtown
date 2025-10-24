@@ -1,7 +1,12 @@
 import { Router } from 'express';
 import { tenantController } from '../controllers/tenant.controller';
+import { authenticate, requireSuperAdmin } from '../middleware/auth.middleware';
 
 const router = Router();
+
+// All tenant routes require super admin authentication
+router.use(authenticate);
+router.use(requireSuperAdmin);
 
 // Get all tenants (with optional filtering)
 router.get('/', (req, res) => tenantController.getAllTenants(req, res));

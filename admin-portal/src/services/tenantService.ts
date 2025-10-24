@@ -1,6 +1,15 @@
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_CUSTOMER_SERVICE_URL || 'http://localhost:4004';
+const API_KEY = process.env.REACT_APP_SUPER_ADMIN_API_KEY || 'dev-super-admin-key-12345';
+
+// Configure axios to include API key in all requests
+const axiosInstance = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'X-API-Key': API_KEY,
+  },
+});
 
 export interface Tenant {
   id: string;
@@ -109,7 +118,7 @@ class TenantService {
     if (filters?.isActive !== undefined) params.append('isActive', filters.isActive.toString());
     if (filters?.isPaused !== undefined) params.append('isPaused', filters.isPaused.toString());
 
-    const response = await axios.get(`${API_URL}/api/tenants?${params.toString()}`);
+    const response = await axiosInstance.get(`/api/tenants?${params.toString()}`);
     return response.data.data;
   }
 
@@ -117,7 +126,7 @@ class TenantService {
    * Get tenant by ID
    */
   async getTenantById(id: string): Promise<Tenant> {
-    const response = await axios.get(`${API_URL}/api/tenants/${id}`);
+    const response = await axiosInstance.get(`/api/tenants/${id}`);
     return response.data.data;
   }
 
@@ -125,7 +134,7 @@ class TenantService {
    * Get tenant by subdomain
    */
   async getTenantBySubdomain(subdomain: string): Promise<Tenant> {
-    const response = await axios.get(`${API_URL}/api/tenants/subdomain/${subdomain}`);
+    const response = await axiosInstance.get(`/api/tenants/subdomain/${subdomain}`);
     return response.data.data;
   }
 
@@ -133,7 +142,7 @@ class TenantService {
    * Create new tenant
    */
   async createTenant(data: CreateTenantDto): Promise<Tenant> {
-    const response = await axios.post(`${API_URL}/api/tenants`, data);
+    const response = await axiosInstance.post(`/api/tenants`, data);
     return response.data.data;
   }
 
@@ -141,7 +150,7 @@ class TenantService {
    * Update tenant
    */
   async updateTenant(id: string, data: UpdateTenantDto): Promise<Tenant> {
-    const response = await axios.put(`${API_URL}/api/tenants/${id}`, data);
+    const response = await axiosInstance.put(`/api/tenants/${id}`, data);
     return response.data.data;
   }
 
@@ -149,7 +158,7 @@ class TenantService {
    * Pause tenant
    */
   async pauseTenant(id: string): Promise<Tenant> {
-    const response = await axios.post(`${API_URL}/api/tenants/${id}/pause`);
+    const response = await axiosInstance.post(`/api/tenants/${id}/pause`);
     return response.data.data;
   }
 
@@ -157,7 +166,7 @@ class TenantService {
    * Reactivate tenant
    */
   async reactivateTenant(id: string): Promise<Tenant> {
-    const response = await axios.post(`${API_URL}/api/tenants/${id}/reactivate`);
+    const response = await axiosInstance.post(`/api/tenants/${id}/reactivate`);
     return response.data.data;
   }
 
@@ -165,7 +174,7 @@ class TenantService {
    * Delete tenant (soft delete)
    */
   async deleteTenant(id: string): Promise<Tenant> {
-    const response = await axios.delete(`${API_URL}/api/tenants/${id}`);
+    const response = await axiosInstance.delete(`/api/tenants/${id}`);
     return response.data.data;
   }
 
@@ -173,7 +182,7 @@ class TenantService {
    * Get tenant usage statistics
    */
   async getTenantUsage(id: string): Promise<TenantUsage> {
-    const response = await axios.get(`${API_URL}/api/tenants/${id}/usage`);
+    const response = await axiosInstance.get(`/api/tenants/${id}/usage`);
     return response.data.data;
   }
 }
