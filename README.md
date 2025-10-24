@@ -7,7 +7,56 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ## Recent Updates (October 2025)
 
-### ✅ NEW: Check-In Workflow & Template Management (October 23, 2025)
+### 🏢 NEW: Multi-Tenancy Management System (October 23, 2025)
+
+**Status**: ✅ Production-Ready - Complete tenant management with security
+
+#### Feature Overview
+- **Separate Admin Portal**: Isolated super-admin application (port 3001)
+- **Tenant Management**: Full CRUD operations for managing tenant accounts
+- **Authentication System**: Two-layer security (login + API keys)
+- **Auto-Provisioning**: Automatic setup of services, resources, and admin users
+- **Usage Tracking**: Monitor customer, reservation, and employee counts
+
+#### Admin Portal Features
+1. **Login Page**: Password-protected access with session management
+2. **Dashboard**: Platform overview with quick stats and navigation
+3. **Tenant List**: Search, filter, and manage all tenants
+4. **Create Tenant**: Multi-step form with automatic provisioning
+5. **Tenant Details**: Comprehensive view of tenant information and usage
+6. **Edit Tenant**: Update business info, subscription, and settings
+7. **Actions**: Pause, reactivate, or delete tenants
+
+#### Security Implementation
+- **API Authentication**: Middleware protecting all tenant endpoints
+- **Role-Based Access**: Super admin, tenant admin, manager, staff roles
+- **Protected Routes**: Frontend authentication with session persistence
+- **API Key System**: Secure backend access with configurable keys
+- **Documentation**: Complete security guide in `/docs/SECURITY.md`
+
+#### Architecture
+```
+Tenant App (Port 3000)     - Customer/pet/reservation management
+Admin Portal (Port 3001)   - Platform administration (NEW)
+Backend API (Port 4004)    - Shared services with protected endpoints
+```
+
+#### Quick Start
+```bash
+# Start Admin Portal
+cd admin-portal
+npm install
+npm start
+
+# Access at http://localhost:3001
+# Login with password: admin123
+```
+
+**Documentation**: See [Multi-Tenancy System](docs/features/multi-tenancy-system.md) and [Security Guide](docs/SECURITY.md)
+
+---
+
+### ✅ Check-In Workflow & Template Management (October 23, 2025)
 
 **Status**: ✅ Fully functional - Template editing now working correctly!
 
