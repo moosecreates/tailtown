@@ -1,53 +1,123 @@
 # Tailtown Unified Roadmap
 
-**Last Updated**: October 23, 2025
+**Last Updated**: October 24, 2025
 
 This document provides a prioritized roadmap for the Tailtown Pet Resort Management System, organized by business value and urgency.
 
 ---
 
-## 🎯 High Priority (November 2025)
-
-### Operations & Customer Experience
-1. **Area-Specific Checklists**
-   - Kennel check-in/check-out checklists
-   - Grooming service checklists
-   - Training session checklists
-   - Daily facility checklists
-   - Custom checklist templates
-   - **Priority**: High | **Effort**: 1 week | **Target**: Nov 15, 2025
-
-### Revenue Features
-2. **Retail Items & POS System**
-   - Inventory management
-   - Product catalog
-   - Package deals and bundles
-   - Quick-sale items
-   - Retail reporting
-   - **Priority**: High | **Effort**: 2 weeks | **Target**: Nov 29, 2025
-
-3. **High Demand Pricing**
-   - Seasonal pricing rules
-   - Peak time surcharges
-   - Capacity-based pricing
-   - Special event pricing
-   - Automated price adjustments
-   - **Priority**: High | **Effort**: 1 week | **Target**: Dec 6, 2025
-
----
-
-## 🚀 Major Features (December 2025)
+## 🎯 High Priority (November-December 2025)
 
 ### Customer Self-Service
-1. **Online Customer Booking Portal**
+1. **Customer Web Booking Portal** ⭐
    - Customer account creation and login
    - Browse available services and time slots
    - Select pets and add-ons
    - Real-time availability checking
    - Online payment processing
-   - Booking confirmation and email notifications
+   - Booking confirmation and email/SMS notifications
    - Manage existing reservations
-   - **Priority**: Critical | **Effort**: 3-4 weeks | **Target**: Dec 20, 2025
+   - Mobile-responsive design
+   - **Priority**: CRITICAL | **Effort**: 3-4 weeks | **Target**: Dec 20, 2025
+
+### Revenue & Pricing Features
+2. **Peak Demand Pricing Rules** ⭐ - **PARTIALLY COMPLETE**
+   - ✅ Surcharge capability added to price rules - **COMPLETE**
+   - 🔲 Seasonal pricing rules
+   - 🔲 Peak time surcharges
+   - 🔲 Capacity-based dynamic pricing
+   - 🔲 Special event pricing
+   - 🔲 Automated price adjustments
+   - **Priority**: HIGH | **Effort**: 1 week remaining | **Target**: Nov 22, 2025
+
+3. **Coupon System** ⭐
+   - Percentage and fixed amount coupons
+   - Service-specific coupons
+   - Date range restrictions
+   - Usage limits (per customer, total uses)
+   - Minimum purchase requirements
+   - First-time customer coupons
+   - Referral coupons
+   - Bulk coupon generation
+   - Redemption tracking and reporting
+   - **Priority**: HIGH | **Effort**: 2 weeks | **Target**: Dec 6, 2025
+
+4. **Loyalty Rewards System** ⭐
+   - Points-based rewards program
+   - Configurable point earning rules
+   - Points for dollars spent
+   - Points for visits/check-ins
+   - Bonus point promotions
+   - Tier-based membership levels
+   - Reward redemption options
+   - Points expiration rules
+   - Customer loyalty dashboard
+   - **Priority**: HIGH | **Effort**: 2 weeks | **Target**: Dec 20, 2025
+
+5. **Flexible Deposit Rules** ⭐
+   - Deposit amount by cost threshold
+   - Deposit amount by service type
+   - Date-based deposit requirements
+   - Advance booking deposit rules
+   - Holiday/peak season deposits
+   - Refund policy configuration
+   - Partial payment tracking
+   - Deposit reminder notifications
+   - **Priority**: HIGH | **Effort**: 1 week | **Target**: Nov 29, 2025
+
+### Capacity & Booking Management
+6. **Multi-Pet Suite Bookings** ⭐
+   - Allow multiple pets in same kennel/suite
+   - Configurable capacity per suite type
+   - Family/household pet grouping
+   - Multi-pet pricing rules
+   - Visual indicators for shared suites
+   - Compatibility checks (same owner)
+   - **Priority**: HIGH | **Effort**: 1 week | **Target**: Nov 15, 2025
+
+### Operations & Customer Experience
+7. **Area-Specific Checklists**
+   - Kennel check-in/check-out checklists
+   - Grooming service checklists
+   - Training session checklists
+   - Daily facility checklists
+   - Custom checklist templates
+   - **Priority**: High | **Effort**: 1 week | **Target**: Jan 10, 2026
+
+### Revenue Features
+8. **Retail Items & POS System**
+   - Inventory management
+   - Product catalog
+   - Package deals and bundles
+   - Quick-sale items
+   - Retail reporting
+   - **Priority**: High | **Effort**: 2 weeks | **Target**: Jan 24, 2026
+
+---
+
+## 🚀 Specialized Calendars & Scheduling (January 2026)
+
+### Advanced Calendar Features
+1. **Multi-Week Training Classes** ⭐
+   - Recurring class schedules (e.g., 8-week puppy training)
+   - Class capacity limits
+   - Weekly session tracking
+   - Multi-day class support
+   - Attendance tracking
+   - Class roster management
+   - Waitlist functionality
+   - Automatic enrollment for series
+   - **Priority**: HIGH | **Effort**: 2 weeks | **Target**: Jan 17, 2026
+
+2. **Groomer-Specific Scheduling** ⭐
+   - Tie grooming appointments to individual groomers
+   - Per-groomer capacity limits
+   - Groomer availability management
+   - Skill-based groomer assignment
+   - Groomer performance tracking
+   - Customer groomer preferences
+   - Break time management
+   - **Priority**: HIGH | **Effort**: 2 weeks | **Target**: Jan 31, 2026
 
 ---
 
@@ -114,7 +184,22 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 
 ## ⚙️ Admin & Configuration (January 2026)
 
-1. **Vaccine Requirements Management** - **PARTIALLY COMPLETE**
+1. **Custom Icon System** ⭐
+   - Create custom icons for customers and pets
+   - Icon library management
+   - Pre-built icon categories:
+     - Customer behavior icons ("worry wart", "argues about price", "difficult", "VIP", etc.)
+     - Account status icons (unsigned contract, outstanding balance, payment plan, etc.)
+     - Pet behavior icons (aggressive, anxious, special needs, etc.)
+     - Medical icons (medication required, allergies, etc.)
+   - Upload custom icon images
+   - Color-coded icon categories
+   - Icon visibility on customer/pet profiles
+   - Icon filtering and search
+   - Quick-glance status indicators
+   - **Priority**: HIGH | **Effort**: 2 weeks | **Target**: Jan 24, 2026
+
+2. **Vaccine Requirements Management** - **PARTIALLY COMPLETE**
    - ✅ Customer vaccine record upload (photos and PDFs) - **COMPLETE**
    - ✅ Document storage and retrieval system - **COMPLETE**
    - 🔲 Admin area to edit required vaccines
@@ -124,7 +209,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - 🔲 Staff verification workflow for uploaded records
    - **Priority**: Medium | **Effort**: 1 week remaining | **Target**: Jan 31, 2026
 
-2. **System Configuration**
+3. **System Configuration**
    - Enhanced admin settings
    - Business rules configuration
    - Preference management
@@ -167,24 +252,35 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 
 ---
 
-## 📥 Data Migration Tools (March-April 2026)
+## 📥 Data Migration Tools (February 2026)
 
 ### Import from Other Systems
-1. **Gingr Import Tool**
-   - Field mapping
-   - Data transformation
-   - Duplicate detection
-   - **Priority**: High | **Effort**: 2 weeks | **Target**: Mar 28, 2026
+1. **Gingr Database Import Tool** ⭐
+   - Complete Gingr database schema mapping
+   - Customer data import
+   - Pet records and medical history
+   - Reservation history
+   - Service definitions
+   - Pricing and packages
+   - Staff and user accounts
+   - Financial records and invoices
+   - Field mapping configuration
+   - Data transformation and cleanup
+   - Duplicate detection and merging
+   - Import validation and error reporting
+   - Rollback capability
+   - Import progress tracking
+   - **Priority**: HIGH | **Effort**: 3 weeks | **Target**: Feb 28, 2026
 
 2. **Generic CSV Import**
    - Validation and cleanup
    - Import history and rollback
-   - **Priority**: Medium | **Effort**: 1 week | **Target**: Apr 11, 2026
+   - **Priority**: Medium | **Effort**: 1 week | **Target**: Mar 14, 2026
 
 3. **Data Validation Tools**
    - Bulk validation
    - Error reporting
-   - **Priority**: Medium | **Effort**: 1 week | **Target**: Apr 18, 2026
+   - **Priority**: Medium | **Effort**: 1 week | **Target**: Mar 21, 2026
 
 ---
 
