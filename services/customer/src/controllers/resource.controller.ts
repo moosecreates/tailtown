@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import AppError from '../utils/appError';
+import { TenantRequest } from '../middleware/tenant.middleware';
 
 const prisma = new PrismaClient();
 
@@ -67,13 +68,13 @@ const validateResourceType = (type: string): string => {
 
 // Get all resources
 export const getAllResources = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // Get tenant ID from header or default to 'dev'
-    const tenantId = (req.headers['x-tenant-id'] as string) || 'dev';
+    // Use tenant ID from middleware
+    const tenantId = req.tenantId!;
     
     // Extract query parameters
     const { sortBy, sortOrder, type } = req.query;
@@ -132,7 +133,7 @@ export const getAllResources = async (
 
 // Get a single resource
 export const getResource = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -170,11 +171,12 @@ export const getResource = async (
 
 // Create a new resource
 export const createResource = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    const tenantId = req.tenantId!;
     const { maintenanceSchedule, capacity, type, ...resourceData } = req.body;
     
     // Validate and map the resource type
@@ -194,6 +196,7 @@ export const createResource = async (
     const resource = await prisma.resource.create({
       data: {
         ...resourceData,
+        tenantId,
         type: validType as any, // Cast to any to satisfy TypeScript
         capacity: capacity ? parseInt(capacity, 10) : 1,
         maintenanceSchedule: undefined,
@@ -217,7 +220,7 @@ export const createResource = async (
 
 // Update a resource
 export const updateResource = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -264,7 +267,7 @@ export const updateResource = async (
 
 // Delete a resource
 export const deleteResource = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -286,7 +289,7 @@ export const deleteResource = async (
 
 // Create availability slot
 export const createAvailabilitySlot = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -315,7 +318,7 @@ export const createAvailabilitySlot = async (
 
 // Update availability slot
 export const updateAvailabilitySlot = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -344,7 +347,7 @@ export const updateAvailabilitySlot = async (
 
 // Delete availability slot
 export const deleteAvailabilitySlot = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -366,7 +369,7 @@ export const deleteAvailabilitySlot = async (
 
 // Get available resources by date range
 export const getAvailableResourcesByDate = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -546,7 +549,7 @@ export const getAvailableResourcesByDate = async (
  * @access Public
  */
 export const getResourceAvailability = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -663,7 +666,7 @@ export const getResourceAvailability = async (
 };
 
 export const getBatchResourceAvailability = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {

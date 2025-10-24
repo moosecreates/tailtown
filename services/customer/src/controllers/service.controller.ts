@@ -1,12 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { PrismaClient, ServiceCategory } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
+import { TenantRequest } from '../middleware/tenant.middleware';
 
 const prisma = new PrismaClient();
 
 // Get all services with filtering options
 export const getAllServices = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -17,9 +18,12 @@ export const getAllServices = async (
     const search = req.query.search as string;
     const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
     const category = req.query.category as ServiceCategory | undefined;
+    const tenantId = req.tenantId!;
     
-    // Build where condition
-    const where: any = {};
+    // Build where condition with tenant filter
+    const where: any = {
+      tenantId
+    };
     if (isActive !== undefined) {
       where.isActive = isActive;
     }
@@ -91,16 +95,17 @@ export const getAllServices = async (
 
 // Get a single service by ID
 export const getServiceById = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { id } = req.params;
+    const tenantId = req.tenantId!;
     const includeDeleted = req.query.includeDeleted === 'true';
     
-    // Build the where condition
-    const where: any = { id };
+    // Build the where condition with tenant filter
+    const where: any = { id, tenantId };
     if (!includeDeleted) {
       where.isActive = true;
     }
@@ -132,13 +137,17 @@ export const getServiceById = async (
 
 // Create a new service
 export const createService = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    const tenantId = req.tenantId!;
     const serviceData = req.body;
     const { availableAddOns, ...mainServiceData } = serviceData;
+    
+    // Add tenantId to service data
+    mainServiceData.tenantId = tenantId;
     
     // Create service with transaction to handle add-ons
     const newService = await prisma.$transaction(async (prismaClient: any) => {
@@ -192,7 +201,7 @@ export const createService = async (
 
 // Update a service
 export const updateService = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -245,7 +254,7 @@ export const updateService = async (
 
 // Delete a service
 export const deleteService = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -341,7 +350,7 @@ export const deleteService = async (
 
 // Deactivate a service (soft delete)
 export const deactivateService = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -375,7 +384,7 @@ export const deactivateService = async (
 
 // Get add-on services for a service
 export const getServiceAddOns = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -409,7 +418,7 @@ export const getServiceAddOns = async (
 
 // Get reservations for a service
 export const getServiceReservations = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
