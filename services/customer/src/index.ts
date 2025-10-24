@@ -21,6 +21,7 @@ import addonRoutes from './routes/addon.routes';
 import analyticsRoutes from './routes/analytics-fixed.routes';
 import tenantRoutes from './routes/tenant.routes';
 import { errorHandler } from './middleware/error.middleware';
+import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 
 // Load environment variables
 dotenv.config();
@@ -202,20 +203,27 @@ app.get('/test-file/:filename', (req, res) => {
 });
 
 // Routes
+// Tenant management routes (no tenant context required - for super admins)
 app.use('/api/tenants', tenantRoutes);
-app.use('/api/customers', customerRoutes);
-app.use('/api/pets', petRoutes);
-app.use('/api/reservations', reservationRoutes);
-app.use('/api/services', serviceRoutes);
-app.use('/api/resources', resourceRoutes);
-app.use('/api/suites', suiteRoutes);
-app.use('/api/staff', staffRoutes);
-app.use('/api/price-rules', priceRuleRoutes);
-app.use('/api/schedules', scheduleRoutes);
-app.use('/api/invoices', invoiceRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/addons', addonRoutes);
-app.use('/api/analytics', analyticsRoutes);
+
+// Apply tenant context middleware to all other routes
+// This extracts the subdomain and attaches tenant info to the request
+app.use('/api', extractTenantContext);
+
+// Tenant-specific routes (require tenant context)
+app.use('/api/customers', requireTenant, customerRoutes);
+app.use('/api/pets', requireTenant, petRoutes);
+app.use('/api/reservations', requireTenant, reservationRoutes);
+app.use('/api/services', requireTenant, serviceRoutes);
+app.use('/api/resources', requireTenant, resourceRoutes);
+app.use('/api/suites', requireTenant, suiteRoutes);
+app.use('/api/staff', requireTenant, staffRoutes);
+app.use('/api/price-rules', requireTenant, priceRuleRoutes);
+app.use('/api/schedules', requireTenant, scheduleRoutes);
+app.use('/api/invoices', requireTenant, invoiceRoutes);
+app.use('/api/payments', requireTenant, paymentRoutes);
+app.use('/api/addons', requireTenant, addonRoutes);
+app.use('/api/analytics', requireTenant, analyticsRoutes);
 
 // Additional routes without /api prefix for staff (to match frontend API calls)
 app.use('/staff', staffRoutes);
