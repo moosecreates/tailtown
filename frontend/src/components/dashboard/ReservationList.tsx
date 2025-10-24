@@ -236,6 +236,10 @@ const ReservationList: React.FC<ReservationListProps> = ({
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 5 }}>
                     <Typography variant="caption" color="text.secondary">
+                      {formatDate(reservation.startDate)} - {formatDate(reservation.endDate)}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">•</Typography>
+                    <Typography variant="caption" color="text.secondary">
                       {formatTime(reservation.startDate)}
                     </Typography>
                     {reservation.service?.name && (
