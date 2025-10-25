@@ -351,7 +351,7 @@ const VaccineRequirements: React.FC = () => {
               </FormControl>
 
               <FormControl fullWidth>
-                <InputLabel>Service Type</InputLabel>
+                <InputLabel shrink>Service Type</InputLabel>
                 <Select
                   value={formData.serviceType ?? ''}
                   onChange={(e) =>
@@ -362,6 +362,7 @@ const VaccineRequirements: React.FC = () => {
                   }
                   label="Service Type"
                   displayEmpty
+                  notched
                   renderValue={(value) => {
                     if (!value) {
                       return 'All Services';
