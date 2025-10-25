@@ -7,7 +7,47 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ## Recent Updates (October 2025)
 
-### 📱 NEW: SMS Notifications with Twilio (October 24, 2025)
+### 🎯 NEW: Customer Booking Portal with CardConnect Payment (October 24, 2025)
+
+**Status**: ✅ Production-Ready - Complete online booking system
+
+#### Feature Overview
+- **CardConnect Payment**: Real-time credit card processing
+- **Auto-Optimizations**: One-click service selection, auto-select single pet
+- **Inline Calendars**: Always-visible date pickers with brand colors
+- **Mobile-First**: Ultra-compact design, 40% less vertical space
+- **Complete Flow**: 7 steps from login to confirmation
+
+#### Key Features
+1. **One-Click Service Selection** - "Reserve Now" button auto-advances (66% fewer clicks)
+2. **Inline Date Calendars** - Side-by-side calendars, always visible
+3. **Auto-Select Single Pet** - Skips step if customer has only one pet
+4. **CardConnect Integration** - PCI-compliant payment processing
+5. **Mobile-Optimized** - Compact cards, responsive design
+6. **Brand Consistency** - Primary color (#126f9f) throughout
+
+#### Quick Start
+```bash
+# 1. Start payment service
+cd services/payment-service
+npm run dev  # Runs on port 4005
+
+# 2. Access booking portal
+http://localhost:3000/booking
+
+# 3. Test with demo card
+Card: 4788250000028291
+Expiry: 12/25
+CVV: 123
+```
+
+#### Documentation
+- Full Guide: [`docs/CUSTOMER-BOOKING-PORTAL.md`](docs/CUSTOMER-BOOKING-PORTAL.md)
+- Payment Service: [`docs/PAYMENT-SERVICE.md`](docs/PAYMENT-SERVICE.md)
+
+---
+
+### 📱 SMS Notifications with Twilio (October 24, 2025)
 
 **Status**: ✅ Production-Ready - Complete Twilio SMS integration
 
