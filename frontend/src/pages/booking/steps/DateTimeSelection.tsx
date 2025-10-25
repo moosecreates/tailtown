@@ -52,6 +52,11 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
+            inputProps={{
+              min: new Date().toISOString().split('T')[0], // Disable past dates
+            }}
+            helperText="Select your check-in date"
+            autoFocus
           />
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -62,6 +67,10 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             InputLabelProps={{ shrink: true }}
+            inputProps={{
+              min: startDate || new Date().toISOString().split('T')[0], // Disable dates before start date
+            }}
+            helperText="Select your check-out date"
           />
         </Grid>
       </Grid>
