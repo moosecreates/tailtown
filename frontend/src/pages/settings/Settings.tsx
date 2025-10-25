@@ -23,7 +23,8 @@ import {
   Vaccines as VaccineIcon,
   ContentCut as GroomingIcon,
   School as TrainingIcon,
-  EmojiEmotions as IconsIcon
+  EmojiEmotions as IconsIcon,
+  ShoppingCart as ProductsIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
@@ -38,9 +39,16 @@ const Settings: React.FC = () => {
       stats: 'Active Services: 12'
     },
     {
+      title: 'Products & POS',
+      description: 'Manage retail products, inventory, and point-of-sale',
+      icon: <ProductsIcon sx={{ fontSize: 40, color: 'success.main' }} />,
+      path: '/products',
+      stats: 'Products: 0'
+    },
+    {
       title: 'Resources',
       description: 'Manage suites, equipment, and facility resources',
-      icon: <ResourcesIcon sx={{ fontSize: 40, color: 'success.main' }} />,
+      icon: <ResourcesIcon sx={{ fontSize: 40, color: 'info.main' }} />,
       path: '/resources',
       stats: 'Total Resources: 173'
     },
