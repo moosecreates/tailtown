@@ -177,7 +177,10 @@ describe('PetSelection', () => {
         expect(screen.getByText('Max')).toBeInTheDocument();
       });
 
-      const petCard = screen.getByText('Max').closest('[role="button"]');
+      // Find the CardActionArea by finding the pet name and going up to the clickable area
+      const petName = screen.getByText('Max');
+      const petCard = petName.closest('.MuiCardActionArea-root');
+      
       if (petCard) {
         fireEvent.click(petCard);
         
@@ -203,11 +206,11 @@ describe('PetSelection', () => {
       });
 
       // Select first pet
-      const maxCard = screen.getByText('Max').closest('[role="button"]');
+      const maxCard = screen.getByText('Max').closest('.MuiCardActionArea-root');
       if (maxCard) fireEvent.click(maxCard);
 
       // Select second pet
-      const bellaCard = screen.getByText('Bella').closest('[role="button"]');
+      const bellaCard = screen.getByText('Bella').closest('.MuiCardActionArea-root');
       if (bellaCard) fireEvent.click(bellaCard);
 
       await waitFor(() => {
@@ -230,7 +233,7 @@ describe('PetSelection', () => {
         expect(screen.getByText('Max')).toBeInTheDocument();
       });
 
-      const petCard = screen.getByText('Max').closest('[role="button"]');
+      const petCard = screen.getByText('Max').closest('.MuiCardActionArea-root');
       
       // Select
       if (petCard) fireEvent.click(petCard);
