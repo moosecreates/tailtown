@@ -34,10 +34,8 @@ import {
   Delete as DeleteIcon,
   ContentCopy as DuplicateIcon,
   People as EnrollmentsIcon,
-  PlayArrow as StartIcon,
-  CheckCircle as CompleteIcon,
-  List as SessionsIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -49,6 +47,7 @@ import {
 } from '../../types/scheduling';
 
 const TrainingClasses: React.FC = () => {
+  const navigate = useNavigate();
   const [classes, setClasses] = useState<TrainingClass[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -385,6 +384,15 @@ const TrainingClasses: React.FC = () => {
                       />
                     </TableCell>
                     <TableCell align="right">
+                      <Tooltip title="View Enrollments">
+                        <IconButton
+                          size="small"
+                          onClick={() => navigate(`/training/classes/${trainingClass.id}/enrollments`)}
+                          color="info"
+                        >
+                          <EnrollmentsIcon />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="Edit">
                         <IconButton
                           size="small"

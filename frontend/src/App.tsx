@@ -90,6 +90,7 @@ const GroomerAppointments = lazy(() => import('./pages/grooming/GroomerAppointme
 
 // Lazy loaded pages - Training
 const TrainingClasses = lazy(() => import('./pages/training/TrainingClasses'));
+const ClassEnrollments = lazy(() => import('./pages/training/ClassEnrollments'));
 
 // Public Booking Portal
 const BookingPortal = lazy(() => import('./pages/booking/BookingPortal'));
@@ -195,6 +196,7 @@ const AppRoutes = () => {
         
         {/* Training Routes */}
         <Route path="/training/classes" element={isAuthenticated ? <TrainingClasses /> : <Navigate to="/login" />} />
+        <Route path="/training/classes/:classId/enrollments" element={isAuthenticated ? <ClassEnrollments /> : <Navigate to="/login" />} />
         
         {/* Debug routes */}
         <Route path="/debug/api" element={<ApiTester />} />
