@@ -79,56 +79,53 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
 
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={6}>
-            <Box className="date-picker-container">
-              <DatePicker
-                ref={startDatePickerRef}
-                selected={startDate}
-                onChange={handleStartDateChange}
-                minDate={new Date()}
-                dateFormat="MM/dd/yyyy"
-                placeholderText="Click to select check-in date"
-                customInput={
-                  <TextField
-                    label="Start Date"
-                    fullWidth
-                    helperText="Select your check-in date"
-                    InputLabelProps={{ shrink: true }}
-                  />
-                }
-                open={startDateOpen}
-                onClickOutside={() => setStartDateOpen(false)}
-                onInputClick={() => setStartDateOpen(true)}
-                shouldCloseOnSelect={true}
-                popperPlacement="bottom-start"
-                inline={false}
-              />
+          <Grid item xs={12} md={6}>
+            <Box>
+              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, mb: 1 }}>
+                Start Date
+              </Typography>
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+                Select your check-in date
+              </Typography>
+              <Box className="inline-date-picker">
+                <DatePicker
+                  ref={startDatePickerRef}
+                  selected={startDate}
+                  onChange={handleStartDateChange}
+                  minDate={new Date()}
+                  inline
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+              </Box>
             </Box>
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <Box className="date-picker-container">
-              <DatePicker
-                selected={endDate}
-                onChange={handleEndDateChange}
-                minDate={startDate || new Date()}
-                dateFormat="MM/dd/yyyy"
-                placeholderText="Click to select check-out date"
-                customInput={
-                  <TextField
-                    label="End Date"
-                    fullWidth
-                    helperText="Select your check-out date"
-                    InputLabelProps={{ shrink: true }}
-                  />
-                }
-                disabled={!startDate}
-                open={endDateOpen}
-                onClickOutside={() => setEndDateOpen(false)}
-                onInputClick={() => setEndDateOpen(true)}
-                shouldCloseOnSelect={true}
-                popperPlacement="bottom-start"
-                inline={false}
-              />
+          <Grid item xs={12} md={6}>
+            <Box>
+              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, mb: 1 }}>
+                End Date
+              </Typography>
+              <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+                Select your check-out date
+              </Typography>
+              <Box className="inline-date-picker" sx={{ opacity: !startDate ? 0.5 : 1 }}>
+                <DatePicker
+                  selected={endDate}
+                  onChange={handleEndDateChange}
+                  minDate={startDate || new Date()}
+                  inline
+                  disabled={!startDate}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+              </Box>
+              {!startDate && (
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block', fontStyle: 'italic' }}>
+                  Please select a start date first
+                </Typography>
+              )}
             </Box>
           </Grid>
         </Grid>
