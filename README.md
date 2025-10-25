@@ -7,7 +7,41 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ## Recent Updates (October 2025)
 
-### 🚀 NEW: Complete Customer Self-Service Suite (October 25, 2025)
+### 🎉 NEW: Advanced Scheduling & Vaccine Management (October 25, 2025)
+
+**Status**: ✅ Production-Ready - Backend Complete
+
+Completed two major backend systems today:
+
+**1. Advanced Scheduling System** ✅
+- Groomer-specific appointment scheduling with skill-based assignment
+- Multi-week training class management with recurring schedules
+- Enrollment tracking with payment and progress monitoring
+- Session attendance tracking with behavior ratings
+- Waitlist management with automatic notifications
+- Certificate issuance for completed classes
+- **32 API endpoints**
+- **8 database tables**
+- **4,327 lines of code**
+- **Documentation**: [`docs/features/ADVANCED-SCHEDULING.md`](docs/features/ADVANCED-SCHEDULING.md)
+
+**2. Vaccine Requirement Management** ✅
+- Configurable vaccine requirements per tenant
+- Pet type and service type specific policies
+- Automatic compliance checking
+- Expiration tracking with reminders
+- Default requirements for dogs and cats (Rabies, DHPP, Bordetella, FVRCP, etc.)
+- **8 API endpoints**
+- **850+ lines of code**
+- Multi-tenant support
+- **Documentation**: [`docs/vaccine-upload.md`](docs/vaccine-upload.md)
+
+**Bug Fixes**:
+- ✅ Fixed infinite loop in employee scheduling calendar
+
+---
+
+### 🚀 Complete Customer Self-Service Suite (October 23, 2025)
 
 **Status**: ✅ Production-Ready - 9 Major Features Complete
 
