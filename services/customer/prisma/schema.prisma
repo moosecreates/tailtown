@@ -719,6 +719,67 @@ enum PriceAdjustmentType {
   SURCHARGE   // Increases price
 }
 
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum CouponStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  DEPLETED
+}
+
+// ============================================
+// COUPON SYSTEM MODELS
+// ============================================
+
+model Coupon {
+  id                     String        @id @default(uuid())
+  tenantId               String        @default("dev")
+  code                   String
+  description            String
+  type                   CouponType
+  discountValue          Float
+  minimumPurchase        Float?
+  serviceIds             String?       // JSON array of service IDs
+  firstTimeCustomersOnly Boolean       @default(false)
+  validFrom              DateTime
+  validUntil             DateTime
+  maxTotalUses           Int?
+  maxUsesPerCustomer     Int           @default(1)
+  currentUses            Int           @default(0)
+  status                 CouponStatus  @default(ACTIVE)
+  isReferralCoupon       Boolean       @default(false)
+  referralCustomerId     String?
+  notes                  String?
+  createdBy              String?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  usages                 CouponUsage[]
+
+  @@unique([tenantId, code], map: "coupons_tenant_code_unique")
+  @@index([tenantId, status], map: "coupons_tenant_status_idx")
+  @@index([tenantId, validFrom, validUntil], map: "coupons_tenant_dates_idx")
+  @@map("coupons")
+}
+
+model CouponUsage {
+  id             String   @id @default(uuid())
+  tenantId       String   @default("dev")
+  couponId       String
+  coupon         Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  customerId     String
+  reservationId  String
+  discountAmount Float
+  usedAt         DateTime @default(now())
+
+  @@index([tenantId, couponId], map: "coupon_usage_tenant_coupon_idx")
+  @@index([tenantId, customerId], map: "coupon_usage_tenant_customer_idx")
+  @@map("coupon_usages")
+}
+
 // ============================================
 // MULTI-TENANCY MANAGEMENT MODELS
 // ============================================
