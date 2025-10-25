@@ -18,7 +18,11 @@ import {
   InputAdornment,
   Tabs,
   Tab,
-  Divider
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
@@ -527,14 +531,27 @@ const CustomerDetails: React.FC = () => {
         )}
 
         {/* Icon Selector Dialog */}
-        <CustomerIconSelectorNew
-          selectedIcons={selectedIcons}
-          iconNotes={iconNotes}
-          onChange={(icons, notes) => {
-            setSelectedIcons(icons);
-            setIconNotes(notes);
-          }}
-        />
+        <Dialog
+          open={iconSelectorOpen}
+          onClose={() => setIconSelectorOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Manage Customer Icons</DialogTitle>
+          <DialogContent>
+            <CustomerIconSelectorNew
+              selectedIcons={selectedIcons}
+              iconNotes={iconNotes}
+              onChange={(icons, notes) => {
+                setSelectedIcons(icons);
+                setIconNotes(notes);
+              }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setIconSelectorOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Snackbar for notifications */}
         <Snackbar
