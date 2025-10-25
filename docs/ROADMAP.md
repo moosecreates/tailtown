@@ -6,41 +6,6 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 
 ---
 
-## 🎉 Recently Completed (October 2025)
-
-### ✅ Customer Web Booking Portal (Oct 24, 2025)
-**Status**: Production Ready | **Documentation**: `docs/CUSTOMER-BOOKING-PORTAL.md`
-
-A fully-featured, mobile-optimized online booking system with CardConnect payment integration.
-
-**Key Features:**
-- ✅ **One-Click Service Selection** - "Reserve Now" button auto-advances (66% fewer clicks)
-- ✅ **Inline Date Calendars** - Always-visible, side-by-side calendars with brand colors
-- ✅ **Auto-Select Single Pet** - Automatically selects pet if customer has only one
-- ✅ **CardConnect Payment** - PCI-compliant credit card processing
-- ✅ **Mobile-Optimized** - Ultra-compact design (40% less vertical space)
-- ✅ **Auto-Filled Info** - Customer information pre-populated from account
-- ✅ **Brand Consistency** - Primary color (#126f9f) throughout
-
-**Technical Highlights:**
-- React 18 + TypeScript
-- Material-UI components
-- React DatePicker (inline mode)
-- CardConnect API integration
-- Payment Service (port 4005)
-- Complete 7-step booking flow
-
-**Performance:**
-- 43-57% click reduction
-- < 2 second load time
-- Mobile-first responsive design
-- WCAG 2.1 AA accessible
-
-**Test Cards Available:**
-- Visa: 4788250000028291 (Exp: 12/25, CVV: 123)
-
----
-
 ## 🎯 High Priority (November-December 2025)
 
 ### Customer Self-Service
@@ -853,6 +818,20 @@ Features and tasks are prioritized based on:
 - ✅ Form improvements and accessibility
 
 #### Business Operations
+- ✅ **Customer Web Booking Portal** (Oct 24, 2025)
+  - Customer account creation and login
+  - One-click service selection with auto-advance (66% fewer clicks)
+  - Inline date calendars (always visible, brand colors)
+  - Auto-select single pet optimization
+  - Add-ons selection
+  - CardConnect payment integration (PCI-compliant)
+  - Booking confirmation with transaction ID
+  - Mobile-optimized design (40% less vertical space)
+  - Auto-filled customer information
+  - Complete 7-step booking flow
+  - WCAG 2.1 AA accessible
+  - **Documentation**: `docs/CUSTOMER-BOOKING-PORTAL.md`
+
 - ✅ **Invoicing and Payment Processing**
   - Invoice generation for reservations
   - Payment tracking and history
