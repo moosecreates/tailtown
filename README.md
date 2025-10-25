@@ -642,6 +642,14 @@ curl http://localhost:4003/health
 
 ## Features
 
+### Operations & Workflow
+- **Area-Specific Checklists** ✅ - Customizable checklists for kennel operations, grooming, training, and facility management
+  - Multi-tenant template management
+  - 7 item types (checkbox, text, number, photo, signature, rating, multi-select)
+  - Default templates for common workflows
+  - Staff completion interface with progress tracking
+  - Real-time auto-save and validation
+
 ### Customer Management
 - Customer profiles with contact information
 - Pet profiles with medical history, vaccination records

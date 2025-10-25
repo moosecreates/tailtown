@@ -144,7 +144,7 @@ export default function ChecklistTemplates() {
       
       const method = currentTemplate.id ? 'PUT' : 'POST';
       
-      await fetch(url, {
+      const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -153,11 +153,19 @@ export default function ChecklistTemplates() {
         body: JSON.stringify(currentTemplate)
       });
       
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Server error:', errorData);
+        alert(`Failed to save template: ${errorData.message || 'Unknown error'}`);
+        return;
+      }
+      
       setEditDialogOpen(false);
       setCurrentTemplate(null);
       loadTemplates();
     } catch (error) {
       console.error('Failed to save template:', error);
+      alert('Failed to save template. Check console for details.');
     }
   };
 
