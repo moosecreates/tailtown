@@ -188,7 +188,11 @@ const CustomerAuth: React.FC<CustomerAuthProps> = ({ onSuccess }) => {
               <Box sx={{ textAlign: 'right', mb: 3 }}>
                 <Link href="#" variant="body2" onClick={(e) => {
                   e.preventDefault();
-                  // TODO: Implement password reset
+                  // TODO(auth): Implement password reset flow
+                  // - Create password reset request endpoint
+                  // - Send email with reset token
+                  // - Create reset password page
+                  // - Verify token and update password
                   alert('Password reset feature coming soon!');
                 }}>
                   Forgot password?

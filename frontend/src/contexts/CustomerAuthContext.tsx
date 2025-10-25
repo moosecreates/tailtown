@@ -56,8 +56,13 @@ export const CustomerAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const login = async (email: string, password: string) => {
     try {
-      // TODO: Implement actual customer login API endpoint
-      // For now, we'll search by email and simulate login
+      // TODO(auth): Implement actual customer login API endpoint
+      // Current: Simulated login via customer search
+      // Needed: POST /api/customers/auth/login endpoint
+      // - Verify email and password hash
+      // - Generate JWT token
+      // - Return customer data with token
+      // - Store token in localStorage/sessionStorage
       const response = await customerService.searchCustomers(email, 1, 1);
       
       if (response.data && response.data.length > 0) {
