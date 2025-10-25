@@ -20,7 +20,8 @@ import {
   Campaign as MarketingIcon,
   Assignment as CheckInIcon,
   ChecklistRtl as ChecklistIcon,
-  Vaccines as VaccineIcon
+  Vaccines as VaccineIcon,
+  ContentCut as GroomingIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
@@ -82,6 +83,13 @@ const Settings: React.FC = () => {
       icon: <VaccineIcon sx={{ fontSize: 40, color: 'error.main' }} />,
       path: '/admin/vaccine-requirements',
       stats: 'Active Requirements: 8'
+    },
+    {
+      title: 'Groomer Appointments',
+      description: 'Manage grooming appointments, schedules, and groomer assignments',
+      icon: <GroomingIcon sx={{ fontSize: 40, color: 'secondary.main' }} />,
+      path: '/grooming/appointments',
+      stats: 'Appointments: 0'
     },
     {
       title: 'Price Rules',
