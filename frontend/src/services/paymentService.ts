@@ -121,10 +121,25 @@ export const paymentService = {
       return response.data;
     } catch (error: any) {
       console.error('Error processing card payment:', error);
-      if (error.response) {
-        return error.response.data;
+      
+      // Return a properly formatted error response
+      if (error.response?.data) {
+        // If backend returned structured error, use it
+        return {
+          status: 'error',
+          message: error.response.data.message || error.response.data.error || 'Payment failed',
+          error: error.response.data.error || error.message,
+          data: error.response.data.data || { approved: false }
+        };
       }
-      throw error;
+      
+      // Generic error response
+      return {
+        status: 'error',
+        message: error.message || 'Payment processing failed',
+        error: error.message,
+        data: { approved: false }
+      };
     }
   },
 
