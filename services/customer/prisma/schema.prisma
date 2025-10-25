@@ -30,6 +30,8 @@ model Customer {
   tags             String[]                @default([])
   icon             String?                 // Customer avatar icon (person, face, smile, etc.)
   iconColor        String?                 // Customer avatar color (blue, green, purple, etc.)
+  customerIcons    Json?                   // Array of icon IDs for quick visual reference (VIP, payment issues, etc.)
+  iconNotes        Json?                   // Custom notes for generic flag icons
   isActive         Boolean                 @default(true)
   createdAt        DateTime                @default(now())
   updatedAt        DateTime                @updatedAt

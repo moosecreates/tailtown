@@ -19,6 +19,8 @@ export interface Customer {
   tags?: string[];
   icon?: string; // Customer avatar icon (person, face, smile, etc.)
   iconColor?: string; // Customer avatar color (blue, green, purple, etc.)
+  customerIcons?: string[]; // Array of icon IDs for quick visual reference
+  iconNotes?: Record<string, string>; // Custom notes for generic flag icons
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
