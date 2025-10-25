@@ -346,11 +346,11 @@ const VaccineRequirements: React.FC = () => {
               <FormControl fullWidth>
                 <InputLabel>Service Type</InputLabel>
                 <Select
-                  value={formData.serviceType || ''}
+                  value={formData.serviceType ?? ''}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
-                      serviceType: (e.target.value || undefined) as 'BOARDING' | 'DAYCARE' | 'GROOMING' | undefined,
+                      serviceType: e.target.value === '' ? undefined : (e.target.value as 'BOARDING' | 'DAYCARE' | 'GROOMING'),
                     })
                   }
                   label="Service Type"
