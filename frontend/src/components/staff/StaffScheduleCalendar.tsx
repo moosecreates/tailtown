@@ -44,8 +44,8 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   
-  const startDate = startOfWeek(currentDate, { weekStartsOn: 0 });
-  const endDate = endOfWeek(currentDate, { weekStartsOn: 0 });
+  const startDate = useMemo(() => startOfWeek(currentDate, { weekStartsOn: 0 }), [currentDate]);
+  const endDate = useMemo(() => endOfWeek(currentDate, { weekStartsOn: 0 }), [currentDate]);
   
   // Generate array of days for the week
   const days = useMemo(() => {
