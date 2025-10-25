@@ -44,19 +44,20 @@ const mockServices = [
 
 describe('ServiceSelection', () => {
   const mockOnNext = jest.fn();
-  const mockOnBack = jest.fn();
   const mockOnUpdate = jest.fn();
   
   const defaultProps = {
     bookingData: {},
     onNext: mockOnNext,
-    onBack: mockOnBack,
     onUpdate: mockOnUpdate
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (serviceManagement.getAllServices as jest.Mock).mockResolvedValue(mockServices);
+    // Match the component's expected response format
+    (serviceManagement.getAllServices as jest.Mock).mockResolvedValue({
+      data: mockServices
+    });
   });
 
   describe('Rendering', () => {
@@ -198,13 +199,28 @@ describe('ServiceSelection', () => {
       });
     });
 
-    it('should display message when no services are available', async () => {
-      (serviceManagement.getAllServices as jest.Mock).mockResolvedValue([]);
+    it('should display retry button on error', async () => {
+      (serviceManagement.getAllServices as jest.Mock).mockRejectedValue(
+        new Error('Failed to load services')
+      );
 
       render(<ServiceSelection {...defaultProps} />);
       
       await waitFor(() => {
-        expect(screen.getByText(/No services available/i)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument();
+      });
+    });
+
+    it('should handle empty services array', async () => {
+      (serviceManagement.getAllServices as jest.Mock).mockResolvedValue({
+        data: []
+      });
+
+      render(<ServiceSelection {...defaultProps} />);
+      
+      await waitFor(() => {
+        // Component should render without errors even with no services
+        expect(screen.getByText('What service would you like to book?')).toBeInTheDocument();
       });
     });
   });

@@ -25,23 +25,29 @@ const mockPets = [
   {
     id: 'pet-1',
     name: 'Max',
-    species: 'Dog',
+    type: 'DOG',
     breed: 'Golden Retriever',
-    isActive: true
+    isActive: true,
+    gender: 'Male',
+    weight: 65
   },
   {
     id: 'pet-2',
     name: 'Bella',
-    species: 'Dog',
+    type: 'DOG',
     breed: 'Labrador',
-    isActive: true
+    isActive: true,
+    gender: 'Female',
+    weight: 55
   },
   {
     id: 'pet-3',
     name: 'Inactive Pet',
-    species: 'Cat',
+    type: 'CAT',
     breed: 'Persian',
-    isActive: false
+    isActive: false,
+    gender: 'Female',
+    weight: 10
   }
 ];
 
@@ -70,7 +76,7 @@ describe('PetSelection', () => {
       render(<PetSelection {...defaultProps} />);
       
       await waitFor(() => {
-        expect(screen.getByText(/Which pets/i)).toBeInTheDocument();
+        expect(screen.getByText('Select Your Pets')).toBeInTheDocument();
       });
     });
 
@@ -285,7 +291,7 @@ describe('PetSelection', () => {
       render(<PetSelection {...defaultProps} />);
       
       await waitFor(() => {
-        expect(screen.getByText(/Unable to load pets/i)).toBeInTheDocument();
+        expect(screen.getByText('Unable to load pets. Please try again.')).toBeInTheDocument();
       });
     });
 
@@ -297,7 +303,7 @@ describe('PetSelection', () => {
       render(<PetSelection {...defaultProps} />);
       
       await waitFor(() => {
-        expect(screen.getByText(/no pets/i)).toBeInTheDocument();
+        expect(screen.getByText(/No active pets found/i)).toBeInTheDocument();
       });
     });
 
@@ -309,7 +315,8 @@ describe('PetSelection', () => {
       render(<PetSelection {...defaultProps} />);
       
       await waitFor(() => {
-        expect(screen.getByText(/no active pets/i)).toBeInTheDocument();
+        // All inactive pets are filtered out, so should show no pets message
+        expect(screen.getByText(/No active pets found/i)).toBeInTheDocument();
       });
     });
   });
