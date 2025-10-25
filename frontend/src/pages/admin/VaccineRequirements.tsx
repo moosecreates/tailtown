@@ -361,6 +361,13 @@ const VaccineRequirements: React.FC = () => {
                     })
                   }
                   label="Service Type"
+                  displayEmpty
+                  renderValue={(value) => {
+                    if (!value) {
+                      return 'All Services';
+                    }
+                    return value;
+                  }}
                 >
                   <MenuItem value="">All Services</MenuItem>
                   {SERVICE_TYPES.map((type) => (
