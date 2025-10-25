@@ -175,25 +175,37 @@ describe('PetSelection', () => {
 
       render(<PetSelection {...defaultProps} />);
       
+      // Verify the mock was called
       await waitFor(() => {
-        expect(screen.getByText('Max')).toBeInTheDocument();
+        expect(petService.getPetsByCustomer).toHaveBeenCalledWith('customer-123');
+      });
+      
+      // Wait for loading to complete
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+      
+      // Wait for pets to render
+      await waitFor(() => {
+        const maxElement = screen.queryByText('Max');
+        expect(maxElement).toBeInTheDocument();
       });
 
       // Find the CardActionArea by finding the pet name and going up to the clickable area
       const petName = screen.getByText('Max');
       const petCard = petName.closest('.MuiCardActionArea-root');
       
-      if (petCard) {
-        fireEvent.click(petCard);
-        
-        await waitFor(() => {
-          expect(mockOnUpdate).toHaveBeenCalledWith(
-            expect.objectContaining({
-              petIds: expect.arrayContaining(['pet-1'])
-            })
-          );
-        });
-      }
+      expect(petCard).toBeTruthy();
+      
+      fireEvent.click(petCard!);
+      
+      await waitFor(() => {
+        expect(mockOnUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            petIds: expect.arrayContaining(['pet-1'])
+          })
+        );
+      });
     });
 
     it('should allow selecting multiple pets', async () => {
@@ -205,17 +217,25 @@ describe('PetSelection', () => {
 
       render(<PetSelection {...defaultProps} />);
       
+      // Wait for pets to load
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+      
       await waitFor(() => {
         expect(screen.getByText('Max')).toBeInTheDocument();
+        expect(screen.getByText('Bella')).toBeInTheDocument();
       });
 
       // Select first pet
       const maxCard = screen.getByText('Max').closest('.MuiCardActionArea-root');
-      if (maxCard) fireEvent.click(maxCard);
+      expect(maxCard).toBeTruthy();
+      fireEvent.click(maxCard!);
 
       // Select second pet
       const bellaCard = screen.getByText('Bella').closest('.MuiCardActionArea-root');
-      if (bellaCard) fireEvent.click(bellaCard);
+      expect(bellaCard).toBeTruthy();
+      fireEvent.click(bellaCard!);
 
       await waitFor(() => {
         expect(mockOnUpdate).toHaveBeenCalledWith(
@@ -235,17 +255,23 @@ describe('PetSelection', () => {
 
       render(<PetSelection {...defaultProps} />);
       
+      // Wait for pets to load
+      await waitFor(() => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      });
+      
       await waitFor(() => {
         expect(screen.getByText('Max')).toBeInTheDocument();
       });
 
       const petCard = screen.getByText('Max').closest('.MuiCardActionArea-root');
+      expect(petCard).toBeTruthy();
       
       // Select
-      if (petCard) fireEvent.click(petCard);
+      fireEvent.click(petCard!);
       
       // Deselect
-      if (petCard) fireEvent.click(petCard);
+      fireEvent.click(petCard!);
 
       await waitFor(() => {
         expect(mockOnUpdate).toHaveBeenLastCalledWith(
