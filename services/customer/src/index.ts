@@ -33,6 +33,7 @@ import groomerAppointmentRoutes from './routes/groomerAppointment.routes';
 import trainingClassRoutes from './routes/trainingClass.routes';
 import enrollmentRoutes from './routes/enrollment.routes';
 import vaccineRequirementRoutes from './routes/vaccineRequirement.routes';
+import customIconRoutes from './routes/custom-icons.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 
@@ -254,6 +255,12 @@ app.use('/api', requireTenant, enrollmentRoutes);
 
 // Vaccine Requirement Routes
 app.use('/api', requireTenant, vaccineRequirementRoutes);
+
+// Custom Icon Routes
+app.use('/api/custom-icons', requireTenant, customIconRoutes);
+
+// Serve uploaded icons statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Additional routes without /api prefix for staff (to match frontend API calls)
 app.use('/staff', staffRoutes);

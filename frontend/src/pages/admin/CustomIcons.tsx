@@ -58,6 +58,24 @@ const CustomIcons: React.FC = () => {
     severity: 'success' as 'success' | 'error'
   });
 
+  // Load icons from API
+  const loadIcons = async () => {
+    try {
+      const response = await fetch('http://localhost:4004/api/custom-icons');
+      const data = await response.json();
+      if (data.status === 'success') {
+        setCustomIcons(data.data);
+      }
+    } catch (error) {
+      console.error('Error loading icons:', error);
+    }
+  };
+
+  // Load icons on mount
+  React.useEffect(() => {
+    loadIcons();
+  }, []);
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -150,20 +168,27 @@ const CustomIcons: React.FC = () => {
     }
 
     try {
-      // TODO: Implement API call to upload icon
-      // const formDataToSend = new FormData();
-      // formDataToSend.append('name', formData.name);
-      // formDataToSend.append('label', formData.label);
-      // formDataToSend.append('description', formData.description);
-      // formDataToSend.append('category', formData.category);
-      // if (selectedFile) {
-      //   formDataToSend.append('image', selectedFile);
-      // }
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('label', formData.label);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('category', formData.category);
+      if (selectedFile) {
+        formDataToSend.append('image', selectedFile);
+      }
       
-      // const response = await fetch('/api/custom-icons', {
-      //   method: editingIcon ? 'PUT' : 'POST',
-      //   body: formDataToSend
-      // });
+      const url = editingIcon 
+        ? `http://localhost:4004/api/custom-icons/${editingIcon.id}`
+        : 'http://localhost:4004/api/custom-icons';
+      
+      const response = await fetch(url, {
+        method: editingIcon ? 'PUT' : 'POST',
+        body: formDataToSend
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save icon');
+      }
 
       setSnackbar({
         open: true,
@@ -172,8 +197,9 @@ const CustomIcons: React.FC = () => {
       });
       
       handleCloseDialog();
-      // TODO: Reload icons list
+      loadIcons(); // Reload icons list
     } catch (error) {
+      console.error('Error saving icon:', error);
       setSnackbar({
         open: true,
         message: 'Failed to save icon',
@@ -188,16 +214,23 @@ const CustomIcons: React.FC = () => {
     }
 
     try {
-      // TODO: Implement API call to delete icon
-      // await fetch(`/api/custom-icons/${iconId}`, { method: 'DELETE' });
+      const response = await fetch(`http://localhost:4004/api/custom-icons/${iconId}`, { 
+        method: 'DELETE' 
+      });
       
-      setCustomIcons(customIcons.filter(icon => icon.id !== iconId));
+      if (!response.ok) {
+        throw new Error('Failed to delete icon');
+      }
+      
       setSnackbar({
         open: true,
         message: 'Icon deleted successfully',
         severity: 'success'
       });
+      
+      loadIcons(); // Reload icons list
     } catch (error) {
+      console.error('Error deleting icon:', error);
       setSnackbar({
         open: true,
         message: 'Failed to delete icon',
