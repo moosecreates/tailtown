@@ -1,6 +1,9 @@
 -- Advanced Scheduling Features Migration
 -- Adds support for groomer-specific scheduling and multi-week training classes
 
+-- Enable UUID extension if not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- ============================================
 -- GROOMER-SPECIFIC SCHEDULING
 -- ============================================
@@ -13,13 +16,13 @@ ADD COLUMN IF NOT EXISTS average_service_time INTEGER;
 
 -- Groomer Appointments
 CREATE TABLE IF NOT EXISTS groomer_appointments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
   tenant_id VARCHAR(255) NOT NULL DEFAULT 'dev',
-  reservation_id UUID NOT NULL,
-  groomer_id UUID NOT NULL,
-  service_id UUID NOT NULL,
-  pet_id UUID NOT NULL,
-  customer_id UUID NOT NULL,
+  reservation_id TEXT NOT NULL,
+  groomer_id TEXT NOT NULL,
+  service_id TEXT NOT NULL,
+  pet_id TEXT NOT NULL,
+  customer_id TEXT NOT NULL,
   scheduled_date TIMESTAMP NOT NULL,
   scheduled_time VARCHAR(10) NOT NULL,
   duration INTEGER NOT NULL,
@@ -42,11 +45,11 @@ CREATE INDEX IF NOT EXISTS idx_groomer_appointments_reservation ON groomer_appoi
 
 -- Groomer Preferences
 CREATE TABLE IF NOT EXISTS groomer_preferences (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
   tenant_id VARCHAR(255) NOT NULL DEFAULT 'dev',
-  customer_id UUID NOT NULL,
-  groomer_id UUID NOT NULL,
-  pet_id UUID,
+  customer_id TEXT NOT NULL,
+  groomer_id TEXT NOT NULL,
+  pet_id TEXT,
   priority INTEGER NOT NULL DEFAULT 1,
   notes TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -62,9 +65,9 @@ CREATE INDEX IF NOT EXISTS idx_groomer_preferences_groomer ON groomer_preference
 
 -- Groomer Breaks
 CREATE TABLE IF NOT EXISTS groomer_breaks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
   tenant_id VARCHAR(255) NOT NULL DEFAULT 'dev',
-  groomer_id UUID NOT NULL,
+  groomer_id TEXT NOT NULL,
   date TIMESTAMP NOT NULL,
   start_time VARCHAR(10) NOT NULL,
   end_time VARCHAR(10) NOT NULL,
@@ -83,13 +86,13 @@ CREATE INDEX IF NOT EXISTS idx_groomer_breaks_groomer_date ON groomer_breaks(gro
 
 -- Training Classes
 CREATE TABLE IF NOT EXISTS training_classes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
   tenant_id VARCHAR(255) NOT NULL DEFAULT 'dev',
   name VARCHAR(255) NOT NULL,
   description TEXT,
   level VARCHAR(50) NOT NULL,
   category VARCHAR(50) NOT NULL,
-  instructor_id UUID NOT NULL,
+  instructor_id TEXT NOT NULL,
   max_capacity INTEGER NOT NULL,
   current_enrolled INTEGER NOT NULL DEFAULT 0,
   
@@ -129,9 +132,9 @@ CREATE INDEX IF NOT EXISTS idx_training_classes_instructor ON training_classes(i
 
 -- Class Sessions
 CREATE TABLE IF NOT EXISTS class_sessions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
   tenant_id VARCHAR(255) NOT NULL DEFAULT 'dev',
-  class_id UUID NOT NULL,
+  class_id TEXT NOT NULL,
   session_number INTEGER NOT NULL,
   scheduled_date TIMESTAMP NOT NULL,
   scheduled_time VARCHAR(10) NOT NULL,
@@ -160,11 +163,11 @@ CREATE INDEX IF NOT EXISTS idx_class_sessions_date_status ON class_sessions(sche
 
 -- Class Enrollments
 CREATE TABLE IF NOT EXISTS class_enrollments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
   tenant_id VARCHAR(255) NOT NULL DEFAULT 'dev',
-  class_id UUID NOT NULL,
-  pet_id UUID NOT NULL,
-  customer_id UUID NOT NULL,
+  class_id TEXT NOT NULL,
+  pet_id TEXT NOT NULL,
+  customer_id TEXT NOT NULL,
   
   -- Enrollment
   enrollment_date TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -201,11 +204,11 @@ CREATE INDEX IF NOT EXISTS idx_class_enrollments_pet ON class_enrollments(pet_id
 
 -- Session Attendance
 CREATE TABLE IF NOT EXISTS session_attendance (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
   tenant_id VARCHAR(255) NOT NULL DEFAULT 'dev',
-  session_id UUID NOT NULL,
-  enrollment_id UUID NOT NULL,
-  pet_id UUID NOT NULL,
+  session_id TEXT NOT NULL,
+  enrollment_id TEXT NOT NULL,
+  pet_id TEXT NOT NULL,
   
   -- Attendance
   status VARCHAR(50) NOT NULL,
@@ -235,11 +238,11 @@ CREATE INDEX IF NOT EXISTS idx_session_attendance_enrollment ON session_attendan
 
 -- Class Waitlist
 CREATE TABLE IF NOT EXISTS class_waitlist (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::TEXT,
   tenant_id VARCHAR(255) NOT NULL DEFAULT 'dev',
-  class_id UUID NOT NULL,
-  pet_id UUID NOT NULL,
-  customer_id UUID NOT NULL,
+  class_id TEXT NOT NULL,
+  pet_id TEXT NOT NULL,
+  customer_id TEXT NOT NULL,
   position INTEGER NOT NULL,
   added_date TIMESTAMP NOT NULL DEFAULT NOW(),
   notified BOOLEAN NOT NULL DEFAULT false,
