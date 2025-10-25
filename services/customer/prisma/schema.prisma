@@ -859,6 +859,53 @@ model PointRedemption {
 }
 
 // ============================================
+// CHECKLIST SYSTEM MODELS
+// ============================================
+
+model ChecklistTemplate {
+  id                  String              @id @default(uuid())
+  tenantId            String              @default("dev")
+  name                String
+  description         String
+  area                String              // KENNEL_CHECKIN, GROOMING, etc.
+  isActive            Boolean             @default(true)
+  items               String              // JSON array of template items
+  requiredForCompletion String?           // JSON array of required item IDs
+  estimatedMinutes    Int                 @default(15)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  instances           ChecklistInstance[]
+
+  @@index([tenantId, area], map: "checklist_template_tenant_area_idx")
+  @@map("checklist_templates")
+}
+
+model ChecklistInstance {
+  id                  String              @id @default(uuid())
+  tenantId            String              @default("dev")
+  templateId          String
+  template            ChecklistTemplate   @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  reservationId       String?
+  petId               String?
+  resourceId          String?
+  customerId          String?
+  assignedToStaffId   String?
+  assignedToStaffName String?
+  status              String              @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, SKIPPED
+  startedAt           DateTime?
+  completedAt         DateTime?
+  items               String              // JSON array of instance items with values
+  notes               String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([tenantId, status], map: "checklist_instance_tenant_status_idx")
+  @@index([tenantId, reservationId], map: "checklist_instance_tenant_reservation_idx")
+  @@index([tenantId, assignedToStaffId], map: "checklist_instance_tenant_staff_idx")
+  @@map("checklist_instances")
+}
+
+// ============================================
 // MULTI-TENANCY MANAGEMENT MODELS
 // ============================================
 
