@@ -36,27 +36,39 @@ describe('Dynamic Pricing Service - Business Logic', () => {
   });
 
   describe('getDayOfWeek', () => {
-    it.skip('should return correct day of week (timezone-dependent)', () => {
-      expect(dynamicPricingService.getDayOfWeek(new Date('2025-10-27'))).toBe('MONDAY');
-      expect(dynamicPricingService.getDayOfWeek(new Date('2025-10-28'))).toBe('TUESDAY');
-      expect(dynamicPricingService.getDayOfWeek(new Date('2025-11-01'))).toBe('SATURDAY');
-      expect(dynamicPricingService.getDayOfWeek(new Date('2025-11-02'))).toBe('SUNDAY');
+    it('should return correct day of week for string dates (timezone-safe)', () => {
+      // Using string dates which are now timezone-safe
+      expect(dynamicPricingService.getDayOfWeek('2025-10-27')).toBe('MONDAY');
+      expect(dynamicPricingService.getDayOfWeek('2025-10-28')).toBe('TUESDAY');
+      expect(dynamicPricingService.getDayOfWeek('2025-11-01')).toBe('SATURDAY');
+      expect(dynamicPricingService.getDayOfWeek('2025-11-02')).toBe('SUNDAY');
     });
 
-    it.skip('should handle string dates (timezone-dependent)', () => {
-      expect(dynamicPricingService.getDayOfWeek('2025-11-01')).toBe('SATURDAY');
+    it('should handle various days of the week', () => {
+      expect(dynamicPricingService.getDayOfWeek('2025-11-03')).toBe('MONDAY');
+      expect(dynamicPricingService.getDayOfWeek('2025-11-04')).toBe('TUESDAY');
+      expect(dynamicPricingService.getDayOfWeek('2025-11-05')).toBe('WEDNESDAY');
+      expect(dynamicPricingService.getDayOfWeek('2025-11-06')).toBe('THURSDAY');
+      expect(dynamicPricingService.getDayOfWeek('2025-11-07')).toBe('FRIDAY');
     });
   });
 
   describe('isWeekend', () => {
-    it.skip('should return true for Saturday and Sunday (timezone-dependent)', () => {
-      expect(dynamicPricingService.isWeekend(new Date('2025-11-01'))).toBe(true); // Saturday
-      expect(dynamicPricingService.isWeekend(new Date('2025-11-02'))).toBe(true); // Sunday
+    it('should return true for Saturday and Sunday (timezone-safe)', () => {
+      // Using string dates which are now timezone-safe
+      expect(dynamicPricingService.isWeekend('2025-11-01')).toBe(true); // Saturday
+      expect(dynamicPricingService.isWeekend('2025-11-02')).toBe(true); // Sunday
+      expect(dynamicPricingService.isWeekend('2025-11-08')).toBe(true); // Saturday
+      expect(dynamicPricingService.isWeekend('2025-11-09')).toBe(true); // Sunday
     });
 
-    it.skip('should return false for weekdays (timezone-dependent)', () => {
-      expect(dynamicPricingService.isWeekend(new Date('2025-10-27'))).toBe(false); // Monday
-      expect(dynamicPricingService.isWeekend(new Date('2025-10-31'))).toBe(false); // Friday
+    it('should return false for weekdays (timezone-safe)', () => {
+      // Using string dates which are now timezone-safe
+      expect(dynamicPricingService.isWeekend('2025-10-27')).toBe(false); // Monday
+      expect(dynamicPricingService.isWeekend('2025-10-28')).toBe(false); // Tuesday
+      expect(dynamicPricingService.isWeekend('2025-10-29')).toBe(false); // Wednesday
+      expect(dynamicPricingService.isWeekend('2025-10-30')).toBe(false); // Thursday
+      expect(dynamicPricingService.isWeekend('2025-10-31')).toBe(false); // Friday
     });
   });
 
@@ -307,9 +319,11 @@ describe('Dynamic Pricing Service - Business Logic', () => {
       expect(summer).toBe('SUMMER');
     });
 
-    it.skip('should correctly identify weekends (timezone-dependent)', () => {
-      expect(dynamicPricingService.isWeekend(new Date('2025-07-05'))).toBe(true); // Saturday
-      expect(dynamicPricingService.isWeekend(new Date('2025-07-04'))).toBe(false); // Friday
+    it('should correctly identify weekends (timezone-safe)', () => {
+      // Using string dates which are now timezone-safe
+      expect(dynamicPricingService.isWeekend('2025-07-05')).toBe(true); // Saturday
+      expect(dynamicPricingService.isWeekend('2025-07-06')).toBe(true); // Sunday
+      expect(dynamicPricingService.isWeekend('2025-07-04')).toBe(false); // Friday
     });
 
     it('should calculate advance booking discount eligibility', () => {

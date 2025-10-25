@@ -24,6 +24,7 @@ import {
   Season,
   DayOfWeek
 } from '../types/dynamicPricing';
+import { getDayOfWeekName, isWeekend as isWeekendUtil, getMonth } from '../utils/dateUtils';
 
 export const dynamicPricingService = {
   /**
@@ -177,20 +178,17 @@ export const dynamicPricingService = {
   },
 
   /**
-   * CLIENT-SIDE: Get day of week
+   * CLIENT-SIDE: Get day of week (timezone-safe)
    */
   getDayOfWeek: (date: Date | string): DayOfWeek => {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    const days: DayOfWeek[] = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-    return days[d.getDay()];
+    return getDayOfWeekName(date) as DayOfWeek;
   },
 
   /**
-   * CLIENT-SIDE: Check if date is weekend
+   * CLIENT-SIDE: Check if date is weekend (timezone-safe)
    */
   isWeekend: (date: Date | string): boolean => {
-    const day = dynamicPricingService.getDayOfWeek(date);
-    return day === 'SATURDAY' || day === 'SUNDAY';
+    return isWeekendUtil(date);
   },
 
   /**
