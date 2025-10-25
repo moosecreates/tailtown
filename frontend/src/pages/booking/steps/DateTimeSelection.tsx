@@ -3,7 +3,7 @@
  * Mobile-optimized calendar and time picker
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Box,
   Button,
@@ -15,6 +15,8 @@ import {
   ArrowBack as ArrowBackIcon,
   ArrowForward as ArrowForwardIcon
 } from '@mui/icons-material';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 interface DateTimeSelectionProps {
   bookingData: any;
@@ -29,35 +31,28 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
   onBack,
   onUpdate
 }) => {
-  const [startDate, setStartDate] = useState(bookingData.startDate || '');
-  const [endDate, setEndDate] = useState(bookingData.endDate || '');
-  const startDateRef = useRef<HTMLInputElement>(null);
-
-  // Auto-open calendar on mount
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (startDateRef.current) {
-        startDateRef.current.focus();
-        // Use showPicker() if available (modern browsers)
-        try {
-          if ('showPicker' in startDateRef.current) {
-            (startDateRef.current as any).showPicker();
-          } else {
-            // Fallback to click for older browsers
-            startDateRef.current.click();
-          }
-        } catch (error) {
-          // Silently fail if showPicker is not supported
-          console.log('Date picker auto-open not supported in this browser');
-        }
-      }
-    }, 300); // Increased delay for better reliability
-    return () => clearTimeout(timer);
-  }, []);
+  const [startDate, setStartDate] = useState<Date | null>(
+    bookingData.startDate ? new Date(bookingData.startDate) : null
+  );
+  const [endDate, setEndDate] = useState<Date | null>(
+    bookingData.endDate ? new Date(bookingData.endDate) : null
+  );
+  const startDatePickerRef = useRef<any>(null);
 
   const handleContinue = () => {
-    onUpdate({ startDate, endDate });
+    onUpdate({ 
+      startDate: startDate?.toISOString().split('T')[0],
+      endDate: endDate?.toISOString().split('T')[0]
+    });
     onNext();
+  };
+
+  const handleStartDateChange = (date: Date | null) => {
+    setStartDate(date);
+    // If end date is before new start date, clear it
+    if (date && endDate && endDate < date) {
+      setEndDate(null);
+    }
   };
 
   return (
@@ -68,33 +63,50 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
 
       <Grid container spacing={3} sx={{ mt: 2 }}>
         <Grid item xs={12} sm={6}>
-          <TextField
-            label="Start Date"
-            type="date"
-            fullWidth
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            inputProps={{
-              min: new Date().toISOString().split('T')[0], // Disable past dates
-            }}
-            inputRef={startDateRef}
-            helperText="Select your check-in date"
-          />
+          <Box sx={{ '& .react-datepicker-wrapper': { width: '100%' } }}>
+            <DatePicker
+              ref={startDatePickerRef}
+              selected={startDate}
+              onChange={handleStartDateChange}
+              minDate={new Date()}
+              dateFormat="MM/dd/yyyy"
+              placeholderText="Select check-in date"
+              customInput={
+                <TextField
+                  label="Start Date"
+                  fullWidth
+                  helperText="Select your check-in date"
+                  InputLabelProps={{ shrink: true }}
+                />
+              }
+              open={true}
+              onClickOutside={() => {}}
+              shouldCloseOnSelect={true}
+              popperPlacement="bottom-start"
+            />
+          </Box>
         </Grid>
         <Grid item xs={12} sm={6}>
-          <TextField
-            label="End Date"
-            type="date"
-            fullWidth
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            inputProps={{
-              min: startDate || new Date().toISOString().split('T')[0], // Disable dates before start date
-            }}
-            helperText="Select your check-out date"
-          />
+          <Box sx={{ '& .react-datepicker-wrapper': { width: '100%' } }}>
+            <DatePicker
+              selected={endDate}
+              onChange={(date) => setEndDate(date)}
+              minDate={startDate || new Date()}
+              dateFormat="MM/dd/yyyy"
+              placeholderText="Select check-out date"
+              customInput={
+                <TextField
+                  label="End Date"
+                  fullWidth
+                  helperText="Select your check-out date"
+                  InputLabelProps={{ shrink: true }}
+                />
+              }
+              disabled={!startDate}
+              shouldCloseOnSelect={true}
+              popperPlacement="bottom-start"
+            />
+          </Box>
         </Grid>
       </Grid>
 
