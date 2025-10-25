@@ -3,7 +3,7 @@
  * Mobile-optimized calendar and time picker
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Button,
@@ -31,6 +31,19 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
 }) => {
   const [startDate, setStartDate] = useState(bookingData.startDate || '');
   const [endDate, setEndDate] = useState(bookingData.endDate || '');
+  const startDateRef = useRef<HTMLInputElement>(null);
+
+  // Auto-open calendar on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (startDateRef.current) {
+        startDateRef.current.focus();
+        // Trigger click to open native date picker
+        startDateRef.current.click();
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleContinue = () => {
     onUpdate({ startDate, endDate });
@@ -54,9 +67,9 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
             InputLabelProps={{ shrink: true }}
             inputProps={{
               min: new Date().toISOString().split('T')[0], // Disable past dates
+              ref: startDateRef,
             }}
             helperText="Select your check-in date"
-            autoFocus
           />
         </Grid>
         <Grid item xs={12} sm={6}>
