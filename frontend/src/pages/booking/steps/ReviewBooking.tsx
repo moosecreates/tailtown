@@ -100,8 +100,19 @@ const ReviewBooking: React.FC<ReviewBookingProps> = ({
 
       const paymentResult = await paymentService.processCardPayment(paymentRequest);
 
-      if (paymentResult.status !== 'success' || !paymentResult.data?.approved) {
-        setError(paymentResult.data?.responseText || paymentResult.message || 'Payment declined. Please check your card details.');
+      // Check if payment was successful
+      if (!paymentResult || paymentResult.status !== 'success' || !paymentResult.data?.approved) {
+        let errorMessage = paymentResult?.data?.responseText 
+          || paymentResult?.message 
+          || paymentResult?.error
+          || 'Payment declined. Please check your card details and try again.';
+        
+        // Add helpful test card info in development
+        if (process.env.NODE_ENV === 'development') {
+          errorMessage += '\n\nTest Cards:\n• 4111111111111111 (Visa - Approved)\n• 4000000000000002 (Declined)\n• Expiry: Any future date (MM/YY)\n• CVV: Any 3 digits';
+        }
+        
+        setError(errorMessage);
         setPaymentProcessing(false);
         setLoading(false);
         return;
