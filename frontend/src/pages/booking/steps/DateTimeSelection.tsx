@@ -9,7 +9,8 @@ import {
   Button,
   Typography,
   Grid,
-  TextField
+  TextField,
+  Paper
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -17,6 +18,7 @@ import {
 } from '@mui/icons-material';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import './DateTimeSelection.css';
 
 interface DateTimeSelectionProps {
   bookingData: any;
@@ -51,20 +53,22 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
 
   const handleStartDateChange = (date: Date | null) => {
     setStartDate(date);
-    setStartDateOpen(false);
     // If end date is before new start date, clear it
     if (date && endDate && endDate < date) {
       setEndDate(null);
     }
-    // Auto-open end date picker
+    // Close start date and open end date picker
     if (date) {
-      setTimeout(() => setEndDateOpen(true), 100);
+      setStartDateOpen(false);
+      setTimeout(() => setEndDateOpen(true), 200);
     }
   };
 
   const handleEndDateChange = (date: Date | null) => {
     setEndDate(date);
-    setEndDateOpen(false);
+    if (date) {
+      setEndDateOpen(false);
+    }
   };
 
   return (
@@ -73,58 +77,62 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
         When would you like to book?
       </Typography>
 
-      <Grid container spacing={3} sx={{ mt: 2 }}>
-        <Grid item xs={12} sm={6}>
-          <Box sx={{ '& .react-datepicker-wrapper': { width: '100%' } }}>
-            <DatePicker
-              ref={startDatePickerRef}
-              selected={startDate}
-              onChange={handleStartDateChange}
-              minDate={new Date()}
-              dateFormat="MM/dd/yyyy"
-              placeholderText="Select check-in date"
-              customInput={
-                <TextField
-                  label="Start Date"
-                  fullWidth
-                  helperText="Select your check-in date"
-                  InputLabelProps={{ shrink: true }}
-                />
-              }
-              open={startDateOpen}
-              onClickOutside={() => setStartDateOpen(false)}
-              onInputClick={() => setStartDateOpen(true)}
-              shouldCloseOnSelect={true}
-              popperPlacement="bottom-start"
-            />
-          </Box>
+      <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <Box className="date-picker-container">
+              <DatePicker
+                ref={startDatePickerRef}
+                selected={startDate}
+                onChange={handleStartDateChange}
+                minDate={new Date()}
+                dateFormat="MM/dd/yyyy"
+                placeholderText="Click to select check-in date"
+                customInput={
+                  <TextField
+                    label="Start Date"
+                    fullWidth
+                    helperText="Select your check-in date"
+                    InputLabelProps={{ shrink: true }}
+                  />
+                }
+                open={startDateOpen}
+                onClickOutside={() => setStartDateOpen(false)}
+                onInputClick={() => setStartDateOpen(true)}
+                shouldCloseOnSelect={true}
+                popperPlacement="bottom-start"
+                inline={false}
+              />
+            </Box>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Box className="date-picker-container">
+              <DatePicker
+                selected={endDate}
+                onChange={handleEndDateChange}
+                minDate={startDate || new Date()}
+                dateFormat="MM/dd/yyyy"
+                placeholderText="Click to select check-out date"
+                customInput={
+                  <TextField
+                    label="End Date"
+                    fullWidth
+                    helperText="Select your check-out date"
+                    InputLabelProps={{ shrink: true }}
+                  />
+                }
+                disabled={!startDate}
+                open={endDateOpen}
+                onClickOutside={() => setEndDateOpen(false)}
+                onInputClick={() => setEndDateOpen(true)}
+                shouldCloseOnSelect={true}
+                popperPlacement="bottom-start"
+                inline={false}
+              />
+            </Box>
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6}>
-          <Box sx={{ '& .react-datepicker-wrapper': { width: '100%' } }}>
-            <DatePicker
-              selected={endDate}
-              onChange={handleEndDateChange}
-              minDate={startDate || new Date()}
-              dateFormat="MM/dd/yyyy"
-              placeholderText="Select check-out date"
-              customInput={
-                <TextField
-                  label="End Date"
-                  fullWidth
-                  helperText="Select your check-out date"
-                  InputLabelProps={{ shrink: true }}
-                />
-              }
-              disabled={!startDate}
-              open={endDateOpen}
-              onClickOutside={() => setEndDateOpen(false)}
-              onInputClick={() => setEndDateOpen(true)}
-              shouldCloseOnSelect={true}
-              popperPlacement="bottom-start"
-            />
-          </Box>
-        </Grid>
-      </Grid>
+      </Paper>
 
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
         <Button
