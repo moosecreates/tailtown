@@ -80,7 +80,8 @@ export default function ChecklistTemplates() {
 
   const loadTemplates = async () => {
     try {
-      const response = await fetch('/api/checklists/templates', {
+      // TODO: Fix proxy configuration - using direct backend URL for now
+      const response = await fetch('http://localhost:4004/api/checklists/templates', {
         headers: { 'x-tenant-id': 'dev' }
       });
       const data = await response.json();
@@ -113,7 +114,7 @@ export default function ChecklistTemplates() {
     if (!window.confirm('Are you sure you want to delete this template?')) return;
     
     try {
-      await fetch(`/api/checklists/templates/${id}`, {
+      await fetch(`http://localhost:4004/api/checklists/templates/${id}`, {
         method: 'DELETE',
         headers: { 'x-tenant-id': 'dev' }
       });
@@ -138,8 +139,8 @@ export default function ChecklistTemplates() {
 
     try {
       const url = currentTemplate.id 
-        ? `/api/checklists/templates/${currentTemplate.id}`
-        : '/api/checklists/templates';
+        ? `http://localhost:4004/api/checklists/templates/${currentTemplate.id}`
+        : 'http://localhost:4004/api/checklists/templates';
       
       const method = currentTemplate.id ? 'PUT' : 'POST';
       
