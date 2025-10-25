@@ -3,6 +3,7 @@ import { resourceService, type Resource } from '../services/resourceService';
 import { reservationService, Reservation as BaseReservation } from '../services/reservationService';
 import { formatDateToYYYYMMDD } from '../utils/dateUtils';
 import { reservationApi } from '../services/api';
+import { sortByRoomAndNumber, sortBySuiteNumber } from '../utils/sortingUtils';
 
 // Extended Resource interface for specific properties used in KennelCalendar
 export interface ExtendedResource extends Resource {
@@ -155,31 +156,7 @@ export const useKennelData = ({
         }));
         
         // Sort kennels by room letter and then by number (A01, A02, A03, ..., B01, B02, etc.)
-        const sortedKennels = [...kennelData].sort((a: any, b: any) => {
-          const nameA = a.name || '';
-          const nameB = b.name || '';
-          
-          // Extract room letter (A, B, C, etc.) and number
-          const matchA = nameA.match(/^([A-Z])(\d+)$/);
-          const matchB = nameB.match(/^([A-Z])(\d+)$/);
-          
-          if (matchA && matchB) {
-            const [, roomA, numA] = matchA;
-            const [, roomB, numB] = matchB;
-            
-            // First sort by room letter
-            if (roomA !== roomB) {
-              return roomA.localeCompare(roomB);
-            }
-            
-            // Then sort by number within the same room
-            return Number(numA) - Number(numB);
-          }
-          
-          // Fallback to string comparison if pattern doesn't match
-          return nameA.localeCompare(nameB);
-        });
-        
+        const sortedKennels = sortByRoomAndNumber(kennelData);
         setKennels(sortedKennels);
         setLoading(false);
         return;
@@ -250,14 +227,8 @@ export const useKennelData = ({
             console.warn('No kennel data found in any expected format');
             setError('No kennels found. Please check your resource configuration.');
           } else {
-            
             // Sort the kennels by suite number
-            const sortedKennels = [...kennelData].sort((a: any, b: any) => {
-              const numA = a.suiteNumber || a.name?.replace(/\D/g, '') || '0';
-              const numB = b.suiteNumber || b.name?.replace(/\D/g, '') || '0';
-              return Number(numA) - Number(numB);
-            });
-            
+            const sortedKennels = sortBySuiteNumber(kennelData);
             setKennels(sortedKennels);
           }
           
