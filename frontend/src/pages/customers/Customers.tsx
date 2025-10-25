@@ -15,14 +15,17 @@ import {
   Alert,
   Snackbar,
   TextField,
-  InputAdornment
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+  InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} from '@mui/material';import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import debounce from 'lodash/debounce';
 import { Customer, customerService } from '../../services/customerService';
-import CustomerIconDisplay from '../../components/customers/CustomerIconDisplay';
-import CustomerIconSelector from '../../components/customers/CustomerIconSelector';
+import CustomerIconBadges from '../../components/customers/CustomerIconBadges';
+import CustomerIconSelectorNew from '../../components/customers/CustomerIconSelectorNew';
 
 const Customers = () => {
   const navigate = useNavigate();
@@ -90,32 +93,32 @@ const Customers = () => {
     setIconSelectorOpen(true);
   }, []);
 
-  const handleIconSave = useCallback(async (icon: string, color: string) => {
+  const handleIconSave = useCallback(async (icons: string[], notes: Record<string, string>) => {
     if (!selectedCustomer) return;
 
     try {
       await customerService.updateCustomer(selectedCustomer.id, {
-        icon,
-        iconColor: color
+        customerIcons: icons,
+        iconNotes: notes
       });
 
       // Update the customer in the list
       const updatedCustomers = customers.map(c =>
-        c.id === selectedCustomer.id ? { ...c, icon, iconColor: color } : c
+        c.id === selectedCustomer.id ? { ...c, customerIcons: icons, iconNotes: notes } : c
       );
       setCustomers(updatedCustomers);
       setFilteredCustomers(updatedCustomers);
 
       setSnackbar({
         open: true,
-        message: 'Customer icon updated',
+        message: 'Customer icons updated',
         severity: 'success'
       });
     } catch (err) {
-      console.error('Error updating customer icon:', err);
+      console.error('Error updating customer icons:', err);
       setSnackbar({
         open: true,
-        message: 'Failed to update icon',
+        message: 'Failed to update icons',
         severity: 'error'
       });
     }
@@ -220,13 +223,19 @@ const Customers = () => {
                         </Box>
                       </TableCell>
                     )}
-                    <TableCell onClick={(e) => handleIconClick(e, customer)} sx={{ cursor: 'pointer' }}>
-                      <CustomerIconDisplay
-                        icon={customer.icon}
-                        color={customer.iconColor}
-                        name={`${customer.firstName} ${customer.lastName}`}
-                        sx={{ width: 40, height: 40 }}
-                      />
+                    <TableCell onClick={(e) => handleIconClick(e, customer)} sx={{ cursor: 'pointer', minWidth: 120 }}>
+                      {customer.customerIcons && customer.customerIcons.length > 0 ? (
+                        <CustomerIconBadges
+                          iconIds={customer.customerIcons}
+                          iconNotes={customer.iconNotes}
+                          maxDisplay={3}
+                          size="small"
+                        />
+                      ) : (
+                        <Typography variant="caption" color="text.secondary">
+                          Click to add
+                        </Typography>
+                      )}
                     </TableCell>
                     <TableCell 
                       onClick={() => handleRowClick(customer.id)}
@@ -272,16 +281,34 @@ const Customers = () => {
 
       {/* Icon Selector Dialog */}
       {selectedCustomer && (
-        <CustomerIconSelector
+        <Dialog
           open={iconSelectorOpen}
-          currentIcon={selectedCustomer.icon || 'person'}
-          currentColor={selectedCustomer.iconColor || 'blue'}
           onClose={() => {
             setIconSelectorOpen(false);
             setSelectedCustomer(null);
           }}
-          onSave={handleIconSave}
-        />
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            Manage Icons for {selectedCustomer.firstName} {selectedCustomer.lastName}
+          </DialogTitle>
+          <DialogContent>
+            <CustomerIconSelectorNew
+              selectedIcons={selectedCustomer.customerIcons || []}
+              iconNotes={selectedCustomer.iconNotes || {}}
+              onChange={handleIconSave}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {
+              setIconSelectorOpen(false);
+              setSelectedCustomer(null);
+            }}>
+              Close
+            </Button>
+          </DialogActions>
+        </Dialog>
       )}
 
       <Snackbar

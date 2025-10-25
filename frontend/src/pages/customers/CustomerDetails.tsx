@@ -30,8 +30,8 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Customer, customerService } from '../../services/customerService';
 import AccountHistory from '../../components/customers/AccountHistory';
-import CustomerIconSelector from '../../components/customers/CustomerIconSelector';
-import CustomerIconDisplay from '../../components/customers/CustomerIconDisplay';
+import CustomerIconSelectorNew from '../../components/customers/CustomerIconSelectorNew';
+import CustomerIconBadges from '../../components/customers/CustomerIconBadges';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -90,8 +90,8 @@ const CustomerDetails: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [tabValue, setTabValue] = useState<number>(0);
   const [iconSelectorOpen, setIconSelectorOpen] = useState(false);
-  const [customerIcon, setCustomerIcon] = useState(customer.icon || 'person');
-  const [customerColor, setCustomerColor] = useState(customer.iconColor || 'blue');
+  const [selectedIcons, setSelectedIcons] = useState<string[]>(customer.customerIcons || []);
+  const [iconNotes, setIconNotes] = useState<Record<string, string>>(customer.iconNotes || {});
   
   // Fetch customer data
   const fetchCustomer = useCallback(async () => {
@@ -122,13 +122,13 @@ const CustomerDetails: React.FC = () => {
 
   // Update icon state when customer data changes
   useEffect(() => {
-    if (customer.icon) {
-      setCustomerIcon(customer.icon);
+    if (customer.customerIcons) {
+      setSelectedIcons(customer.customerIcons);
     }
-    if (customer.iconColor) {
-      setCustomerColor(customer.iconColor);
+    if (customer.iconNotes) {
+      setIconNotes(customer.iconNotes);
     }
-  }, [customer.icon, customer.iconColor]);
+  }, [customer.customerIcons, customer.iconNotes]);
   
   // Handle tab changes
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -167,8 +167,8 @@ const CustomerDetails: React.FC = () => {
       // Include icon fields in customer data
       const customerData = {
         ...customer,
-        icon: customerIcon,
-        iconColor: customerColor
+        customerIcons: selectedIcons,
+        iconNotes: iconNotes
       };
 
       if (isNewCustomer) {
@@ -411,22 +411,26 @@ const CustomerDetails: React.FC = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-          <CustomerIconDisplay
-            icon={customerIcon}
-            color={customerColor}
-            name={`${customer.firstName} ${customer.lastName}`}
-            sx={{ width: 64, height: 64, cursor: 'pointer' }}
-            onClick={() => setIconSelectorOpen(true)}
-          />
-          <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="h5" component="h1">
-              {isNewCustomer ? 'New Customer' : `${customer.firstName} ${customer.lastName}`}
-            </Typography>
-            <Typography variant="caption" color="textSecondary">
-              Click avatar to customize
-            </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h5" component="h1">
+                {isNewCustomer ? 'New Customer' : `${customer.firstName} ${customer.lastName}`}
+              </Typography>
+            </Box>
           </Box>
+          {selectedIcons.length > 0 && (
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Customer Icons
+              </Typography>
+              <CustomerIconBadges 
+                iconIds={selectedIcons} 
+                iconNotes={iconNotes}
+                size="medium"
+              />
+            </Box>
+          )}
         </Box>
 
         {/* Action Buttons */}
@@ -439,6 +443,13 @@ const CustomerDetails: React.FC = () => {
                 onClick={handleSave}
               >
                 Save
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setIconSelectorOpen(true)}
+                startIcon={<PersonIcon />}
+              >
+                Manage Icons
               </Button>
               <Button
                 variant="outlined"
@@ -516,15 +527,12 @@ const CustomerDetails: React.FC = () => {
         )}
 
         {/* Icon Selector Dialog */}
-        <CustomerIconSelector
-          open={iconSelectorOpen}
-          currentIcon={customerIcon}
-          currentColor={customerColor}
-          onClose={() => setIconSelectorOpen(false)}
-          onSave={(icon, color) => {
-            setCustomerIcon(icon);
-            setCustomerColor(color);
-            // Icon will be saved to backend when customer is saved
+        <CustomerIconSelectorNew
+          selectedIcons={selectedIcons}
+          iconNotes={iconNotes}
+          onChange={(icons, notes) => {
+            setSelectedIcons(icons);
+            setIconNotes(notes);
           }}
         />
 
