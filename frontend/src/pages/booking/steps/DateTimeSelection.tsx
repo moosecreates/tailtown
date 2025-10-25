@@ -77,8 +77,8 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
             InputLabelProps={{ shrink: true }}
             inputProps={{
               min: new Date().toISOString().split('T')[0], // Disable past dates
-              ref: startDateRef,
             }}
+            inputRef={startDateRef}
             helperText="Select your check-in date"
           />
         </Grid>
