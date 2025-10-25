@@ -1,7 +1,9 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Grid } from '@mui/material';
 import DashboardMetrics from '../components/dashboard/DashboardMetrics';
 import ReservationList from '../components/dashboard/ReservationList';
+import UpcomingAppointments from '../components/dashboard/UpcomingAppointments';
+import UpcomingClasses from '../components/dashboard/UpcomingClasses';
 import { useDashboardData } from '../hooks/useDashboardData';
 
 /**
@@ -42,6 +44,16 @@ const Dashboard = () => {
           appointmentFilter={appointmentFilter}
           onFilterChange={filterReservations}
         />
+
+        {/* New Widgets Row */}
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <UpcomingAppointments />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <UpcomingClasses />
+          </Grid>
+        </Grid>
 
         {/* Reservations List */}
         <ReservationList
