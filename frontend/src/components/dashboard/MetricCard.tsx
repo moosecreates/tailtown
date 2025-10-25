@@ -33,8 +33,9 @@ const MetricCard: React.FC<MetricCardProps> = ({
       sx={{
         p: 2,
         display: 'flex',
-        flexDirection: 'column',
-        height: 100,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        height: 70,
         borderRadius: 2,
         position: 'relative',
         overflow: 'hidden',
@@ -49,17 +50,17 @@ const MetricCard: React.FC<MetricCardProps> = ({
         } : {}
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Typography variant="subtitle2" component="div" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
           {title}
         </Typography>
-        <Box sx={{ transform: 'scale(0.8)' }}>
-          {icon}
-        </Box>
+        <Typography variant="h4" component="div" sx={{ fontWeight: 'bold' }}>
+          {displayValue}
+        </Typography>
       </Box>
-      <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', mt: 'auto' }}>
-        {displayValue}
-      </Typography>
+      <Box sx={{ transform: 'scale(0.8)' }}>
+        {icon}
+      </Box>
     </Paper>
   );
 };
