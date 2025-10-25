@@ -78,6 +78,10 @@ const CheckInTemplateManager = lazy(() => import('./pages/admin/CheckInTemplateM
 // Lazy loaded pages - Checkout
 const CheckoutWorkflow = lazy(() => import('./pages/checkout/CheckoutWorkflow'));
 
+// Lazy loaded pages - Checklists
+const ChecklistTemplates = lazy(() => import('./pages/admin/ChecklistTemplates'));
+const ChecklistView = lazy(() => import('./pages/staff/ChecklistView'));
+
 // Public Booking Portal
 const BookingPortal = lazy(() => import('./pages/booking/BookingPortal'));
 
@@ -169,6 +173,10 @@ const AppRoutes = () => {
         
         {/* Checkout Routes */}
         <Route path="/checkout/:reservationId" element={isAuthenticated ? <CheckoutWorkflow /> : <Navigate to="/login" />} />
+        
+        {/* Checklist Routes */}
+        <Route path="/admin/checklist-templates" element={isAuthenticated ? <ChecklistTemplates /> : <Navigate to="/login" />} />
+        <Route path="/staff/checklist/:id" element={isAuthenticated ? <ChecklistView /> : <Navigate to="/login" />} />
         
         {/* Debug routes */}
         <Route path="/debug/api" element={<ApiTester />} />

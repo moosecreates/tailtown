@@ -164,6 +164,7 @@ export const startChecklist = async (req: Request, res: Response, next: NextFunc
     const instanceItems = templateItems.map((item: any) => ({
       templateItemId: item.id,
       label: item.label,
+      description: item.description,
       type: item.type,
       isRequired: item.isRequired,
       isCompleted: false

@@ -86,6 +86,7 @@ export interface ChecklistInstance {
 export interface ChecklistInstanceItem {
   templateItemId: string;
   label: string;
+  description?: string;
   type: ChecklistItemType;
   isRequired: boolean;
   

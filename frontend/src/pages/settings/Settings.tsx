@@ -18,7 +18,8 @@ import {
   AttachMoney as PriceRulesIcon,
   Settings as GeneralIcon,
   Campaign as MarketingIcon,
-  Assignment as CheckInIcon
+  Assignment as CheckInIcon,
+  ChecklistRtl as ChecklistIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
@@ -66,6 +67,13 @@ const Settings: React.FC = () => {
       icon: <CheckInIcon sx={{ fontSize: 40, color: 'success.main' }} />,
       path: '/admin/check-in-templates',
       stats: 'Templates: 1'
+    },
+    {
+      title: 'Checklist Templates',
+      description: 'Manage operational checklists for kennel check-in/out, grooming, and facility tasks',
+      icon: <ChecklistIcon sx={{ fontSize: 40, color: 'info.main' }} />,
+      path: '/admin/checklist-templates',
+      stats: 'Active Templates: 0'
     },
     {
       title: 'Price Rules',
