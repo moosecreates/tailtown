@@ -23,6 +23,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import VaccinationStatus from '../../components/VaccinationStatus';
 import PetIconSelector from '../../components/pets/PetIconSelector';
 import PetIconDisplay from '../../components/pets/PetIconDisplay';
+import VaccineComplianceBadge from '../../components/pets/VaccineComplianceBadge';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { Pet, petService } from '../../services/petService';
 import { customerService } from '../../services/customerService';
@@ -248,9 +249,14 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
   return (
     <Container maxWidth="lg">
       <Box sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          {isNewPet ? 'New Pet' : pet.name}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <Typography variant="h4">
+            {isNewPet ? 'New Pet' : pet.name}
+          </Typography>
+          {!isNewPet && id && (
+            <VaccineComplianceBadge petId={id} showDetails={true} />
+          )}
+        </Box>
         
         <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
 
