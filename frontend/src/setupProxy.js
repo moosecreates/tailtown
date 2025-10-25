@@ -41,6 +41,23 @@ module.exports = function(app) {
     })
   );
 
+  // Checklist routes to customer-service (4004)
+  app.use(
+    '/api/checklists',
+    createProxyMiddleware({
+      target: 'http://localhost:4004',
+      changeOrigin: true,
+      logLevel: 'debug',
+      pathRewrite: function (path, req) {
+        return path; // Don't rewrite, keep the full path
+      },
+      onError: (err, req, res) => {
+        console.error('Proxy Error:', err);
+        res.status(500).json({ error: 'Proxy Error', details: err.message });
+      }
+    })
+  );
+
   // Default: other /api routes to customer-service (4004)
   app.use(
     '/api',
