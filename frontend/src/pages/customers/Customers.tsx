@@ -58,6 +58,8 @@ const Customers = () => {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [iconSelectorOpen, setIconSelectorOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [tempSelectedIcons, setTempSelectedIcons] = useState<string[]>([]);
+  const [tempIconNotes, setTempIconNotes] = useState<Record<string, string>>({});
 
   const loadCustomers = useCallback(async () => {
     try {
@@ -90,6 +92,8 @@ const Customers = () => {
   const handleIconClick = useCallback((e: React.MouseEvent, customer: Customer) => {
     e.stopPropagation(); // Prevent row click
     setSelectedCustomer(customer);
+    setTempSelectedIcons(customer.customerIcons || []);
+    setTempIconNotes(customer.iconNotes || {});
     setIconSelectorOpen(true);
   }, []);
 
@@ -284,6 +288,8 @@ const Customers = () => {
         <Dialog
           open={iconSelectorOpen}
           onClose={() => {
+            // Save on close
+            handleIconSave(tempSelectedIcons, tempIconNotes);
             setIconSelectorOpen(false);
             setSelectedCustomer(null);
           }}
@@ -295,17 +301,32 @@ const Customers = () => {
           </DialogTitle>
           <DialogContent>
             <CustomerIconSelectorNew
-              selectedIcons={selectedCustomer.customerIcons || []}
-              iconNotes={selectedCustomer.iconNotes || {}}
-              onChange={handleIconSave}
+              selectedIcons={tempSelectedIcons}
+              iconNotes={tempIconNotes}
+              onChange={(icons, notes) => {
+                setTempSelectedIcons(icons);
+                setTempIconNotes(notes);
+              }}
             />
           </DialogContent>
           <DialogActions>
             <Button onClick={() => {
+              // Don't save, just close
               setIconSelectorOpen(false);
               setSelectedCustomer(null);
             }}>
-              Close
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                // Save and close
+                handleIconSave(tempSelectedIcons, tempIconNotes);
+                setIconSelectorOpen(false);
+                setSelectedCustomer(null);
+              }}
+              variant="contained"
+            >
+              Save
             </Button>
           </DialogActions>
         </Dialog>
