@@ -84,8 +84,8 @@ const VaccineRequirements: React.FC = () => {
       setFormData({
         name: requirement.name,
         description: requirement.description || '',
-        petType: requirement.petType || undefined,
-        serviceType: requirement.serviceType || undefined,
+        petType: requirement.petType ?? undefined,
+        serviceType: requirement.serviceType ?? undefined,
         isRequired: requirement.isRequired,
         validityPeriodMonths: requirement.validityPeriodMonths,
         reminderDaysBefore: requirement.reminderDaysBefore,
@@ -118,10 +118,17 @@ const VaccineRequirements: React.FC = () => {
 
   const handleSave = async () => {
     try {
+      // Convert undefined to null for proper JSON serialization
+      const dataToSave = {
+        ...formData,
+        petType: formData.petType === undefined ? null : formData.petType,
+        serviceType: formData.serviceType === undefined ? null : formData.serviceType,
+      };
+      
       if (editingRequirement) {
-        await vaccineService.update(editingRequirement.id, formData);
+        await vaccineService.update(editingRequirement.id, dataToSave);
       } else {
-        await vaccineService.create(formData);
+        await vaccineService.create(dataToSave);
       }
       await loadRequirements();
       handleCloseDialog();

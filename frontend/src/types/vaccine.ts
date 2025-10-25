@@ -58,8 +58,8 @@ export interface PetVaccineCompliance {
 export interface CreateVaccineRequirementRequest {
   name: string;
   description?: string;
-  petType?: 'DOG' | 'CAT';
-  serviceType?: 'BOARDING' | 'DAYCARE' | 'GROOMING';
+  petType?: 'DOG' | 'CAT' | null;
+  serviceType?: 'BOARDING' | 'DAYCARE' | 'GROOMING' | null;
   isRequired?: boolean;
   validityPeriodMonths?: number;
   reminderDaysBefore?: number;
