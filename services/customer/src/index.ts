@@ -34,6 +34,7 @@ import trainingClassRoutes from './routes/trainingClass.routes';
 import enrollmentRoutes from './routes/enrollment.routes';
 import vaccineRequirementRoutes from './routes/vaccineRequirement.routes';
 import customIconRoutes from './routes/custom-icons.routes';
+import productsRoutes from './routes/products.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 
@@ -258,6 +259,9 @@ app.use('/api', requireTenant, vaccineRequirementRoutes);
 
 // Custom Icon Routes
 app.use('/api/custom-icons', requireTenant, customIconRoutes);
+
+// Products & POS Routes
+app.use('/api', requireTenant, productsRoutes);
 
 // Serve uploaded icons statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

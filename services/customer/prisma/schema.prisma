@@ -1331,3 +1331,111 @@ model CustomIcon {
   @@index([category], map: "custom_icons_category_idx")
   @@map("custom_icons")
 }
+
+// ============================================
+// RETAIL POS SYSTEM
+// ============================================
+
+model ProductCategory {
+  id          String    @id @default(uuid())
+  tenantId    String    @default("dev") @map("tenant_id")
+  name        String
+  description String?
+  displayOrder Int      @default(0) @map("display_order")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  products    Product[]
+  
+  @@unique([tenantId, name], map: "product_category_unique")
+  @@index([tenantId, isActive], map: "product_categories_tenant_active_idx")
+  @@map("product_categories")
+}
+
+model Product {
+  id              String    @id @default(uuid())
+  tenantId        String    @default("dev") @map("tenant_id")
+  
+  // Basic Info
+  sku             String?   // Stock Keeping Unit
+  name            String
+  description     String?
+  categoryId      String?   @map("category_id")
+  
+  // Pricing
+  price           Decimal   @db.Decimal(10, 2)
+  cost            Decimal?  @db.Decimal(10, 2) // Cost to business
+  taxable         Boolean   @default(true)
+  
+  // Inventory
+  trackInventory  Boolean   @default(true) @map("track_inventory")
+  currentStock    Int       @default(0) @map("current_stock")
+  lowStockAlert   Int?      @map("low_stock_alert") // Alert when stock below this
+  reorderPoint    Int?      @map("reorder_point")
+  reorderQuantity Int?      @map("reorder_quantity")
+  
+  // Product Type
+  isService       Boolean   @default(false) @map("is_service") // Service vs physical product
+  isPackage       Boolean   @default(false) @map("is_package") // Bundle/package deal
+  
+  // Status
+  isActive        Boolean   @default(true) @map("is_active")
+  isFeatured      Boolean   @default(false) @map("is_featured")
+  
+  // Metadata
+  imageUrl        String?   @map("image_url")
+  barcode         String?
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  category        ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  inventoryLogs   InventoryLog[]
+  packageItems    PackageItem[] @relation("PackageProduct")
+  packageContents PackageItem[] @relation("PackageContents")
+  
+  @@unique([tenantId, sku], map: "product_sku_unique")
+  @@index([tenantId, isActive], map: "products_tenant_active_idx")
+  @@index([categoryId], map: "products_category_idx")
+  @@index([currentStock], map: "products_stock_idx")
+  @@map("products")
+}
+
+model PackageItem {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("dev") @map("tenant_id")
+  
+  packageId   String   @map("package_id")
+  productId   String   @map("product_id")
+  quantity    Int      @default(1)
+  
+  package     Product  @relation("PackageProduct", fields: [packageId], references: [id], onDelete: Cascade)
+  product     Product  @relation("PackageContents", fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([packageId, productId], map: "package_item_unique")
+  @@map("package_items")
+}
+
+model InventoryLog {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("dev") @map("tenant_id")
+  
+  productId   String   @map("product_id")
+  changeType  String   // PURCHASE, SALE, ADJUSTMENT, RETURN, DAMAGE, RESTOCK
+  quantity    Int      // Positive for additions, negative for subtractions
+  previousStock Int    @map("previous_stock")
+  newStock    Int      @map("new_stock")
+  
+  reason      String?
+  reference   String?  // Order ID, Invoice ID, etc.
+  performedBy String?  @map("performed_by") // Staff ID
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId, productId], map: "inventory_logs_tenant_product_idx")
+  @@index([createdAt], map: "inventory_logs_date_idx")
+  @@map("inventory_logs")
+}
