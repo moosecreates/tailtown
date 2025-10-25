@@ -251,11 +251,17 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - **Priority**: Medium | **Effort**: 2 weeks | **Target**: May 15, 2026
 
 ### Training & Classes
-3. **Group Classes Enhancement**
-   - Multi-week class management
-   - Enrollment tracking
-   - Class scheduling
-   - **Priority**: Medium | **Effort**: 2 weeks | **Target**: Jun 15, 2026
+3. **✅ Advanced Scheduling Features** - **COMPLETED Oct 25, 2025**
+   - ✅ Groomer-specific appointment scheduling
+   - ✅ Multi-week training class management
+   - ✅ Enrollment tracking and waitlist management
+   - ✅ Session attendance tracking
+   - ✅ Certificate issuance
+   - ✅ 32 API endpoints implemented
+   - ✅ Full backend with database schema
+   - ✅ TypeScript types and service layer for frontend
+   - **Status**: Backend complete, ready for UI implementation
+   - **Priority**: Medium | **Effort**: 2 weeks | **Completed**: Oct 25, 2025
 
 4. **Contracts Management**
    - Digital contract creation
