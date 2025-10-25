@@ -20,13 +20,34 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - ✅ Mobile-responsive design (ultra-compact, 40% less space)
    - ✅ Auto-optimizations (66% fewer clicks)
    - ✅ Brand color consistency
-   - 🔲 Manage existing reservations (future enhancement)
-   - 🔲 Real-time availability checking (future enhancement)
    - **Status**: PRODUCTION READY | **Completed**: Oct 24, 2025
    - **Documentation**: `docs/CUSTOMER-BOOKING-PORTAL.md`
 
+2. **Customer Reservation Management** ⭐
+   - View existing reservations
+   - Modify reservation dates
+   - Add/remove pets from reservation
+   - Add/remove add-ons
+   - Cancel reservations
+   - Cancellation policy enforcement
+   - Refund processing
+   - Modification history tracking
+   - Email notifications for changes
+   - **Priority**: HIGH | **Effort**: 2 weeks | **Target**: Dec 6, 2025
+
+3. **Real-Time Availability Checking** ⭐
+   - Live kennel/suite availability display
+   - Service capacity checking
+   - Staff availability validation
+   - Date range availability calendar
+   - Alternative date suggestions
+   - Waitlist option when full
+   - Instant booking confirmation
+   - Prevent double-bookings
+   - **Priority**: HIGH | **Effort**: 1 week | **Target**: Nov 29, 2025
+
 ### Revenue & Pricing Features
-2. **Peak Demand Pricing Rules** ⭐ - **PARTIALLY COMPLETE**
+4. **Peak Demand Pricing Rules** ⭐ - **PARTIALLY COMPLETE**
    - ✅ Surcharge capability added to price rules - **COMPLETE**
    - 🔲 Seasonal pricing rules
    - 🔲 Peak time surcharges
@@ -35,7 +56,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - 🔲 Automated price adjustments
    - **Priority**: HIGH | **Effort**: 1 week remaining | **Target**: Nov 22, 2025
 
-3. **Coupon System** ⭐
+5. **Coupon System** ⭐
    - Percentage and fixed amount coupons
    - Service-specific coupons
    - Date range restrictions
@@ -45,9 +66,9 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - Referral coupons
    - Bulk coupon generation
    - Redemption tracking and reporting
-   - **Priority**: HIGH | **Effort**: 2 weeks | **Target**: Dec 6, 2025
+   - **Priority**: HIGH | **Effort**: 2 weeks | **Target**: Dec 13, 2025
 
-4. **Loyalty Rewards System** ⭐
+6. **Loyalty Rewards System** ⭐
    - Points-based rewards program
    - Configurable point earning rules
    - Points for dollars spent
@@ -57,9 +78,9 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - Reward redemption options
    - Points expiration rules
    - Customer loyalty dashboard
-   - **Priority**: HIGH | **Effort**: 2 weeks | **Target**: Dec 20, 2025
+   - **Priority**: HIGH | **Effort**: 2 weeks | **Target**: Dec 27, 2025
 
-5. **Flexible Deposit Rules** ⭐
+7. **Flexible Deposit Rules** ⭐
    - Deposit amount by cost threshold
    - Deposit amount by service type
    - Date-based deposit requirements
@@ -68,10 +89,10 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - Refund policy configuration
    - Partial payment tracking
    - Deposit reminder notifications
-   - **Priority**: HIGH | **Effort**: 1 week | **Target**: Nov 29, 2025
+   - **Priority**: HIGH | **Effort**: 1 week | **Target**: Dec 6, 2025
 
 ### Capacity & Booking Management
-6. **Multi-Pet Suite Bookings** ⭐
+8. **Multi-Pet Suite Bookings** ⭐
    - Allow multiple pets in same kennel/suite
    - Configurable capacity per suite type
    - Family/household pet grouping
@@ -81,7 +102,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - **Priority**: HIGH | **Effort**: 1 week | **Target**: Nov 15, 2025
 
 ### Operations & Customer Experience
-7. **Area-Specific Checklists**
+9. **Area-Specific Checklists**
    - Kennel check-in/check-out checklists
    - Grooming service checklists
    - Training session checklists
@@ -90,7 +111,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
    - **Priority**: High | **Effort**: 1 week | **Target**: Jan 10, 2026
 
 ### Revenue Features
-8. **Retail Items & POS System**
+10. **Retail Items & POS System**
    - Inventory management
    - Product catalog
    - Package deals and bundles
