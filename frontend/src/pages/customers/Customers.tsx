@@ -21,6 +21,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import debounce from 'lodash/debounce';
 import { Customer, customerService } from '../../services/customerService';
+import CustomerIconDisplay from '../../components/customers/CustomerIconDisplay';
+import CustomerIconSelector from '../../components/customers/CustomerIconSelector';
 
 const Customers = () => {
   const navigate = useNavigate();
@@ -51,6 +53,8 @@ const Customers = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [iconSelectorOpen, setIconSelectorOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   const loadCustomers = useCallback(async () => {
     try {
@@ -79,6 +83,43 @@ const Customers = () => {
   const handleRowClick = useCallback((customerId: string) => {
     navigate(`/customers/${customerId}`);
   }, [navigate]);
+
+  const handleIconClick = useCallback((e: React.MouseEvent, customer: Customer) => {
+    e.stopPropagation(); // Prevent row click
+    setSelectedCustomer(customer);
+    setIconSelectorOpen(true);
+  }, []);
+
+  const handleIconSave = useCallback(async (icon: string, color: string) => {
+    if (!selectedCustomer) return;
+
+    try {
+      await customerService.updateCustomer(selectedCustomer.id, {
+        icon,
+        iconColor: color
+      });
+
+      // Update the customer in the list
+      const updatedCustomers = customers.map(c =>
+        c.id === selectedCustomer.id ? { ...c, icon, iconColor: color } : c
+      );
+      setCustomers(updatedCustomers);
+      setFilteredCustomers(updatedCustomers);
+
+      setSnackbar({
+        open: true,
+        message: 'Customer icon updated',
+        severity: 'success'
+      });
+    } catch (err) {
+      console.error('Error updating customer icon:', err);
+      setSnackbar({
+        open: true,
+        message: 'Failed to update icon',
+        severity: 'error'
+      });
+    }
+  }, [selectedCustomer, customers]);
 
   const handleDelete = useCallback(async (e: React.MouseEvent, id: string) => {
     e.stopPropagation(); // Prevent row click
@@ -153,6 +194,7 @@ const Customers = () => {
             <Table>
               <TableHead>
                 <TableRow>
+                  <TableCell width="60">Icon</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Email</TableCell>
                   <TableCell>Phone</TableCell>
@@ -169,7 +211,7 @@ const Customers = () => {
                   >
                     {/* Add a tooltip showing matching pet names if search matches a pet */}
                     {searchQuery && customer.pets?.some((pet: { name: string }) => pet.name.toLowerCase().includes(searchQuery.toLowerCase())) && (
-                      <TableCell colSpan={6} sx={{ p: 0, borderBottom: 'none' }}>
+                      <TableCell colSpan={7} sx={{ p: 0, borderBottom: 'none' }}>
                         <Box sx={{ backgroundColor: '#e3f2fd', p: 1, m: 1, borderRadius: 1 }}>
                           Matching pets: {customer.pets
                             .filter((pet: { name: string }) => pet.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -178,6 +220,14 @@ const Customers = () => {
                         </Box>
                       </TableCell>
                     )}
+                    <TableCell onClick={(e) => handleIconClick(e, customer)} sx={{ cursor: 'pointer' }}>
+                      <CustomerIconDisplay
+                        icon={customer.icon}
+                        color={customer.iconColor}
+                        name={`${customer.firstName} ${customer.lastName}`}
+                        sx={{ width: 40, height: 40 }}
+                      />
+                    </TableCell>
                     <TableCell 
                       onClick={() => handleRowClick(customer.id)}
                       sx={{ cursor: 'pointer' }}
@@ -219,6 +269,20 @@ const Customers = () => {
           </TableContainer>
         )}
       </Box>
+
+      {/* Icon Selector Dialog */}
+      {selectedCustomer && (
+        <CustomerIconSelector
+          open={iconSelectorOpen}
+          currentIcon={selectedCustomer.icon || 'person'}
+          currentColor={selectedCustomer.iconColor || 'blue'}
+          onClose={() => {
+            setIconSelectorOpen(false);
+            setSelectedCustomer(null);
+          }}
+          onSave={handleIconSave}
+        />
+      )}
 
       <Snackbar
         open={snackbar.open}
