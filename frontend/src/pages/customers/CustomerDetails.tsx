@@ -30,6 +30,8 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Customer, customerService } from '../../services/customerService';
 import AccountHistory from '../../components/customers/AccountHistory';
+import CustomerIconSelector from '../../components/customers/CustomerIconSelector';
+import CustomerIconDisplay from '../../components/customers/CustomerIconDisplay';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -87,6 +89,9 @@ const CustomerDetails: React.FC = () => {
   });
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [tabValue, setTabValue] = useState<number>(0);
+  const [iconSelectorOpen, setIconSelectorOpen] = useState(false);
+  const [customerIcon, setCustomerIcon] = useState('person');
+  const [customerColor, setCustomerColor] = useState('blue');
   
   // Fetch customer data
   const fetchCustomer = useCallback(async () => {
@@ -389,9 +394,23 @@ const CustomerDetails: React.FC = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ py: 4 }}>
-        <Typography variant="h5" component="h1" gutterBottom>
-          {isNewCustomer ? 'New Customer' : `${customer.firstName} ${customer.lastName}`}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <CustomerIconDisplay
+            icon={customerIcon}
+            color={customerColor}
+            name={`${customer.firstName} ${customer.lastName}`}
+            sx={{ width: 64, height: 64, cursor: 'pointer' }}
+            onClick={() => setIconSelectorOpen(true)}
+          />
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography variant="h5" component="h1">
+              {isNewCustomer ? 'New Customer' : `${customer.firstName} ${customer.lastName}`}
+            </Typography>
+            <Typography variant="caption" color="textSecondary">
+              Click avatar to customize
+            </Typography>
+          </Box>
+        </Box>
 
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
@@ -478,6 +497,19 @@ const CustomerDetails: React.FC = () => {
             </TabPanel>
           </>
         )}
+
+        {/* Icon Selector Dialog */}
+        <CustomerIconSelector
+          open={iconSelectorOpen}
+          currentIcon={customerIcon}
+          currentColor={customerColor}
+          onClose={() => setIconSelectorOpen(false)}
+          onSave={(icon, color) => {
+            setCustomerIcon(icon);
+            setCustomerColor(color);
+            // TODO: Save to backend when customer profile supports icon/color fields
+          }}
+        />
 
         {/* Snackbar for notifications */}
         <Snackbar
