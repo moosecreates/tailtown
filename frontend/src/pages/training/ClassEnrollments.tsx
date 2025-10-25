@@ -70,10 +70,9 @@ const ClassEnrollments: React.FC = () => {
   };
 
   const handleComplete = async (enrollmentId: string) => {
-    if (window.confirm('Mark this enrollment as completed and issue certificate?')) {
+    if (window.confirm('Mark this enrollment as completed?')) {
       try {
-        // Using the correct method name from the service
-        await schedulingService.enrollments.complete(enrollmentId);
+        await schedulingService.enrollments.update(enrollmentId, { status: 'COMPLETED' });
         await loadData();
       } catch (err: any) {
         setError(err.message || 'Failed to complete enrollment');
