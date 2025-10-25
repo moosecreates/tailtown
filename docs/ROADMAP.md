@@ -302,8 +302,12 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 ## 🐛 Outstanding Issues
 
 ### Known Bugs
-- 🔲 Suite capacity currently limited to 1 (need multi-pet suite support)
-- 🔲 Add feeding schedule to kennel cards with weekly dates
+- ✅ Suite capacity currently limited to 1 (need multi-pet suite support) - **FIXED Oct 25, 2025**
+  - Added helper text and max validation to capacity field
+  - Clarified multi-pet suite configuration (2-10 pets)
+- ✅ Add feeding schedule to kennel cards with weekly dates - **FIXED Oct 25, 2025**
+  - Added "Feeding" row to weekly schedule table
+  - Positioned as first row for easy visibility
 
 ---
 
