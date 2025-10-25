@@ -110,7 +110,7 @@ export default function ChecklistTemplates() {
   };
 
   const handleDeleteTemplate = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this template?')) return;
+    if (!window.confirm('Are you sure you want to delete this template?')) return;
     
     try {
       await fetch(`/api/checklists/templates/${id}`, {
@@ -345,7 +345,7 @@ export default function ChecklistTemplates() {
                 onChange={(e) => {
                   const newArea = e.target.value as ChecklistArea;
                   setCurrentTemplate({ ...currentTemplate, area: newArea });
-                  if (confirm('Load default items for this area?')) {
+                  if (window.confirm('Load default items for this area?')) {
                     handleLoadDefaultTemplate(newArea);
                   }
                 }}

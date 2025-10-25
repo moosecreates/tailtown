@@ -13,8 +13,7 @@ import {
   FormGroup,
   LinearProgress,
   Alert,
-  Chip,
-  IconButton
+  Chip
 } from '@mui/material';
 import {
   CheckCircle as CheckIcon,
@@ -29,11 +28,7 @@ export default function ChecklistView() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    loadChecklist();
-  }, [checklistId]);
-
-  const loadChecklist = async () => {
+  const loadChecklist = React.useCallback(async () => {
     try {
       const response = await fetch(`/api/checklists/instances/${checklistId}`, {
         headers: { 'x-tenant-id': 'dev' }
@@ -45,7 +40,11 @@ export default function ChecklistView() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [checklistId]);
+
+  useEffect(() => {
+    loadChecklist();
+  }, [loadChecklist]);
 
   const handleUpdateItem = async (item: ChecklistInstanceItem, values: Partial<ChecklistInstanceItem>) => {
     if (!checklist) return;
