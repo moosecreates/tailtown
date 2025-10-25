@@ -322,6 +322,14 @@ const KennelCard: React.FC<KennelCardProps> = ({
                 </TableRow>
               </TableHead>
               <TableBody>
+                {/* Feeding Row */}
+                <TableRow>
+                  <StyledTableRowHeaderCell>Feeding</StyledTableRowHeaderCell>
+                  {weekDays.map((day) => (
+                    <StyledTableCell key={`feeding-${day.dayName}`}></StyledTableCell>
+                  ))}
+                </TableRow>
+                
                 {/* AM Row */}
                 <TableRow>
                   <StyledTableRowHeaderCell>AM</StyledTableRowHeaderCell>

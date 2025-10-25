@@ -259,7 +259,8 @@ const ResourceDetails: React.FC = () => {
                   name="capacity"
                   value={resource.capacity || ''}
                   onChange={handleChange}
-                  inputProps={{ min: 1 }}
+                  inputProps={{ min: 1, max: 10 }}
+                  helperText="Maximum number of pets (1-10). For multi-pet suites, set to 2 or more."
                 />
               </Grid>
 
