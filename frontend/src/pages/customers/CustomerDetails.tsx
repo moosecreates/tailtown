@@ -90,8 +90,8 @@ const CustomerDetails: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [tabValue, setTabValue] = useState<number>(0);
   const [iconSelectorOpen, setIconSelectorOpen] = useState(false);
-  const [customerIcon, setCustomerIcon] = useState('person');
-  const [customerColor, setCustomerColor] = useState('blue');
+  const [customerIcon, setCustomerIcon] = useState(customer.icon || 'person');
+  const [customerColor, setCustomerColor] = useState(customer.iconColor || 'blue');
   
   // Fetch customer data
   const fetchCustomer = useCallback(async () => {
@@ -119,6 +119,16 @@ const CustomerDetails: React.FC = () => {
   useEffect(() => {
     fetchCustomer();
   }, [fetchCustomer]);
+
+  // Update icon state when customer data changes
+  useEffect(() => {
+    if (customer.icon) {
+      setCustomerIcon(customer.icon);
+    }
+    if (customer.iconColor) {
+      setCustomerColor(customer.iconColor);
+    }
+  }, [customer.icon, customer.iconColor]);
   
   // Handle tab changes
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -154,9 +164,16 @@ const CustomerDetails: React.FC = () => {
     try {
       setLoading(true);
       
+      // Include icon fields in customer data
+      const customerData = {
+        ...customer,
+        icon: customerIcon,
+        iconColor: customerColor
+      };
+
       if (isNewCustomer) {
         // Create the customer
-        const newCustomer = await customerService.createCustomer(customer);
+        const newCustomer = await customerService.createCustomer(customerData);
         setSnackbar({
           open: true,
           message: 'Customer created successfully',
@@ -175,7 +192,7 @@ const CustomerDetails: React.FC = () => {
           navigate('/customers');
         }
       } else {
-        await customerService.updateCustomer(id || '', customer);
+        await customerService.updateCustomer(id || '', customerData);
         setSnackbar({
           open: true,
           message: 'Customer updated successfully',
@@ -507,7 +524,7 @@ const CustomerDetails: React.FC = () => {
           onSave={(icon, color) => {
             setCustomerIcon(icon);
             setCustomerColor(color);
-            // TODO: Save to backend when customer profile supports icon/color fields
+            // Icon will be saved to backend when customer is saved
           }}
         />
 

@@ -28,6 +28,8 @@ model Customer {
   vatTaxId         String?
   referralSource   String?
   tags             String[]                @default([])
+  icon             String?                 // Customer avatar icon (person, face, smile, etc.)
+  iconColor        String?                 // Customer avatar color (blue, green, purple, etc.)
   isActive         Boolean                 @default(true)
   createdAt        DateTime                @default(now())
   updatedAt        DateTime                @updatedAt

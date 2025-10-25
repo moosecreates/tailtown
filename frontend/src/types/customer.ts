@@ -17,6 +17,8 @@ export interface Customer {
   vatTaxId?: string;
   referralSource?: string;
   tags?: string[];
+  icon?: string; // Customer avatar icon (person, face, smile, etc.)
+  iconColor?: string; // Customer avatar color (blue, green, purple, etc.)
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
