@@ -84,8 +84,8 @@ const VaccineRequirements: React.FC = () => {
       setFormData({
         name: requirement.name,
         description: requirement.description || '',
-        petType: requirement.petType ?? undefined,
-        serviceType: requirement.serviceType ?? undefined,
+        petType: requirement.petType === null ? undefined : requirement.petType,
+        serviceType: requirement.serviceType === null ? undefined : requirement.serviceType,
         isRequired: requirement.isRequired,
         validityPeriodMonths: requirement.validityPeriodMonths,
         reminderDaysBefore: requirement.reminderDaysBefore,
