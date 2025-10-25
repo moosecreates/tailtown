@@ -26,33 +26,53 @@ import debounce from 'lodash/debounce';
 import { Customer, customerService } from '../../services/customerService';
 import CustomerIconBadges from '../../components/customers/CustomerIconBadges';
 import CustomerIconSelectorNew from '../../components/customers/CustomerIconSelectorNew';
+import { ALL_CUSTOMER_ICONS, getCustomerIconById } from '../../constants/customerIcons';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import ClearIcon from '@mui/icons-material/Clear';
+import { Chip, Collapse, IconButton } from '@mui/material';
 
 const Customers = () => {
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilterIcons, setSelectedFilterIcons] = useState<string[]>([]);
+  const [filterIconsOpen, setFilterIconsOpen] = useState(false);
   
   const debouncedSearch = useMemo(
-    () => debounce((query: string) => {
-      const filtered = customers.filter(customer => 
-        `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(query) ||
-        (customer.email || '').toLowerCase().includes(query) ||
-        (customer.phone || '').toLowerCase().includes(query) ||
-        // Search through pet names
-        (customer.pets || []).some(pet => pet.name.toLowerCase().includes(query))
-      );
+    () => debounce((query: string, iconFilters: string[]) => {
+      let filtered = customers;
+      
+      // Apply text search
+      if (query) {
+        filtered = filtered.filter(customer => 
+          `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(query) ||
+          (customer.email || '').toLowerCase().includes(query) ||
+          (customer.phone || '').toLowerCase().includes(query) ||
+          // Search through pet names
+          (customer.pets || []).some(pet => pet.name.toLowerCase().includes(query))
+        );
+      }
+      
+      // Apply icon filters (customer must have ALL selected icons)
+      if (iconFilters.length > 0) {
+        filtered = filtered.filter(customer => {
+          const customerIcons = customer.customerIcons || [];
+          return iconFilters.every(iconId => customerIcons.includes(iconId));
+        });
+      }
+      
       setFilteredCustomers(filtered);
     }, 300),
     [customers]
   );
 
   useEffect(() => {
-    debouncedSearch(searchQuery);
+    debouncedSearch(searchQuery, selectedFilterIcons);
     return () => {
       debouncedSearch.cancel();
     };
-  }, [searchQuery, debouncedSearch]);
+  }, [searchQuery, selectedFilterIcons, debouncedSearch]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
@@ -184,6 +204,97 @@ const Customers = () => {
               ),
             }}
           />
+
+          {/* Icon Filter Section */}
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <Button
+                size="small"
+                startIcon={<FilterListIcon />}
+                onClick={() => setFilterIconsOpen(!filterIconsOpen)}
+                variant={selectedFilterIcons.length > 0 ? "contained" : "outlined"}
+              >
+                Filter by Icons {selectedFilterIcons.length > 0 && `(${selectedFilterIcons.length})`}
+              </Button>
+              {selectedFilterIcons.length > 0 && (
+                <Button
+                  size="small"
+                  startIcon={<ClearIcon />}
+                  onClick={() => setSelectedFilterIcons([])}
+                  color="secondary"
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </Box>
+
+            <Collapse in={filterIconsOpen}>
+              <Paper sx={{ p: 2, mb: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Select icons to filter customers (customers must have ALL selected icons):
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                  {ALL_CUSTOMER_ICONS.map((icon) => {
+                    const isSelected = selectedFilterIcons.includes(icon.id);
+                    return (
+                      <Chip
+                        key={icon.id}
+                        label={
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                            <span style={{ fontSize: '1rem' }}>{icon.icon}</span>
+                            <Typography variant="caption">{icon.label}</Typography>
+                          </Box>
+                        }
+                        onClick={() => {
+                          if (isSelected) {
+                            setSelectedFilterIcons(selectedFilterIcons.filter(id => id !== icon.id));
+                          } else {
+                            setSelectedFilterIcons([...selectedFilterIcons, icon.id]);
+                          }
+                        }}
+                        color={isSelected ? "primary" : "default"}
+                        variant={isSelected ? "filled" : "outlined"}
+                        sx={{
+                          cursor: 'pointer',
+                          '&:hover': {
+                            transform: 'scale(1.05)',
+                          },
+                          transition: 'transform 0.2s',
+                        }}
+                      />
+                    );
+                  })}
+                </Box>
+              </Paper>
+            </Collapse>
+
+            {/* Active Filter Chips */}
+            {selectedFilterIcons.length > 0 && !filterIconsOpen && (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ mr: 1, alignSelf: 'center' }}>
+                  Active filters:
+                </Typography>
+                {selectedFilterIcons.map((iconId) => {
+                  const iconDef = getCustomerIconById(iconId);
+                  if (!iconDef) return null;
+                  return (
+                    <Chip
+                      key={iconId}
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <span style={{ fontSize: '0.9rem' }}>{iconDef.icon}</span>
+                          <Typography variant="caption">{iconDef.label}</Typography>
+                        </Box>
+                      }
+                      size="small"
+                      onDelete={() => setSelectedFilterIcons(selectedFilterIcons.filter(id => id !== iconId))}
+                      color="primary"
+                    />
+                  );
+                })}
+              </Box>
+            )}
+          </Box>
         </Box>
 
         {error && (
