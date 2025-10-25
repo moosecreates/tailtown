@@ -88,6 +88,9 @@ const VaccineRequirements = lazy(() => import('./pages/admin/VaccineRequirements
 // Lazy loaded pages - Grooming
 const GroomerAppointments = lazy(() => import('./pages/grooming/GroomerAppointments'));
 
+// Lazy loaded pages - Training
+const TrainingClasses = lazy(() => import('./pages/training/TrainingClasses'));
+
 // Public Booking Portal
 const BookingPortal = lazy(() => import('./pages/booking/BookingPortal'));
 
@@ -189,6 +192,9 @@ const AppRoutes = () => {
         
         {/* Grooming Routes */}
         <Route path="/grooming/appointments" element={isAuthenticated ? <GroomerAppointments /> : <Navigate to="/login" />} />
+        
+        {/* Training Routes */}
+        <Route path="/training/classes" element={isAuthenticated ? <TrainingClasses /> : <Navigate to="/login" />} />
         
         {/* Debug routes */}
         <Route path="/debug/api" element={<ApiTester />} />

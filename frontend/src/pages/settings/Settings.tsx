@@ -21,7 +21,8 @@ import {
   Assignment as CheckInIcon,
   ChecklistRtl as ChecklistIcon,
   Vaccines as VaccineIcon,
-  ContentCut as GroomingIcon
+  ContentCut as GroomingIcon,
+  School as TrainingIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
@@ -90,6 +91,13 @@ const Settings: React.FC = () => {
       icon: <GroomingIcon sx={{ fontSize: 40, color: 'secondary.main' }} />,
       path: '/grooming/appointments',
       stats: 'Appointments: 0'
+    },
+    {
+      title: 'Training Classes',
+      description: 'Manage training classes, enrollments, sessions, and certificates',
+      icon: <TrainingIcon sx={{ fontSize: 40, color: 'info.main' }} />,
+      path: '/training/classes',
+      stats: 'Classes: 0'
     },
     {
       title: 'Price Rules',
