@@ -1296,3 +1296,38 @@ model VaccineRequirement {
   @@index([petType, serviceType], map: "vaccine_requirements_type_idx")
   @@map("vaccine_requirements")
 }
+
+// ============================================
+// CUSTOM ICON MANAGEMENT
+// ============================================
+
+model CustomIcon {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("dev") @map("tenant_id")
+  
+  // Icon identification
+  name        String   // Unique identifier (e.g., "custom_vip", "custom_special")
+  label       String   // Display name (e.g., "VIP Customer")
+  description String   // Tooltip text
+  
+  // Categorization
+  category    String   @default("custom") // status, payment, communication, service, flag, custom
+  
+  // Image storage
+  imageUrl    String   @map("image_url") // URL or path to uploaded image
+  fileName    String   @map("file_name") // Original filename
+  fileSize    Int      @map("file_size") // File size in bytes
+  mimeType    String   @map("mime_type") // image/png, image/jpeg, image/svg+xml
+  
+  // Metadata
+  isActive    Boolean  @default(true) @map("is_active")
+  displayOrder Int     @default(0) @map("display_order")
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@unique([tenantId, name], map: "custom_icon_unique")
+  @@index([tenantId, isActive], map: "custom_icons_tenant_active_idx")
+  @@index([category], map: "custom_icons_category_idx")
+  @@map("custom_icons")
+}
