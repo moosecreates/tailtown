@@ -20,7 +20,6 @@ const Dashboard = () => {
     inCount,
     outCount,
     overnightCount,
-    todayRevenue,
     filteredReservations,
     loading,
     error,
@@ -40,7 +39,6 @@ const Dashboard = () => {
           inCount={inCount}
           outCount={outCount}
           overnightCount={overnightCount}
-          todayRevenue={todayRevenue}
           appointmentFilter={appointmentFilter}
           onFilterChange={filterReservations}
         />

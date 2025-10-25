@@ -6,7 +6,6 @@ interface DashboardMetrics {
   inCount: number | null;
   outCount: number | null;
   overnightCount: number | null;
-  todayRevenue: number | null;
 }
 
 interface DashboardData extends DashboardMetrics {
@@ -48,7 +47,6 @@ interface DashboardData extends DashboardMetrics {
  * @returns {number|null} inCount - Number of check-ins today (UTC)
  * @returns {number|null} outCount - Number of check-outs today (UTC)
  * @returns {number|null} overnightCount - Number of overnight guests
- * @returns {number|null} todayRevenue - Total revenue for today
  * @returns {Reservation[]} allReservations - All fetched reservations
  * @returns {Reservation[]} filteredReservations - Filtered reservations based on current filter
  * @returns {boolean} loading - Loading state
@@ -69,8 +67,7 @@ export const useDashboardData = () => {
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     inCount: null,
     outCount: null,
-    overnightCount: null,
-    todayRevenue: null
+    overnightCount: null
   });
   
   const [allReservations, setAllReservations] = useState<any[]>([]);
@@ -131,11 +128,8 @@ export const useDashboardData = () => {
       
       const activeStatuses = 'PENDING,CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED,NO_SHOW';
       
-      // Fetch all data in parallel - don't filter by date, we'll filter client-side
-      const [reservationsResponse, revenueResponse] = await Promise.all([
-        reservationService.getAllReservations(1, 250, 'startDate', 'asc', activeStatuses),
-        reservationService.getTodayRevenue()
-      ]);
+      // Fetch reservations - don't filter by date, we'll filter client-side
+      const reservationsResponse = await reservationService.getAllReservations(1, 250, 'startDate', 'asc', activeStatuses);
 
       // Extract reservations from response
       let reservations: any[] = [];
@@ -169,26 +163,10 @@ export const useDashboardData = () => {
         return startDateStr < formattedToday && endDateStr >= formattedToday;
       }).length;
 
-      // Extract revenue
-      let revenue = 0;
-      const revResponse = revenueResponse as any;
-      if (typeof revResponse?.data === 'number') {
-        revenue = revResponse.data;
-      } else if (revResponse?.data?.totalRevenue) {
-        revenue = revResponse.data.totalRevenue;
-      } else if (revResponse?.data?.revenue) {
-        revenue = revResponse.data.revenue;
-      } else if (revResponse?.revenue) {
-        revenue = revResponse.revenue;
-      } else if (revResponse?.totalRevenue) {
-        revenue = revResponse.totalRevenue;
-      }
-
       setMetrics({
         inCount: checkIns,
         outCount: checkOuts,
-        overnightCount: overnight,
-        todayRevenue: revenue
+        overnightCount: overnight
       });
 
       setAllReservations(reservations);

@@ -3,8 +3,7 @@ import { Box } from '@mui/material';
 import { 
   Login as InIcon, 
   Logout as OutIcon, 
-  Hotel as OvernightIcon, 
-  AttachMoney as MoneyIcon
+  Hotel as OvernightIcon
 } from '@mui/icons-material';
 import MetricCard from './MetricCard';
 
@@ -12,7 +11,6 @@ interface DashboardMetricsProps {
   inCount: number | null;
   outCount: number | null;
   overnightCount: number | null;
-  todayRevenue: number | null;
   appointmentFilter: 'in' | 'out' | 'all';
   onFilterChange: (filter: 'in' | 'out' | 'all') => void;
 }
@@ -25,7 +23,6 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
   inCount,
   outCount,
   overnightCount,
-  todayRevenue,
   appointmentFilter,
   onFilterChange
 }) => {
@@ -50,13 +47,6 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       icon: <OvernightIcon sx={{ fontSize: 40, color: 'success.main' }} />,
       onClick: undefined,
       isActive: false
-    },
-    { 
-      title: 'Today\'s Revenue', 
-      value: todayRevenue !== null ? `$${(todayRevenue || 0).toLocaleString()}` : null, 
-      icon: <MoneyIcon sx={{ fontSize: 40, color: 'info.main' }} />,
-      onClick: undefined,
-      isActive: false
     }
   ];
 
@@ -64,7 +54,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(4, 1fr)' },
+        gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' },
         gap: 3
       }}
     >
