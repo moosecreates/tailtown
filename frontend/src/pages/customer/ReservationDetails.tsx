@@ -245,7 +245,7 @@ export const ReservationDetails: React.FC = () => {
                         primary={reservationManagementService.formatModificationType(mod.modificationType)}
                         secondary={
                           <>
-                            {formatDateTime(mod.modifiedAt)}
+                            {formatDateTime(typeof mod.modifiedAt === 'string' ? mod.modifiedAt : mod.modifiedAt.toISOString())}
                             {mod.notes && ` • ${mod.notes}`}
                           </>
                         }
