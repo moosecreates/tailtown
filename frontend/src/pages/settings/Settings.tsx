@@ -22,7 +22,8 @@ import {
   ChecklistRtl as ChecklistIcon,
   Vaccines as VaccineIcon,
   ContentCut as GroomingIcon,
-  School as TrainingIcon
+  School as TrainingIcon,
+  EmojiEmotions as IconsIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
@@ -98,6 +99,13 @@ const Settings: React.FC = () => {
       icon: <TrainingIcon sx={{ fontSize: 40, color: 'info.main' }} />,
       path: '/training/classes',
       stats: 'Classes: 0'
+    },
+    {
+      title: 'Custom Icons',
+      description: 'Upload and manage custom icons for customers and pets',
+      icon: <IconsIcon sx={{ fontSize: 40, color: 'warning.main' }} />,
+      path: '/admin/custom-icons',
+      stats: 'Custom Icons: 0'
     },
     {
       title: 'Price Rules',

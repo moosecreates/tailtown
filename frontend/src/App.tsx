@@ -85,6 +85,9 @@ const ChecklistView = lazy(() => import('./pages/staff/ChecklistView'));
 // Lazy loaded pages - Vaccine Management
 const VaccineRequirements = lazy(() => import('./pages/admin/VaccineRequirements'));
 
+// Lazy loaded pages - Custom Icons
+const CustomIcons = lazy(() => import('./pages/admin/CustomIcons'));
+
 // Lazy loaded pages - Grooming
 const GroomerAppointments = lazy(() => import('./pages/grooming/GroomerAppointments'));
 
@@ -190,6 +193,9 @@ const AppRoutes = () => {
         
         {/* Vaccine Management Routes */}
         <Route path="/admin/vaccine-requirements" element={isAuthenticated ? <VaccineRequirements /> : <Navigate to="/login" />} />
+        
+        {/* Custom Icons Route */}
+        <Route path="/admin/custom-icons" element={isAuthenticated ? <CustomIcons /> : <Navigate to="/login" />} />
         
         {/* Grooming Routes */}
         <Route path="/grooming/appointments" element={isAuthenticated ? <GroomerAppointments /> : <Navigate to="/login" />} />
