@@ -3,11 +3,23 @@
  * Tests for CardConnect payment integration
  */
 
-import { paymentService, CardPaymentRequest } from '../paymentService';
 import axios from 'axios';
 
+// Mock axios first
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+// Mock the api module to prevent interceptor errors
+jest.mock('../api', () => ({
+  customerApi: {
+    interceptors: {
+      request: { use: jest.fn() },
+      response: { use: jest.fn() }
+    }
+  }
+}));
+
+import { paymentService, CardPaymentRequest } from '../paymentService';
 
 const validPaymentRequest: CardPaymentRequest = {
   amount: 100.00,
