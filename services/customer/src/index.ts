@@ -32,6 +32,7 @@ import vaccineUploadRoutes from './routes/vaccine-upload.routes';
 import groomerAppointmentRoutes from './routes/groomerAppointment.routes';
 import trainingClassRoutes from './routes/trainingClass.routes';
 import enrollmentRoutes from './routes/enrollment.routes';
+import vaccineRequirementRoutes from './routes/vaccineRequirement.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 
@@ -250,6 +251,9 @@ app.use('/api/pets', requireTenant, vaccineUploadRoutes);
 app.use('/api', requireTenant, groomerAppointmentRoutes);
 app.use('/api', requireTenant, trainingClassRoutes);
 app.use('/api', requireTenant, enrollmentRoutes);
+
+// Vaccine Requirement Routes
+app.use('/api', requireTenant, vaccineRequirementRoutes);
 
 // Additional routes without /api prefix for staff (to match frontend API calls)
 app.use('/staff', staffRoutes);

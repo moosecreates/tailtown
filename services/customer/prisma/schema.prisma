@@ -1259,3 +1259,36 @@ model ClassWaitlist {
   @@index([customerId], map: "class_waitlist_customer_idx")
   @@map("class_waitlist")
 }
+
+// ============================================
+// VACCINE REQUIREMENT MANAGEMENT
+// ============================================
+
+model VaccineRequirement {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("dev") @map("tenant_id")
+  name        String   // e.g., "Rabies", "DHPP", "Bordetella"
+  description String?
+  
+  // Applicability
+  petType     String?  @map("pet_type") // null = all types, or "DOG", "CAT"
+  serviceType String?  @map("service_type") // null = all services, or "DAYCARE", "BOARDING", "GROOMING"
+  
+  // Requirements
+  isRequired  Boolean  @default(true) @map("is_required")
+  validityPeriodMonths Int? @map("validity_period_months") // How many months vaccine is valid
+  reminderDaysBefore   Int? @default(30) @map("reminder_days_before") // Days before expiration to send reminder
+  
+  // Status
+  isActive    Boolean  @default(true) @map("is_active")
+  displayOrder Int     @default(0) @map("display_order")
+  
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@unique([tenantId, name, petType, serviceType], map: "vaccine_requirement_unique")
+  @@index([tenantId, isActive], map: "vaccine_requirements_tenant_active_idx")
+  @@index([petType, serviceType], map: "vaccine_requirements_type_idx")
+  @@map("vaccine_requirements")
+}
