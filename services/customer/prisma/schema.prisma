@@ -274,9 +274,9 @@ model Staff {
   city                 String?
   state                String?
   zipCode              String?
-  groomingSkills       Json?
-  maxAppointmentsPerDay Int?
-  averageServiceTime   Int?
+  groomingSkills       Json?    @map("grooming_skills")
+  maxAppointmentsPerDay Int?    @map("max_appointments_per_day")
+  averageServiceTime   Int?    @map("average_service_time")
   assignedReservations Reservation[]
   availability         StaffAvailability[]
   schedules            StaffSchedule[]
@@ -1029,21 +1029,21 @@ enum UserRole {
 // Groomer-Specific Scheduling
 model GroomerAppointment {
   id              String   @id @default(uuid())
-  tenantId        String   @default("dev")
-  reservationId   String
-  groomerId       String
-  serviceId       String
-  petId           String
-  customerId      String
-  scheduledDate   DateTime
-  scheduledTime   String
+  tenantId        String   @default("dev") @map("tenant_id")
+  reservationId   String   @map("reservation_id")
+  groomerId       String   @map("groomer_id")
+  serviceId       String   @map("service_id")
+  petId           String   @map("pet_id")
+  customerId      String   @map("customer_id")
+  scheduledDate   DateTime @map("scheduled_date")
+  scheduledTime   String   @map("scheduled_time")
   duration        Int
   status          String   @default("SCHEDULED")
-  actualStartTime DateTime?
-  actualEndTime   DateTime?
+  actualStartTime DateTime? @map("actual_start_time")
+  actualEndTime   DateTime? @map("actual_end_time")
   notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
   
   groomer         Staff    @relation("GroomerAppointments", fields: [groomerId], references: [id], onDelete: Cascade)
   service         Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
@@ -1058,13 +1058,13 @@ model GroomerAppointment {
 
 model GroomerPreference {
   id         String   @id @default(uuid())
-  tenantId   String   @default("dev")
-  customerId String
-  groomerId  String
-  petId      String?
+  tenantId   String   @default("dev") @map("tenant_id")
+  customerId String   @map("customer_id")
+  groomerId  String   @map("groomer_id")
+  petId      String?  @map("pet_id")
   priority   Int      @default(1)
   notes      String?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime @default(now()) @map("created_at")
   
   customer   Customer @relation("CustomerGroomerPreferences", fields: [customerId], references: [id], onDelete: Cascade)
   groomer    Staff    @relation("GroomerPreferences", fields: [groomerId], references: [id], onDelete: Cascade)
@@ -1078,14 +1078,14 @@ model GroomerPreference {
 
 model GroomerBreak {
   id        String   @id @default(uuid())
-  tenantId  String   @default("dev")
-  groomerId String
+  tenantId  String   @default("dev") @map("tenant_id")
+  groomerId String   @map("groomer_id")
   date      DateTime
-  startTime String
-  endTime   String
+  startTime String   @map("start_time")
+  endTime   String   @map("end_time")
   type      String
   notes     String?
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
   
   groomer   Staff    @relation("GroomerBreaks", fields: [groomerId], references: [id], onDelete: Cascade)
   
@@ -1096,37 +1096,37 @@ model GroomerBreak {
 // Multi-Week Training Classes
 model TrainingClass {
   id              String   @id @default(uuid())
-  tenantId        String   @default("dev")
+  tenantId        String   @default("dev") @map("tenant_id")
   name            String
   description     String?
   level           String
   category        String
-  instructorId    String
-  maxCapacity     Int
-  currentEnrolled Int      @default(0)
+  instructorId    String   @map("instructor_id")
+  maxCapacity     Int      @map("max_capacity")
+  currentEnrolled Int      @default(0) @map("current_enrolled")
   
-  startDate       DateTime
-  endDate         DateTime
-  totalWeeks      Int
-  daysOfWeek      Int[]
-  startTime       String
-  endTime         String
+  startDate       DateTime @map("start_date")
+  endDate         DateTime @map("end_date")
+  totalWeeks      Int      @map("total_weeks")
+  daysOfWeek      Int[]    @map("days_of_week")
+  startTime       String   @map("start_time")
+  endTime         String   @map("end_time")
   duration        Int
   
-  pricePerSeries  Float
-  pricePerSession Float?
-  depositRequired Float?
+  pricePerSeries  Float    @map("price_per_series")
+  pricePerSession Float?   @map("price_per_session")
+  depositRequired Float?   @map("deposit_required")
   
   status          String   @default("SCHEDULED")
-  isActive        Boolean  @default(true)
+  isActive        Boolean  @default(true) @map("is_active")
   
-  minAge          Int?
-  maxAge          Int?
+  minAge          Int?     @map("min_age")
+  maxAge          Int?     @map("max_age")
   prerequisites   String[]
   
   notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
   
   instructor      Staff           @relation("InstructorClasses", fields: [instructorId], references: [id], onDelete: Cascade)
   sessions        ClassSession[]
@@ -1141,16 +1141,16 @@ model TrainingClass {
 
 model ClassSession {
   id              String   @id @default(uuid())
-  tenantId        String   @default("dev")
-  classId         String
-  sessionNumber   Int
-  scheduledDate   DateTime
-  scheduledTime   String
+  tenantId        String   @default("dev") @map("tenant_id")
+  classId         String   @map("class_id")
+  sessionNumber   Int      @map("session_number")
+  scheduledDate   DateTime @map("scheduled_date")
+  scheduledTime   String   @map("scheduled_time")
   duration        Int
   
   status          String   @default("SCHEDULED")
-  actualStartTime DateTime?
-  actualEndTime   DateTime?
+  actualStartTime DateTime? @map("actual_start_time")
+  actualEndTime   DateTime? @map("actual_end_time")
   
   topic           String?
   objectives      String[]
@@ -1158,8 +1158,8 @@ model ClassSession {
   homework        String?
   
   notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
   
   class           TrainingClass      @relation(fields: [classId], references: [id], onDelete: Cascade)
   attendance      SessionAttendance[]
@@ -1209,24 +1209,24 @@ model ClassEnrollment {
 
 model SessionAttendance {
   id              String   @id @default(uuid())
-  tenantId        String   @default("dev")
-  sessionId       String
-  enrollmentId    String
-  petId           String
+  tenantId        String   @default("dev") @map("tenant_id")
+  sessionId       String   @map("session_id")
+  enrollmentId    String   @map("enrollment_id")
+  petId           String   @map("pet_id")
   
   status          String
-  arrivalTime     DateTime?
-  departureTime   DateTime?
+  arrivalTime     DateTime? @map("arrival_time")
+  departureTime   DateTime? @map("departure_time")
   
-  participationLevel String?
-  behaviorRating     Int?
-  progressNotes      String?
+  participationLevel String? @map("participation_level")
+  behaviorRating     Int?    @map("behavior_rating")
+  progressNotes      String? @map("progress_notes")
   
-  homeworkCompleted  Boolean @default(false)
-  homeworkNotes      String?
+  homeworkCompleted  Boolean @default(false) @map("homework_completed")
+  homeworkNotes      String? @map("homework_notes")
   
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
   
   session         ClassSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   enrollment      ClassEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
@@ -1240,14 +1240,14 @@ model SessionAttendance {
 
 model ClassWaitlist {
   id           String   @id @default(uuid())
-  tenantId     String   @default("dev")
-  classId      String
-  petId        String
-  customerId   String
+  tenantId     String   @default("dev") @map("tenant_id")
+  classId      String   @map("class_id")
+  petId        String   @map("pet_id")
+  customerId   String   @map("customer_id")
   position     Int
-  addedDate    DateTime @default(now())
+  addedDate    DateTime @default(now()) @map("added_date")
   notified     Boolean  @default(false)
-  notifiedDate DateTime?
+  notifiedDate DateTime? @map("notified_date")
   status       String   @default("WAITING")
   
   class        TrainingClass @relation(fields: [classId], references: [id], onDelete: Cascade)
