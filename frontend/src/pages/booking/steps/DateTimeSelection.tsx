@@ -38,10 +38,20 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
     const timer = setTimeout(() => {
       if (startDateRef.current) {
         startDateRef.current.focus();
-        // Trigger click to open native date picker
-        startDateRef.current.click();
+        // Use showPicker() if available (modern browsers)
+        try {
+          if ('showPicker' in startDateRef.current) {
+            (startDateRef.current as any).showPicker();
+          } else {
+            // Fallback to click for older browsers
+            startDateRef.current.click();
+          }
+        } catch (error) {
+          // Silently fail if showPicker is not supported
+          console.log('Date picker auto-open not supported in this browser');
+        }
       }
-    }, 100);
+    }, 300); // Increased delay for better reliability
     return () => clearTimeout(timer);
   }, []);
 
