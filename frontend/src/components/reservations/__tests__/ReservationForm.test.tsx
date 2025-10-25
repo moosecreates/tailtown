@@ -9,16 +9,40 @@ import * as petService from '../../../services/petService';
 import * as serviceManagement from '../../../services/serviceManagement';
 import * as resourceService from '../../../services/resourceService';
 
-// Mock the services
-jest.mock('../../../services/customerService');
-jest.mock('../../../services/petService');
-jest.mock('../../../services/serviceManagement');
-jest.mock('../../../services/resourceService');
+// Mock the services with proper implementations
+jest.mock('../../../services/customerService', () => ({
+  customerService: {
+    getAllCustomers: jest.fn(),
+    searchCustomers: jest.fn(),
+    getCustomerById: jest.fn()
+  }
+}));
 
-const mockCustomerService = customerService as jest.Mocked<typeof customerService>;
-const mockPetService = petService as jest.Mocked<typeof petService>;
-const mockServiceManagement = serviceManagement as jest.Mocked<typeof serviceManagement>;
-const mockResourceService = resourceService as jest.Mocked<typeof resourceService>;
+jest.mock('../../../services/petService', () => ({
+  petService: {
+    getPetsByCustomer: jest.fn(),
+    getPetById: jest.fn()
+  }
+}));
+
+jest.mock('../../../services/serviceManagement', () => ({
+  serviceManagement: {
+    getAllServices: jest.fn(),
+    getServiceById: jest.fn()
+  }
+}));
+
+jest.mock('../../../services/resourceService', () => ({
+  resourceService: {
+    getSuites: jest.fn(),
+    getResourceById: jest.fn()
+  }
+}));
+
+const mockCustomerService = customerService.customerService as jest.Mocked<typeof customerService.customerService>;
+const mockPetService = petService.petService as jest.Mocked<typeof petService.petService>;
+const mockServiceManagement = serviceManagement.serviceManagement as jest.Mocked<typeof serviceManagement.serviceManagement>;
+const mockResourceService = resourceService.resourceService as jest.Mocked<typeof resourceService.resourceService>;
 
 // Test data
 const mockCustomers = [
