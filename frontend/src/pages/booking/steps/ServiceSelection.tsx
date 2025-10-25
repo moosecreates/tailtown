@@ -9,7 +9,6 @@ import {
   Grid,
   Card,
   CardContent,
-  CardActionArea,
   Typography,
   Chip,
   CircularProgress,
@@ -221,10 +220,6 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({
                     }
                   }}
                 >
-                  <CardActionArea
-                    onClick={() => handleServiceSelect(service)}
-                    sx={{ height: '100%' }}
-                  >
                     <CardContent sx={{ p: { xs: 1, sm: 1.5 } }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Avatar
@@ -299,10 +294,7 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({
                           variant="contained"
                           fullWidth
                           size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleServiceSelect(service);
-                          }}
+                          onClick={() => handleServiceSelect(service)}
                           sx={{
                             py: { xs: 0.5, sm: 0.75 },
                             fontSize: { xs: '0.75rem', sm: '0.875rem' },
@@ -314,7 +306,6 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({
                         </Button>
                       </Box>
                     </CardContent>
-                  </CardActionArea>
                 </Card>
               </Grid>
             ))}
