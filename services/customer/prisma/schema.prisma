@@ -37,6 +37,10 @@ model Customer {
   payments         Payment[]
   pets             Pet[]
   reservations     Reservation[]
+  groomerAppointments GroomerAppointment[] @relation("CustomerGroomerAppointments")
+  groomerPreferences  GroomerPreference[]  @relation("CustomerGroomerPreferences")
+  classEnrollments    ClassEnrollment[]    @relation("CustomerClassEnrollments")
+  classWaitlist       ClassWaitlist[]      @relation("CustomerClassWaitlist")
 
   @@index([firstName, lastName], map: "customers_name_search_idx")
   @@index([email], map: "customers_email_search_idx")
@@ -84,6 +88,11 @@ model Pet {
   medicalRecords     MedicalRecord[]
   owner              Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
   reservations       Reservation[]
+  groomerAppointments GroomerAppointment[] @relation("PetGroomerAppointments")
+  groomerPreferences  GroomerPreference[]  @relation("PetGroomerPreferences")
+  classEnrollments    ClassEnrollment[]    @relation("PetClassEnrollments")
+  sessionAttendance   SessionAttendance[]  @relation("PetSessionAttendance")
+  classWaitlist       ClassWaitlist[]      @relation("PetClassWaitlist")
 
   @@index([customerId], map: "pets_customer_id_idx")
   @@index([isActive, type], map: "pets_active_type_idx")
@@ -158,6 +167,7 @@ model Service {
   availableAddOns AddOnService[]
   priceRules      PriceRuleService[]
   reservations    Reservation[]
+  groomerAppointments GroomerAppointment[]
 
   @@index([tenantId, isActive], map: "services_tenant_active_idx")
   @@index([tenantId, name], map: "services_tenant_name_idx")
@@ -264,10 +274,17 @@ model Staff {
   city                 String?
   state                String?
   zipCode              String?
+  groomingSkills       Json?
+  maxAppointmentsPerDay Int?
+  averageServiceTime   Int?
   assignedReservations Reservation[]
   availability         StaffAvailability[]
   schedules            StaffSchedule[]
   timeOff              StaffTimeOff[]
+  groomerAppointments  GroomerAppointment[] @relation("GroomerAppointments")
+  groomerPreferences   GroomerPreference[]  @relation("GroomerPreferences")
+  groomerBreaks        GroomerBreak[]       @relation("GroomerBreaks")
+  instructorClasses    TrainingClass[]      @relation("InstructorClasses")
 
   @@unique([tenantId, email], map: "staff_tenant_email_unique")
   @@index([tenantId, isActive], map: "staff_tenant_active_idx")
@@ -1002,4 +1019,243 @@ enum UserRole {
   TENANT_ADMIN   // Tenant owner/admin
   MANAGER        // Location manager
   STAFF          // Regular employee
+  CUSTOMER       // Customer with login
+}
+
+// ============================================
+// ADVANCED SCHEDULING MODELS
+// ============================================
+
+// Groomer-Specific Scheduling
+model GroomerAppointment {
+  id              String   @id @default(uuid())
+  tenantId        String   @default("dev")
+  reservationId   String
+  groomerId       String
+  serviceId       String
+  petId           String
+  customerId      String
+  scheduledDate   DateTime
+  scheduledTime   String
+  duration        Int
+  status          String   @default("SCHEDULED")
+  actualStartTime DateTime?
+  actualEndTime   DateTime?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  groomer         Staff    @relation("GroomerAppointments", fields: [groomerId], references: [id], onDelete: Cascade)
+  service         Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  pet             Pet      @relation("PetGroomerAppointments", fields: [petId], references: [id], onDelete: Cascade)
+  customer        Customer @relation("CustomerGroomerAppointments", fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@index([groomerId, scheduledDate], map: "groomer_appointments_groomer_date_idx")
+  @@index([tenantId, groomerId, status], map: "groomer_appointments_tenant_groomer_status_idx")
+  @@index([reservationId], map: "groomer_appointments_reservation_idx")
+  @@map("groomer_appointments")
+}
+
+model GroomerPreference {
+  id         String   @id @default(uuid())
+  tenantId   String   @default("dev")
+  customerId String
+  groomerId  String
+  petId      String?
+  priority   Int      @default(1)
+  notes      String?
+  createdAt  DateTime @default(now())
+  
+  customer   Customer @relation("CustomerGroomerPreferences", fields: [customerId], references: [id], onDelete: Cascade)
+  groomer    Staff    @relation("GroomerPreferences", fields: [groomerId], references: [id], onDelete: Cascade)
+  pet        Pet?     @relation("PetGroomerPreferences", fields: [petId], references: [id], onDelete: Cascade)
+  
+  @@unique([tenantId, customerId, groomerId, petId], map: "groomer_preference_unique")
+  @@index([customerId], map: "groomer_preferences_customer_idx")
+  @@index([groomerId], map: "groomer_preferences_groomer_idx")
+  @@map("groomer_preferences")
+}
+
+model GroomerBreak {
+  id        String   @id @default(uuid())
+  tenantId  String   @default("dev")
+  groomerId String
+  date      DateTime
+  startTime String
+  endTime   String
+  type      String
+  notes     String?
+  createdAt DateTime @default(now())
+  
+  groomer   Staff    @relation("GroomerBreaks", fields: [groomerId], references: [id], onDelete: Cascade)
+  
+  @@index([groomerId, date], map: "groomer_breaks_groomer_date_idx")
+  @@map("groomer_breaks")
+}
+
+// Multi-Week Training Classes
+model TrainingClass {
+  id              String   @id @default(uuid())
+  tenantId        String   @default("dev")
+  name            String
+  description     String?
+  level           String
+  category        String
+  instructorId    String
+  maxCapacity     Int
+  currentEnrolled Int      @default(0)
+  
+  startDate       DateTime
+  endDate         DateTime
+  totalWeeks      Int
+  daysOfWeek      Int[]
+  startTime       String
+  endTime         String
+  duration        Int
+  
+  pricePerSeries  Float
+  pricePerSession Float?
+  depositRequired Float?
+  
+  status          String   @default("SCHEDULED")
+  isActive        Boolean  @default(true)
+  
+  minAge          Int?
+  maxAge          Int?
+  prerequisites   String[]
+  
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  instructor      Staff           @relation("InstructorClasses", fields: [instructorId], references: [id], onDelete: Cascade)
+  sessions        ClassSession[]
+  enrollments     ClassEnrollment[]
+  waitlist        ClassWaitlist[]
+  
+  @@index([tenantId, status, isActive], map: "training_classes_tenant_status_idx")
+  @@index([startDate, endDate], map: "training_classes_dates_idx")
+  @@index([instructorId], map: "training_classes_instructor_idx")
+  @@map("training_classes")
+}
+
+model ClassSession {
+  id              String   @id @default(uuid())
+  tenantId        String   @default("dev")
+  classId         String
+  sessionNumber   Int
+  scheduledDate   DateTime
+  scheduledTime   String
+  duration        Int
+  
+  status          String   @default("SCHEDULED")
+  actualStartTime DateTime?
+  actualEndTime   DateTime?
+  
+  topic           String?
+  objectives      String[]
+  materials       String[]
+  homework        String?
+  
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  class           TrainingClass      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  attendance      SessionAttendance[]
+  
+  @@index([classId, sessionNumber], map: "class_sessions_class_number_idx")
+  @@index([scheduledDate, status], map: "class_sessions_date_status_idx")
+  @@map("class_sessions")
+}
+
+model ClassEnrollment {
+  id              String   @id @default(uuid())
+  tenantId        String   @default("dev")
+  classId         String
+  petId           String
+  customerId      String
+  
+  enrollmentDate  DateTime @default(now())
+  status          String   @default("ENROLLED")
+  
+  amountPaid      Float    @default(0)
+  amountDue       Float
+  paymentStatus   String   @default("PENDING")
+  
+  sessionsAttended Int     @default(0)
+  totalSessions   Int
+  completionRate  Float   @default(0)
+  
+  certificateIssued Boolean @default(false)
+  certificateDate   DateTime?
+  
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  class           TrainingClass      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  pet             Pet                @relation("PetClassEnrollments", fields: [petId], references: [id], onDelete: Cascade)
+  customer        Customer           @relation("CustomerClassEnrollments", fields: [customerId], references: [id], onDelete: Cascade)
+  attendance      SessionAttendance[]
+  
+  @@unique([classId, petId], map: "class_enrollment_unique")
+  @@index([tenantId, status], map: "class_enrollments_tenant_status_idx")
+  @@index([classId], map: "class_enrollments_class_idx")
+  @@index([customerId], map: "class_enrollments_customer_idx")
+  @@index([petId], map: "class_enrollments_pet_idx")
+  @@map("class_enrollments")
+}
+
+model SessionAttendance {
+  id              String   @id @default(uuid())
+  tenantId        String   @default("dev")
+  sessionId       String
+  enrollmentId    String
+  petId           String
+  
+  status          String
+  arrivalTime     DateTime?
+  departureTime   DateTime?
+  
+  participationLevel String?
+  behaviorRating     Int?
+  progressNotes      String?
+  
+  homeworkCompleted  Boolean @default(false)
+  homeworkNotes      String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  session         ClassSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  enrollment      ClassEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  pet             Pet             @relation("PetSessionAttendance", fields: [petId], references: [id], onDelete: Cascade)
+  
+  @@unique([sessionId, enrollmentId], map: "session_attendance_unique")
+  @@index([sessionId, status], map: "session_attendance_session_status_idx")
+  @@index([enrollmentId], map: "session_attendance_enrollment_idx")
+  @@map("session_attendance")
+}
+
+model ClassWaitlist {
+  id           String   @id @default(uuid())
+  tenantId     String   @default("dev")
+  classId      String
+  petId        String
+  customerId   String
+  position     Int
+  addedDate    DateTime @default(now())
+  notified     Boolean  @default(false)
+  notifiedDate DateTime?
+  status       String   @default("WAITING")
+  
+  class        TrainingClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  pet          Pet           @relation("PetClassWaitlist", fields: [petId], references: [id], onDelete: Cascade)
+  customer     Customer      @relation("CustomerClassWaitlist", fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@unique([classId, petId], map: "class_waitlist_unique")
+  @@index([classId, position], map: "class_waitlist_class_position_idx")
+  @@index([customerId], map: "class_waitlist_customer_idx")
+  @@map("class_waitlist")
 }
