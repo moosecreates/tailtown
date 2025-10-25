@@ -37,6 +37,8 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
   const [endDate, setEndDate] = useState<Date | null>(
     bookingData.endDate ? new Date(bookingData.endDate) : null
   );
+  const [startDateOpen, setStartDateOpen] = useState(true);
+  const [endDateOpen, setEndDateOpen] = useState(false);
   const startDatePickerRef = useRef<any>(null);
 
   const handleContinue = () => {
@@ -49,10 +51,20 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
 
   const handleStartDateChange = (date: Date | null) => {
     setStartDate(date);
+    setStartDateOpen(false);
     // If end date is before new start date, clear it
     if (date && endDate && endDate < date) {
       setEndDate(null);
     }
+    // Auto-open end date picker
+    if (date) {
+      setTimeout(() => setEndDateOpen(true), 100);
+    }
+  };
+
+  const handleEndDateChange = (date: Date | null) => {
+    setEndDate(date);
+    setEndDateOpen(false);
   };
 
   return (
@@ -79,8 +91,9 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
                   InputLabelProps={{ shrink: true }}
                 />
               }
-              open={true}
-              onClickOutside={() => {}}
+              open={startDateOpen}
+              onClickOutside={() => setStartDateOpen(false)}
+              onInputClick={() => setStartDateOpen(true)}
               shouldCloseOnSelect={true}
               popperPlacement="bottom-start"
             />
@@ -90,7 +103,7 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
           <Box sx={{ '& .react-datepicker-wrapper': { width: '100%' } }}>
             <DatePicker
               selected={endDate}
-              onChange={(date) => setEndDate(date)}
+              onChange={handleEndDateChange}
               minDate={startDate || new Date()}
               dateFormat="MM/dd/yyyy"
               placeholderText="Select check-out date"
@@ -103,6 +116,9 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
                 />
               }
               disabled={!startDate}
+              open={endDateOpen}
+              onClickOutside={() => setEndDateOpen(false)}
+              onInputClick={() => setEndDateOpen(true)}
               shouldCloseOnSelect={true}
               popperPlacement="bottom-start"
             />
