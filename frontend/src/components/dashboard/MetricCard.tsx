@@ -31,10 +31,10 @@ const MetricCard: React.FC<MetricCardProps> = ({
       elevation={2}
       onClick={onClick}
       sx={{
-        p: 3,
+        p: 2,
         display: 'flex',
         flexDirection: 'column',
-        height: 140,
+        height: 100,
         borderRadius: 2,
         position: 'relative',
         overflow: 'hidden',
@@ -42,20 +42,22 @@ const MetricCard: React.FC<MetricCardProps> = ({
         opacity: isActive ? 1 : 0.9,
         border: isActive ? 2 : 0,
         borderColor: isActive ? 'primary.main' : 'transparent',
-        transition: 'all 0.3s ease',
+        transition: 'all 0.2s ease',
         '&:hover': onClick ? {
-          transform: 'translateY(-4px)',
-          boxShadow: 4,
+          transform: 'translateY(-2px)',
+          boxShadow: 3,
         } : {}
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h6" component="div" sx={{ fontWeight: 500 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+        <Typography variant="subtitle2" component="div" sx={{ fontWeight: 500, fontSize: '0.875rem' }}>
           {title}
         </Typography>
-        {icon}
+        <Box sx={{ transform: 'scale(0.8)' }}>
+          {icon}
+        </Box>
       </Box>
-      <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', mt: 'auto' }}>
+      <Typography variant="h5" component="div" sx={{ fontWeight: 'bold', mt: 'auto' }}>
         {displayValue}
       </Typography>
     </Paper>

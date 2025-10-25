@@ -29,11 +29,11 @@ const Dashboard = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom component="h1">
+      <Typography variant="h5" component="h1" sx={{ mb: 2 }}>
         Dashboard
       </Typography>
       
-      <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {/* Metrics Cards */}
         <DashboardMetrics
           inCount={inCount}
@@ -44,7 +44,7 @@ const Dashboard = () => {
         />
 
         {/* New Widgets Row */}
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
             <UpcomingAppointments />
           </Grid>

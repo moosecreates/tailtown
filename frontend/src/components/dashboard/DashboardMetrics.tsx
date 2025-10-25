@@ -55,7 +55,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       sx={{
         display: 'grid',
         gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' },
-        gap: 3
+        gap: 2
       }}
     >
       {metrics.map((metric, index) => (
