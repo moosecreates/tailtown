@@ -84,19 +84,17 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({
 
   const handleServiceSelect = (service: Service) => {
     setSelectedService(service);
-    onUpdate({
+    onUpdate({ 
       serviceId: service.id,
-      serviceName: service.name,
-      serviceCategory: service.serviceCategory,
-      servicePrice: service.price
+      servicePrice: service.price 
     });
+    // Auto-advance to next step after brief delay for visual feedback
+    setTimeout(() => {
+      onNext();
+    }, 300);
   };
 
-  const handleContinue = () => {
-    if (selectedService) {
-      onNext();
-    }
-  };
+  // handleContinue removed - auto-advance on selection
 
   const getServiceIcon = (category: string) => {
     switch (category.toUpperCase()) {
@@ -274,27 +272,46 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({
                           <CheckCircleIcon color="primary" sx={{ fontSize: { xs: 20, sm: 24 }, flexShrink: 0 }} />
                         )}
                       </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
-                        <Typography 
-                          variant="h6" 
-                          color="primary" 
-                          fontWeight={700}
-                          sx={{ fontSize: { xs: '0.95rem', sm: '1.1rem' } }}
+                      <Box sx={{ mt: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                          <Typography 
+                            variant="h6" 
+                            color="primary" 
+                            fontWeight={700}
+                            sx={{ fontSize: { xs: '0.95rem', sm: '1.1rem' } }}
+                          >
+                            ${service.price.toFixed(2)}
+                          </Typography>
+                          {service.duration && (
+                            <Chip
+                              label={`${service.duration} min`}
+                              size="small"
+                              variant="outlined"
+                              sx={{ 
+                                height: { xs: 18, sm: 20 },
+                                fontSize: { xs: '0.6rem', sm: '0.65rem' },
+                                '& .MuiChip-label': { px: 0.75 }
+                              }}
+                            />
+                          )}
+                        </Box>
+                        <Button
+                          variant="contained"
+                          fullWidth
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleServiceSelect(service);
+                          }}
+                          sx={{
+                            py: { xs: 0.5, sm: 0.75 },
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                            fontWeight: 600,
+                            textTransform: 'none'
+                          }}
                         >
-                          ${service.price.toFixed(2)}
-                        </Typography>
-                        {service.duration && (
-                          <Chip
-                            label={`${service.duration} min`}
-                            size="small"
-                            variant="outlined"
-                            sx={{ 
-                              height: { xs: 18, sm: 20 },
-                              fontSize: { xs: '0.6rem', sm: '0.65rem' },
-                              '& .MuiChip-label': { px: 0.75 }
-                            }}
-                          />
-                        )}
+                          Reserve Now
+                        </Button>
                       </Box>
                     </CardContent>
                   </CardActionArea>
@@ -304,41 +321,6 @@ const ServiceSelection: React.FC<ServiceSelectionProps> = ({
           </Grid>
         </Box>
       ))}
-
-      {/* Continue Button - Fixed on mobile */}
-      <Box
-        sx={{
-          position: { xs: 'fixed', sm: 'static' },
-          bottom: { xs: 0, sm: 'auto' },
-          left: { xs: 0, sm: 'auto' },
-          right: { xs: 0, sm: 'auto' },
-          p: { xs: 2, sm: 0 },
-          mt: { xs: 0, sm: 4 },
-          bgcolor: { xs: 'background.paper', sm: 'transparent' },
-          boxShadow: { xs: '0 -2px 10px rgba(0,0,0,0.1)', sm: 'none' },
-          zIndex: { xs: 1000, sm: 'auto' }
-        }}
-      >
-        <Button
-          variant="contained"
-          size="large"
-          fullWidth
-          disabled={!selectedService}
-          onClick={handleContinue}
-          endIcon={<ArrowForwardIcon />}
-          sx={{
-            py: { xs: 1.5, sm: 1.5 },
-            fontSize: { xs: '1rem', sm: '1rem' }
-          }}
-        >
-          Continue to Date & Time
-        </Button>
-      </Box>
-
-      {/* Spacer for fixed button on mobile */}
-      {selectedService && (
-        <Box sx={{ display: { xs: 'block', sm: 'none' }, height: 80 }} />
-      )}
     </Box>
   );
 };
