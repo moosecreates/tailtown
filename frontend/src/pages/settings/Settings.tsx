@@ -19,7 +19,8 @@ import {
   Settings as GeneralIcon,
   Campaign as MarketingIcon,
   Assignment as CheckInIcon,
-  ChecklistRtl as ChecklistIcon
+  ChecklistRtl as ChecklistIcon,
+  Vaccines as VaccineIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
@@ -74,6 +75,13 @@ const Settings: React.FC = () => {
       icon: <ChecklistIcon sx={{ fontSize: 40, color: 'info.main' }} />,
       path: '/admin/checklist-templates',
       stats: 'Active Templates: 0'
+    },
+    {
+      title: 'Vaccine Requirements',
+      description: 'Configure required vaccines per pet type and service, track compliance and expirations',
+      icon: <VaccineIcon sx={{ fontSize: 40, color: 'error.main' }} />,
+      path: '/admin/vaccine-requirements',
+      stats: 'Active Requirements: 8'
     },
     {
       title: 'Price Rules',
