@@ -731,6 +731,33 @@ enum CouponStatus {
   DEPLETED
 }
 
+enum PointEarningType {
+  DOLLARS_SPENT
+  VISIT
+  REFERRAL
+  BIRTHDAY
+  ANNIVERSARY
+  REVIEW
+  SOCIAL_SHARE
+  SERVICE_SPECIFIC
+}
+
+enum RedemptionType {
+  DISCOUNT_PERCENTAGE
+  DISCOUNT_FIXED
+  FREE_SERVICE
+  FREE_ADDON
+  UPGRADE
+}
+
+enum TierLevel {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+}
+
 // ============================================
 // COUPON SYSTEM MODELS
 // ============================================
@@ -778,6 +805,57 @@ model CouponUsage {
   @@index([tenantId, couponId], map: "coupon_usage_tenant_coupon_idx")
   @@index([tenantId, customerId], map: "coupon_usage_tenant_customer_idx")
   @@map("coupon_usages")
+}
+
+// ============================================
+// LOYALTY REWARDS SYSTEM MODELS
+// ============================================
+
+model LoyaltyMember {
+  id                String              @id @default(uuid())
+  tenantId          String              @default("dev")
+  customerId        String              @unique
+  currentPoints     Int                 @default(0)
+  lifetimePoints    Int                 @default(0)
+  currentTier       TierLevel           @default(BRONZE)
+  joinedAt          DateTime            @default(now())
+  lastActivityAt    DateTime            @default(now())
+  transactions      PointTransaction[]
+  redemptions       PointRedemption[]
+
+  @@index([tenantId, customerId], map: "loyalty_member_tenant_customer_idx")
+  @@map("loyalty_members")
+}
+
+model PointTransaction {
+  id              String            @id @default(uuid())
+  tenantId        String            @default("dev")
+  memberId        String
+  member          LoyaltyMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  points          Int
+  type            PointEarningType
+  description     String
+  referenceId     String?           // Reservation ID, etc.
+  createdAt       DateTime          @default(now())
+
+  @@index([tenantId, memberId], map: "point_transaction_tenant_member_idx")
+  @@map("point_transactions")
+}
+
+model PointRedemption {
+  id              String            @id @default(uuid())
+  tenantId        String            @default("dev")
+  memberId        String
+  member          LoyaltyMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  pointsRedeemed  Int
+  redemptionType  RedemptionType
+  value           Float
+  description     String
+  reservationId   String?
+  redeemedAt      DateTime          @default(now())
+
+  @@index([tenantId, memberId], map: "point_redemption_tenant_member_idx")
+  @@map("point_redemptions")
 }
 
 // ============================================
