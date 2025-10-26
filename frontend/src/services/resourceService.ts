@@ -43,6 +43,56 @@ export const resourceService = {
     type?: string
   ): Promise<{ status: string; data: Resource[]; totalPages?: number; currentPage?: number; results?: number }> => {
     try {
+      // If a large limit is requested (like 1000), fetch all pages
+      if (limit && limit > 100) {
+        let allResources: Resource[] = [];
+        let currentPage = 1;
+        let totalPages = 1;
+        
+        // Fetch first page with limit of 100
+        const firstResponse: AxiosResponse = await api.get('/api/resources', {
+          params: { 
+            page: currentPage, 
+            limit: 100,
+            sortBy,
+            sortOrder,
+            type
+          }
+        });
+        
+        if (firstResponse.data.status === 'success') {
+          allResources = firstResponse.data.data || [];
+          totalPages = firstResponse.data.totalPages || 1;
+          
+          // Fetch remaining pages if there are any
+          while (currentPage < totalPages) {
+            currentPage++;
+            const pageResponse: AxiosResponse = await api.get('/api/resources', {
+              params: { 
+                page: currentPage, 
+                limit: 100,
+                sortBy,
+                sortOrder,
+                type
+              }
+            });
+            
+            if (pageResponse.data.status === 'success' && pageResponse.data.data) {
+              allResources = [...allResources, ...pageResponse.data.data];
+            }
+          }
+        }
+        
+        return {
+          status: 'success',
+          data: allResources,
+          totalPages: totalPages,
+          currentPage: totalPages,
+          results: allResources.length
+        };
+      }
+      
+      // Normal single-page request
       const response: AxiosResponse = await api.get('/api/resources', {
         params: { 
           page, 
