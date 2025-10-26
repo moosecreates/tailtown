@@ -3,6 +3,8 @@
  * Handles all communication with Gingr API for data migration
  */
 
+import fetch from 'node-fetch';
+
 interface GingrApiConfig {
   subdomain: string;
   apiKey: string;
@@ -230,7 +232,7 @@ export class GingrApiClient {
           end_date: this.formatDate(chunkEnd)
         });
         
-        const chunk = response.data || [];
+        const chunk = Array.isArray(response.data) ? response.data : (response.data ? [response.data] : []);
         allReservations.push(...chunk);
         
         console.log(`[Gingr API] Fetched ${chunk.length} reservations for this chunk`);
