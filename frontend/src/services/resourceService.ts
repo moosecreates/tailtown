@@ -45,6 +45,7 @@ export const resourceService = {
     try {
       // If a large limit is requested (like 1000), fetch all pages
       if (limit && limit > 100) {
+        console.log('[ResourceService] Large limit detected:', limit, '- fetching all pages');
         let allResources: Resource[] = [];
         let currentPage = 1;
         let totalPages = 1;
@@ -63,6 +64,7 @@ export const resourceService = {
         if (firstResponse.data.status === 'success') {
           allResources = firstResponse.data.data || [];
           totalPages = firstResponse.data.totalPages || 1;
+          console.log('[ResourceService] First page fetched:', allResources.length, 'resources, totalPages:', totalPages);
           
           // Fetch remaining pages if there are any
           while (currentPage < totalPages) {
@@ -79,10 +81,12 @@ export const resourceService = {
             
             if (pageResponse.data.status === 'success' && pageResponse.data.data) {
               allResources = [...allResources, ...pageResponse.data.data];
+              console.log('[ResourceService] Page', currentPage, 'fetched:', pageResponse.data.data.length, 'resources. Total so far:', allResources.length);
             }
           }
         }
         
+        console.log('[ResourceService] All pages fetched! Total resources:', allResources.length);
         return {
           status: 'success',
           data: allResources,
