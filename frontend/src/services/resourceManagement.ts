@@ -1,21 +1,44 @@
 import { Resource, ResourceAvailability } from '../types/resource';
 import { reservationApi as api } from './api';
 
-// Get all resources
+// Get all resources with pagination support
 export const getAllResources = async () => {
   try {
-    const response = await api.get('/api/resources', {
+    let allResources: any[] = [];
+    let currentPage = 1;
+    let totalPages = 1;
+    
+    // Fetch first page
+    const firstResponse = await api.get('/api/resources', {
       params: {
-        limit: 1000  // Set a high limit to get all resources
+        page: currentPage,
+        limit: 100
       }
     });
     
-    if (response.data && response.data.status === 'success') {
-      const resources = response.data.data || [];
-      return resources;
+    if (firstResponse.data && firstResponse.data.status === 'success') {
+      allResources = firstResponse.data.data || [];
+      totalPages = firstResponse.data.totalPages || 1;
+      
+      // Fetch remaining pages if there are any
+      while (currentPage < totalPages) {
+        currentPage++;
+        const pageResponse = await api.get('/api/resources', {
+          params: {
+            page: currentPage,
+            limit: 100
+          }
+        });
+        
+        if (pageResponse.data && pageResponse.data.status === 'success' && pageResponse.data.data) {
+          allResources = [...allResources, ...pageResponse.data.data];
+        }
+      }
+      
+      return allResources;
     }
     
-    console.error('Unexpected response format:', response.data);
+    console.error('Unexpected response format:', firstResponse.data);
     throw new Error('Failed to get resources: Invalid response format');
   } catch (error: any) {
     console.error('Error getting resources:', error.response?.data || error.message);
