@@ -19,7 +19,7 @@ import { useShoppingCart, CartItem } from '../../contexts/ShoppingCartContext';
 import OrderSummary from '../../components/cart/OrderSummary';
 import PaymentStep from './steps/PaymentStep';
 import { reservationService } from '../../services/reservationService';
-import { invoiceService } from '../../services/invoiceService';
+import { invoiceService, InvoiceLineItem } from '../../services/invoiceService';
 import { paymentService } from '../../services/paymentService';
 
 interface AddOn {
@@ -190,7 +190,7 @@ const CheckoutPage: React.FC = () => {
       
       // Step 2: Create invoice for the first customer (assuming single customer checkout)
       const firstItem = cartItems[0];
-      const invoiceLineItems = cartItems.map(item => ({
+      const invoiceLineItems: InvoiceLineItem[] = cartItems.map((item): InvoiceLineItem => ({
         type: 'SERVICE',
         description: `${item.serviceName} for ${item.petName}`,
         quantity: 1,
