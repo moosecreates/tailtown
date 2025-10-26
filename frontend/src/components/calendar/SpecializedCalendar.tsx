@@ -12,7 +12,6 @@ import schedulingService from '../../services/schedulingService';
 import ReservationForm from '../reservations/ReservationForm';
 import { Reservation } from '../../services/reservationService';
 import { ServiceCategory } from '../../types/service';
-import { format } from 'date-fns';
 
 /**
  * Props for the SpecializedCalendar component
@@ -129,14 +128,26 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
                 if (sessionsResponse && Array.isArray(sessionsResponse)) {
                   console.log(`Creating ${sessionsResponse.length} session events`);
                   const sessionEvents = sessionsResponse.map((session: any) => {
-                    // Combine session date and time
-                    const sessionDate = new Date(session.scheduledDate);
-                    const [hours, minutes] = session.scheduledTime.split(':');
-                    sessionDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                    // The scheduledDate comes from the backend as an ISO string in UTC
+                    // e.g., "2024-11-04T00:00:00.000Z" which represents midnight UTC on Nov 4
+                    // We need to extract just the date part and treat it as a local date
                     
-                    // Calculate end time
+                    // Extract YYYY-MM-DD from the ISO string
+                    const dateStr = session.scheduledDate.split('T')[0];
+                    const [year, month, day] = dateStr.split('-').map(Number);
+                    
+                    // Parse the time (HH:MM format)
+                    const [hours, minutes] = session.scheduledTime.split(':').map(Number);
+                    
+                    // Create a Date object in the LOCAL timezone (not UTC)
+                    // This ensures Nov 4 at 6:00 PM stays Nov 4 at 6:00 PM regardless of timezone
+                    const sessionDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+                    
+                    // Calculate end time by adding duration
                     const endDate = new Date(sessionDate);
                     endDate.setMinutes(endDate.getMinutes() + (session.duration || 60));
+                    
+                    console.log(`Session ${session.sessionNumber}: ${dateStr} ${session.scheduledTime} -> ${sessionDate.toLocaleString()}`);
                     
                     return {
                       id: `class-session-${session.id}`,

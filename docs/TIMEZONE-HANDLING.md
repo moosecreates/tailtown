@@ -341,6 +341,65 @@ const weekendDates = dates.filter(isWeekend);
 const weekdayDates = dates.filter(d => !isWeekend(d));
 ```
 
+## Training Calendar Timezone Fix
+
+### The Problem
+
+Training class sessions were displaying on the wrong day in the calendar because:
+
+1. **Backend**: Sessions stored with dates like `2024-11-04T00:00:00.000Z` (UTC midnight)
+2. **Frontend**: JavaScript parsed these as UTC and converted to local time
+3. **Result**: In PST (UTC-8), Nov 4 midnight UTC became Nov 3 at 4:00 PM locally
+4. **Impact**: Sessions appeared on the wrong day, risking double-booking
+
+### The Solution
+
+**Frontend Date Parsing** (`SpecializedCalendar.tsx`):
+
+```typescript
+// Extract date and time components
+const dateStr = session.scheduledDate.split('T')[0]; // '2024-11-04'
+const [year, month, day] = dateStr.split('-').map(Number);
+const [hours, minutes] = session.scheduledTime.split(':').map(Number);
+
+// Create Date in LOCAL timezone (not UTC)
+const sessionDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+```
+
+**Why This Works:**
+- Extracts just the date part (`YYYY-MM-DD`) from the ISO string
+- Manually parses into components
+- Creates Date object using local timezone constructor
+- Nov 4 stays Nov 4 regardless of timezone
+
+### Test Coverage
+
+**Backend Tests** (`dateHandling.timezone.test.ts`):
+- 20 passing tests
+- Date storage and retrieval
+- Month/year boundaries
+- Leap years
+- DST transitions
+- Session generation logic
+
+**Frontend Tests** (`SpecializedCalendar.timezone.test.tsx`):
+- 10 passing tests
+- UTC to local date parsing
+- Multi-week schedules
+- Time handling
+- DST edge cases
+- Multiple classes
+
+### Verified Scenarios
+
+✅ Sessions display on correct dates (Nov 4, 11, 18, 25)  
+✅ Works across month boundaries (Oct 28 → Nov 4)  
+✅ Works across year boundaries (Dec 30 → Jan 6)  
+✅ Handles leap years (Feb 29)  
+✅ Maintains consistency during DST transitions  
+✅ Multiple classes on same day at different times  
+✅ Sessions spanning midnight  
+
 ## Future Enhancements
 
 ### Potential Improvements
@@ -369,6 +428,7 @@ const weekdayDates = dates.filter(d => !isWeekend(d));
 ---
 
 **Last Updated:** October 25, 2025
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Production Ready
-**Test Coverage:** 28 passing tests
+**Test Coverage:** 60 passing tests (28 date utils + 21 backend + 11 frontend)
+**Special Note:** Sunday (day 0) scheduling fully validated

@@ -174,15 +174,24 @@ const TrainingClasses: React.FC = () => {
       }
 
       // Format the data for the API
+      // Format dates as YYYY-MM-DD to avoid timezone conversion issues
+      const formatDateForAPI = (date: Date | string): string => {
+        if (typeof date === 'string') return date;
+        // Format as YYYY-MM-DD in local timezone (not UTC)
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
       const apiData = {
         ...formData,
-        startDate: formData.startDate instanceof Date 
-          ? formData.startDate.toISOString() 
-          : formData.startDate,
-        endDate: formData.endDate instanceof Date
-          ? formData.endDate.toISOString()
-          : formData.endDate
+        startDate: formatDateForAPI(formData.startDate!),
+        endDate: formData.endDate ? formatDateForAPI(formData.endDate) : undefined
       };
+
+      console.log('Creating training class with data:', apiData);
+      console.log('Start date formatted as:', apiData.startDate);
 
       if (editingClass) {
         await schedulingService.trainingClasses.update(editingClass.id, apiData as any);
@@ -642,7 +651,17 @@ const TrainingClasses: React.FC = () => {
               <DatePicker
                 label="Start Date"
                 value={formData.startDate}
-                onChange={(date) => setFormData({ ...formData, startDate: date || new Date() })}
+                onChange={(date) => {
+                  const newDate = date || new Date();
+                  // Automatically set daysOfWeek based on the selected start date
+                  const dayOfWeek = newDate instanceof Date ? newDate.getDay() : 0; // 0 = Sunday, 1 = Monday, etc.
+                  console.log('Start date changed to:', newDate, 'Day of week:', dayOfWeek);
+                  setFormData({ 
+                    ...formData, 
+                    startDate: newDate,
+                    daysOfWeek: [dayOfWeek] // Set to the day of the selected date
+                  });
+                }}
                 slotProps={{ textField: { fullWidth: true } }}
               />
             </LocalizationProvider>
