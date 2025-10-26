@@ -28,6 +28,7 @@ import { petService } from '../../services/petService';
 import { serviceManagement } from '../../services/serviceManagement';
 import { resourceService, type Resource } from '../../services/resourceService';
 import AddOnSelectionDialogEnhanced from './AddOnSelectionDialogEnhanced';
+import GroomerSelector from './GroomerSelector';
 import { useShoppingCart } from '../../contexts/ShoppingCartContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -108,6 +109,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   const [petSuiteAssignments, setPetSuiteAssignments] = useState<{[petId: string]: string}>({});
   const [occupiedSuiteIds, setOccupiedSuiteIds] = useState<Set<string>>(new Set());
   const [selectedService, setSelectedService] = useState<string>('');
+  const [selectedGroomerId, setSelectedGroomerId] = useState<string>('');
   const [selectedSuiteType, setSelectedSuiteType] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('CONFIRMED');
   const [startDate, setStartDate] = useState<Date | null>(defaultDates?.start || null);
@@ -209,6 +211,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           if (initialData.serviceId && servicesList.some((s: Service) => s.id === initialData.serviceId)) {
             setSelectedService(initialData.serviceId);
           } else {
+          }
+          
+          // Set groomer if assigned
+          if (initialData.staffAssignedId) {
+            setSelectedGroomerId(initialData.staffAssignedId);
           }
           
           // Mark that initial data has been loaded
@@ -783,6 +790,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           notes: hasMultiplePets ? `Multi-pet reservation (${i + 1} of ${petsToBook.length})` : '',
         };
         
+        // Add groomer assignment for grooming services
+        if (selectedGroomerId && selectedServiceObj?.serviceCategory === 'GROOMING') {
+          formData.staffAssignedId = selectedGroomerId;
+        }
+        
         if (requiresSuiteType) {
           // Send suite type to backend for auto-assignment
           formData.suiteType = effectiveSuiteType;
@@ -1097,6 +1109,25 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               ))}
             </Select>
           </FormControl>
+
+          {/* Conditionally show Groomer Selector for Grooming services */}
+          {(() => {
+            const selectedServiceObj = services.find(s => s.id === selectedService);
+            const isGroomingService = selectedServiceObj?.serviceCategory === 'GROOMING';
+            
+            if (!isGroomingService) return null;
+            
+            return (
+              <GroomerSelector
+                selectedGroomerId={selectedGroomerId}
+                onGroomerChange={setSelectedGroomerId}
+                appointmentDate={startDate}
+                appointmentStartTime={startDate}
+                appointmentEndTime={endDate}
+                disabled={loading}
+              />
+            );
+          })()}
 
           {/* Conditionally show suiteType dropdown for Daycare or Boarding */}
           {(() => {
