@@ -10,27 +10,27 @@ import { customerApi } from './api';
 // ============================================================================
 
 export const getSalesDailyReport = async (date: string) => {
-  const response = await customerApi.get(`/reports/sales/daily?date=${date}`);
+  const response = await customerApi.get(`/api/reports/sales/daily?date=${date}`);
   return response.data;
 };
 
 export const getSalesWeeklyReport = async (startDate: string, endDate: string) => {
-  const response = await customerApi.get(`/reports/sales/weekly?startDate=${startDate}&endDate=${endDate}`);
+  const response = await customerApi.get(`/api/reports/sales/weekly?startDate=${startDate}&endDate=${endDate}`);
   return response.data;
 };
 
 export const getSalesMonthlyReport = async (year: number, month: number) => {
-  const response = await customerApi.get(`/reports/sales/monthly?year=${year}&month=${month}`);
+  const response = await customerApi.get(`/api/reports/sales/monthly?year=${year}&month=${month}`);
   return response.data;
 };
 
 export const getSalesYTDReport = async (year: number) => {
-  const response = await customerApi.get(`/reports/sales/ytd?year=${year}`);
+  const response = await customerApi.get(`/api/reports/sales/ytd?year=${year}`);
   return response.data;
 };
 
 export const getTopCustomersReport = async (startDate: string, endDate: string, limit: number = 10) => {
-  const response = await customerApi.get(`/reports/sales/top-customers?startDate=${startDate}&endDate=${endDate}&limit=${limit}`);
+  const response = await customerApi.get(`/api/reports/sales/top-customers?startDate=${startDate}&endDate=${endDate}&limit=${limit}`);
   return response.data;
 };
 
@@ -39,22 +39,22 @@ export const getTopCustomersReport = async (startDate: string, endDate: string, 
 // ============================================================================
 
 export const getTaxMonthlyReport = async (year: number, month: number) => {
-  const response = await customerApi.get(`/reports/tax/monthly?year=${year}&month=${month}`);
+  const response = await customerApi.get(`/api/reports/tax/monthly?year=${year}&month=${month}`);
   return response.data;
 };
 
 export const getTaxQuarterlyReport = async (year: number, quarter: number) => {
-  const response = await customerApi.get(`/reports/tax/quarterly?year=${year}&quarter=${quarter}`);
+  const response = await customerApi.get(`/api/reports/tax/quarterly?year=${year}&quarter=${quarter}`);
   return response.data;
 };
 
 export const getTaxAnnualReport = async (year: number) => {
-  const response = await customerApi.get(`/reports/tax/annual?year=${year}`);
+  const response = await customerApi.get(`/api/reports/tax/annual?year=${year}`);
   return response.data;
 };
 
 export const getTaxBreakdownReport = async (startDate: string, endDate: string) => {
-  const response = await customerApi.get(`/reports/tax/breakdown?startDate=${startDate}&endDate=${endDate}`);
+  const response = await customerApi.get(`/api/reports/tax/breakdown?startDate=${startDate}&endDate=${endDate}`);
   return response.data;
 };
 
