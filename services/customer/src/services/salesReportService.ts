@@ -172,6 +172,7 @@ export const getMonthlySalesReport = async (
 ): Promise<MonthlySalesData> => {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0);
+  endDate.setHours(23, 59, 59, 999);
   
   const monthStr = `${year}-${String(month).padStart(2, '0')}`;
   const monthName = startDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
