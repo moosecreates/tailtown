@@ -8,9 +8,11 @@ import { EventInput, DateSelectArg, EventClickArg, EventDropArg } from '@fullcal
 
 import { Box, Paper, Dialog, DialogTitle, DialogContent, Button, Typography } from '@mui/material';
 import { reservationService } from '../../services/reservationService';
+import schedulingService from '../../services/schedulingService';
 import ReservationForm from '../reservations/ReservationForm';
 import { Reservation } from '../../services/reservationService';
 import { ServiceCategory } from '../../types/service';
+import { format } from 'date-fns';
 
 /**
  * Props for the SpecializedCalendar component
@@ -50,6 +52,8 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
 
   const loadReservations = useCallback(async () => {
     try {
+      const allEvents: EventInput[] = [];
+      
       // Get all relevant reservations (PENDING, CONFIRMED or CHECKED_IN)
       // We don't filter by date to ensure we see all current reservations
       const response = await reservationService.getAllReservations(
@@ -91,18 +95,72 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
             borderColor: getStatusColor(reservation.status),
             textColor: '#ffffff',
             extendedProps: {
-              reservation
+              reservation,
+              type: 'reservation'
             }
           };
         });
         
-        setEvents(calendarEvents);
-        return calendarEvents;
+        allEvents.push(...calendarEvents);
       } else {
         console.warn('SpecializedCalendar: Invalid response format or no reservations found');
-        setEvents([]);
-        return [];
       }
+      
+      // Load training class sessions if showing training calendar
+      if (serviceCategories && serviceCategories.includes(ServiceCategory.TRAINING)) {
+        try {
+          const classesResponse = await schedulingService.trainingClasses.getAll({
+            status: 'SCHEDULED,IN_PROGRESS',
+            isActive: true
+          });
+          
+          if (classesResponse && Array.isArray(classesResponse)) {
+            // For each class, get its sessions
+            for (const trainingClass of classesResponse) {
+              try {
+                const sessionsResponse = await schedulingService.trainingClasses.getSessions(trainingClass.id);
+                
+                if (sessionsResponse && Array.isArray(sessionsResponse)) {
+                  const sessionEvents = sessionsResponse.map((session: any) => {
+                    // Combine session date and time
+                    const sessionDate = new Date(session.scheduledDate);
+                    const [hours, minutes] = session.scheduledTime.split(':');
+                    sessionDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                    
+                    // Calculate end time
+                    const endDate = new Date(sessionDate);
+                    endDate.setMinutes(endDate.getMinutes() + (session.duration || 60));
+                    
+                    return {
+                      id: `class-session-${session.id}`,
+                      title: `${trainingClass.name} - Session ${session.sessionNumber}`,
+                      start: sessionDate,
+                      end: endDate,
+                      backgroundColor: '#9c27b0', // Purple for training classes
+                      borderColor: '#7b1fa2',
+                      textColor: '#ffffff',
+                      extendedProps: {
+                        type: 'trainingClass',
+                        trainingClass,
+                        session
+                      }
+                    };
+                  });
+                  
+                  allEvents.push(...sessionEvents);
+                }
+              } catch (sessionError) {
+                console.error(`Error loading sessions for class ${trainingClass.id}:`, sessionError);
+              }
+            }
+          }
+        } catch (classError) {
+          console.error('Error loading training classes:', classError);
+        }
+      }
+      
+      setEvents(allEvents);
+      return allEvents;
     } catch (error) {
       console.error('SpecializedCalendar: Error loading reservations:', error);
       setEvents([]);
