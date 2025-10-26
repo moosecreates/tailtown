@@ -38,6 +38,7 @@ import vaccineRequirementRoutes from './routes/vaccineRequirement.routes';
 import customIconRoutes from './routes/custom-icons.routes';
 import productsRoutes from './routes/products.routes';
 import reportRoutes from './routes/reports.routes';
+import gingrRoutes from './routes/gingr.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 import { enforceHTTPS, securityHeaders, sanitizeInput } from './middleware/security.middleware';
@@ -309,10 +310,13 @@ app.use('/api', requireTenant, vaccineRequirementRoutes);
 app.use('/api/custom-icons', requireTenant, customIconRoutes);
 
 // Products & POS Routes
-app.use('/api', requireTenant, productsRoutes);
+app.use('/api/products', requireTenant, productsRoutes);
 
 // Reports Routes
 app.use('/api/reports', requireTenant, reportRoutes);
+
+// Gingr Migration Routes (no tenant required - for super admin)
+app.use('/api/gingr', gingrRoutes);
 
 // Serve uploaded icons statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
