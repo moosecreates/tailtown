@@ -12,10 +12,10 @@ const prisma = new PrismaClient();
 async function seedResources() {
   console.log('Starting resource seeding...');
   
-  // Define the suite types we want to create
+  // Define the suite types we want to create (matching production data: 173 total)
   const suiteTypes = [
-    { type: 'STANDARD_SUITE', count: 10 },
-    { type: 'STANDARD_PLUS_SUITE', count: 5 },
+    { type: 'STANDARD_SUITE', count: 138 },
+    { type: 'STANDARD_PLUS_SUITE', count: 33 },
     { type: 'VIP_SUITE', count: 2 }
   ];
   
@@ -34,7 +34,8 @@ async function seedResources() {
             type: suiteType.type as any, // Use the specific suite type (VIP_SUITE, etc.)
             description: `A ${suiteType.type.toLowerCase().replace('_', ' ')} for pets`,
             capacity: 1,
-            isActive: true
+            isActive: true,
+            tenantId: 'dev' // Add tenantId for multi-tenant support
           }
         });
       }
