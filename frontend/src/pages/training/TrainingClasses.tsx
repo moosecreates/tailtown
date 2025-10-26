@@ -149,15 +149,35 @@ const TrainingClasses: React.FC = () => {
 
   const handleSave = async () => {
     try {
+      // Validate required fields
+      if (!formData.name || !formData.instructorId || !formData.maxCapacity || 
+          !formData.startDate || !formData.totalWeeks || !formData.daysOfWeek?.length ||
+          !formData.startTime || !formData.endTime || !formData.pricePerSeries) {
+        setError('Please fill in all required fields (name, instructor, capacity, dates, times, price)');
+        return;
+      }
+
+      // Format the data for the API
+      const apiData = {
+        ...formData,
+        startDate: formData.startDate instanceof Date 
+          ? formData.startDate.toISOString() 
+          : formData.startDate,
+        endDate: formData.endDate instanceof Date
+          ? formData.endDate.toISOString()
+          : formData.endDate
+      };
+
       if (editingClass) {
-        await schedulingService.trainingClasses.update(editingClass.id, formData as any);
+        await schedulingService.trainingClasses.update(editingClass.id, apiData as any);
       } else {
-        await schedulingService.trainingClasses.create(formData);
+        await schedulingService.trainingClasses.create(apiData);
       }
       await loadClasses();
       handleCloseDialog();
     } catch (err: any) {
-      setError(err.message || 'Failed to save training class');
+      console.error('Error saving training class:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to save training class');
     }
   };
 
