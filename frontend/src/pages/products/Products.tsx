@@ -37,7 +37,10 @@ import {
   Delete as DeleteIcon,
   Search as SearchIcon,
   Inventory as InventoryIcon,
-  Warning as WarningIcon
+  Warning as WarningIcon,
+  AddCircle as AddCircleIcon,
+  RemoveCircle as RemoveCircleIcon,
+  History as HistoryIcon
 } from '@mui/icons-material';
 
 interface Product {
@@ -46,8 +49,8 @@ interface Product {
   name: string;
   description?: string;
   categoryId?: string;
-  price: number;
-  cost?: number;
+  price: number | string; // Decimal from DB comes as string
+  cost?: number | string;
   taxable: boolean;
   trackInventory: boolean;
   currentStock: number;
@@ -81,6 +84,15 @@ const Products: React.FC = () => {
     open: false,
     message: '',
     severity: 'success' as 'success' | 'error'
+  });
+
+  // Inventory adjustment state
+  const [inventoryDialogOpen, setInventoryDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [inventoryAdjustment, setInventoryAdjustment] = useState({
+    quantity: '',
+    changeType: 'ADJUSTMENT',
+    reason: ''
   });
 
   const [formData, setFormData] = useState({
@@ -225,7 +237,10 @@ const Products: React.FC = () => {
 
       const response = await fetch(url, {
         method: editingProduct ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-tenant-id': 'dev'
+        },
         body: JSON.stringify({
           ...formData,
           price: parseFloat(formData.price),
@@ -262,7 +277,8 @@ const Products: React.FC = () => {
 
     try {
       const response = await fetch(`http://localhost:4004/api/products/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'x-tenant-id': 'dev' }
       });
 
       if (!response.ok) throw new Error('Failed to delete product');
@@ -290,6 +306,68 @@ const Products: React.FC = () => {
       return product.currentStock <= product.lowStockAlert;
     }
     return product.currentStock === 0;
+  };
+
+  const handleOpenInventoryDialog = (product: Product) => {
+    setSelectedProduct(product);
+    setInventoryAdjustment({
+      quantity: '',
+      changeType: 'ADJUSTMENT',
+      reason: ''
+    });
+    setInventoryDialogOpen(true);
+  };
+
+  const handleCloseInventoryDialog = () => {
+    setInventoryDialogOpen(false);
+    setSelectedProduct(null);
+  };
+
+  const handleInventoryAdjustment = async () => {
+    if (!selectedProduct || !inventoryAdjustment.quantity) {
+      setSnackbar({
+        open: true,
+        message: 'Quantity is required',
+        severity: 'error'
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:4004/api/products/${selectedProduct.id}/inventory/adjust`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tenant-id': 'dev'
+        },
+        body: JSON.stringify({
+          quantity: parseInt(inventoryAdjustment.quantity),
+          changeType: inventoryAdjustment.changeType,
+          reason: inventoryAdjustment.reason || undefined
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to adjust inventory');
+      }
+
+      setSnackbar({
+        open: true,
+        message: 'Inventory adjusted successfully!',
+        severity: 'success'
+      });
+
+      handleCloseInventoryDialog();
+      loadProducts();
+    } catch (error: any) {
+      console.error('Error adjusting inventory:', error);
+      setSnackbar({
+        open: true,
+        message: error.message || 'Failed to adjust inventory',
+        severity: 'error'
+      });
+    }
   };
 
   return (
@@ -378,7 +456,7 @@ const Products: React.FC = () => {
                     </Box>
                   </TableCell>
                   <TableCell>{product.category?.name || '-'}</TableCell>
-                  <TableCell align="right">${product.price.toFixed(2)}</TableCell>
+                  <TableCell align="right">${Number(product.price).toFixed(2)}</TableCell>
                   <TableCell align="center">
                     {product.trackInventory && !product.isService ? (
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
@@ -405,6 +483,16 @@ const Products: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell align="right">
+                    {product.trackInventory && !product.isService && (
+                      <IconButton 
+                        size="small" 
+                        color="primary" 
+                        onClick={() => handleOpenInventoryDialog(product)}
+                        title="Adjust Inventory"
+                      >
+                        <InventoryIcon fontSize="small" />
+                      </IconButton>
+                    )}
                     <IconButton size="small" onClick={() => handleOpenDialog(product)}>
                       <EditIcon fontSize="small" />
                     </IconButton>
@@ -558,6 +646,80 @@ const Products: React.FC = () => {
             <Button onClick={handleCloseDialog}>Cancel</Button>
             <Button onClick={handleSave} variant="contained">
               {editingProduct ? 'Update' : 'Create'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Inventory Adjustment Dialog */}
+        <Dialog open={inventoryDialogOpen} onClose={handleCloseInventoryDialog} maxWidth="sm" fullWidth>
+          <DialogTitle>
+            Adjust Inventory - {selectedProduct?.name}
+          </DialogTitle>
+          <DialogContent>
+            <Box sx={{ mt: 2 }}>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Current Stock: <strong>{selectedProduct?.currentStock || 0}</strong>
+              </Alert>
+              
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <FormControl fullWidth>
+                    <InputLabel>Change Type</InputLabel>
+                    <Select
+                      value={inventoryAdjustment.changeType}
+                      onChange={(e) => setInventoryAdjustment({ ...inventoryAdjustment, changeType: e.target.value })}
+                      label="Change Type"
+                    >
+                      <MenuItem value="PURCHASE">Purchase (Add Stock)</MenuItem>
+                      <MenuItem value="SALE">Sale (Remove Stock)</MenuItem>
+                      <MenuItem value="ADJUSTMENT">Manual Adjustment</MenuItem>
+                      <MenuItem value="RETURN">Customer Return</MenuItem>
+                      <MenuItem value="DAMAGE">Damaged/Lost</MenuItem>
+                      <MenuItem value="RESTOCK">Restock</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Quantity"
+                    type="number"
+                    value={inventoryAdjustment.quantity}
+                    onChange={(e) => setInventoryAdjustment({ ...inventoryAdjustment, quantity: e.target.value })}
+                    helperText="Use negative numbers to decrease stock (e.g., -5 for removing 5 items)"
+                    required
+                  />
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Reason (Optional)"
+                    value={inventoryAdjustment.reason}
+                    onChange={(e) => setInventoryAdjustment({ ...inventoryAdjustment, reason: e.target.value })}
+                    multiline
+                    rows={2}
+                    placeholder="Enter reason for adjustment..."
+                  />
+                </Grid>
+                
+                {inventoryAdjustment.quantity && (
+                  <Grid item xs={12}>
+                    <Alert severity={parseInt(inventoryAdjustment.quantity) >= 0 ? 'success' : 'warning'}>
+                      New Stock: <strong>
+                        {(selectedProduct?.currentStock || 0) + parseInt(inventoryAdjustment.quantity || '0')}
+                      </strong>
+                    </Alert>
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseInventoryDialog}>Cancel</Button>
+            <Button onClick={handleInventoryAdjustment} variant="contained" color="primary">
+              Adjust Inventory
             </Button>
           </DialogActions>
         </Dialog>

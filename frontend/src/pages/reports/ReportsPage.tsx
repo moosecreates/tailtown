@@ -31,6 +31,8 @@ import {
   Build as ServiceIcon,
   GetApp as ExportIcon,
 } from '@mui/icons-material';
+import SalesReports from './SalesReports';
+import TaxReports from './TaxReports';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -237,48 +239,7 @@ const ReportsPage: React.FC = () => {
 
         {/* Sales Reports */}
         <TabPanel value={tabValue} index={0}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Daily Sales Summary"
-                description="Daily sales totals with year-over-year comparison, payment method breakdown, and trending analysis."
-                icon={<SalesIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Daily Sales')}
-                onExport={() => handleExport('Daily Sales')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Weekly Sales Report"
-                description="Weekly sales performance with growth rates and seasonal pattern analysis."
-                icon={<SalesIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Weekly Sales')}
-                onExport={() => handleExport('Weekly Sales')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Monthly Sales Analysis"
-                description="Comprehensive monthly sales report with service breakdown and performance indicators."
-                icon={<SalesIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Monthly Sales')}
-                onExport={() => handleExport('Monthly Sales')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Year-to-Date Sales"
-                description="Cumulative YTD sales with comparison to previous year and growth projections."
-                icon={<SalesIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('YTD Sales')}
-                onExport={() => handleExport('YTD Sales')}
-              />
-            </Grid>
-          </Grid>
+          <SalesReports />
         </TabPanel>
 
         {/* Financial Reports */}
@@ -559,48 +520,7 @@ const ReportsPage: React.FC = () => {
 
         {/* Tax Reports */}
         <TabPanel value={tabValue} index={7}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Monthly Tax Report"
-                description="Monthly sales tax collection summary for monthly filing requirements."
-                icon={<FinancialIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Monthly Tax')}
-                onExport={() => handleExport('Monthly Tax')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Quarterly Tax Report"
-                description="Quarterly tax totals and breakdown for quarterly filing requirements."
-                icon={<FinancialIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Quarterly Tax')}
-                onExport={() => handleExport('Quarterly Tax')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Annual Tax Summary"
-                description="Year-end tax summary for annual reporting and tax return preparation."
-                icon={<FinancialIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Annual Tax')}
-                onExport={() => handleExport('Annual Tax')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Tax Breakdown Analysis"
-                description="Taxable vs. non-taxable sales breakdown with exemption tracking and audit trail."
-                icon={<FinancialIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Tax Breakdown')}
-                onExport={() => handleExport('Tax Breakdown')}
-              />
-            </Grid>
-          </Grid>
+          <TaxReports />
         </TabPanel>
       </Box>
     </Container>

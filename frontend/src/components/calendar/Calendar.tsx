@@ -12,7 +12,7 @@ import { serviceManagement } from '../../services/serviceManagement';
 import ReservationForm from '../reservations/ReservationForm';
 import { Reservation } from '../../services/reservationService';
 import { ServiceCategory } from '../../types/service';
-import AddOnSelectionDialog from '../reservations/AddOnSelectionDialog';
+import AddOnSelectionDialogEnhanced from '../reservations/AddOnSelectionDialogEnhanced';
 
 /**
  * Props for the Calendar component
@@ -533,7 +533,7 @@ const Calendar: React.FC<CalendarProps> = ({ onEventUpdate, serviceCategories, c
       </Dialog>
 
       {/* Add-On Selection Dialog - keeping for backward compatibility */}
-      <AddOnSelectionDialog
+      <AddOnSelectionDialogEnhanced
         open={isAddOnDialogOpen}
         onClose={() => setIsAddOnDialogOpen(false)}
         reservationId={currentReservationId}

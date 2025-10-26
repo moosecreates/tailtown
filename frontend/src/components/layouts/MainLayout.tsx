@@ -44,7 +44,8 @@ import {
   Print as PrintIcon,
   InsertChart as AnalyticsIcon,
   CreditCard as PaymentIcon,
-  AssessmentOutlined as ReportIcon
+  AssessmentOutlined as ReportIcon,
+  ShoppingCart as ShoppingCartIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -108,6 +109,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     { path: '/calendar/training', label: 'Training', icon: TrainingIcon },
     { path: '/customers', label: 'Customers', icon: PeopleIcon },
     { path: '/pets', label: 'Pets', icon: PetsIcon },
+    { path: '/products', label: 'Products & POS', icon: ShoppingCartIcon },
     { 
       path: '/suites', 
       label: 'Kennels', 

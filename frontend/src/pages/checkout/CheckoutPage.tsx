@@ -191,11 +191,13 @@ const CheckoutPage: React.FC = () => {
       // Step 2: Create invoice for the first customer (assuming single customer checkout)
       const firstItem = cartItems[0];
       const invoiceLineItems = cartItems.map(item => ({
+        type: 'SERVICE',
         description: `${item.serviceName} for ${item.petName}`,
         quantity: 1,
         unitPrice: item.price,
         amount: item.price,
-        taxable: true
+        taxable: true,
+        serviceId: item.serviceId
       }));
       
       // Add add-ons as separate line items
@@ -203,11 +205,28 @@ const CheckoutPage: React.FC = () => {
         if (item.addOns && item.addOns.length > 0) {
           item.addOns.forEach(addOn => {
             invoiceLineItems.push({
+              type: 'ADD_ON',
               description: `${addOn.name} (Add-on)`,
               quantity: addOn.quantity,
               unitPrice: addOn.price,
               amount: addOn.price * addOn.quantity,
-              taxable: true
+              taxable: true,
+              serviceId: addOn.id
+            });
+          });
+        }
+        
+        // Add products as separate line items
+        if (item.products && item.products.length > 0) {
+          item.products.forEach(product => {
+            invoiceLineItems.push({
+              type: 'PRODUCT',
+              description: product.name,
+              quantity: product.quantity,
+              unitPrice: product.price,
+              amount: product.price * product.quantity,
+              taxable: true,
+              productId: product.id
             });
           });
         }
@@ -263,6 +282,32 @@ const CheckoutPage: React.FC = () => {
         }
       }
       
+      
+      // Step 6: Deduct inventory for products
+      for (const cartItem of state.items) {
+        if (cartItem.products && cartItem.products.length > 0) {
+          for (const product of cartItem.products) {
+            try {
+              await fetch(`http://localhost:4004/api/products/${product.id}/inventory/adjust`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'x-tenant-id': 'dev'
+                },
+                body: JSON.stringify({
+                  quantity: -product.quantity, // Negative to deduct
+                  changeType: 'SALE',
+                  reason: `Sold to customer - Invoice #${invoice.invoiceNumber || invoice.id}`,
+                  reference: invoice.invoiceNumber || invoice.id
+                })
+              });
+            } catch (error) {
+              console.error(`Error deducting inventory for product ${product.id}:`, error);
+              // Don't fail checkout if inventory deduction fails - log for manual correction
+            }
+          }
+        }
+      }
       
       // Process successful payment
       setSuccess(true);

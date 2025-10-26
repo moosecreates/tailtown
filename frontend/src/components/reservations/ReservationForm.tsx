@@ -27,7 +27,7 @@ import { customerService } from '../../services/customerService';
 import { petService } from '../../services/petService';
 import { serviceManagement } from '../../services/serviceManagement';
 import { resourceService, type Resource } from '../../services/resourceService';
-import AddOnSelectionDialog from './AddOnSelectionDialog';
+import AddOnSelectionDialogEnhanced from './AddOnSelectionDialogEnhanced';
 import { useShoppingCart } from '../../contexts/ShoppingCartContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -1505,7 +1505,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       </Paper>
       
       {/* Add-Ons Dialog - only shown after successful reservation creation when showAddOns is true */}
-      <AddOnSelectionDialog
+      <AddOnSelectionDialogEnhanced
         open={addOnsDialogOpen && !!newReservationId && !!selectedServiceId}
         onClose={() => {
           setAddOnsDialogOpen(false);

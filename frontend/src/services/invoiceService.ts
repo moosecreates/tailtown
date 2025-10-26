@@ -4,11 +4,14 @@ import { ENDPOINTS } from '../config/constants';
 // Types
 export interface InvoiceLineItem {
   id?: string;
+  type?: string;
   description: string;
   quantity: number;
   unitPrice: number;
   amount: number;
   taxable: boolean;
+  serviceId?: string;
+  productId?: string;
 }
 
 export interface Invoice {

@@ -116,11 +116,14 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
           notes,
           lineItems: {
             create: lineItems.map((item: any) => ({
+              type: item.type || 'SERVICE',
               description: item.description,
               quantity: parseInt(item.quantity as any, 10),
               unitPrice: parseFloat(item.unitPrice as any),
               amount: parseFloat(item.amount as any),
-              taxable: item.taxable || true,
+              taxable: item.taxable !== undefined ? item.taxable : true,
+              serviceId: item.serviceId || null,
+              productId: item.productId || null,
             })),
           },
         },

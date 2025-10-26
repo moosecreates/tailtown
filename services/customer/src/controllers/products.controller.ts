@@ -457,25 +457,24 @@ export const getLowStockProducts = async (req: Request, res: Response) => {
   try {
     const tenantId = req.headers['x-tenant-id'] as string || 'dev';
     
-    const products = await prisma.product.findMany({
+    // Get all products with inventory tracking
+    const allProducts = await prisma.product.findMany({
       where: {
         tenantId,
         isActive: true,
         trackInventory: true,
-        OR: [
-          {
-            AND: [
-              { lowStockAlert: { not: null } },
-              { currentStock: { lte: prisma.product.fields.lowStockAlert } }
-            ]
-          }
-        ]
+        lowStockAlert: { not: null }
       },
       include: {
         category: true
       },
       orderBy: { currentStock: 'asc' }
     });
+    
+    // Filter products where currentStock <= lowStockAlert
+    const products = allProducts.filter(p => 
+      p.lowStockAlert !== null && p.currentStock <= p.lowStockAlert
+    );
     
     res.json({
       status: 'success',

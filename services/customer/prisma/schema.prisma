@@ -392,17 +392,20 @@ model Invoice {
 }
 
 model InvoiceLineItem {
-  id          String   @id @default(uuid())
-  tenantId    String   @default("dev")
+  id          String              @id @default(uuid())
+  tenantId    String              @default("dev")
   invoiceId   String
+  type        InvoiceLineItemType @default(SERVICE)
   description String
-  quantity    Int      @default(1)
+  quantity    Int                 @default(1)
   unitPrice   Float
   amount      Float
-  taxable     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  taxable     Boolean             @default(true)
+  serviceId   String?
+  productId   String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  invoice     Invoice             @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, invoiceId], map: "invoice_line_items_tenant_invoice_idx")
   @@map("invoice_line_items")
@@ -630,6 +633,12 @@ enum ContactMethod {
   SMS
   BOTH
   NONE
+}
+
+enum InvoiceLineItemType {
+  SERVICE
+  ADD_ON
+  PRODUCT
 }
 
 enum PaymentMethod {

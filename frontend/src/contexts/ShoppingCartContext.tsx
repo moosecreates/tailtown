@@ -8,6 +8,14 @@ export interface AddOn {
   quantity: number;
 }
 
+// Define product interface
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
 // Define enhanced CartItem interface for reservations
 export interface CartItem {
   id: string;
@@ -26,6 +34,7 @@ export interface CartItem {
   resourceId?: string;
   resourceName?: string;
   addOns?: AddOn[];
+  products?: Product[]; // NEW: Retail products
   notes?: string;
 }
 
