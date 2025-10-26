@@ -34,6 +34,7 @@ import {
   Delete as DeleteIcon,
   ContentCopy as DuplicateIcon,
   People as EnrollmentsIcon,
+  PersonAdd as EnrollIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -41,10 +42,14 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { format } from 'date-fns';
 import schedulingService from '../../services/schedulingService';
+import { customerService } from '../../services/customerService';
+import { petService } from '../../services/petService';
 import {
   TrainingClass,
   CreateTrainingClassRequest,
 } from '../../types/scheduling';
+import { Customer } from '../../types/customer';
+import { Pet } from '../../types/pet';
 
 const TrainingClasses: React.FC = () => {
   const navigate = useNavigate();
@@ -78,6 +83,17 @@ const TrainingClasses: React.FC = () => {
     category: '',
     level: '',
     isActive: true,
+  });
+
+  // Enrollment dialog state
+  const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
+  const [selectedClassForEnrollment, setSelectedClassForEnrollment] = useState<TrainingClass | null>(null);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [enrollmentData, setEnrollmentData] = useState({
+    customerId: '',
+    petId: '',
+    amountPaid: 0,
   });
 
   useEffect(() => {
@@ -201,6 +217,73 @@ const TrainingClasses: React.FC = () => {
       } catch (err: any) {
         setError(err.message || 'Failed to delete class');
       }
+    }
+  };
+
+  const handleOpenEnrollDialog = async (trainingClass: TrainingClass) => {
+    setSelectedClassForEnrollment(trainingClass);
+    setEnrollmentData({
+      customerId: '',
+      petId: '',
+      amountPaid: trainingClass.pricePerSeries || 0,
+    });
+    
+    // Load customers
+    try {
+      const customersResponse = await customerService.getAllCustomers(1, 100);
+      setCustomers(customersResponse.data || []);
+    } catch (err) {
+      console.error('Error loading customers:', err);
+    }
+    
+    setEnrollDialogOpen(true);
+  };
+
+  const handleCloseEnrollDialog = () => {
+    setEnrollDialogOpen(false);
+    setSelectedClassForEnrollment(null);
+    setPets([]);
+    setEnrollmentData({
+      customerId: '',
+      petId: '',
+      amountPaid: 0,
+    });
+  };
+
+  const handleCustomerChange = async (customerId: string) => {
+    setEnrollmentData({ ...enrollmentData, customerId, petId: '' });
+    
+    if (customerId) {
+      try {
+        const petsResponse = await petService.getPetsByCustomer(customerId);
+        setPets(petsResponse.data || []);
+      } catch (err) {
+        console.error('Error loading pets:', err);
+        setPets([]);
+      }
+    } else {
+      setPets([]);
+    }
+  };
+
+  const handleEnroll = async () => {
+    if (!enrollmentData.customerId || !enrollmentData.petId || !selectedClassForEnrollment) {
+      setError('Please select both customer and pet');
+      return;
+    }
+
+    try {
+      await schedulingService.enrollments.enroll(selectedClassForEnrollment.id, {
+        customerId: enrollmentData.customerId,
+        petId: enrollmentData.petId,
+        amountPaid: enrollmentData.amountPaid,
+      });
+      
+      await loadClasses();
+      handleCloseEnrollDialog();
+      setError(null);
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || 'Failed to enroll pet');
     }
   };
 
@@ -404,6 +487,15 @@ const TrainingClasses: React.FC = () => {
                       />
                     </TableCell>
                     <TableCell align="right">
+                      <Tooltip title="Enroll Pet">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleOpenEnrollDialog(trainingClass)}
+                          color="success"
+                        >
+                          <EnrollIcon />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="View Enrollments">
                         <IconButton
                           size="small"
@@ -600,6 +692,87 @@ const TrainingClasses: React.FC = () => {
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button onClick={handleSave} variant="contained" color="primary">
             {editingClass ? 'Update' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Enrollment Dialog */}
+      <Dialog open={enrollDialogOpen} onClose={handleCloseEnrollDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          Enroll Pet in {selectedClassForEnrollment?.name}
+        </DialogTitle>
+        <DialogContent>
+          {error && (
+            <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            <FormControl fullWidth required>
+              <InputLabel>Customer</InputLabel>
+              <Select
+                value={enrollmentData.customerId}
+                onChange={(e) => handleCustomerChange(e.target.value)}
+                label="Customer"
+              >
+                <MenuItem value="">
+                  <em>Select a customer</em>
+                </MenuItem>
+                {customers.map((customer) => (
+                  <MenuItem key={customer.id} value={customer.id}>
+                    {customer.firstName} {customer.lastName}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth required disabled={!enrollmentData.customerId}>
+              <InputLabel>Pet</InputLabel>
+              <Select
+                value={enrollmentData.petId}
+                onChange={(e) => setEnrollmentData({ ...enrollmentData, petId: e.target.value })}
+                label="Pet"
+              >
+                <MenuItem value="">
+                  <em>Select a pet</em>
+                </MenuItem>
+                {pets.map((pet) => (
+                  <MenuItem key={pet.id} value={pet.id}>
+                    {pet.name} ({pet.breed || 'Pet'})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <TextField
+              label="Amount Paid"
+              type="number"
+              value={enrollmentData.amountPaid}
+              onChange={(e) => setEnrollmentData({ ...enrollmentData, amountPaid: parseFloat(e.target.value) || 0 })}
+              fullWidth
+              helperText={`Class price: $${selectedClassForEnrollment?.pricePerSeries || 0}`}
+            />
+
+            {selectedClassForEnrollment && (
+              <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
+                <Typography variant="body2" color="info.contrastText">
+                  <strong>Class Details:</strong><br />
+                  {selectedClassForEnrollment.totalWeeks} weeks • {selectedClassForEnrollment.daysOfWeek.length} days/week<br />
+                  Capacity: {selectedClassForEnrollment.currentEnrolled} / {selectedClassForEnrollment.maxCapacity}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEnrollDialog}>Cancel</Button>
+          <Button 
+            onClick={handleEnroll} 
+            variant="contained" 
+            color="success"
+            disabled={!enrollmentData.customerId || !enrollmentData.petId}
+          >
+            Enroll Pet
           </Button>
         </DialogActions>
       </Dialog>
