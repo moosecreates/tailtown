@@ -276,9 +276,35 @@ export const getAlternativeDates = async (
       }
     });
     
+    // Calculate date range for all alternatives upfront
+    const earliestDate = new Date(requestedStart);
+    earliestDate.setDate(earliestDate.getDate() - Number(daysToCheck));
+    const latestDate = new Date(requestedStart);
+    latestDate.setDate(latestDate.getDate() + Number(daysToCheck) + duration);
+    
+    // Batch fetch ALL reservations in the entire date range (prevents N+1 query)
+    const allReservations = await prisma.reservation.findMany({
+      where: {
+        status: { in: ['CONFIRMED', 'CHECKED_IN'] },
+        OR: [
+          {
+            AND: [
+              { startDate: { lte: latestDate } },
+              { endDate: { gte: earliestDate } }
+            ]
+          }
+        ]
+      },
+      select: {
+        resourceId: true,
+        startDate: true,
+        endDate: true
+      }
+    });
+    
     const alternatives: any[] = [];
     
-    // Check dates before and after
+    // Check dates before and after using pre-fetched data
     for (let offset = 1; offset <= Number(daysToCheck); offset++) {
       // Check before
       const beforeStart = new Date(requestedStart);
@@ -286,19 +312,9 @@ export const getAlternativeDates = async (
       const beforeEnd = new Date(beforeStart);
       beforeEnd.setDate(beforeEnd.getDate() + duration);
       
-      const beforeReservations = await prisma.reservation.findMany({
-        where: {
-          status: { in: ['CONFIRMED', 'CHECKED_IN'] },
-          OR: [
-            {
-              AND: [
-                { startDate: { lte: beforeEnd } },
-                { endDate: { gte: beforeStart } }
-              ]
-            }
-          ]
-        }
-      });
+      const beforeReservations = allReservations.filter(res =>
+        res.startDate <= beforeEnd && res.endDate >= beforeStart
+      );
       
       const beforeAvailable = resources.filter(r => 
         !beforeReservations.some(res => res.resourceId === r.id)
@@ -319,19 +335,9 @@ export const getAlternativeDates = async (
       const afterEnd = new Date(afterStart);
       afterEnd.setDate(afterEnd.getDate() + duration);
       
-      const afterReservations = await prisma.reservation.findMany({
-        where: {
-          status: { in: ['CONFIRMED', 'CHECKED_IN'] },
-          OR: [
-            {
-              AND: [
-                { startDate: { lte: afterEnd } },
-                { endDate: { gte: afterStart } }
-              ]
-            }
-          ]
-        }
-      });
+      const afterReservations = allReservations.filter(res =>
+        res.startDate <= afterEnd && res.endDate >= afterStart
+      );
       
       const afterAvailable = resources.filter(r => 
         !afterReservations.some(res => res.resourceId === r.id)

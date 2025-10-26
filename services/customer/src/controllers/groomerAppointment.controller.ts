@@ -464,43 +464,64 @@ export const getAvailableGroomers = async (req: Request, res: Response, next: Ne
       }
     });
     
-    // Check each groomer's availability
+    const groomerIds = groomers.map(g => g.id);
+    const scheduledDate = new Date(date as string);
+    
+    // Batch fetch all appointments for all groomers (prevents N+1 query)
+    const allAppointments = await prisma.groomerAppointment.findMany({
+      where: {
+        tenantId,
+        groomerId: { in: groomerIds },
+        scheduledDate,
+        status: { in: ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED'] }
+      },
+      select: {
+        groomerId: true,
+        scheduledTime: true,
+        status: true
+      }
+    });
+    
+    // Batch fetch all breaks for all groomers (prevents N+1 query)
+    const allBreaks = await prisma.groomerBreak.findMany({
+      where: {
+        tenantId,
+        groomerId: { in: groomerIds },
+        date: scheduledDate,
+        startTime: { lte: time as string },
+        endTime: { gte: time as string }
+      },
+      select: {
+        groomerId: true
+      }
+    });
+    
+    // Create lookup maps for O(1) access
+    const appointmentsByGroomer = allAppointments.reduce((acc, apt) => {
+      if (!acc[apt.groomerId]) acc[apt.groomerId] = [];
+      acc[apt.groomerId].push(apt);
+      return acc;
+    }, {} as Record<string, typeof allAppointments>);
+    
+    const breaksByGroomer = new Set(allBreaks.map(b => b.groomerId));
+    
+    // Check each groomer's availability using pre-fetched data
     const availableGroomers = [];
     
     for (const groomer of groomers) {
-      // Check for conflicting appointments
-      const conflicts = await prisma.groomerAppointment.findMany({
-        where: {
-          tenantId,
-          groomerId: groomer.id,
-          scheduledDate: new Date(date as string),
-          scheduledTime: time as string,
-          status: { in: ['SCHEDULED', 'IN_PROGRESS'] }
-        }
-      });
+      const groomerAppointments = appointmentsByGroomer[groomer.id] || [];
+      const hasBreak = breaksByGroomer.has(groomer.id);
       
-      // Check for breaks
-      const breaks = await prisma.groomerBreak.findMany({
-        where: {
-          tenantId,
-          groomerId: groomer.id,
-          date: new Date(date as string),
-          startTime: { lte: time as string },
-          endTime: { gte: time as string }
-        }
-      });
+      // Check for conflicts at the specific time
+      const conflicts = groomerAppointments.filter(
+        apt => apt.scheduledTime === time && 
+        (apt.status === 'SCHEDULED' || apt.status === 'IN_PROGRESS')
+      );
       
-      if (conflicts.length === 0 && breaks.length === 0) {
+      if (conflicts.length === 0 && !hasBreak) {
         // Check daily capacity if set
         if (groomer.maxAppointmentsPerDay) {
-          const dailyCount = await prisma.groomerAppointment.count({
-            where: {
-              tenantId,
-              groomerId: groomer.id,
-              scheduledDate: new Date(date as string),
-              status: { in: ['SCHEDULED', 'IN_PROGRESS', 'COMPLETED'] }
-            }
-          });
+          const dailyCount = groomerAppointments.length;
           
           if (dailyCount >= groomer.maxAppointmentsPerDay) {
             continue;
