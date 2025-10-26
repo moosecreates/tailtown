@@ -33,6 +33,7 @@ import {
 } from '@mui/icons-material';
 import SalesReports from './SalesReports';
 import TaxReports from './TaxReports';
+import FinancialReports from './FinancialReports';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -244,48 +245,7 @@ const ReportsPage: React.FC = () => {
 
         {/* Financial Reports */}
         <TabPanel value={tabValue} index={1}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Profit & Loss Statement"
-                description="Comprehensive P&L with revenue, expenses, and net profit analysis by time period."
-                icon={<FinancialIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('P&L Statement')}
-                onExport={() => handleExport('P&L Statement')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Revenue Analysis"
-                description="Detailed revenue breakdown by service type, add-ons, and payment methods."
-                icon={<FinancialIcon color="primary" />}
-                status="available"
-                onGenerate={() => window.open('/analytics', '_blank')}
-                onExport={() => handleExport('Revenue Analysis')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Outstanding Balances"
-                description="Customer account balances, overdue payments, and accounts receivable aging."
-                icon={<FinancialIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Outstanding Balances')}
-                onExport={() => handleExport('Outstanding Balances')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Payment Methods Report"
-                description="Analysis of payment methods used, processing fees, and payment trends."
-                icon={<FinancialIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Payment Methods')}
-                onExport={() => handleExport('Payment Methods')}
-              />
-            </Grid>
-          </Grid>
+          <FinancialReports />
         </TabPanel>
 
         {/* Customer Reports */}
