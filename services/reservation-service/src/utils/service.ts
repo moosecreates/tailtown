@@ -7,6 +7,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import compression from 'compression';
 
 /**
  * Create and configure an Express service with standard middleware
@@ -18,6 +19,9 @@ export function createService(options: {
   const app = express();
   
   // Apply standard middleware
+  // Enable gzip compression for all responses
+  app.use(compression());
+  
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(cors({

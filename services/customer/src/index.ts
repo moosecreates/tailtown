@@ -4,6 +4,7 @@ import fs from 'fs';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import compression from 'compression';
 import dotenv from 'dotenv';
 import { customerRoutes } from './routes/customer.routes';
 import { petRoutes } from './routes/pet.routes';
@@ -57,6 +58,9 @@ app.use((req, res, next) => {
 });
 
 // Middleware
+// Enable gzip compression for all responses
+app.use(compression());
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
