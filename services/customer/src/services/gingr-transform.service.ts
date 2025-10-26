@@ -59,14 +59,15 @@ export function transformOwnerToCustomer(owner: GingrOwner) {
   return {
     firstName: owner.first_name || '',
     lastName: owner.last_name || '',
-    email: owner.email || '',
-    phone: owner.cell_phone || owner.home_phone || '',
-    address: owner.address || '',
-    city: owner.city || '',
-    state: owner.state || '',
-    zipCode: owner.zip || '',
-    emergencyContactName: owner.emergency_contact_name || '',
-    emergencyContactPhone: owner.emergency_contact_phone || '',
+    email: owner.email || `customer${owner.system_id}@imported.local`,
+    phone: owner.cell_phone || owner.home_phone || null,
+    alternatePhone: (owner.cell_phone && owner.home_phone) ? owner.home_phone : null,
+    address: owner.address || null,
+    city: owner.city || null,
+    state: owner.state || null,
+    zipCode: owner.zip || null,
+    emergencyContact: owner.emergency_contact_name || null,
+    emergencyPhone: owner.emergency_contact_phone || null,
     notes: stripHtml(owner.notes || ''),
     // Store Gingr ID for reference during migration
     externalId: owner.system_id,
@@ -78,22 +79,31 @@ export function transformOwnerToCustomer(owner: GingrOwner) {
  * Transform Gingr animal to Tailtown pet
  */
 export function transformAnimalToPet(animal: GingrAnimal, customerId: string) {
+  // Map species to PetType enum
+  const species = (animal.species || 'Dog').toUpperCase();
+  let petType = 'DOG';
+  if (species.includes('CAT')) petType = 'CAT';
+  else if (species.includes('BIRD')) petType = 'BIRD';
+  else if (species.includes('RABBIT')) petType = 'RABBIT';
+  else if (species.includes('REPTILE')) petType = 'REPTILE';
+  else if (species.includes('FISH')) petType = 'FISH';
+  
   return {
     customerId,
     name: animal.name || 'Unknown',
-    species: animal.species || 'Dog',
+    type: petType as any, // PetType enum
     breed: animal.breed || 'Mixed',
     color: animal.color || '',
-    gender: animal.gender || 'UNKNOWN',
-    birthDate: animal.birthday ? new Date(animal.birthday * 1000) : null,
+    gender: (animal.gender || 'UNKNOWN').toUpperCase() as any,
+    birthdate: animal.birthday ? new Date(animal.birthday * 1000) : null,
     weight: animal.weight || null,
     microchipNumber: animal.microchip || '',
-    veterinarianName: animal.vet_name || '',
-    veterinarianPhone: animal.vet_phone || '',
-    medications: animal.medications || '',
+    vetName: animal.vet_name || '',
+    vetPhone: animal.vet_phone || '',
+    medicationNotes: animal.medications || '',
     allergies: animal.allergies || '',
     specialNeeds: animal.special_needs || '',
-    notes: stripHtml(animal.notes || ''),
+    behaviorNotes: stripHtml(animal.notes || ''),
     isActive: true,
     // Store Gingr ID for reference
     externalId: animal.id,

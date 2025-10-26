@@ -86,12 +86,14 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
 
     for (const type of reservationTypes) {
       try {
-        // Check if service already exists by name
+        // Check if service already exists by name or externalId
         let service = await prisma.service.findFirst({
           where: {
-            tenantId: 'dev',
-            name: type.name
-          }
+            OR: [
+              { tenantId: 'dev', name: type.name },
+              { tenantId: 'dev', externalId: type.id }
+            ]
+          } as any
         });
 
         if (!service) {
@@ -101,9 +103,11 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
               description: type.description || '',
               price: type.price || 0,
               duration: 60, // Default duration
+              serviceCategory: 'BOARDING', // Default category
               isActive: true,
+              externalId: type.id,
               tenantId: 'dev'
-            }
+            } as any
           });
         }
 
@@ -127,18 +131,20 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
 
     for (const owner of owners) {
       try {
-        // Check if customer already exists
+        // Check if customer already exists by externalId or email
         let customer = await prisma.customer.findFirst({
           where: {
-            tenantId: 'dev',
-            externalId: owner.system_id
-          }
+            OR: [
+              { tenantId: 'dev', externalId: owner.system_id },
+              { tenantId: 'dev', email: owner.email }
+            ]
+          } as any
         });
 
         if (!customer) {
           const customerData = transformOwnerToCustomer(owner);
           customer = await prisma.customer.create({
-            data: customerData
+            data: customerData as any
           });
         }
 
@@ -168,18 +174,18 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
           throw new Error(`Customer not found for owner_id: ${animal.owner_id}`);
         }
 
-        // Check if pet already exists
+        // Check if pet already exists by externalId
         let pet = await prisma.pet.findFirst({
           where: {
             tenantId: 'dev',
             externalId: animal.id
-          }
+          } as any
         });
 
         if (!pet) {
           const petData = transformAnimalToPet(animal, customerId);
           pet = await prisma.pet.create({
-            data: petData
+            data: petData as any
           });
         }
 
@@ -222,7 +228,7 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
           where: {
             tenantId: 'dev',
             externalId: reservation.id
-          }
+          } as any
         });
 
         if (!existingReservation) {
@@ -237,7 +243,7 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
             data: {
               ...reservationData,
               orderNumber: generateOrderNumber()
-            }
+            } as any
           });
         }
 

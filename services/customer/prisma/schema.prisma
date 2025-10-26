@@ -32,6 +32,7 @@ model Customer {
   iconColor        String?                 // Customer avatar color (blue, green, purple, etc.)
   customerIcons    Json?                   // Array of icon IDs for quick visual reference (VIP, payment issues, etc.)
   iconNotes        Json?                   // Custom notes for generic flag icons
+  externalId       String?                 // ID from external system (Gingr, etc.) for migration tracking
   isActive         Boolean                 @default(true)
   createdAt        DateTime                @default(now())
   updatedAt        DateTime                @updatedAt
@@ -83,6 +84,7 @@ model Pet {
   profilePhoto       String?
   petIcons           Json?           // Array of icon IDs for quick visual reference
   iconNotes          Json?           // Custom notes for generic flag icons
+  externalId         String?         // ID from external system (Gingr, etc.) for migration tracking
   isActive           Boolean         @default(true)
   lastCheckIn        DateTime?
   createdAt          DateTime        @default(now())
@@ -126,6 +128,7 @@ model Reservation {
   confirmedBy        String?
   cancelReason       String?
   cancelDate         DateTime?
+  externalId         String?            // ID from external system (Gingr, etc.) for migration tracking
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   customerId         String
@@ -165,6 +168,7 @@ model Service {
   isActive        Boolean            @default(true)
   requiresStaff   Boolean            @default(false)
   notes           String?
+  externalId      String?            // ID from external system (Gingr, etc.) for migration tracking
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   capacityLimit   Int                @default(0)
