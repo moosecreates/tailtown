@@ -111,7 +111,6 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
         console.log('Loading training classes for calendar...');
         try {
           const classesResponse = await schedulingService.trainingClasses.getAll({
-            status: 'SCHEDULED,IN_PROGRESS',
             isActive: true
           });
           
