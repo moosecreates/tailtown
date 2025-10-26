@@ -108,19 +108,27 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
       
       // Load training class sessions if showing training calendar
       if (serviceCategories && serviceCategories.includes(ServiceCategory.TRAINING)) {
+        console.log('Loading training classes for calendar...');
         try {
           const classesResponse = await schedulingService.trainingClasses.getAll({
             status: 'SCHEDULED,IN_PROGRESS',
             isActive: true
           });
           
+          console.log('Training classes response:', classesResponse);
+          
           if (classesResponse && Array.isArray(classesResponse)) {
+            console.log(`Found ${classesResponse.length} training classes`);
             // For each class, get its sessions
             for (const trainingClass of classesResponse) {
               try {
+                console.log(`Loading sessions for class: ${trainingClass.name} (${trainingClass.id})`);
                 const sessionsResponse = await schedulingService.trainingClasses.getSessions(trainingClass.id);
                 
+                console.log(`Sessions for ${trainingClass.name}:`, sessionsResponse);
+                
                 if (sessionsResponse && Array.isArray(sessionsResponse)) {
+                  console.log(`Creating ${sessionsResponse.length} session events`);
                   const sessionEvents = sessionsResponse.map((session: any) => {
                     // Combine session date and time
                     const sessionDate = new Date(session.scheduledDate);
@@ -147,6 +155,7 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
                     };
                   });
                   
+                  console.log('Session events created:', sessionEvents);
                   allEvents.push(...sessionEvents);
                 }
               } catch (sessionError) {
@@ -159,6 +168,7 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
         }
       }
       
+      console.log('Total events to display:', allEvents.length, allEvents);
       setEvents(allEvents);
       return allEvents;
     } catch (error) {
