@@ -60,19 +60,21 @@ const TaxReports: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      let data;
+      let response;
       switch (period) {
         case 'monthly':
-          data = await getTaxMonthlyReport(selectedYear, selectedMonth);
+          response = await getTaxMonthlyReport(selectedYear, selectedMonth);
           break;
         case 'quarterly':
-          data = await getTaxQuarterlyReport(selectedYear, selectedQuarter);
+          response = await getTaxQuarterlyReport(selectedYear, selectedQuarter);
           break;
         case 'annual':
-          data = await getTaxAnnualReport(selectedYear);
+          response = await getTaxAnnualReport(selectedYear);
           break;
       }
       
+      // Extract the actual data from the response
+      const data = response?.data || response;
       setReportData(data);
     } catch (err: any) {
       console.error('Error loading tax report:', err);

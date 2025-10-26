@@ -63,24 +63,26 @@ const SalesReports: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      let data;
+      let response;
       switch (period) {
         case 'daily':
-          data = await getSalesDailyReport(selectedDate);
+          response = await getSalesDailyReport(selectedDate);
           break;
         case 'monthly':
-          data = await getSalesMonthlyReport(selectedYear, selectedMonth);
+          response = await getSalesMonthlyReport(selectedYear, selectedMonth);
           break;
         case 'ytd':
-          data = await getSalesYTDReport(selectedYear);
+          response = await getSalesYTDReport(selectedYear);
           break;
         case 'top-customers':
           const endDate = new Date().toISOString().split('T')[0];
           const startDate = new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString().split('T')[0];
-          data = await getTopCustomersReport(startDate, endDate, 10);
+          response = await getTopCustomersReport(startDate, endDate, 10);
           break;
       }
       
+      // Extract the actual data from the response
+      const data = response?.data || response;
       setReportData(data);
     } catch (err: any) {
       console.error('Error loading report:', err);
