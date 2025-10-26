@@ -59,6 +59,83 @@ export const getTaxBreakdownReport = async (startDate: string, endDate: string) 
 };
 
 // ============================================================================
+// Financial Reports
+// ============================================================================
+
+export const getFinancialRevenueReport = async (startDate: string, endDate: string) => {
+  const response = await customerApi.get(`/api/reports/financial/revenue?startDate=${startDate}&endDate=${endDate}`);
+  return response.data;
+};
+
+export const getFinancialProfitLossReport = async (startDate: string, endDate: string) => {
+  const response = await customerApi.get(`/api/reports/financial/profit-loss?startDate=${startDate}&endDate=${endDate}`);
+  return response.data;
+};
+
+export const getFinancialOutstandingReport = async () => {
+  const response = await customerApi.get(`/api/reports/financial/outstanding`);
+  return response.data;
+};
+
+export const getFinancialRefundsReport = async (startDate: string, endDate: string) => {
+  const response = await customerApi.get(`/api/reports/financial/refunds?startDate=${startDate}&endDate=${endDate}`);
+  return response.data;
+};
+
+// ============================================================================
+// Customer Reports
+// ============================================================================
+
+export const getCustomerAcquisitionReport = async (startDate: string, endDate: string) => {
+  const response = await customerApi.get(`/api/reports/customers/acquisition?startDate=${startDate}&endDate=${endDate}`);
+  return response.data;
+};
+
+export const getCustomerRetentionReport = async (startDate: string, endDate: string) => {
+  const response = await customerApi.get(`/api/reports/customers/retention?startDate=${startDate}&endDate=${endDate}`);
+  return response.data;
+};
+
+export const getCustomerLifetimeValueReport = async (limit: number = 50) => {
+  const response = await customerApi.get(`/api/reports/customers/lifetime-value?limit=${limit}`);
+  return response.data;
+};
+
+export const getCustomerDemographicsReport = async () => {
+  const response = await customerApi.get(`/api/reports/customers/demographics`);
+  return response.data;
+};
+
+export const getCustomerInactiveReport = async (days: number = 90) => {
+  const response = await customerApi.get(`/api/reports/customers/inactive?days=${days}`);
+  return response.data;
+};
+
+// ============================================================================
+// Operational Reports
+// ============================================================================
+
+export const getOperationalStaffReport = async (startDate: string, endDate: string) => {
+  const response = await customerApi.get(`/api/reports/operations/staff?startDate=${startDate}&endDate=${endDate}`);
+  return response.data;
+};
+
+export const getOperationalResourcesReport = async (startDate: string, endDate: string) => {
+  const response = await customerApi.get(`/api/reports/operations/resources?startDate=${startDate}&endDate=${endDate}`);
+  return response.data;
+};
+
+export const getOperationalBookingsReport = async (startDate: string, endDate: string) => {
+  const response = await customerApi.get(`/api/reports/operations/bookings?startDate=${startDate}&endDate=${endDate}`);
+  return response.data;
+};
+
+export const getOperationalCapacityReport = async (startDate: string, endDate: string) => {
+  const response = await customerApi.get(`/api/reports/operations/capacity?startDate=${startDate}&endDate=${endDate}`);
+  return response.data;
+};
+
+// ============================================================================
 // Export Functions
 // ============================================================================
 

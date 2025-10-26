@@ -34,6 +34,8 @@ import {
 import SalesReports from './SalesReports';
 import TaxReports from './TaxReports';
 import FinancialReports from './FinancialReports';
+import CustomerReports from './CustomerReports';
+import OperationalReports from './OperationalReports';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -250,48 +252,7 @@ const ReportsPage: React.FC = () => {
 
         {/* Customer Reports */}
         <TabPanel value={tabValue} index={2}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Customer Acquisition"
-                description="New customer registration trends, referral sources, and acquisition costs."
-                icon={<CustomerIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Customer Acquisition')}
-                onExport={() => handleExport('Customer Acquisition')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Customer Lifetime Value"
-                description="CLV analysis, retention rates, and customer segmentation by value."
-                icon={<CustomerIcon color="primary" />}
-                status="available"
-                onGenerate={() => window.open('/analytics/customer-value', '_blank')}
-                onExport={() => handleExport('Customer Lifetime Value')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Customer Demographics"
-                description="Customer demographics, geographic distribution, and profile analysis."
-                icon={<CustomerIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Customer Demographics')}
-                onExport={() => handleExport('Customer Demographics')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Visit Frequency Analysis"
-                description="Customer visit patterns, frequency analysis, and retention metrics."
-                icon={<CustomerIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Visit Frequency')}
-                onExport={() => handleExport('Visit Frequency')}
-              />
-            </Grid>
-          </Grid>
+          <CustomerReports />
         </TabPanel>
 
         {/* Pet Reports */}
@@ -388,48 +349,7 @@ const ReportsPage: React.FC = () => {
 
         {/* Operational Reports */}
         <TabPanel value={tabValue} index={5}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Staff Performance"
-                description="Staff productivity metrics, performance indicators, and scheduling efficiency."
-                icon={<OperationalIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Staff Performance')}
-                onExport={() => handleExport('Staff Performance')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Resource Utilization"
-                description="Suite occupancy rates, resource efficiency, and capacity optimization."
-                icon={<OperationalIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Resource Utilization')}
-                onExport={() => handleExport('Resource Utilization')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Booking Patterns"
-                description="Reservation trends, peak times analysis, and demand patterns."
-                icon={<OperationalIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Booking Patterns')}
-                onExport={() => handleExport('Booking Patterns')}
-              />
-            </Grid>
-            <Grid item xs={12} md={6} lg={4}>
-              <ReportCard
-                title="Capacity Analysis"
-                description="Facility capacity utilization, bottleneck identification, and expansion planning."
-                icon={<OperationalIcon color="primary" />}
-                status="planned"
-                onGenerate={() => handleExport('Capacity Analysis')}
-                onExport={() => handleExport('Capacity Analysis')}
-              />
-            </Grid>
-          </Grid>
+          <OperationalReports />
         </TabPanel>
 
         {/* Service Reports */}
