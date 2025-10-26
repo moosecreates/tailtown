@@ -455,6 +455,11 @@ const TrainingClasses: React.FC = () => {
           {editingClass ? 'Edit Training Class' : 'New Training Class'}
         </DialogTitle>
         <DialogContent>
+          {error && (
+            <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
             <TextField
               label="Class Name"
@@ -504,6 +509,21 @@ const TrainingClasses: React.FC = () => {
                 </FormControl>
               </Grid>
             </Grid>
+
+            <FormControl fullWidth required>
+              <InputLabel>Instructor</InputLabel>
+              <Select
+                value={formData.instructorId}
+                onChange={(e) => setFormData({ ...formData, instructorId: e.target.value })}
+                label="Instructor"
+              >
+                <MenuItem value="">
+                  <em>Select an instructor</em>
+                </MenuItem>
+                {/* TODO: Load actual instructors from staff service */}
+                <MenuItem value="default-instructor">Default Instructor</MenuItem>
+              </Select>
+            </FormControl>
 
             <Grid container spacing={2}>
               <Grid item xs={6}>
@@ -574,13 +594,6 @@ const TrainingClasses: React.FC = () => {
               rows={3}
               fullWidth
             />
-
-            {!editingClass && (
-              <Alert severity="info">
-                Note: Instructor assignment and day selection require additional configuration.
-                This simplified form covers the basics.
-              </Alert>
-            )}
           </Box>
         </DialogContent>
         <DialogActions>
