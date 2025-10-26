@@ -30,7 +30,14 @@ import {
   AttachMoney as MoneyIcon,
   GetApp as ExportIcon
 } from '@mui/icons-material';
-import { formatCurrency } from '../../services/reportService';
+import { 
+  formatCurrency,
+  getFinancialRevenueReport,
+  getFinancialProfitLossReport,
+  getFinancialOutstandingReport,
+  getFinancialRefundsReport,
+  exportReportCSV
+} from '../../services/reportService';
 
 type ReportType = 'revenue' | 'profit-loss' | 'outstanding' | 'refunds';
 
@@ -47,18 +54,25 @@ const FinancialReports: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      // TODO: Call appropriate API endpoint based on reportType
-      // For now, just simulate loading
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      let response;
+      switch (reportType) {
+        case 'revenue':
+          response = await getFinancialRevenueReport(startDate, endDate);
+          break;
+        case 'profit-loss':
+          response = await getFinancialProfitLossReport(startDate, endDate);
+          break;
+        case 'outstanding':
+          response = await getFinancialOutstandingReport();
+          break;
+        case 'refunds':
+          response = await getFinancialRefundsReport(startDate, endDate);
+          break;
+      }
       
-      setReportData({
-        summary: {
-          totalRevenue: 0,
-          totalExpenses: 0,
-          netProfit: 0
-        },
-        data: []
-      });
+      // Extract the actual data from the response
+      const data = response?.data || response;
+      setReportData(data);
     } catch (err: any) {
       console.error('Error loading report:', err);
       setError(err.response?.data?.message || 'Failed to load report');
@@ -68,8 +82,9 @@ const FinancialReports: React.FC = () => {
   };
 
   const handleExport = () => {
-    // TODO: Implement CSV export
-    console.log('Export clicked');
+    if (reportData) {
+      exportReportCSV(reportData);
+    }
   };
 
   return (

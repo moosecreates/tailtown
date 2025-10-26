@@ -31,7 +31,16 @@ import {
   People as PeopleIcon,
   GetApp as ExportIcon
 } from '@mui/icons-material';
-import { formatCurrency, formatPercentage } from '../../services/reportService';
+import { 
+  formatCurrency, 
+  formatPercentage,
+  getCustomerAcquisitionReport,
+  getCustomerRetentionReport,
+  getCustomerLifetimeValueReport,
+  getCustomerDemographicsReport,
+  getCustomerInactiveReport,
+  exportReportCSV
+} from '../../services/reportService';
 
 type ReportType = 'acquisition' | 'retention' | 'lifetime-value' | 'demographics' | 'inactive';
 
@@ -50,19 +59,28 @@ const CustomerReports: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      // TODO: Call appropriate API endpoint based on reportType
-      // For now, just simulate loading
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      let response;
+      switch (reportType) {
+        case 'acquisition':
+          response = await getCustomerAcquisitionReport(startDate, endDate);
+          break;
+        case 'retention':
+          response = await getCustomerRetentionReport(startDate, endDate);
+          break;
+        case 'lifetime-value':
+          response = await getCustomerLifetimeValueReport(limit);
+          break;
+        case 'demographics':
+          response = await getCustomerDemographicsReport();
+          break;
+        case 'inactive':
+          response = await getCustomerInactiveReport(inactiveDays);
+          break;
+      }
       
-      setReportData({
-        summary: {
-          totalCustomers: 0,
-          newCustomers: 0,
-          retentionRate: 0,
-          averageLTV: 0
-        },
-        data: []
-      });
+      // Extract the actual data from the response
+      const data = response?.data || response;
+      setReportData(data);
     } catch (err: any) {
       console.error('Error loading report:', err);
       setError(err.response?.data?.message || 'Failed to load report');
@@ -72,8 +90,9 @@ const CustomerReports: React.FC = () => {
   };
 
   const handleExport = () => {
-    // TODO: Implement CSV export
-    console.log('Export clicked');
+    if (reportData) {
+      exportReportCSV(reportData);
+    }
   };
 
   const renderSummaryCards = () => {

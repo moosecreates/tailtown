@@ -160,8 +160,76 @@ export const exportReportCSV = async (reportData: any) => {
 };
 
 export const exportReportPDF = async (reportData: any) => {
-  // For now, just alert - will implement PDF generation later
-  alert('PDF export coming soon! Use CSV export for now.');
+  // Simple HTML-based PDF export using print dialog
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    alert('Please allow popups to export PDF');
+    return;
+  }
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${reportData.title || 'Report'}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #1976d2; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #1976d2; color: white; }
+        .summary { margin: 20px 0; padding: 15px; background: #f5f5f5; }
+        .summary-item { margin: 10px 0; }
+        @media print {
+          button { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>${reportData.title || 'Report'}</h1>
+      <p><strong>Generated:</strong> ${new Date(reportData.generatedAt).toLocaleString()}</p>
+      
+      ${reportData.summary ? `
+        <div class="summary">
+          <h2>Summary</h2>
+          ${Object.entries(reportData.summary).map(([key, value]) => `
+            <div class="summary-item">
+              <strong>${key.replace(/([A-Z])/g, ' $1').trim()}:</strong> ${
+                typeof value === 'number' && key.toLowerCase().includes('revenue') || key.toLowerCase().includes('total') || key.toLowerCase().includes('amount')
+                  ? formatCurrency(value as number)
+                  : value
+              }
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+      
+      ${reportData.data && reportData.data.length > 0 ? `
+        <table>
+          <thead>
+            <tr>
+              ${Object.keys(reportData.data[0]).map(key => `<th>${key}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${reportData.data.map((row: any) => `
+              <tr>
+                ${Object.values(row).map(value => `<td>${value}</td>`).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : '<p>No data available</p>'}
+      
+      <button onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; background: #1976d2; color: white; border: none; cursor: pointer;">
+        Print / Save as PDF
+      </button>
+    </body>
+    </html>
+  `;
+
+  printWindow.document.write(html);
+  printWindow.document.close();
 };
 
 // ============================================================================

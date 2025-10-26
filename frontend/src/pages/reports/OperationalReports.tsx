@@ -31,7 +31,15 @@ import {
   Business as BusinessIcon,
   GetApp as ExportIcon
 } from '@mui/icons-material';
-import { formatCurrency, formatPercentage } from '../../services/reportService';
+import { 
+  formatCurrency, 
+  formatPercentage,
+  getOperationalStaffReport,
+  getOperationalResourcesReport,
+  getOperationalBookingsReport,
+  getOperationalCapacityReport,
+  exportReportCSV
+} from '../../services/reportService';
 
 type ReportType = 'staff' | 'resources' | 'bookings' | 'capacity';
 
@@ -48,19 +56,25 @@ const OperationalReports: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      // TODO: Call appropriate API endpoint based on reportType
-      // For now, just simulate loading
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      let response;
+      switch (reportType) {
+        case 'staff':
+          response = await getOperationalStaffReport(startDate, endDate);
+          break;
+        case 'resources':
+          response = await getOperationalResourcesReport(startDate, endDate);
+          break;
+        case 'bookings':
+          response = await getOperationalBookingsReport(startDate, endDate);
+          break;
+        case 'capacity':
+          response = await getOperationalCapacityReport(startDate, endDate);
+          break;
+      }
       
-      setReportData({
-        summary: {
-          totalStaff: 0,
-          totalRevenue: 0,
-          averageUtilization: 0,
-          totalBookings: 0
-        },
-        data: []
-      });
+      // Extract the actual data from the response
+      const data = response?.data || response;
+      setReportData(data);
     } catch (err: any) {
       console.error('Error loading report:', err);
       setError(err.response?.data?.message || 'Failed to load report');
@@ -70,8 +84,9 @@ const OperationalReports: React.FC = () => {
   };
 
   const handleExport = () => {
-    // TODO: Implement CSV export
-    console.log('Export clicked');
+    if (reportData) {
+      exportReportCSV(reportData);
+    }
   };
 
   const renderSummaryCards = () => {
