@@ -40,6 +40,7 @@ import productsRoutes from './routes/products.routes';
 import reportRoutes from './routes/reports.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
+import { enforceHTTPS, securityHeaders, sanitizeInput } from './middleware/security.middleware';
 
 // Load environment variables
 dotenv.config();
@@ -59,6 +60,12 @@ app.use((req, res, next) => {
 });
 
 // Middleware
+// Security: Enforce HTTPS in production
+app.use(enforceHTTPS);
+
+// Security: Add security headers
+app.use(securityHeaders);
+
 // Enable gzip compression for all responses
 app.use(compression());
 
@@ -76,8 +83,15 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 // Enhanced CORS configuration to ensure frontend can connect
+// In production, restrict to specific domains
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : ['http://localhost:3000', 'http://localhost:3001']; // Default for development
+
 app.use(cors({
-  origin: '*', // Allow all origins
+  origin: process.env.NODE_ENV === 'production' 
+    ? allowedOrigins 
+    : '*', // Allow all origins in development only
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'x-api-key', 'X-API-Key', 'X-Tenant-Subdomain'],
   credentials: true
@@ -114,6 +128,9 @@ app.use('/api/auth/login', authLimiter);
 // Request body parsing middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Security: Sanitize user input
+app.use(sanitizeInput);
 
 // Use minimal logging in production to reduce overhead
 app.use(morgan('tiny'));

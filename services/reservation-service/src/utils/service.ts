@@ -37,8 +37,16 @@ export function createService(options: {
   
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  
+  // CORS configuration - restrict in production
+  const allowedOrigins = process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+    : ['http://localhost:3000', 'http://localhost:3001'];
+  
   app.use(cors({
-    origin: '*', // Allow all origins
+    origin: process.env.NODE_ENV === 'production' 
+      ? allowedOrigins 
+      : '*', // Allow all origins in development only
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id'],
     credentials: true
