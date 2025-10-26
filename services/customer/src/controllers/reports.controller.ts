@@ -4,7 +4,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../middleware/errorHandler';
+import { AppError } from '../middleware/error.middleware';
 import {
   getDailySalesReport,
   getWeeklySalesReport,
