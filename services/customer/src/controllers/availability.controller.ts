@@ -46,13 +46,6 @@ export const checkAvailability = async (
             ]
           }
         ]
-      },
-      include: {
-        pets: {
-          select: {
-            name: true
-          }
-        }
       }
     });
     
@@ -111,7 +104,7 @@ export const getAvailabilityCalendar = async (
     const resources = await prisma.resource.findMany({
       where: {
         isActive: true,
-        ...(suiteType && { type: suiteType as string })
+        ...(suiteType && { type: suiteType as any })
       }
     });
     
@@ -218,13 +211,6 @@ export const getSuiteAvailability = async (
             ]
           }
         ]
-      },
-      include: {
-        pets: {
-          select: {
-            name: true
-          }
-        }
       }
     });
     
@@ -241,8 +227,7 @@ export const getSuiteAvailability = async (
         conflictingReservations: conflictingReservations.map(res => ({
           id: res.id,
           startDate: res.startDate,
-          endDate: res.endDate,
-          petName: res.pets.map(p => p.name).join(', ')
+          endDate: res.endDate
         }))
       }
     });
