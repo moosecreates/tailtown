@@ -17,7 +17,16 @@ import {
   getRevenue,
   getProfitLoss,
   getOutstanding,
-  getRefunds
+  getRefunds,
+  getCustomerAcquisition,
+  getCustomerRetention,
+  getCustomerLifetimeValue,
+  getCustomerDemographics,
+  getInactiveCustomers,
+  getStaffPerformance,
+  getResourceUtilization,
+  getBookingPatterns,
+  getCapacityAnalysis
 } from '../controllers/reports.controller';
 
 const router = express.Router();
@@ -136,5 +145,84 @@ router.get('/financial/outstanding', getOutstanding);
  * @access  Private
  */
 router.get('/financial/refunds', getRefunds);
+
+// ============================================================================
+// Customer Reports
+// ============================================================================
+
+/**
+ * @route   GET /api/reports/customers/acquisition
+ * @desc    Get customer acquisition report
+ * @query   startDate, endDate
+ * @access  Private
+ */
+router.get('/customers/acquisition', getCustomerAcquisition);
+
+/**
+ * @route   GET /api/reports/customers/retention
+ * @desc    Get customer retention report
+ * @query   startDate, endDate
+ * @access  Private
+ */
+router.get('/customers/retention', getCustomerRetention);
+
+/**
+ * @route   GET /api/reports/customers/lifetime-value
+ * @desc    Get customer lifetime value report
+ * @query   limit (optional)
+ * @access  Private
+ */
+router.get('/customers/lifetime-value', getCustomerLifetimeValue);
+
+/**
+ * @route   GET /api/reports/customers/demographics
+ * @desc    Get customer demographics report
+ * @access  Private
+ */
+router.get('/customers/demographics', getCustomerDemographics);
+
+/**
+ * @route   GET /api/reports/customers/inactive
+ * @desc    Get inactive customers report
+ * @query   days (optional, default 90)
+ * @access  Private
+ */
+router.get('/customers/inactive', getInactiveCustomers);
+
+// ============================================================================
+// Operational Reports
+// ============================================================================
+
+/**
+ * @route   GET /api/reports/operations/staff
+ * @desc    Get staff performance report
+ * @query   startDate, endDate
+ * @access  Private
+ */
+router.get('/operations/staff', getStaffPerformance);
+
+/**
+ * @route   GET /api/reports/operations/resources
+ * @desc    Get resource utilization report
+ * @query   startDate, endDate
+ * @access  Private
+ */
+router.get('/operations/resources', getResourceUtilization);
+
+/**
+ * @route   GET /api/reports/operations/bookings
+ * @desc    Get booking patterns report
+ * @query   startDate, endDate
+ * @access  Private
+ */
+router.get('/operations/bookings', getBookingPatterns);
+
+/**
+ * @route   GET /api/reports/operations/capacity
+ * @desc    Get capacity analysis report
+ * @query   startDate, endDate
+ * @access  Private
+ */
+router.get('/operations/capacity', getCapacityAnalysis);
 
 export default router;

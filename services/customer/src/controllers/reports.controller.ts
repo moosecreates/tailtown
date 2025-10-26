@@ -515,3 +515,327 @@ export const getRefunds = async (req: Request, res: Response, next: NextFunction
     return next(new AppError('Failed to generate refunds report', 500));
   }
 };
+
+// ============================================================================
+// Customer Reports
+// ============================================================================
+
+/**
+ * GET /api/reports/customers/acquisition
+ */
+export const getCustomerAcquisition = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.headers['x-tenant-id'] as string;
+    const { startDate, endDate } = req.query;
+    
+    if (!startDate || !endDate) {
+      return next(new AppError('startDate and endDate parameters are required', 400));
+    }
+    
+    const report = await getCustomerAcquisitionReport(tenantId, startDate as string, endDate as string);
+    
+    const totalNew = report.reduce((sum, item) => sum + item.newCustomers, 0);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        reportType: 'customer_acquisition',
+        title: `Customer Acquisition Report - ${startDate} to ${endDate}`,
+        generatedAt: new Date(),
+        filters: { startDate, endDate },
+        summary: {
+          totalNewCustomers: totalNew,
+          periodCount: report.length
+        },
+        data: report
+      }
+    });
+  } catch (error) {
+    console.error('Error generating customer acquisition report:', error);
+    return next(new AppError('Failed to generate customer acquisition report', 500));
+  }
+};
+
+/**
+ * GET /api/reports/customers/retention
+ */
+export const getCustomerRetention = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.headers['x-tenant-id'] as string;
+    const { startDate, endDate } = req.query;
+    
+    if (!startDate || !endDate) {
+      return next(new AppError('startDate and endDate parameters are required', 400));
+    }
+    
+    const report = await getCustomerRetentionReport(tenantId, startDate as string, endDate as string);
+    const retentionData = report[0] || { retentionRate: 0, returningCustomers: 0, totalCustomers: 0 };
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        reportType: 'customer_retention',
+        title: `Customer Retention Report - ${startDate} to ${endDate}`,
+        generatedAt: new Date(),
+        filters: { startDate, endDate },
+        summary: {
+          retentionRate: retentionData.retentionRate,
+          returningCustomers: retentionData.returningCustomers,
+          totalCustomers: retentionData.totalCustomers
+        },
+        data: report
+      }
+    });
+  } catch (error) {
+    console.error('Error generating customer retention report:', error);
+    return next(new AppError('Failed to generate customer retention report', 500));
+  }
+};
+
+/**
+ * GET /api/reports/customers/lifetime-value
+ */
+export const getCustomerLifetimeValue = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.headers['x-tenant-id'] as string;
+    const limit = parseInt(req.query.limit as string) || 50;
+    
+    const report = await getCustomerLifetimeValueReport(tenantId, limit);
+    
+    const totalLTV = report.reduce((sum, item) => sum + item.lifetimeValue, 0);
+    const avgLTV = report.length > 0 ? totalLTV / report.length : 0;
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        reportType: 'customer_lifetime_value',
+        title: 'Customer Lifetime Value Report',
+        generatedAt: new Date(),
+        filters: { limit },
+        summary: {
+          totalCustomers: report.length,
+          totalLifetimeValue: totalLTV,
+          averageLifetimeValue: avgLTV
+        },
+        data: report
+      }
+    });
+  } catch (error) {
+    console.error('Error generating customer lifetime value report:', error);
+    return next(new AppError('Failed to generate customer lifetime value report', 500));
+  }
+};
+
+/**
+ * GET /api/reports/customers/demographics
+ */
+export const getCustomerDemographics = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.headers['x-tenant-id'] as string;
+    
+    const report = await getCustomerDemographicsReport(tenantId);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        reportType: 'customer_demographics',
+        title: 'Customer Demographics Report',
+        generatedAt: new Date(),
+        filters: {},
+        summary: {
+          totalCustomers: report.totalCustomers,
+          locationCount: report.byLocation.length,
+          petTypeCount: report.byPetType.length
+        },
+        data: report
+      }
+    });
+  } catch (error) {
+    console.error('Error generating customer demographics report:', error);
+    return next(new AppError('Failed to generate customer demographics report', 500));
+  }
+};
+
+/**
+ * GET /api/reports/customers/inactive
+ */
+export const getInactiveCustomers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.headers['x-tenant-id'] as string;
+    const days = parseInt(req.query.days as string) || 90;
+    
+    const report = await getInactiveCustomersReport(tenantId, days);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        reportType: 'customer_inactive',
+        title: `Inactive Customers Report - ${days} days`,
+        generatedAt: new Date(),
+        filters: { days },
+        summary: {
+          inactiveCount: report.length,
+          daysThreshold: days
+        },
+        data: report
+      }
+    });
+  } catch (error) {
+    console.error('Error generating inactive customers report:', error);
+    return next(new AppError('Failed to generate inactive customers report', 500));
+  }
+};
+
+// ============================================================================
+// Operational Reports
+// ============================================================================
+
+/**
+ * GET /api/reports/operations/staff
+ */
+export const getStaffPerformance = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.headers['x-tenant-id'] as string;
+    const { startDate, endDate } = req.query;
+    
+    if (!startDate || !endDate) {
+      return next(new AppError('startDate and endDate parameters are required', 400));
+    }
+    
+    const report = await getStaffPerformanceReport(tenantId, startDate as string, endDate as string);
+    
+    const totalRevenue = report.reduce((sum, item) => sum + item.revenue, 0);
+    const totalServices = report.reduce((sum, item) => sum + item.servicesCompleted, 0);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        reportType: 'operations_staff',
+        title: `Staff Performance Report - ${startDate} to ${endDate}`,
+        generatedAt: new Date(),
+        filters: { startDate, endDate },
+        summary: {
+          totalStaff: report.length,
+          totalRevenue,
+          totalServices
+        },
+        data: report
+      }
+    });
+  } catch (error) {
+    console.error('Error generating staff performance report:', error);
+    return next(new AppError('Failed to generate staff performance report', 500));
+  }
+};
+
+/**
+ * GET /api/reports/operations/resources
+ */
+export const getResourceUtilization = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.headers['x-tenant-id'] as string;
+    const { startDate, endDate } = req.query;
+    
+    if (!startDate || !endDate) {
+      return next(new AppError('startDate and endDate parameters are required', 400));
+    }
+    
+    const report = await getResourceUtilizationReport(tenantId, startDate as string, endDate as string);
+    
+    const avgUtilization = report.length > 0
+      ? report.reduce((sum, item) => sum + item.utilizationRate, 0) / report.length
+      : 0;
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        reportType: 'operations_resources',
+        title: `Resource Utilization Report - ${startDate} to ${endDate}`,
+        generatedAt: new Date(),
+        filters: { startDate, endDate },
+        summary: {
+          totalResources: report.length,
+          averageUtilization: avgUtilization
+        },
+        data: report
+      }
+    });
+  } catch (error) {
+    console.error('Error generating resource utilization report:', error);
+    return next(new AppError('Failed to generate resource utilization report', 500));
+  }
+};
+
+/**
+ * GET /api/reports/operations/bookings
+ */
+export const getBookingPatterns = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.headers['x-tenant-id'] as string;
+    const { startDate, endDate } = req.query;
+    
+    if (!startDate || !endDate) {
+      return next(new AppError('startDate and endDate parameters are required', 400));
+    }
+    
+    const report = await getBookingPatternsReport(tenantId, startDate as string, endDate as string);
+    
+    const totalBookings = report.reduce((sum, item) => sum + item.bookingCount, 0);
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        reportType: 'operations_bookings',
+        title: `Booking Patterns Report - ${startDate} to ${endDate}`,
+        generatedAt: new Date(),
+        filters: { startDate, endDate },
+        summary: {
+          totalBookings,
+          patternsAnalyzed: report.length
+        },
+        data: report
+      }
+    });
+  } catch (error) {
+    console.error('Error generating booking patterns report:', error);
+    return next(new AppError('Failed to generate booking patterns report', 500));
+  }
+};
+
+/**
+ * GET /api/reports/operations/capacity
+ */
+export const getCapacityAnalysis = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.headers['x-tenant-id'] as string;
+    const { startDate, endDate } = req.query;
+    
+    if (!startDate || !endDate) {
+      return next(new AppError('startDate and endDate parameters are required', 400));
+    }
+    
+    const report = await getCapacityAnalysisReport(tenantId, startDate as string, endDate as string);
+    
+    const avgCapacity = report.length > 0
+      ? report.reduce((sum, item) => sum + item.utilizationRate, 0) / report.length
+      : 0;
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        reportType: 'operations_capacity',
+        title: `Capacity Analysis Report - ${startDate} to ${endDate}`,
+        generatedAt: new Date(),
+        filters: { startDate, endDate },
+        summary: {
+          periodsAnalyzed: report.length,
+          averageCapacity: avgCapacity
+        },
+        data: report
+      }
+    });
+  } catch (error) {
+    console.error('Error generating capacity analysis report:', error);
+    return next(new AppError('Failed to generate capacity analysis report', 500));
+  }
+};
