@@ -21,7 +21,7 @@ async function seedRealisticKennels() {
   // Room B: Standard Suites (40 kennels)
   // Room C: Standard Plus Suites (25 kennels)
   // Room D: Standard Suites (40 kennels)
-  // Room E: Standard Plus Suites (8 kennels)
+  // Room T: Standard Plus Suites (8 kennels) - Training/Therapy room
   // VIP Suites: 2 special suites
   // Bathing Stations: 1
   
@@ -30,7 +30,7 @@ async function seedRealisticKennels() {
     { letter: 'B', type: 'STANDARD_SUITE', count: 40 },
     { letter: 'C', type: 'STANDARD_PLUS_SUITE', count: 25 },
     { letter: 'D', type: 'STANDARD_SUITE', count: 40 },
-    { letter: 'E', type: 'STANDARD_PLUS_SUITE', count: 8 }
+    { letter: 'T', type: 'STANDARD_PLUS_SUITE', count: 8 }
   ];
   
   let totalCreated = 0;
@@ -109,7 +109,7 @@ async function seedRealisticKennels() {
     const samples = await prisma.resource.findMany({
       where: {
         name: {
-          in: ['A01', 'A40', 'B01', 'C01', 'D01', 'E01', 'VIP-1', 'BATH-1']
+          in: ['A01', 'A40', 'B01', 'C01', 'D01', 'T01', 'VIP-1', 'BATH-1']
         }
       },
       orderBy: { name: 'asc' }
