@@ -40,11 +40,12 @@
     "yup": "^1.6.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "test:coverage": "react-scripts test --coverage --watchAll=false",
-    "test:coverage:watch": "react-scripts test --coverage",
+    "start": "craco start",
+    "build": "GENERATE_SOURCEMAP=false craco build",
+    "build:analyze": "GENERATE_SOURCEMAP=false craco build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "test": "craco test",
+    "test:coverage": "craco test --coverage --watchAll=false",
+    "test:coverage:watch": "craco test --coverage",
     "eject": "react-scripts eject"
   },
   "proxy": "http://localhost:3002",
@@ -81,9 +82,11 @@
     "@types/react-dom": "18.2.21"
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
     "@testing-library/dom": "^10.4.1",
     "@types/lodash": "^4.17.16",
     "@types/recharts": "^2.0.1",
+    "compression-webpack-plugin": "^11.1.0",
     "webpack-bundle-analyzer": "^4.10.2"
   }
 }

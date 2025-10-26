@@ -8,6 +8,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 
 /**
  * Create and configure an Express service with standard middleware
@@ -21,6 +22,18 @@ export function createService(options: {
   // Apply standard middleware
   // Enable gzip compression for all responses
   app.use(compression());
+  
+  // Rate limiting to prevent abuse
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // Limit each IP to 1000 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.path === '/health',
+  });
+  
+  app.use('/api/', limiter);
   
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));

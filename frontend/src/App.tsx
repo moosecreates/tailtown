@@ -10,15 +10,15 @@ import ScrollFix from './components/ScrollFix';
 import ApiTester from './components/debug/ApiTester';
 import PageLoader from './components/common/PageLoader';
 
-// Layouts
-import MainLayout from './components/layouts/MainLayout';
-import AuthLayout from './components/layouts/AuthLayout';
+// Layouts - Lazy loaded for code splitting
+const MainLayout = lazy(() => import('./components/layouts/MainLayout'));
+const AuthLayout = lazy(() => import('./components/layouts/AuthLayout'));
 
 // Pages - Lazy loaded for code splitting
-// Core pages (loaded immediately)
-import Login from './pages/auth/Login';
-import Dashboard from './pages/Dashboard';
-import NotFound from './pages/NotFound';
+// All pages lazy loaded for optimal code splitting
+const Login = lazy(() => import('./pages/auth/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Lazy loaded pages - Customer Management
 const Customers = lazy(() => import('./pages/customers/Customers'));
