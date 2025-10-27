@@ -142,6 +142,17 @@ export const useKennelData = ({
           apiResponseData.resources.forEach((item: any) => {
             availabilityMap[item.resourceId] = item.isAvailable;
             occupyingReservationsMap[item.resourceId] = item.occupyingReservations || [];
+            
+            // Debug: Log first reservation to see if service data is included
+            if (item.occupyingReservations && item.occupyingReservations.length > 0) {
+              const firstRes = item.occupyingReservations[0];
+              console.log('[useKennelData] Sample reservation from API:', {
+                petName: firstRes.pet?.name,
+                hasService: !!firstRes.service,
+                serviceCategory: firstRes.service?.serviceCategory,
+                serviceName: firstRes.service?.name
+              });
+            }
           });
         } else {
           console.warn('Could not process availability data, assuming all available');
