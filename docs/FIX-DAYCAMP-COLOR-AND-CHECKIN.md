@@ -92,7 +92,7 @@ INSERT INTO check_in_templates (
   name,
   description,
   "isDefault",
-  sections,
+  "isActive",
   "createdAt",
   "updatedAt"
 )
@@ -102,7 +102,7 @@ VALUES (
   'Standard Check-In',
   'Default check-in template for all reservations',
   true,
-  '[]'::jsonb,
+  true,
   NOW(),
   NOW()
 )
@@ -156,7 +156,7 @@ INSERT INTO check_in_templates (
   name,
   description,
   "isDefault",
-  sections,
+  "isActive",
   "createdAt",
   "updatedAt"
 )
@@ -166,7 +166,7 @@ VALUES (
   'Standard Check-In',
   'Default check-in template for all reservations',
   true,
-  '[]'::jsonb,
+  true,
   NOW(),
   NOW()
 )

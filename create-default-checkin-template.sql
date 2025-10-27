@@ -11,7 +11,7 @@ INSERT INTO check_in_templates (
   name,
   description,
   "isDefault",
-  sections,
+  "isActive",
   "createdAt",
   "updatedAt"
 )
@@ -21,13 +21,13 @@ VALUES (
   'Standard Check-In',
   'Default check-in template for all reservations',
   true,
-  '[]'::jsonb,
+  true,
   NOW(),
   NOW()
 )
 ON CONFLICT DO NOTHING;
 
 -- Verify the template was created
-SELECT id, name, "isDefault", "tenantId" 
+SELECT id, name, "isDefault", "isActive", "tenantId" 
 FROM check_in_templates 
 WHERE "tenantId" = 'dev';
