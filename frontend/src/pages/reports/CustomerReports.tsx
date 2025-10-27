@@ -193,7 +193,7 @@ const CustomerReports: React.FC = () => {
                     Average LTV
                   </Typography>
                   <Typography variant="h4">
-                    {formatCurrency(reportData.summary.averageLTV || 0)}
+                    {formatCurrency(reportData.summary.averageLifetimeValue || 0)}
                   </Typography>
                 </CardContent>
               </Card>
@@ -205,7 +205,7 @@ const CustomerReports: React.FC = () => {
                     Total LTV
                   </Typography>
                   <Typography variant="h4">
-                    {formatCurrency(reportData.summary.totalLTV || 0)}
+                    {formatCurrency(reportData.summary.totalLifetimeValue || 0)}
                   </Typography>
                 </CardContent>
               </Card>
@@ -217,7 +217,7 @@ const CustomerReports: React.FC = () => {
                     Top Customers
                   </Typography>
                   <Typography variant="h4">
-                    {reportData.summary.topCustomerCount || 0}
+                    {reportData.summary.totalCustomers || 0}
                   </Typography>
                 </CardContent>
               </Card>
