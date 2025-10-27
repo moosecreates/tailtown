@@ -128,7 +128,8 @@ export const useDashboardData = () => {
       
       console.log('[Dashboard] Loading data for date:', formattedToday);
       
-      const activeStatuses = 'PENDING,CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED,NO_SHOW';
+      // Only fetch active/current reservations, exclude COMPLETED (past) reservations
+      const activeStatuses = 'PENDING,CONFIRMED,CHECKED_IN';
       
       // Fetch reservations - don't filter by date, we'll filter client-side
       console.log('[Dashboard] Fetching reservations...');
