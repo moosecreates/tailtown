@@ -80,16 +80,6 @@ const KennelRow: React.FC<KennelRowProps> = memo(({
     let border = '1px solid rgba(224, 224, 224, 1)';
 
     if (occupied && reservation) {
-      // Debug logging - log ALL reservations to see the data structure
-      console.log('[KennelRow] Reservation data:', {
-        petName: reservation.pet?.name,
-        serviceName: reservation.service?.name,
-        serviceCategory: reservation.service?.serviceCategory,
-        status: reservation.status,
-        hasService: !!reservation.service,
-        serviceKeys: reservation.service ? Object.keys(reservation.service) : []
-      });
-      
       // Check if service category is DAYCARE - use orange, otherwise use blue tint
       const isDaycare = reservation.service?.serviceCategory === 'DAYCARE';
       if (isDaycare) {
