@@ -90,13 +90,13 @@ const KennelRow: React.FC<KennelRowProps> = memo(({
         serviceKeys: reservation.service ? Object.keys(reservation.service) : []
       });
       
-      // Check if service category is DAYCARE - use orange, otherwise use status color
+      // Check if service category is DAYCARE - use orange, otherwise use blue tint
       const isDaycare = reservation.service?.serviceCategory === 'DAYCARE';
       if (isDaycare) {
-        backgroundColor = 'rgba(255, 152, 0, 0.20)'; // Orange for DAYCARE
+        backgroundColor = 'rgba(255, 152, 0, 0.12)'; // Orange tint for DAYCARE
       } else {
-        // Use status-based color with transparency for BOARDING
-        backgroundColor = `${getStatusColor(reservation.status)}40`; // Increased opacity for better visibility
+        // Use consistent blue tint for BOARDING (not status-based)
+        backgroundColor = 'rgba(33, 150, 243, 0.12)'; // Blue tint for BOARDING
       }
     } else if (!available) {
       backgroundColor = 'rgba(255, 152, 0, 0.1)'; // Light orange for unavailable
@@ -123,8 +123,8 @@ const KennelRow: React.FC<KennelRowProps> = memo(({
       '&:hover': {
         backgroundColor: occupied && reservation
           ? (reservation.service?.serviceCategory === 'DAYCARE' 
-              ? 'rgba(255, 152, 0, 0.30)' // Darker orange on hover for DAYCARE
-              : `${getStatusColor(reservation.status)}60`) // Darker status color on hover for BOARDING
+              ? 'rgba(255, 152, 0, 0.20)' // Darker orange on hover for DAYCARE
+              : 'rgba(33, 150, 243, 0.20)') // Darker blue on hover for BOARDING
           : 'rgba(0, 0, 0, 0.08)',
       }
     };
