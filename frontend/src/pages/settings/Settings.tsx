@@ -24,7 +24,8 @@ import {
   ContentCut as GroomingIcon,
   School as TrainingIcon,
   EmojiEmotions as IconsIcon,
-  ShoppingCart as ProductsIcon
+  ShoppingCart as ProductsIcon,
+  Payment as PaymentIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
@@ -114,6 +115,13 @@ const Settings: React.FC = () => {
       icon: <IconsIcon sx={{ fontSize: 40, color: 'warning.main' }} />,
       path: '/admin/custom-icons',
       stats: 'Custom Icons: 0'
+    },
+    {
+      title: 'Payment Methods',
+      description: 'Configure accepted payment methods and CardConnect integration',
+      icon: <PaymentIcon sx={{ fontSize: 40, color: 'success.main' }} />,
+      path: '/settings/payment-methods',
+      stats: 'Active Methods: 3'
     },
     {
       title: 'Price Rules',

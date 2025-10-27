@@ -53,6 +53,7 @@ const SuitesPage = lazy(() => import('./pages/suites/SuitesPage'));
 // Lazy loaded pages - Settings & Admin
 const PriceRulesPage = lazy(() => import('./pages/settings/PriceRules'));
 const PriceRuleDetailsPage = lazy(() => import('./pages/settings/PriceRuleDetailsPage'));
+const PaymentMethods = lazy(() => import('./pages/settings/PaymentMethods'));
 const Settings = lazy(() => import('./pages/settings/Settings'));
 const Users = lazy(() => import('./pages/settings/Users'));
 const PriceRuleRedirect = lazy(() => import('./components/redirects/PriceRuleRedirect'));
@@ -165,6 +166,7 @@ const AppRoutes = () => {
         <Route path="/price-rules/:id" element={<PriceRuleRedirect />} />
         <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
         <Route path="/settings/users" element={isAuthenticated ? <Users /> : <Navigate to="/login" />} />
+        <Route path="/settings/payment-methods" element={isAuthenticated ? <PaymentMethods /> : <Navigate to="/login" />} />
         <Route path="/settings/price-rules" element={isAuthenticated ? <PriceRulesPage /> : <Navigate to="/login" />} />
         <Route path="/settings/price-rules/new" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />
         <Route path="/settings/price-rules/:id" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />

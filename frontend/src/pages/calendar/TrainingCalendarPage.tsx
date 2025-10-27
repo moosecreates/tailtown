@@ -3,6 +3,7 @@ import { Container, Typography, Box, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { School as ClassIcon } from '@mui/icons-material';
 import SpecializedCalendar from '../../components/calendar/SpecializedCalendar';
+import UpcomingClasses from '../../components/dashboard/UpcomingClasses';
 import { ServiceCategory } from '../../types/service';
 
 /**
@@ -29,6 +30,12 @@ const TrainingCalendarPage: React.FC = () => {
           Manage Classes & Enrollment
         </Button>
       </Box>
+
+      {/* Upcoming Classes Widget */}
+      <Box sx={{ mb: 3 }}>
+        <UpcomingClasses />
+      </Box>
+
       <SpecializedCalendar 
         serviceCategories={[ServiceCategory.TRAINING]} 
         calendarTitle="Training Calendar"
