@@ -6,8 +6,11 @@
 echo "🔧 Applying database fixes..."
 echo ""
 
+# Set password environment variable
+export PGPASSWORD=postgres
+
 # Run the SQL fixes
-PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -d customer << 'EOF'
+psql -h localhost -p 5433 -U postgres -d customer << 'EOF'
 
 -- Fix 1: Change Day Camp service category to DAYCARE
 UPDATE services 
