@@ -4,13 +4,14 @@
  */
 
 interface GingrOwner {
-  system_id: string;
+  id: string;
   first_name: string;
   last_name: string;
   email: string;
   cell_phone?: string;
   home_phone?: string;
-  address?: string;
+  address_1?: string;
+  address_2?: string;
   city?: string;
   state?: string;
   zip?: string;
@@ -22,47 +23,70 @@ interface GingrOwner {
 interface GingrAnimal {
   id: string;
   owner_id: string;
-  name: string;
-  species?: string;
-  breed?: string;
+  first_name: string; // Pet name
+  species_id?: string;
+  breed_id?: string;
   color?: string;
   gender?: string;
   birthday?: number;
-  weight?: number;
+  weight?: string;
   microchip?: string;
-  vet_name?: string;
-  vet_phone?: string;
-  medications?: string;
+  vet_id?: string;
+  medicines?: string;
   allergies?: string;
-  special_needs?: string;
   notes?: string;
+  feeding_notes?: string;
+  grooming_notes?: string;
+  temperment?: string;
+  fixed?: string; // "1" or "0"
 }
 
 interface GingrReservation {
-  id: string;
-  owner_id: string;
-  animal_id: string;
-  type_id: string;
-  start_date: number;
-  end_date: number;
-  status_id: number;
-  check_in_stamp?: number;
-  check_out_stamp?: number;
-  notes?: string;
-  total_amount?: number;
+  reservation_id: string;
+  start_date: string; // ISO string
+  end_date: string; // ISO string
+  check_in_date?: string | null;
+  check_out_date?: string | null;
+  cancelled_date?: string | null;
+  confirmed_date?: string | null;
+  animal: {
+    id: string;
+    name: string;
+    breed: string;
+  };
+  owner: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  };
+  reservation_type: {
+    id: string;
+    type: string;
+  };
+  notes?: {
+    reservation_notes?: string;
+    animal_notes?: string;
+    owner_notes?: string;
+  };
+  transaction?: {
+    price?: number;
+  };
 }
 
 /**
  * Transform Gingr owner to Tailtown customer
  */
 export function transformOwnerToCustomer(owner: GingrOwner) {
+  const address = owner.address_1 || '';
+  const fullAddress = owner.address_2 ? `${address} ${owner.address_2}` : address;
+  
   return {
     firstName: owner.first_name || '',
     lastName: owner.last_name || '',
-    email: owner.email || `customer${owner.system_id}@imported.local`,
+    email: owner.email || `customer${owner.id}@imported.local`,
     phone: owner.cell_phone || owner.home_phone || null,
     alternatePhone: (owner.cell_phone && owner.home_phone) ? owner.home_phone : null,
-    address: owner.address || null,
+    address: fullAddress || null,
     city: owner.city || null,
     state: owner.state || null,
     zipCode: owner.zip || null,
@@ -70,7 +94,7 @@ export function transformOwnerToCustomer(owner: GingrOwner) {
     emergencyPhone: owner.emergency_contact_phone || null,
     notes: stripHtml(owner.notes || ''),
     // Store Gingr ID for reference during migration
-    externalId: owner.system_id,
+    externalId: owner.id,
     tenantId: 'dev' // Will be replaced with actual tenant ID
   };
 }
@@ -79,33 +103,50 @@ export function transformOwnerToCustomer(owner: GingrOwner) {
  * Transform Gingr animal to Tailtown pet
  */
 export function transformAnimalToPet(animal: GingrAnimal, customerId: string) {
-  // Map species to PetType enum
-  const species = (animal.species || 'Dog').toUpperCase();
+  // Map species_id to PetType enum (1=Dog, 2=Cat, etc.)
   let petType = 'DOG';
-  if (species.includes('CAT')) petType = 'CAT';
-  else if (species.includes('BIRD')) petType = 'BIRD';
-  else if (species.includes('RABBIT')) petType = 'RABBIT';
-  else if (species.includes('REPTILE')) petType = 'REPTILE';
-  else if (species.includes('FISH')) petType = 'FISH';
+  if (animal.species_id === '2') petType = 'CAT';
+  else if (animal.species_id === '3') petType = 'BIRD';
+  else if (animal.species_id === '4') petType = 'RABBIT';
+  else if (animal.species_id === '5') petType = 'REPTILE';
+  else if (animal.species_id === '6') petType = 'FISH';
+  
+  // Map gender
+  let gender = 'UNKNOWN';
+  if (animal.gender) {
+    const g = animal.gender.toLowerCase();
+    if (g.includes('male') && !g.includes('female')) gender = 'MALE';
+    else if (g.includes('female')) gender = 'FEMALE';
+  }
+  
+  // Parse weight
+  const weight = animal.weight ? parseFloat(animal.weight) : null;
+  
+  // Combine notes
+  const allNotes = [
+    animal.notes,
+    animal.feeding_notes ? `Feeding: ${animal.feeding_notes}` : '',
+    animal.grooming_notes ? `Grooming: ${animal.grooming_notes}` : ''
+  ].filter(Boolean).join('\n\n');
   
   return {
     customerId,
-    name: animal.name || 'Unknown',
-    type: petType as any, // PetType enum
-    breed: animal.breed || 'Mixed',
-    color: animal.color || '',
-    gender: (animal.gender || 'UNKNOWN').toUpperCase() as any,
+    name: animal.first_name || 'Unknown',
+    type: petType as any,
+    breed: animal.breed_id || 'Mixed', // TODO: Map breed_id to breed name
+    color: animal.color || null,
+    gender: gender as any,
     birthdate: animal.birthday ? new Date(animal.birthday * 1000) : null,
-    weight: animal.weight || null,
-    microchipNumber: animal.microchip || '',
-    vetName: animal.vet_name || '',
-    vetPhone: animal.vet_phone || '',
-    medicationNotes: animal.medications || '',
-    allergies: animal.allergies || '',
-    specialNeeds: animal.special_needs || '',
-    behaviorNotes: stripHtml(animal.notes || ''),
+    weight: weight,
+    isNeutered: animal.fixed === '1',
+    microchipNumber: animal.microchip || null,
+    vetName: null, // Gingr uses vet_id, would need separate lookup
+    vetPhone: null,
+    medicationNotes: stripHtml(animal.medicines || ''),
+    allergies: stripHtml(animal.allergies || ''),
+    specialNeeds: animal.temperment || null,
+    behaviorNotes: stripHtml(allNotes),
     isActive: true,
-    // Store Gingr ID for reference
     externalId: animal.id,
     tenantId: 'dev'
   };
@@ -138,18 +179,33 @@ export function transformReservationToReservation(
   petId: string,
   serviceId: string
 ) {
+  // Determine status based on dates
+  let status = 'CONFIRMED';
+  if (reservation.cancelled_date) status = 'CANCELLED';
+  else if (reservation.check_out_date) status = 'COMPLETED';
+  else if (reservation.check_in_date) status = 'CHECKED_IN';
+  else if (reservation.confirmed_date) status = 'CONFIRMED';
+  else status = 'PENDING';
+  
+  // Combine notes
+  const allNotes = [
+    reservation.notes?.reservation_notes,
+    reservation.notes?.animal_notes,
+    reservation.notes?.owner_notes
+  ].filter(Boolean).join('\\n\\n');
+  
   return {
     customerId,
     petId,
     serviceId,
-    startDate: new Date(reservation.start_date * 1000),
-    endDate: new Date(reservation.end_date * 1000),
-    status: transformReservationStatus(reservation.status_id),
-    notes: stripHtml(reservation.notes || ''),
-    checkInTime: reservation.check_in_stamp ? new Date(reservation.check_in_stamp * 1000) : null,
-    checkOutTime: reservation.check_out_stamp ? new Date(reservation.check_out_stamp * 1000) : null,
+    startDate: new Date(reservation.start_date),
+    endDate: new Date(reservation.end_date),
+    status: status as any,
+    notes: stripHtml(allNotes),
+    checkInDate: reservation.check_in_date ? new Date(reservation.check_in_date) : null,
+    checkOutDate: reservation.check_out_date ? new Date(reservation.check_out_date) : null,
     // Store Gingr ID for reference
-    externalId: reservation.id,
+    externalId: reservation.reservation_id,
     tenantId: 'dev'
   };
 }

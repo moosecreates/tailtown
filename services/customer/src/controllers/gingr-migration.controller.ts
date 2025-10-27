@@ -5,6 +5,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
+import fetch from 'node-fetch';
 import GingrApiClient from '../services/gingr-api.service';
 import {
   transformOwnerToCustomer,
@@ -132,12 +133,18 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
     for (const owner of owners) {
       try {
         // Check if customer already exists by externalId or email
+        const whereConditions: any[] = [
+          { tenantId: 'dev', externalId: owner.id }
+        ];
+        
+        // Only check email if it exists
+        if (owner.email) {
+          whereConditions.push({ tenantId: 'dev', email: owner.email });
+        }
+        
         let customer = await prisma.customer.findFirst({
           where: {
-            OR: [
-              { tenantId: 'dev', externalId: owner.system_id },
-              { tenantId: 'dev', email: owner.email }
-            ]
+            OR: whereConditions
           } as any
         });
 
@@ -148,13 +155,13 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
           });
         }
 
-        customerMap.set(owner.system_id, customer.id);
+        customerMap.set(owner.id, customer.id);
         progress.completed++;
       } catch (error: any) {
         progress.failed++;
         progress.errors.push({
           type: 'customer',
-          id: owner.system_id,
+          id: owner.id,
           error: error.message
         });
       }
@@ -201,37 +208,41 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
       }
     }
 
-    // Phase 5: Import reservations
+    // Phase 5: Import reservations (to reservation service)
     progress.phase = 'Importing reservations';
-    console.log('[Migration] Phase 5: Importing reservations...');
+    console.log('[Migration] Phase 5: Importing reservations to reservation service...');
+
+    const RESERVATION_SERVICE_URL = process.env.RESERVATION_SERVICE_URL || 'http://localhost:4003';
 
     for (const reservation of reservations) {
       try {
-        const customerId = customerMap.get(reservation.owner_id);
-        const petId = petMap.get(reservation.animal_id);
-        const serviceId = serviceMap.get(reservation.type_id);
+        const customerId = customerMap.get(reservation.owner.id);
+        const petId = petMap.get(reservation.animal.id);
+        const serviceId = serviceMap.get(reservation.reservation_type.id);
 
         if (!customerId) {
-          throw new Error(`Customer not found for owner_id: ${reservation.owner_id}`);
+          throw new Error(`Customer not found for owner_id: ${reservation.owner.id}`);
         }
 
         if (!petId) {
-          throw new Error(`Pet not found for animal_id: ${reservation.animal_id}`);
+          throw new Error(`Pet not found for animal_id: ${reservation.animal.id}`);
         }
 
         if (!serviceId) {
-          throw new Error(`Service not found for type_id: ${reservation.type_id}`);
+          throw new Error(`Service not found for type_id: ${reservation.reservation_type.id}`);
         }
 
-        // Check if reservation already exists
-        const existingReservation = await prisma.reservation.findFirst({
-          where: {
-            tenantId: 'dev',
-            externalId: reservation.id
-          } as any
-        });
-
-        if (!existingReservation) {
+        // Check if reservation already exists in reservation service
+        const checkResponse = await fetch(
+          `${RESERVATION_SERVICE_URL}/api/reservations?externalId=${reservation.reservation_id}`,
+          {
+            headers: { 'x-tenant-id': 'dev' }
+          }
+        );
+        
+        const existingReservations = await checkResponse.json();
+        
+        if (!existingReservations || existingReservations.length === 0) {
           const reservationData = transformReservationToReservation(
             reservation,
             customerId,
@@ -239,12 +250,26 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
             serviceId
           );
 
-          await prisma.reservation.create({
-            data: {
-              ...reservationData,
-              orderNumber: generateOrderNumber()
-            } as any
-          });
+          // Create reservation via API
+          const createResponse = await fetch(
+            `${RESERVATION_SERVICE_URL}/api/reservations`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-tenant-id': 'dev'
+              },
+              body: JSON.stringify({
+                ...reservationData,
+                orderNumber: generateOrderNumber()
+              })
+            }
+          );
+
+          if (!createResponse.ok) {
+            const errorText = await createResponse.text();
+            throw new Error(`Failed to create reservation: ${errorText}`);
+          }
         }
 
         progress.completed++;
@@ -252,7 +277,7 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
         progress.failed++;
         progress.errors.push({
           type: 'reservation',
-          id: reservation.id,
+          id: reservation.reservation_id,
           error: error.message
         });
       }

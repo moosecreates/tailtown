@@ -11,13 +11,14 @@ interface GingrApiConfig {
 }
 
 interface GingrOwner {
-  system_id: string;
+  id: string;
   first_name: string;
   last_name: string;
   email: string;
   cell_phone?: string;
   home_phone?: string;
-  address?: string;
+  address_1?: string;
+  address_2?: string;
   city?: string;
   state?: string;
   zip?: string;
@@ -29,34 +30,54 @@ interface GingrOwner {
 interface GingrAnimal {
   id: string;
   owner_id: string;
-  name: string;
-  species?: string;
-  breed?: string;
+  first_name: string; // Pet name
+  species_id?: string;
+  breed_id?: string;
   color?: string;
   gender?: string;
   birthday?: number; // Unix timestamp
-  weight?: number;
+  weight?: string;
   microchip?: string;
-  vet_name?: string;
-  vet_phone?: string;
-  medications?: string;
+  vet_id?: string;
+  medicines?: string;
   allergies?: string;
-  special_needs?: string;
   notes?: string;
+  feeding_notes?: string;
+  grooming_notes?: string;
+  temperment?: string;
+  fixed?: string; // "1" or "0"
 }
 
 interface GingrReservation {
-  id: string;
-  owner_id: string;
-  animal_id: string;
-  type_id: string;
-  start_date: number; // Unix timestamp
-  end_date: number; // Unix timestamp
-  status_id: number;
-  check_in_stamp?: number;
-  check_out_stamp?: number;
-  notes?: string;
-  total_amount?: number;
+  reservation_id: string;
+  start_date: string; // ISO string
+  end_date: string; // ISO string
+  check_in_date?: string | null;
+  check_out_date?: string | null;
+  cancelled_date?: string | null;
+  confirmed_date?: string | null;
+  animal: {
+    id: string;
+    name: string;
+    breed: string;
+  };
+  owner: {
+    id: string;
+    first_name: string;
+    last_name: string;
+  };
+  reservation_type: {
+    id: string;
+    type: string;
+  };
+  notes?: {
+    reservation_notes?: string;
+    animal_notes?: string;
+    owner_notes?: string;
+  };
+  transaction?: {
+    price?: number;
+  };
 }
 
 interface GingrInvoice {
@@ -232,7 +253,11 @@ export class GingrApiClient {
           end_date: this.formatDate(chunkEnd)
         });
         
-        const chunk = Array.isArray(response.data) ? response.data : (response.data ? [response.data] : []);
+        // Gingr returns reservations as an object with reservation IDs as keys
+        // Convert to array
+        const reservationsObj = response.data || response || {};
+        const chunk = Object.values(reservationsObj) as GingrReservation[];
+        
         allReservations.push(...chunk);
         
         console.log(`[Gingr API] Fetched ${chunk.length} reservations for this chunk`);
