@@ -234,9 +234,20 @@ const ReservationList: React.FC<ReservationListProps> = ({
                 }
               >
                 <Box 
-                  sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5, cursor: 'pointer' }}
+                  sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.25, cursor: 'pointer' }}
                   onClick={() => navigate(`/reservations/${reservation.id}`)}
                 >
+                  {/* Row 1: Pet Name & Customer Name */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <PetNameWithIcons
+                      petName={reservation.pet?.name || 'Unknown Pet'}
+                      petIcons={reservation.pet?.petIcons}
+                    />
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                      • {reservation.customer?.firstName || ''} {reservation.customer?.lastName || 'Unknown'}
+                    </Typography>
+                  </Box>
+                  {/* Row 2: Time, Service, Kennel */}
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                     <Typography variant="caption" color="text.secondary">
                       {formatTime(reservation.startDate)}
