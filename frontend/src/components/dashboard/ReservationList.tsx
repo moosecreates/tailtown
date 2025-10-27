@@ -25,6 +25,10 @@ interface Reservation {
     name?: string;
     serviceCategory?: string;
   };
+  resource?: {
+    name?: string;
+    type?: string;
+  };
 }
 
 interface ReservationListProps {
@@ -233,27 +237,7 @@ const ReservationList: React.FC<ReservationListProps> = ({
                   sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.5, cursor: 'pointer' }}
                   onClick={() => navigate(`/reservations/${reservation.id}`)}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    {reservation.pet && (
-                      <PetNameWithIcons
-                        petName={reservation.pet.name}
-                        petIcons={reservation.pet.petIcons}
-                        petType={reservation.pet.type as any}
-                        profilePhoto={reservation.pet.profilePhoto}
-                        size="medium"
-                        showPhoto={true}
-                        nameVariant="body2"
-                      />
-                    )}
-                    <Typography variant="caption" color="text.secondary">
-                      • {reservation.customer?.firstName} {reservation.customer?.lastName}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 5 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      {formatDate(reservation.startDate)} - {formatDate(reservation.endDate)}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">•</Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                     <Typography variant="caption" color="text.secondary">
                       {formatTime(reservation.startDate)}
                     </Typography>
@@ -263,6 +247,17 @@ const ReservationList: React.FC<ReservationListProps> = ({
                         <Typography variant="caption" color="text.secondary">
                           {reservation.service.name}
                         </Typography>
+                      </>
+                    )}
+                    {reservation.resource?.name && (
+                      <>
+                        <Typography variant="caption" color="text.secondary">•</Typography>
+                        <Chip 
+                          label={reservation.resource.name} 
+                          size="small" 
+                          variant="outlined"
+                          sx={{ height: 18, fontSize: '0.65rem', fontWeight: 600 }}
+                        />
                       </>
                     )}
                   </Box>
