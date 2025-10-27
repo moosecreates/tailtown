@@ -218,17 +218,28 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               // Load pets for the selected customer
               try {
                 const petsResponse = await petService.getPetsByCustomer(initialData.customerId);
-                const petsData = petsResponse.data || [];
+                let petsData = petsResponse.data || [];
                 console.log('Loaded pets:', petsData.length, 'Looking for petId:', initialData.petId);
+                
+                // Check if pet exists in the list
+                let petExists = initialData.petId && petsData.some(p => p.id === initialData.petId);
+                
+                // If not in list, add the pet from initialData
+                if (!petExists && initialData.pet) {
+                  console.log('Adding pet from initialData:', initialData.pet);
+                  petsData.push(initialData.pet);
+                  petExists = true;
+                }
+                
                 setPets(petsData);
                 selectsWithOptions.current.pet = petsData.length > 0;
                 
-                // Only set pet ID if it exists in the pets list
-                if (initialData.petId && petsData.some(p => p.id === initialData.petId)) {
+                // Set pet ID if it exists
+                if (petExists && initialData.petId) {
                   console.log('Setting selected pet:', initialData.petId);
                   setSelectedPet(initialData.petId);
-                } else {
-                  console.warn('Pet not found in list:', initialData.petId);
+                } else if (!petExists) {
+                  console.warn('Pet not found in list and no pet object in initialData:', initialData.petId);
                 }
               } catch (err) {
                 console.error('Error loading pets:', err);
