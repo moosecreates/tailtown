@@ -219,12 +219,16 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               try {
                 const petsResponse = await petService.getPetsByCustomer(initialData.customerId);
                 const petsData = petsResponse.data || [];
+                console.log('Loaded pets:', petsData.length, 'Looking for petId:', initialData.petId);
                 setPets(petsData);
                 selectsWithOptions.current.pet = petsData.length > 0;
                 
                 // Only set pet ID if it exists in the pets list
                 if (initialData.petId && petsData.some(p => p.id === initialData.petId)) {
+                  console.log('Setting selected pet:', initialData.petId);
                   setSelectedPet(initialData.petId);
+                } else {
+                  console.warn('Pet not found in list:', initialData.petId);
                 }
               } catch (err) {
                 console.error('Error loading pets:', err);
@@ -235,11 +239,26 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             }
           }
           
-          // Only set service ID if it exists in the services list
+          // Only set service ID - add service from initialData if not in list
           const servicesList = servicesResponse.data || [];
-          if (initialData.serviceId && servicesList.some((s: Service) => s.id === initialData.serviceId)) {
-            setSelectedService(initialData.serviceId);
-          } else {
+          console.log('Services loaded:', servicesList.length, 'Looking for serviceId:', initialData.serviceId);
+          if (initialData.serviceId) {
+            let serviceExists = servicesList.some((s: Service) => s.id === initialData.serviceId);
+            
+            // If not in list, add the service from initialData
+            if (!serviceExists && initialData.service) {
+              console.log('Adding service from initialData:', initialData.service);
+              servicesList.push(initialData.service);
+              setServices(servicesList);
+              serviceExists = true;
+            }
+            
+            if (serviceExists) {
+              console.log('Setting selected service:', initialData.serviceId);
+              setSelectedService(initialData.serviceId);
+            } else {
+              console.warn('Service not found in list and no service object in initialData:', initialData.serviceId);
+            }
           }
           
           // Set groomer if assigned
