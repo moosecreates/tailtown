@@ -246,6 +246,41 @@ The training class enrollment system is fully functional and integrated with the
 
 ---
 
-**Last Updated:** October 26, 2025 7:41 PM  
+**Last Updated:** October 26, 2025 8:03 PM  
 **Status:** ✅ COMPLETE and production-ready  
+**Recent Enhancements:** Customer search, payment processing, CardConnect integration  
 **Developer:** Cascade AI Assistant
+
+---
+
+## 🎉 Recent Enhancements (Oct 26, 2025 8:03 PM)
+
+### Advanced Enrollment Features
+- ✅ Customer search with Autocomplete (type-to-search)
+- ✅ Pet selection with Autocomplete
+- ✅ Payment method selection (Cash/Credit Card/Check)
+- ✅ Order summary with line items
+- ✅ Credit card payment dialog with CardConnect placeholder
+- ✅ Payment amount validation
+- ✅ 2-second simulated payment processing
+
+### Widget Improvements
+- ✅ Compact 2-column responsive layout
+- ✅ 12-hour time format display
+- ✅ Direct "Enroll Pet" button on cards
+- ✅ Moved to Training Calendar page for better context
+- ✅ Shows up to 6 classes efficiently
+
+### Payment Methods Settings
+- ✅ New admin settings page (/settings/payment-methods)
+- ✅ Toggle payment methods on/off
+- ✅ CardConnect merchant service configuration
+- ✅ Test mode for development
+- ✅ Visual status indicators
+
+### Testing
+- ✅ 60+ comprehensive tests for enrollment flow
+- ✅ Tests for customer search, payment, validation
+- ✅ Mock services and async testing
+
+**See:** [TRAINING-ENROLLMENT-ENHANCEMENTS.md](./features/TRAINING-ENROLLMENT-ENHANCEMENTS.md) for complete details
