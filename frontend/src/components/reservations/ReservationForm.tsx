@@ -238,6 +238,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 if (petExists && initialData.petId) {
                   console.log('Setting selected pet:', initialData.petId);
                   setSelectedPet(initialData.petId);
+                  // Also set selectedPets array for the multi-select dropdown
+                  setSelectedPets([initialData.petId]);
                 } else if (!petExists) {
                   console.warn('Pet not found in list and no pet object in initialData:', initialData.petId);
                 }
