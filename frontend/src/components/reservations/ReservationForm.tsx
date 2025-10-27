@@ -157,6 +157,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       // Only load initial data once to prevent duplicate initializations
       if (initialDataLoaded.current) return;
       
+      console.log('ReservationForm initialData:', initialData);
+      
       try {
         setLoading(true);
         const [customersResponse, servicesResponse] = await Promise.all([
@@ -714,8 +716,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
    * Handle reservation deletion
    */
   const handleDelete = async () => {
-    if (!initialData?.id) return;
+    if (!initialData?.id) {
+      setError('No reservation ID found');
+      return;
+    }
     
+    console.log('Deleting reservation:', initialData.id);
     setDeleting(true);
     try {
       const response = await fetch(`http://localhost:4003/api/reservations/${initialData.id}`, {
@@ -726,9 +732,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       });
       
       if (!response.ok) {
-        throw new Error('Failed to delete reservation');
+        const errorData = await response.text();
+        console.error('Delete failed:', response.status, errorData);
+        throw new Error(`Failed to delete: ${response.status} - ${errorData}`);
       }
       
+      console.log('Delete successful');
       setDeleteConfirmOpen(false);
       
       // Close the form and refresh
@@ -739,6 +748,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       // Reload the page to refresh the calendar
       window.location.reload();
     } catch (err: any) {
+      console.error('Delete error:', err);
       setError(err.message || 'Failed to delete reservation');
       setDeleteConfirmOpen(false);
     } finally {
