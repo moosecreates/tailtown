@@ -23,6 +23,7 @@ interface Reservation {
   status: string;
   service?: {
     name?: string;
+    serviceCategory?: string;
   };
 }
 
@@ -87,6 +88,17 @@ const ReservationList: React.FC<ReservationListProps> = ({
       case 'CANCELLED': return 'error';
       default: return 'default';
     }
+  };
+
+  /**
+   * Gets background color based on service category
+   * DAYCARE = orange tint, BOARDING = default (blue tint)
+   */
+  const getServiceColor = (serviceCategory?: string) => {
+    if (serviceCategory === 'DAYCARE') {
+      return 'rgba(255, 152, 0, 0.08)'; // Orange tint
+    }
+    return 'rgba(25, 118, 210, 0.08)'; // Blue tint (default)
   };
 
   const formatTime = (dateString: string) => {
@@ -187,8 +199,11 @@ const ReservationList: React.FC<ReservationListProps> = ({
                 sx={{
                   py: 1,
                   px: 2,
+                  bgcolor: getServiceColor(reservation.service?.serviceCategory),
                   '&:hover': {
-                    bgcolor: 'action.hover',
+                    bgcolor: reservation.service?.serviceCategory === 'DAYCARE' 
+                      ? 'rgba(255, 152, 0, 0.15)'
+                      : 'rgba(25, 118, 210, 0.15)',
                   }
                 }}
                 secondaryAction={
