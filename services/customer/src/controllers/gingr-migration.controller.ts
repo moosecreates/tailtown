@@ -13,6 +13,10 @@ import {
   transformReservationToReservation,
   generateOrderNumber
 } from '../services/gingr-transform.service';
+import {
+  findOrCreateResource,
+  extractGingrLodging
+} from '../services/gingr-resource-mapper.service';
 
 const prisma = new PrismaClient();
 
@@ -267,6 +271,22 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
             serviceId
           );
 
+          // Extract lodging from Gingr and map to Tailtown resource
+          let resourceId = defaultResourceId;
+          const gingrLodging = extractGingrLodging(reservation);
+          
+          if (gingrLodging) {
+            try {
+              const resource = await findOrCreateResource(gingrLodging, RESERVATION_SERVICE_URL);
+              resourceId = resource.id;
+              console.log(`[Migration] Mapped Gingr lodging "${gingrLodging}" → Tailtown resource "${resource.name}" (${resource.id})`);
+            } catch (error: any) {
+              console.warn(`[Migration] Could not map lodging "${gingrLodging}": ${error.message}, using default`);
+            }
+          } else {
+            console.log(`[Migration] No lodging found for reservation ${reservation.reservation_id}, using default`);
+          }
+
           // Create reservation via API
           const createResponse = await fetch(
             `${RESERVATION_SERVICE_URL}/api/reservations`,
@@ -279,7 +299,7 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
               body: JSON.stringify({
                 ...reservationData,
                 orderNumber: generateOrderNumber(),
-                resourceId: defaultResourceId // Assign default resource so calendar displays it
+                resourceId: resourceId
               })
             }
           );
