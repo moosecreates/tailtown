@@ -126,10 +126,14 @@ export const useDashboardData = () => {
       const today = new Date();
       const formattedToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
       
+      console.log('[Dashboard] Loading data for date:', formattedToday);
+      
       const activeStatuses = 'PENDING,CONFIRMED,CHECKED_IN,CHECKED_OUT,COMPLETED,NO_SHOW';
       
       // Fetch reservations - don't filter by date, we'll filter client-side
+      console.log('[Dashboard] Fetching reservations...');
       const reservationsResponse = await reservationService.getAllReservations(1, 250, 'startDate', 'asc', activeStatuses);
+      console.log('[Dashboard] Reservations response:', reservationsResponse);
 
       // Extract reservations from response
       let reservations: any[] = [];
@@ -141,6 +145,8 @@ export const useDashboardData = () => {
       } else if (resResponse?.data?.reservations && Array.isArray(resResponse.data.reservations)) {
         reservations = resResponse.data.reservations;
       }
+      
+      console.log('[Dashboard] Extracted reservations:', reservations.length, 'reservations');
 
       // Calculate metrics
       const checkIns = reservations.filter((res: any) => {
@@ -162,6 +168,13 @@ export const useDashboardData = () => {
         const endDateStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}`;
         return startDateStr < formattedToday && endDateStr >= formattedToday;
       }).length;
+
+      console.log('[Dashboard] Calculated metrics:', {
+        checkIns,
+        checkOuts,
+        overnight,
+        totalReservations: reservations.length
+      });
 
       setMetrics({
         inCount: checkIns,
