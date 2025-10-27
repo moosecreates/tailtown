@@ -214,7 +214,10 @@ const TaxReports: React.FC = () => {
                     Total Revenue
                   </Typography>
                   <Typography variant="h5">
-                    {formatCurrency(reportData.summary?.taxableRevenue + reportData.summary?.nonTaxableRevenue || 0)}
+                    {formatCurrency(
+                      (reportData.summary?.taxableRevenue || 0) + 
+                      (reportData.summary?.nonTaxableRevenue || 0)
+                    )}
                   </Typography>
                 </CardContent>
               </Card>
