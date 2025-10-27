@@ -13,8 +13,14 @@ import {
   Autocomplete,
   CircularProgress,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -141,6 +147,10 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     suiteType: false,
     suiteId: false
   });
+  
+  // Delete confirmation dialog state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const loadInitialData = async () => {
@@ -697,6 +707,42 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       setError(error.message || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * Handle reservation deletion
+   */
+  const handleDelete = async () => {
+    if (!initialData?.id) return;
+    
+    setDeleting(true);
+    try {
+      const response = await fetch(`http://localhost:4003/api/reservations/${initialData.id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-tenant-id': 'dev',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete reservation');
+      }
+      
+      setDeleteConfirmOpen(false);
+      
+      // Close the form and refresh
+      if (onClose) {
+        onClose();
+      }
+      
+      // Reload the page to refresh the calendar
+      window.location.reload();
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete reservation');
+      setDeleteConfirmOpen(false);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -1527,9 +1573,22 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               </>
             )}
             {initialData && (
-              <Button type="submit" variant="contained" color="primary" size="small" disabled={loading}>
-                {loading ? 'Processing...' : 'Update Reservation'}
-              </Button>
+              <>
+                <Button 
+                  variant="outlined" 
+                  color="error" 
+                  size="small" 
+                  startIcon={<DeleteIcon />}
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  disabled={loading || deleting}
+                  sx={{ mr: 1 }}
+                >
+                  Delete
+                </Button>
+                <Button type="submit" variant="contained" color="primary" size="small" disabled={loading}>
+                  {loading ? 'Processing...' : 'Update Reservation'}
+                </Button>
+              </>
             )}
           </Box>
         </Box>
@@ -1551,6 +1610,27 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         serviceId={selectedServiceId}
         onAddOnsAdded={handleAddOnsAdded}
       />
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={() => !deleting && setDeleteConfirmOpen(false)}
+      >
+        <DialogTitle>Delete Reservation?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this reservation? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="error" variant="contained" disabled={deleting}>
+            {deleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </LocalizationProvider>
   );
 };
