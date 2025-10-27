@@ -141,18 +141,18 @@ const Settings: React.FC = () => {
 
   return (
     <Container maxWidth="xl">
-      <Box sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+      <Box sx={{ mt: 2, mb: 2 }}>
+        <Typography variant="h5" component="h1" sx={{ mb: 1 }}>
           Admin Panel
         </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           Manage system settings, users, and administrative functions.
         </Typography>
         
-        <Paper sx={{ p: 3, mt: 3 }}>
-          <Grid container spacing={3}>
+        <Paper sx={{ p: 2 }}>
+          <Grid container spacing={1.5}>
             {adminSections.map((section, index) => (
-              <Grid item xs={12} md={6} lg={4} key={index}>
+              <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
                 <Card 
                   sx={{ 
                     height: '100%', 
@@ -160,41 +160,28 @@ const Settings: React.FC = () => {
                     transition: 'all 0.2s ease-in-out',
                     '&:hover': {
                       transform: 'translateY(-2px)',
-                      boxShadow: 4
+                      boxShadow: 3
                     }
                   }}
                   onClick={() => navigate(section.path)}
                 >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-                      <Box sx={{ mr: 2 }}>
-                        {section.icon}
+                  <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                      <Box sx={{ mr: 1, display: 'flex', alignItems: 'center' }}>
+                        {React.cloneElement(section.icon as React.ReactElement, { 
+                          sx: { fontSize: 28, color: (section.icon as any).props.sx.color } 
+                        })}
                       </Box>
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Typography variant="h6" component="h2" gutterBottom>
-                          {section.title}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" paragraph>
-                          {section.description}
-                        </Typography>
-                        <Typography variant="caption" color="primary.main" sx={{ fontWeight: 'medium' }}>
-                          {section.stats}
-                        </Typography>
-                      </Box>
+                      <Typography variant="subtitle2" component="h2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                        {section.title}
+                      </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                      <Button 
-                        variant="outlined" 
-                        color="primary" 
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(section.path);
-                        }}
-                      >
-                        Manage →
-                      </Button>
-                    </Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, lineHeight: 1.3 }}>
+                      {section.description}
+                    </Typography>
+                    <Typography variant="caption" color="primary.main" sx={{ fontWeight: 'medium', fontSize: '0.7rem' }}>
+                      {section.stats}
+                    </Typography>
                   </CardContent>
                 </Card>
               </Grid>
