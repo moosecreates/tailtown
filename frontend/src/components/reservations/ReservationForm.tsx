@@ -196,25 +196,42 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             setSelectedStatus(initialData.status);
           }
           
-          // Set customer ID if it exists in the customers list
+          // Set customer ID - fetch the specific customer if not in initial list
           const customersList = customersResponse.data || [];
-          if (initialData.customerId && customersList.some((c: Customer) => c.id === initialData.customerId)) {
-            setSelectedCustomer(initialData.customerId);
+          if (initialData.customerId) {
+            // Check if customer is in the list
+            let customerExists = customersList.some((c: Customer) => c.id === initialData.customerId);
             
-            // Load pets for the selected customer
-            try {
-              const petsResponse = await petService.getPetsByCustomer(initialData.customerId);
-              const petsData = petsResponse.data || [];
-              setPets(petsData);
-              selectsWithOptions.current.pet = petsData.length > 0;
+            // If not in list, fetch the specific customer
+            if (!customerExists && initialData.customer) {
+              // Add the customer from initialData to the list
+              const customer = initialData.customer;
+              customersList.push(customer);
+              setCustomers(customersList);
+              customerExists = true;
+            }
+            
+            if (customerExists) {
+              setSelectedCustomer(initialData.customerId);
+              selectsWithOptions.current.customer = true;
               
-              // Only set pet ID if it exists in the pets list
-              if (initialData.petId && petsData.some(p => p.id === initialData.petId)) {
-                setSelectedPet(initialData.petId);
+              // Load pets for the selected customer
+              try {
+                const petsResponse = await petService.getPetsByCustomer(initialData.customerId);
+                const petsData = petsResponse.data || [];
+                setPets(petsData);
+                selectsWithOptions.current.pet = petsData.length > 0;
+                
+                // Only set pet ID if it exists in the pets list
+                if (initialData.petId && petsData.some(p => p.id === initialData.petId)) {
+                  setSelectedPet(initialData.petId);
+                }
+              } catch (err) {
+                console.error('Error loading pets:', err);
+                setPets([]);
               }
-            } catch (err) {
-              console.error('Error loading pets:', err);
-              setPets([]);
+            } else {
+              console.warn('Customer not found:', initialData.customerId);
             }
           }
           
