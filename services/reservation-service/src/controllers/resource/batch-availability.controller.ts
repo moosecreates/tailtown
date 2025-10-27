@@ -117,6 +117,13 @@ export const batchCheckResourceAvailability = async (
               select: {
                 name: true
               }
+            },
+            service: {
+              select: {
+                id: true,
+                name: true,
+                serviceCategory: true
+              }
             }
           }
         });
