@@ -112,6 +112,7 @@ model Reservation {
   confirmedBy        String?
   cancelReason       String?
   cancelDate         DateTime?
+  externalId         String?            // ID from external system (Gingr, etc.) for migration tracking
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   customerId         String
@@ -131,6 +132,7 @@ model Reservation {
   @@index([startDate, endDate], map: "reservations_date_range_idx")
   @@index([status, startDate], map: "reservations_status_date_idx")
   @@index([customerId, status], map: "reservations_customer_status_idx")
+  @@index([externalId], map: "reservations_external_id_idx")
   @@unique([tenantId, orderNumber], map: "reservations_tenant_order_unique")
   @@index([tenantId, startDate, endDate], map: "reservations_tenant_date_range_idx")
   @@index([tenantId, status, startDate], map: "reservations_tenant_status_date_idx")
