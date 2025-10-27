@@ -111,6 +111,26 @@ export const deleteReservation = catchAsync(async (
     );
     
     logger.info(`Successfully cleaned up related add-on services for reservation: ${id}`, { requestId });
+    
+    // Clean up any invoices linked to this reservation
+    // Set reservationId to null instead of deleting the invoice
+    await safeExecutePrismaQuery(
+      async () => {
+        return await prisma.invoice.updateMany({
+          where: {
+            reservationId: id,
+            tenantId
+          },
+          data: {
+            reservationId: null
+          }
+        });
+      },
+      null,
+      `Error unlinking invoices for reservation ${id}`
+    );
+    
+    logger.info(`Successfully unlinked invoices for reservation: ${id}`, { requestId });
   } catch (error) {
     logger.warn(`Error cleaning up related records for reservation ${id}:`, { requestId, error });
     warnings.push('There was an issue cleaning up related records, but the reservation will still be deleted.');
