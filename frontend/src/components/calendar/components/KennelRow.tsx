@@ -79,7 +79,12 @@ const KennelRow: React.FC<KennelRowProps> = memo(({
     let cursor = 'pointer';
     let border = '1px solid rgba(224, 224, 224, 1)';
 
-    if (occupied && reservation) {
+    // Debug logging
+    if (Math.random() < 0.1) {
+      console.log('[getCellStyle] Debug:', { occupied, available, hasRes: !!reservation, category: reservation?.service?.serviceCategory });
+    }
+
+    if (reservation) {
       // Check if service category is DAYCARE - use orange, otherwise use blue tint
       const isDaycare = reservation.service?.serviceCategory === 'DAYCARE';
       if (isDaycare) {
@@ -89,7 +94,7 @@ const KennelRow: React.FC<KennelRowProps> = memo(({
         backgroundColor = 'rgba(33, 150, 243, 0.12)'; // Blue tint for BOARDING
       }
     } else if (!available) {
-      backgroundColor = 'rgba(255, 152, 0, 0.1)'; // Light orange for unavailable
+      backgroundColor = 'rgba(200, 200, 200, 0.1)'; // Light grey for unavailable
     } else if (isWeekend) {
       backgroundColor = 'rgba(0, 0, 0, 0.04)'; // Light grey for weekends
     }
