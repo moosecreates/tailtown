@@ -163,6 +163,7 @@ model Service {
   description     String?
   duration        Int
   price           Float
+  taxable         Boolean            @default(true)
   color           String?
   serviceCategory ServiceCategory
   isActive        Boolean            @default(true)
@@ -188,6 +189,7 @@ model AddOnService {
   name              String
   description       String?
   price             Float
+  taxable           Boolean            @default(true)
   duration          Int?
   serviceId         String
   isActive          Boolean            @default(true)

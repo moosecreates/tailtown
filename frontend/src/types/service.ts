@@ -11,6 +11,7 @@ export interface AddOnService {
   name: string;
   description?: string;
   price: number;
+  taxable?: boolean;
   duration?: number;
   serviceId?: string;
 }
@@ -27,6 +28,7 @@ export interface Service {
   serviceCategory: ServiceCategory;
   price: number;
   duration: number;
+  taxable?: boolean;
   color?: string;
   requiresStaff: boolean;
   notes?: string;

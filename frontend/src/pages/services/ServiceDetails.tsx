@@ -445,6 +445,16 @@ const ServiceDetails: React.FC = () => {
                   <FormControlLabel
                     control={
                       <Switch
+                        checked={service.taxable !== false}
+                        onChange={handleSwitchChange}
+                        name="taxable"
+                      />
+                    }
+                    label="Taxable"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
                         checked={service.requiresStaff}
                         onChange={handleSwitchChange}
                         name="requiresStaff"
