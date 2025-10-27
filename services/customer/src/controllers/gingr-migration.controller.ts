@@ -213,6 +213,23 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
     console.log('[Migration] Phase 5: Importing reservations to reservation service...');
 
     const RESERVATION_SERVICE_URL = process.env.RESERVATION_SERVICE_URL || 'http://localhost:4003';
+    
+    // Fetch a default resource to assign (calendar requires resourceId)
+    let defaultResourceId: string | null = null;
+    try {
+      const resourceResponse = await fetch(
+        `${RESERVATION_SERVICE_URL}/api/resources?type=STANDARD_SUITE&limit=1`,
+        { headers: { 'x-tenant-id': 'dev' } }
+      );
+      const resourceData = await resourceResponse.json();
+      const resources = resourceData.data?.resources || [];
+      if (resources.length > 0) {
+        defaultResourceId = resources[0].id;
+        console.log(`[Migration] Using default resource: ${resources[0].name} (${defaultResourceId})`);
+      }
+    } catch (error) {
+      console.warn('[Migration] Could not fetch default resource, reservations will not have resourceId');
+    }
 
     for (const reservation of reservations) {
       try {
@@ -261,7 +278,8 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
               },
               body: JSON.stringify({
                 ...reservationData,
-                orderNumber: generateOrderNumber()
+                orderNumber: generateOrderNumber(),
+                resourceId: defaultResourceId // Assign default resource so calendar displays it
               })
             }
           );

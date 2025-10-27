@@ -39,6 +39,8 @@ interface GingrAnimal {
   grooming_notes?: string;
   temperment?: string;
   fixed?: string; // "1" or "0"
+  vip?: string; // "1" or "0"
+  banned?: string; // "1" or "0"
 }
 
 interface GingrReservation {
@@ -129,6 +131,17 @@ export function transformAnimalToPet(animal: GingrAnimal, customerId: string) {
     animal.grooming_notes ? `Grooming: ${animal.grooming_notes}` : ''
   ].filter(Boolean).join('\n\n');
   
+  // Map Gingr flags to Tailtown icons
+  const petIcons: string[] = [];
+  if (animal.vip === '1') petIcons.push('vip');
+  if (animal.banned === '1') petIcons.push('red-flag');
+  if (animal.medicines) petIcons.push('medication-required');
+  if (animal.allergies) petIcons.push('allergies');
+  if (animal.temperment && ['1', '2'].includes(animal.temperment)) {
+    // Temperament 1-2 might indicate behavioral concerns
+    petIcons.push('behavioral-note');
+  }
+  
   return {
     customerId,
     name: animal.first_name || 'Unknown',
@@ -146,6 +159,7 @@ export function transformAnimalToPet(animal: GingrAnimal, customerId: string) {
     allergies: stripHtml(animal.allergies || ''),
     specialNeeds: animal.temperment || null,
     behaviorNotes: stripHtml(allNotes),
+    petIcons: petIcons.length > 0 ? petIcons : null,
     isActive: true,
     externalId: animal.id,
     tenantId: 'dev'

@@ -46,6 +46,8 @@ interface GingrAnimal {
   grooming_notes?: string;
   temperment?: string;
   fixed?: string; // "1" or "0"
+  vip?: string; // "1" or "0"
+  banned?: string; // "1" or "0"
 }
 
 interface GingrReservation {
