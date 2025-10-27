@@ -93,6 +93,14 @@ const ExpandableRow = ({ customer, theme }: ExpandableRowProps) => {
         <TableCell align="right">{customer.invoiceCount}</TableCell>
         <TableCell align="right">{formatCurrency(customer.totalSpend)}</TableCell>
         <TableCell align="right">
+          <Typography variant="body2" fontWeight="bold" color="primary">
+            {formatCurrency(customer.totalSpend)}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Lifetime Value
+          </Typography>
+        </TableCell>
+        <TableCell align="right">
           <Button 
             variant="outlined" 
             size="small" 
@@ -440,13 +448,17 @@ const CustomerValueReport = () => {
               <Card>
                 <CardContent>
                   <Typography variant="subtitle2" color="text.secondary">
-                    Total Invoices
+                    Avg. LTV
                   </Typography>
                   <Typography variant="h4" sx={{ mt: 1, color: 'warning.main' }}>
-                    {customers.reduce((sum, customer) => sum + customer.invoiceCount, 0)}
+                    {formatCurrency(
+                      customers.length > 0
+                        ? customers.reduce((sum, customer) => sum + customer.totalSpend, 0) / customers.length
+                        : 0
+                    )}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {getPeriodLabel()}
+                    All Time Average
                   </Typography>
                 </CardContent>
               </Card>
@@ -485,7 +497,8 @@ const CustomerValueReport = () => {
                   <TableCell>Name</TableCell>
                   <TableCell>Email</TableCell>
                   <TableCell align="right">Invoices</TableCell>
-                  <TableCell align="right">Total Spend</TableCell>
+                  <TableCell align="right">Period Spend</TableCell>
+                  <TableCell align="right">LTV</TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
@@ -497,7 +510,7 @@ const CustomerValueReport = () => {
                   ))}
                 {filteredCustomers.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} align="center">
+                    <TableCell colSpan={7} align="center">
                       No customers found
                     </TableCell>
                   </TableRow>
