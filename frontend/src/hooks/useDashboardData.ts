@@ -41,7 +41,7 @@ interface DashboardData extends DashboardMetrics {
  * - Fetches all active reservations (no server-side date filtering)
  * - Uses UTC date methods for consistent timezone handling
  * - Filters check-ins/check-outs based on UTC date comparison
- * - Default filter shows today's check-ins
+ * - Default filter shows all active reservations
  * 
  * @returns {Object} Dashboard data and control functions
  * @returns {number|null} inCount - Number of check-ins today (UTC)
@@ -51,7 +51,7 @@ interface DashboardData extends DashboardMetrics {
  * @returns {Reservation[]} filteredReservations - Filtered reservations based on current filter
  * @returns {boolean} loading - Loading state
  * @returns {string|null} error - Error message if any
- * @returns {'in'|'out'|'all'} appointmentFilter - Current filter state (default: 'in')
+ * @returns {'in'|'out'|'all'} appointmentFilter - Current filter state (default: 'all')
  * @returns {Function} filterReservations - Function to change filter
  * @returns {Function} refreshData - Function to manually refresh data
  * 
@@ -74,7 +74,7 @@ export const useDashboardData = () => {
   const [filteredReservations, setFilteredReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [appointmentFilter, setAppointmentFilter] = useState<'in' | 'out' | 'all'>('in'); // Default to check-ins
+  const [appointmentFilter, setAppointmentFilter] = useState<'in' | 'out' | 'all'>('all'); // Default to all reservations
 
   /**
    * Filter reservations based on check-in or check-out status
@@ -184,13 +184,8 @@ export const useDashboardData = () => {
 
       setAllReservations(reservations);
       
-      // Apply initial filter (check-ins by default)
-      const checkInReservations = reservations.filter((res: any) => {
-        const startDate = new Date(res.startDate);
-        const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
-        return startDateStr === formattedToday;
-      });
-      setFilteredReservations(checkInReservations);
+      // Apply initial filter (all reservations by default)
+      setFilteredReservations(reservations);
       
     } catch (err: any) {
       logger.error('Failed to load dashboard data', { error: err.message });
