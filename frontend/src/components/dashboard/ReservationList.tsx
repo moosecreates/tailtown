@@ -1,7 +1,9 @@
-import React from 'react';
-import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress, List, ListItem, IconButton, Tooltip } from '@mui/material';
+import React, { useState, useMemo } from 'react';
+import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress, List, ListItem, IconButton, Tooltip, TextField, InputAdornment } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
 import PetNameWithIcons from '../pets/PetNameWithIcons';
 
 interface Reservation {
@@ -78,6 +80,37 @@ const ReservationList: React.FC<ReservationListProps> = ({
   onFilterChange
 }) => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter reservations based on search query
+  const filteredReservations = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return reservations;
+    }
+
+    const query = searchQuery.toLowerCase();
+    return reservations.filter(reservation => {
+      const petName = reservation.pet?.name?.toLowerCase() || '';
+      const customerFirstName = reservation.customer?.firstName?.toLowerCase() || '';
+      const customerLastName = reservation.customer?.lastName?.toLowerCase() || '';
+      const customerFullName = `${customerFirstName} ${customerLastName}`.trim();
+      const kennelName = reservation.resource?.name?.toLowerCase() || '';
+      const serviceName = reservation.service?.name?.toLowerCase() || '';
+
+      return (
+        petName.includes(query) ||
+        customerFirstName.includes(query) ||
+        customerLastName.includes(query) ||
+        customerFullName.includes(query) ||
+        kennelName.includes(query) ||
+        serviceName.includes(query)
+      );
+    });
+  }, [reservations, searchQuery]);
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
 
   /**
    * Maps reservation status to Material-UI chip color
@@ -137,7 +170,7 @@ const ReservationList: React.FC<ReservationListProps> = ({
             {getFilterTitle()}
             {reservations.length > 0 && (
               <Chip 
-                label={reservations.length} 
+                label={searchQuery ? `${filteredReservations.length} of ${reservations.length}` : reservations.length} 
                 size="small" 
                 color="primary"
                 variant="outlined"
@@ -172,6 +205,30 @@ const ReservationList: React.FC<ReservationListProps> = ({
         }
       />
       <CardContent>
+        {/* Search Bar */}
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Search by pet name, customer name, kennel, or service..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ mb: 2 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+            endAdornment: searchQuery && (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={handleClearSearch}>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
             <CircularProgress />
@@ -181,6 +238,10 @@ const ReservationList: React.FC<ReservationListProps> = ({
         ) : reservations.length === 0 ? (
           <Typography color="text.secondary">
             No {filter === 'in' ? 'check-ins' : filter === 'out' ? 'check-outs' : 'appointments'} scheduled
+          </Typography>
+        ) : filteredReservations.length === 0 ? (
+          <Typography color="text.secondary">
+            No reservations match your search "{searchQuery}"
           </Typography>
         ) : (
           <List 
@@ -197,7 +258,7 @@ const ReservationList: React.FC<ReservationListProps> = ({
               }
             }}
           >
-            {reservations.map((reservation) => (
+            {filteredReservations.map((reservation) => (
               <ListItem
                 key={reservation.id}
                 sx={{
