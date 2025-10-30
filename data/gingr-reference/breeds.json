@@ -1,0 +1,3818 @@
+[
+  {
+    "value": "672",
+    "label": "*Mixed Breed"
+  },
+  {
+    "value": "854",
+    "label": "Abbysinian/Siamese"
+  },
+  {
+    "value": "668",
+    "label": "Abyssinian"
+  },
+  {
+    "value": "890",
+    "label": "Affador Mixed"
+  },
+  {
+    "value": "363",
+    "label": "Affenpinscher"
+  },
+  {
+    "value": "889",
+    "label": "Affenpinscher Mix"
+  },
+  {
+    "value": "362",
+    "label": "Afghan Hound"
+  },
+  {
+    "value": "692",
+    "label": "Afghan Hound Mix"
+  },
+  {
+    "value": "361",
+    "label": "Afghan Shepherd"
+  },
+  {
+    "value": "360",
+    "label": "Aidi"
+  },
+  {
+    "value": "38",
+    "label": "Airedale Mixed"
+  },
+  {
+    "value": "359",
+    "label": "Airedale Terrier"
+  },
+  {
+    "value": "958",
+    "label": "Airedale X"
+  },
+  {
+    "value": "358",
+    "label": "Akbash"
+  },
+  {
+    "value": "769",
+    "label": "Akita"
+  },
+  {
+    "value": "357",
+    "label": "Akita Inu"
+  },
+  {
+    "value": "738",
+    "label": "Akita Mix"
+  },
+  {
+    "value": "356",
+    "label": "Alano Español"
+  },
+  {
+    "value": "760",
+    "label": "Alaskan Husky"
+  },
+  {
+    "value": "736",
+    "label": "Alaskan Husky/Mix"
+  },
+  {
+    "value": "355",
+    "label": "Alaskan Klee Kai"
+  },
+  {
+    "value": "1",
+    "label": "Alaskan Malamute"
+  },
+  {
+    "value": "863",
+    "label": "Alaskan Malamute Mix"
+  },
+  {
+    "value": "806",
+    "label": "Alley Cat"
+  },
+  {
+    "value": "977",
+    "label": "Alpha Bull Dog"
+  },
+  {
+    "value": "353",
+    "label": "Alpine Dachsbracke"
+  },
+  {
+    "value": "352",
+    "label": "Alpine Spaniel"
+  },
+  {
+    "value": "351",
+    "label": "American Akita"
+  },
+  {
+    "value": "2",
+    "label": "American Bulldog"
+  },
+  {
+    "value": "690",
+    "label": "American Bulldog Mix"
+  },
+  {
+    "value": "703",
+    "label": "American Bully"
+  },
+  {
+    "value": "985",
+    "label": "American Cattle Dog"
+  },
+  {
+    "value": "349",
+    "label": "American Cocker Spaniel"
+  },
+  {
+    "value": "102",
+    "label": "American English Coonhound"
+  },
+  {
+    "value": "348",
+    "label": "American Eskimo Dog"
+  },
+  {
+    "value": "943",
+    "label": "American Eskimo Mix"
+  },
+  {
+    "value": "347",
+    "label": "American Foxhound"
+  },
+  {
+    "value": "753",
+    "label": "American Foxhound X"
+  },
+  {
+    "value": "346",
+    "label": "American Hairless Terrier"
+  },
+  {
+    "value": "846",
+    "label": "American Hound Dog"
+  },
+  {
+    "value": "789",
+    "label": "American Hound Mix"
+  },
+  {
+    "value": "922",
+    "label": "American Mastiff"
+  },
+  {
+    "value": "26",
+    "label": "American Pit Bull"
+  },
+  {
+    "value": "345",
+    "label": "American Pit Bull Terrier"
+  },
+  {
+    "value": "856",
+    "label": "American Pointer Mix"
+  },
+  {
+    "value": "679",
+    "label": "American Shorthair"
+  },
+  {
+    "value": "344",
+    "label": "American Staffordshire Terrier"
+  },
+  {
+    "value": "721",
+    "label": "American Staffordshire Terrier Mix "
+  },
+  {
+    "value": "768",
+    "label": "American Terrier"
+  },
+  {
+    "value": "757",
+    "label": "American Terrier Mix"
+  },
+  {
+    "value": "343",
+    "label": "American Water Spaniel"
+  },
+  {
+    "value": "342",
+    "label": "Anatolian Shepherd Dog"
+  },
+  {
+    "value": "716",
+    "label": "Anatolian Shepherd Mix"
+  },
+  {
+    "value": "341",
+    "label": "Andalusian Hound"
+  },
+  {
+    "value": "340",
+    "label": "Anglo-Français de Petite Vénerie"
+  },
+  {
+    "value": "339",
+    "label": "Appenzeller Sennenhund"
+  },
+  {
+    "value": "338",
+    "label": "Ariege Pointer"
+  },
+  {
+    "value": "337",
+    "label": "Ariegeois"
+  },
+  {
+    "value": "336",
+    "label": "Armant"
+  },
+  {
+    "value": "335",
+    "label": "Armenian Gampr dog"
+  },
+  {
+    "value": "334",
+    "label": "Artois Hound"
+  },
+  {
+    "value": "685",
+    "label": "Aussiedoodle"
+  },
+  {
+    "value": "899",
+    "label": "Aussiedor"
+  },
+  {
+    "value": "938",
+    "label": "Aussiepoo"
+  },
+  {
+    "value": "710",
+    "label": "Australian Blue Heeler"
+  },
+  {
+    "value": "333",
+    "label": "Australian Cattle Dog"
+  },
+  {
+    "value": "667",
+    "label": "Australian Cattle dog Mix"
+  },
+  {
+    "value": "767",
+    "label": "Australian Collie"
+  },
+  {
+    "value": "777",
+    "label": "Australian Heeler"
+  },
+  {
+    "value": "839",
+    "label": "Australian Hound mix"
+  },
+  {
+    "value": "332",
+    "label": "Australian Kelpie"
+  },
+  {
+    "value": "713",
+    "label": "Australian Kelpie Mix"
+  },
+  {
+    "value": "728",
+    "label": "Australian Labradoodle"
+  },
+  {
+    "value": "868",
+    "label": "Australian Mix"
+  },
+  {
+    "value": "756",
+    "label": "Australian red heeler"
+  },
+  {
+    "value": "873",
+    "label": "Australian Sheep Dog"
+  },
+  {
+    "value": "331",
+    "label": "Australian Shepherd"
+  },
+  {
+    "value": "694",
+    "label": "Australian shepherd mix"
+  },
+  {
+    "value": "330",
+    "label": "Australian Silky Terrier"
+  },
+  {
+    "value": "329",
+    "label": "Australian Terrier"
+  },
+  {
+    "value": "896",
+    "label": "Australian Terrier Mix "
+  },
+  {
+    "value": "328",
+    "label": "Austrian Black and Tan Hound"
+  },
+  {
+    "value": "327",
+    "label": "Austrian Pinscher"
+  },
+  {
+    "value": "326",
+    "label": "Azawakh"
+  },
+  {
+    "value": "325",
+    "label": "Bakharwal Dog"
+  },
+  {
+    "value": "817",
+    "label": "ball python"
+  },
+  {
+    "value": "324",
+    "label": "Barbet"
+  },
+  {
+    "value": "323",
+    "label": "Basenji"
+  },
+  {
+    "value": "872",
+    "label": "Basenji Mix"
+  },
+  {
+    "value": "322",
+    "label": "Basque Ratter"
+  },
+  {
+    "value": "321",
+    "label": "Basque Shepherd Dog"
+  },
+  {
+    "value": "320",
+    "label": "Basset Artésien Normand"
+  },
+  {
+    "value": "319",
+    "label": "Basset Bleu de Gascogne"
+  },
+  {
+    "value": "318",
+    "label": "Basset Fauve de Bretagne"
+  },
+  {
+    "value": "317",
+    "label": "Basset Griffon Vendéen, Grand"
+  },
+  {
+    "value": "316",
+    "label": "Basset Griffon Vendéen, Petit"
+  },
+  {
+    "value": "4",
+    "label": "Basset Hound"
+  },
+  {
+    "value": "315",
+    "label": "Basset Hound"
+  },
+  {
+    "value": "795",
+    "label": "Basset Hound Mix"
+  },
+  {
+    "value": "314",
+    "label": "Bavarian Mountain Hound"
+  },
+  {
+    "value": "313",
+    "label": "Beagle"
+  },
+  {
+    "value": "743",
+    "label": "beagle mix"
+  },
+  {
+    "value": "312",
+    "label": "Beagle-Harrier"
+  },
+  {
+    "value": "311",
+    "label": "Bearded Collie"
+  },
+  {
+    "value": "934",
+    "label": "Bearded collie mix"
+  },
+  {
+    "value": "310",
+    "label": "Beauceron"
+  },
+  {
+    "value": "309",
+    "label": "Bedlington Terrier"
+  },
+  {
+    "value": "824",
+    "label": "Belgian Malamute"
+  },
+  {
+    "value": "725",
+    "label": "Belgian Malinois"
+  },
+  {
+    "value": "784",
+    "label": "Belgian Malinois Mix"
+  },
+  {
+    "value": "906",
+    "label": "Belgian Sheep Dog"
+  },
+  {
+    "value": "727",
+    "label": "Belgian Shepherd"
+  },
+  {
+    "value": "305",
+    "label": "Belgian Shepherd (Tervuren)"
+  },
+  {
+    "value": "308",
+    "label": "Belgian Shepherd Dog (Groenendael)"
+  },
+  {
+    "value": "307",
+    "label": "Belgian Shepherd Dog (Laekenois)"
+  },
+  {
+    "value": "306",
+    "label": "Belgian Shepherd Dog (Malinois)"
+  },
+  {
+    "value": "965",
+    "label": "Belgian Shepherd mix"
+  },
+  {
+    "value": "952",
+    "label": "Bengal cat"
+  },
+  {
+    "value": "304",
+    "label": "Bergamasco Shepherd"
+  },
+  {
+    "value": "975",
+    "label": "Bergen Blanc Suisse"
+  },
+  {
+    "value": "302",
+    "label": "Berger Blanc Suisse"
+  },
+  {
+    "value": "303",
+    "label": "Berger Picard"
+  },
+  {
+    "value": "707",
+    "label": "Bernedoodle"
+  },
+  {
+    "value": "301",
+    "label": "Berner Laufhund"
+  },
+  {
+    "value": "300",
+    "label": "Bernese Mountain Dog"
+  },
+  {
+    "value": "832",
+    "label": "bernese mountain dog mix"
+  },
+  {
+    "value": "100",
+    "label": "Bichon Frise"
+  },
+  {
+    "value": "812",
+    "label": "Bichon Frises Mix"
+  },
+  {
+    "value": "810",
+    "label": "Biewer Terrier"
+  },
+  {
+    "value": "297",
+    "label": "Billy"
+  },
+  {
+    "value": "866",
+    "label": "Bird"
+  },
+  {
+    "value": "298",
+    "label": "Black and Tan Coonhound"
+  },
+  {
+    "value": "296",
+    "label": "Black and Tan Virginia Foxhound"
+  },
+  {
+    "value": "746",
+    "label": "Black Cat"
+  },
+  {
+    "value": "740",
+    "label": "Black dom short-hair "
+  },
+  {
+    "value": "693",
+    "label": "Black Mouth Cur"
+  },
+  {
+    "value": "766",
+    "label": "Black Mouth Cur Mix"
+  },
+  {
+    "value": "295",
+    "label": "Black Norwegian Elkhound"
+  },
+  {
+    "value": "966",
+    "label": "black persian"
+  },
+  {
+    "value": "294",
+    "label": "Black Russian Terrier"
+  },
+  {
+    "value": "834",
+    "label": "Black Shorthair Cat"
+  },
+  {
+    "value": "770",
+    "label": "black tabby"
+  },
+  {
+    "value": "723",
+    "label": "Black tuxedo"
+  },
+  {
+    "value": "836",
+    "label": "black white "
+  },
+  {
+    "value": "293",
+    "label": "Blackmouth Cur"
+  },
+  {
+    "value": "292",
+    "label": "Bleu de Gascogne, Grand"
+  },
+  {
+    "value": "291",
+    "label": "Bleu de Gascogne, Petit"
+  },
+  {
+    "value": "290",
+    "label": "Bloodhound"
+  },
+  {
+    "value": "752",
+    "label": "Bloodhound Mix"
+  },
+  {
+    "value": "991",
+    "label": "Blue Healer"
+  },
+  {
+    "value": "288",
+    "label": "Blue Heeler"
+  },
+  {
+    "value": "733",
+    "label": "Blue Heeler  Mix"
+  },
+  {
+    "value": "986",
+    "label": "blue heeler mix"
+  },
+  {
+    "value": "289",
+    "label": "Blue Lacy"
+  },
+  {
+    "value": "808",
+    "label": "Blue Lacy Mix"
+  },
+  {
+    "value": "287",
+    "label": "Blue Paul Terrier"
+  },
+  {
+    "value": "819",
+    "label": "Blue Tick Hound"
+  },
+  {
+    "value": "820",
+    "label": "Blue Tick Hound  Mix"
+  },
+  {
+    "value": "286",
+    "label": "Bluetick Coonhound"
+  },
+  {
+    "value": "735",
+    "label": "Bob Tail"
+  },
+  {
+    "value": "285",
+    "label": "Boerboel"
+  },
+  {
+    "value": "912",
+    "label": "Boerboel Mastiff"
+  },
+  {
+    "value": "961",
+    "label": "Boggle"
+  },
+  {
+    "value": "284",
+    "label": "Bohemian Shepherd"
+  },
+  {
+    "value": "283",
+    "label": "Bolognese"
+  },
+  {
+    "value": "891",
+    "label": "Bombay"
+  },
+  {
+    "value": "282",
+    "label": "Border Collie"
+  },
+  {
+    "value": "35",
+    "label": "Border Collie Mix"
+  },
+  {
+    "value": "281",
+    "label": "Border Terrier"
+  },
+  {
+    "value": "280",
+    "label": "Borzoi"
+  },
+  {
+    "value": "279",
+    "label": "Bosnian Coarse-haired Hound"
+  },
+  {
+    "value": "7",
+    "label": "Boston Terrier"
+  },
+  {
+    "value": "830",
+    "label": "Boston Terrier Mix"
+  },
+  {
+    "value": "277",
+    "label": "Bouvier des Ardennes"
+  },
+  {
+    "value": "275",
+    "label": "Bouvier des Flandres"
+  },
+  {
+    "value": "276",
+    "label": "Boxer"
+  },
+  {
+    "value": "643",
+    "label": "Boxer Mix"
+  },
+  {
+    "value": "273",
+    "label": "Boykin Spaniel"
+  },
+  {
+    "value": "969",
+    "label": "Boykin Spaniel Mix"
+  },
+  {
+    "value": "274",
+    "label": "Bracco Italiano"
+  },
+  {
+    "value": "272",
+    "label": "Braque d'Auvergne"
+  },
+  {
+    "value": "271",
+    "label": "Braque du Bourbonnais"
+  },
+  {
+    "value": "270",
+    "label": "Braque du Puy"
+  },
+  {
+    "value": "269",
+    "label": "Braque Francais"
+  },
+  {
+    "value": "268",
+    "label": "Braque Saint-Germain"
+  },
+  {
+    "value": "266",
+    "label": "Brazilian Dogo"
+  },
+  {
+    "value": "267",
+    "label": "Brazilian Terrier"
+  },
+  {
+    "value": "265",
+    "label": "Briard"
+  },
+  {
+    "value": "264",
+    "label": "Briquet Griffon Vendéen"
+  },
+  {
+    "value": "8",
+    "label": "Brittany"
+  },
+  {
+    "value": "900",
+    "label": "Brittany Spaniel Mix"
+  },
+  {
+    "value": "262",
+    "label": "Broholmer"
+  },
+  {
+    "value": "758",
+    "label": "Brown Tabby"
+  },
+  {
+    "value": "261",
+    "label": "Bruno Jura Hound"
+  },
+  {
+    "value": "718",
+    "label": "Brussels Griffon"
+  },
+  {
+    "value": "826",
+    "label": "Brussels Griffon Mix"
+  },
+  {
+    "value": "260",
+    "label": "Bucovina Shepherd Dog"
+  },
+  {
+    "value": "706",
+    "label": "Bull Mastiff Mix"
+  },
+  {
+    "value": "258",
+    "label": "Bull Terrier"
+  },
+  {
+    "value": "257",
+    "label": "Bull Terrier (Miniature)"
+  },
+  {
+    "value": "877",
+    "label": "bull terrier mix"
+  },
+  {
+    "value": "689",
+    "label": "Bulldog"
+  },
+  {
+    "value": "787",
+    "label": "Bulldog Mix"
+  },
+  {
+    "value": "254",
+    "label": "Bullenbeisser"
+  },
+  {
+    "value": "255",
+    "label": "Bullmastiff"
+  },
+  {
+    "value": "253",
+    "label": "Bully Kutta"
+  },
+  {
+    "value": "761",
+    "label": "Bully Mix"
+  },
+  {
+    "value": "252",
+    "label": "Burgos Pointer"
+  },
+  {
+    "value": "821",
+    "label": "Burmese Cat"
+  },
+  {
+    "value": "9",
+    "label": "Cairn Terrier"
+  },
+  {
+    "value": "818",
+    "label": "Cairn Terrier Mix"
+  },
+  {
+    "value": "708",
+    "label": "Calico "
+  },
+  {
+    "value": "250",
+    "label": "Canaan Dog"
+  },
+  {
+    "value": "249",
+    "label": "Canadian Eskimo Dog"
+  },
+  {
+    "value": "248",
+    "label": "Cane Corso"
+  },
+  {
+    "value": "739",
+    "label": "Cane Corso Mix"
+  },
+  {
+    "value": "658",
+    "label": "Cane Corso/ English Mastiff Mix"
+  },
+  {
+    "value": "247",
+    "label": "Cantabrian Water Dog"
+  },
+  {
+    "value": "178",
+    "label": "Cão da Serra de Aires"
+  },
+  {
+    "value": "177",
+    "label": "Cão de Castro Laboreiro"
+  },
+  {
+    "value": "176",
+    "label": "Cão Fila de São Miguel"
+  },
+  {
+    "value": "175",
+    "label": "Carolina Dog"
+  },
+  {
+    "value": "828",
+    "label": "Carolina Dog Mix"
+  },
+  {
+    "value": "174",
+    "label": "Carpathian Shepherd Dog"
+  },
+  {
+    "value": "796",
+    "label": "cat dsh"
+  },
+  {
+    "value": "173",
+    "label": "Cat: American Shorthair"
+  },
+  {
+    "value": "179",
+    "label": "Cat: American Wirehair"
+  },
+  {
+    "value": "29",
+    "label": "Cat: Arabian Mau"
+  },
+  {
+    "value": "138",
+    "label": "Cat: Asian"
+  },
+  {
+    "value": "137",
+    "label": "Cat: Asian Semi-longhair"
+  },
+  {
+    "value": "180",
+    "label": "Cat: Australian Mist"
+  },
+  {
+    "value": "197",
+    "label": "Cat: Balinese"
+  },
+  {
+    "value": "198",
+    "label": "Cat: Bambino"
+  },
+  {
+    "value": "181",
+    "label": "Cat: Bengal"
+  },
+  {
+    "value": "199",
+    "label": "Cat: Birman"
+  },
+  {
+    "value": "182",
+    "label": "Cat: Bombay"
+  },
+  {
+    "value": "200",
+    "label": "Cat: Brazilian Shorthair"
+  },
+  {
+    "value": "202",
+    "label": "Cat: British Longhair"
+  },
+  {
+    "value": "183",
+    "label": "Cat: British Semi-longhair"
+  },
+  {
+    "value": "201",
+    "label": "Cat: British Shorthair"
+  },
+  {
+    "value": "203",
+    "label": "Cat: Burmese"
+  },
+  {
+    "value": "204",
+    "label": "Cat: Burmilla"
+  },
+  {
+    "value": "205",
+    "label": "Cat: California Spangled"
+  },
+  {
+    "value": "206",
+    "label": "Cat: Chantilly-Tiffany"
+  },
+  {
+    "value": "207",
+    "label": "Cat: Chartreux"
+  },
+  {
+    "value": "208",
+    "label": "Cat: Chausie"
+  },
+  {
+    "value": "209",
+    "label": "Cat: Cheetoh"
+  },
+  {
+    "value": "210",
+    "label": "Cat: Colorpoint Shorthair"
+  },
+  {
+    "value": "211",
+    "label": "Cat: Cornish Rex"
+  },
+  {
+    "value": "212",
+    "label": "Cat: Cymric,  or Manx Longhair"
+  },
+  {
+    "value": "213",
+    "label": "Cat: Cyprus"
+  },
+  {
+    "value": "214",
+    "label": "Cat: Devon Rex"
+  },
+  {
+    "value": "675",
+    "label": "Cat: Domestic Longhair (DLH)"
+  },
+  {
+    "value": "669",
+    "label": "Cat: Domestic Shorthair (DSH)"
+  },
+  {
+    "value": "215",
+    "label": "Cat: Donskoy,  or Don Sphynx"
+  },
+  {
+    "value": "216",
+    "label": "Cat: Dragon Li"
+  },
+  {
+    "value": "184",
+    "label": "Cat: Dwarf cat,  or Dwelf"
+  },
+  {
+    "value": "185",
+    "label": "Cat: Egyptian Mau"
+  },
+  {
+    "value": "217",
+    "label": "Cat: European Shorthair"
+  },
+  {
+    "value": "186",
+    "label": "Cat: Exotic ShortHair"
+  },
+  {
+    "value": "187",
+    "label": "Cat: FoldEx Cat (Official Breed - CCA/AFC)[1]"
+  },
+  {
+    "value": "188",
+    "label": "Cat: German Rex"
+  },
+  {
+    "value": "218",
+    "label": "Cat: Havana Brown"
+  },
+  {
+    "value": "219",
+    "label": "Cat: Highlander"
+  },
+  {
+    "value": "220",
+    "label": "Cat: Himalayan,  or Colorpoint Persian"
+  },
+  {
+    "value": "221",
+    "label": "Cat: Japanese Bobtail"
+  },
+  {
+    "value": "222",
+    "label": "Cat: Javanese"
+  },
+  {
+    "value": "190",
+    "label": "Cat: Khao Manee"
+  },
+  {
+    "value": "191",
+    "label": "Cat: Korat"
+  },
+  {
+    "value": "223",
+    "label": "Cat: Korean Bobtail"
+  },
+  {
+    "value": "192",
+    "label": "Cat: Korn Ja"
+  },
+  {
+    "value": "189",
+    "label": "Cat: Kurilian Bobtail"
+  },
+  {
+    "value": "225",
+    "label": "Cat: LaPerm"
+  },
+  {
+    "value": "226",
+    "label": "Cat: Lykoi"
+  },
+  {
+    "value": "193",
+    "label": "Cat: Maine Coon"
+  },
+  {
+    "value": "227",
+    "label": "Cat: Manx"
+  },
+  {
+    "value": "228",
+    "label": "Cat: Mekong Bobtail"
+  },
+  {
+    "value": "229",
+    "label": "Cat: Minskin"
+  },
+  {
+    "value": "230",
+    "label": "Cat: Munchkin"
+  },
+  {
+    "value": "232",
+    "label": "Cat: Napoleon"
+  },
+  {
+    "value": "231",
+    "label": "Cat: Nebelung"
+  },
+  {
+    "value": "233",
+    "label": "Cat: Norwegian Forest Cat"
+  },
+  {
+    "value": "234",
+    "label": "Cat: Ocicat"
+  },
+  {
+    "value": "235",
+    "label": "Cat: Ojos Azules"
+  },
+  {
+    "value": "236",
+    "label": "Cat: Oregon Rex"
+  },
+  {
+    "value": "237",
+    "label": "Cat: Oriental Bicolor"
+  },
+  {
+    "value": "239",
+    "label": "Cat: Oriental Longhair"
+  },
+  {
+    "value": "238",
+    "label": "Cat: Oriental Shorthair"
+  },
+  {
+    "value": "240",
+    "label": "Cat: PerFold Cat (Experimental Breed - WCF)"
+  },
+  {
+    "value": "241",
+    "label": "Cat: Persian (Modern Persian Cat)"
+  },
+  {
+    "value": "194",
+    "label": "Cat: Peterbald"
+  },
+  {
+    "value": "195",
+    "label": "Cat: Pixie-bob"
+  },
+  {
+    "value": "242",
+    "label": "Cat: Raas"
+  },
+  {
+    "value": "243",
+    "label": "Cat: Ragamuffin"
+  },
+  {
+    "value": "244",
+    "label": "Cat: Ragdoll"
+  },
+  {
+    "value": "245",
+    "label": "Cat: Russian Blue"
+  },
+  {
+    "value": "196",
+    "label": "Cat: Russian White, Black and Tabby"
+  },
+  {
+    "value": "641",
+    "label": "Cat: Sabre Tooth"
+  },
+  {
+    "value": "246",
+    "label": "Cat: Sam Sawet"
+  },
+  {
+    "value": "30",
+    "label": "Cat: Savannah"
+  },
+  {
+    "value": "33",
+    "label": "Cat: Scottish Fold"
+  },
+  {
+    "value": "97",
+    "label": "Cat: Selkirk Rex"
+  },
+  {
+    "value": "172",
+    "label": "Cat: Serengeti"
+  },
+  {
+    "value": "171",
+    "label": "Cat: Serrade petit"
+  },
+  {
+    "value": "170",
+    "label": "Cat: Siamese"
+  },
+  {
+    "value": "169",
+    "label": "Cat: Siberian"
+  },
+  {
+    "value": "168",
+    "label": "Cat: Singapura"
+  },
+  {
+    "value": "167",
+    "label": "Cat: Snowshoe"
+  },
+  {
+    "value": "16",
+    "label": "Cat: Sokoke"
+  },
+  {
+    "value": "61",
+    "label": "Cat: Somali"
+  },
+  {
+    "value": "60",
+    "label": "Cat: Sphynx"
+  },
+  {
+    "value": "687",
+    "label": "Cat: Tabby"
+  },
+  {
+    "value": "59",
+    "label": "Cat: Thai"
+  },
+  {
+    "value": "99",
+    "label": "Cat: Tonkinese"
+  },
+  {
+    "value": "127",
+    "label": "Cat: Toyger"
+  },
+  {
+    "value": "165",
+    "label": "Cat: Traditional Persian,  or Doll Face Persian"
+  },
+  {
+    "value": "36",
+    "label": "Cat: Turkish Angora"
+  },
+  {
+    "value": "12",
+    "label": "Cat: Turkish Van"
+  },
+  {
+    "value": "39",
+    "label": "Cat: Ukrainian Levkoy"
+  },
+  {
+    "value": "94",
+    "label": "Cat: York Chocolate"
+  },
+  {
+    "value": "861",
+    "label": "catahoula"
+  },
+  {
+    "value": "166",
+    "label": "Catahoula Cur"
+  },
+  {
+    "value": "161",
+    "label": "Catahoula Mix"
+  },
+  {
+    "value": "164",
+    "label": "Catalan Sheepdog"
+  },
+  {
+    "value": "163",
+    "label": "Caucasian Shepherd Dog"
+  },
+  {
+    "value": "809",
+    "label": "Cavachon"
+  },
+  {
+    "value": "967",
+    "label": "Cavachon Mix"
+  },
+  {
+    "value": "10",
+    "label": "Cavalier King Charles Spaniel"
+  },
+  {
+    "value": "895",
+    "label": "Cavalier Mix"
+  },
+  {
+    "value": "944",
+    "label": "Cavanese"
+  },
+  {
+    "value": "823",
+    "label": "Cavapoo"
+  },
+  {
+    "value": "160",
+    "label": "Central Asian Shepherd Dog"
+  },
+  {
+    "value": "159",
+    "label": "Cesky Fousek"
+  },
+  {
+    "value": "158",
+    "label": "Cesky Terrier"
+  },
+  {
+    "value": "155",
+    "label": "Chesapeake Bay Retriever"
+  },
+  {
+    "value": "935",
+    "label": "Chesapeake Mix"
+  },
+  {
+    "value": "157",
+    "label": "Chien Français Blanc et Noir"
+  },
+  {
+    "value": "154",
+    "label": "Chien Français Blanc et Orange"
+  },
+  {
+    "value": "153",
+    "label": "Chien Français Tricolore"
+  },
+  {
+    "value": "152",
+    "label": "Chien-gris"
+  },
+  {
+    "value": "11",
+    "label": "Chihuahua"
+  },
+  {
+    "value": "664",
+    "label": "Chihuahua Mix"
+  },
+  {
+    "value": "150",
+    "label": "Chilean Fox Terrier"
+  },
+  {
+    "value": "148",
+    "label": "Chinese Chongqing Dog"
+  },
+  {
+    "value": "147",
+    "label": "Chinese Crested Dog"
+  },
+  {
+    "value": "879",
+    "label": "Chinese Crested Mix"
+  },
+  {
+    "value": "146",
+    "label": "Chinese Imperial Dog"
+  },
+  {
+    "value": "145",
+    "label": "Chinook"
+  },
+  {
+    "value": "144",
+    "label": "Chippiparai"
+  },
+  {
+    "value": "43",
+    "label": "Chocolate Lab"
+  },
+  {
+    "value": "142",
+    "label": "Chow Chow"
+  },
+  {
+    "value": "749",
+    "label": "Chow Mix"
+  },
+  {
+    "value": "141",
+    "label": "Cierny Sery"
+  },
+  {
+    "value": "140",
+    "label": "Cirneco dell'Etna"
+  },
+  {
+    "value": "139",
+    "label": "Clumber Spaniel"
+  },
+  {
+    "value": "774",
+    "label": "Cockapoo "
+  },
+  {
+    "value": "903",
+    "label": "Cockapoo Mix"
+  },
+  {
+    "value": "816",
+    "label": "Cocker Spaniel"
+  },
+  {
+    "value": "871",
+    "label": "Cocker Spaniel Mix"
+  },
+  {
+    "value": "748",
+    "label": "Collie"
+  },
+  {
+    "value": "907",
+    "label": "Collie (Rough Coat)"
+  },
+  {
+    "value": "747",
+    "label": "Collie Mix"
+  },
+  {
+    "value": "136",
+    "label": "Collie, Rough"
+  },
+  {
+    "value": "135",
+    "label": "Collie, Smooth"
+  },
+  {
+    "value": "132",
+    "label": "Combai"
+  },
+  {
+    "value": "920",
+    "label": "Coonhound"
+  },
+  {
+    "value": "813",
+    "label": "Coonhound Mix"
+  },
+  {
+    "value": "134",
+    "label": "Cordoba Fighting Dog"
+  },
+  {
+    "value": "670",
+    "label": "Corgi"
+  },
+  {
+    "value": "678",
+    "label": "Corgi Mix"
+  },
+  {
+    "value": "131",
+    "label": "Coton de Tulear"
+  },
+  {
+    "value": "130",
+    "label": "Cretan Hound"
+  },
+  {
+    "value": "129",
+    "label": "Croatian Sheepdog"
+  },
+  {
+    "value": "126",
+    "label": "Cumberland Sheepdog"
+  },
+  {
+    "value": "128",
+    "label": "Curly Coated Retriever"
+  },
+  {
+    "value": "125",
+    "label": "Cursinu"
+  },
+  {
+    "value": "124",
+    "label": "Czechoslovak Wolfdog"
+  },
+  {
+    "value": "122",
+    "label": "Dachshund"
+  },
+  {
+    "value": "683",
+    "label": "Dachshund Mix"
+  },
+  {
+    "value": "662",
+    "label": "Dachshund, "
+  },
+  {
+    "value": "123",
+    "label": "Dalmatian"
+  },
+  {
+    "value": "792",
+    "label": "Dalmatian Mix"
+  },
+  {
+    "value": "121",
+    "label": "Dandie Dinmont Terrier"
+  },
+  {
+    "value": "120",
+    "label": "Danish Swedish Farmdog"
+  },
+  {
+    "value": "118",
+    "label": "Decker Rat Terrier"
+  },
+  {
+    "value": "835",
+    "label": "Dem Short Hair"
+  },
+  {
+    "value": "119",
+    "label": "Deutsche Bracke"
+  },
+  {
+    "value": "881",
+    "label": "Devon Rex"
+  },
+  {
+    "value": "959",
+    "label": "Dingo"
+  },
+  {
+    "value": "801",
+    "label": "DLH"
+  },
+  {
+    "value": "822",
+    "label": "dmh"
+  },
+  {
+    "value": "782",
+    "label": "Doberman Mix"
+  },
+  {
+    "value": "117",
+    "label": "Doberman Pinscher"
+  },
+  {
+    "value": "115",
+    "label": "Dogo Argentino"
+  },
+  {
+    "value": "114",
+    "label": "Dogo Cubano"
+  },
+  {
+    "value": "113",
+    "label": "Dogue de Bordeaux"
+  },
+  {
+    "value": "894",
+    "label": "Dom Long Hair"
+  },
+  {
+    "value": "865",
+    "label": "Dom Med Hair"
+  },
+  {
+    "value": "860",
+    "label": "Dom. Short Hair"
+  },
+  {
+    "value": "928",
+    "label": "Dom. Shorthair"
+  },
+  {
+    "value": "878",
+    "label": "Dom. Shrt Hair"
+  },
+  {
+    "value": "882",
+    "label": "Domestic"
+  },
+  {
+    "value": "772",
+    "label": "Domestic Long Hair"
+  },
+  {
+    "value": "722",
+    "label": "Domestic Medium Hair"
+  },
+  {
+    "value": "790",
+    "label": "Domestic Shor Hair"
+  },
+  {
+    "value": "744",
+    "label": "Domestic Short Hair"
+  },
+  {
+    "value": "649",
+    "label": "Domestic Short Hair DSH"
+  },
+  {
+    "value": "862",
+    "label": "Domestic short hair tabby "
+  },
+  {
+    "value": "829",
+    "label": "Domestic Shorthair"
+  },
+  {
+    "value": "803",
+    "label": "Domestic Tabby"
+  },
+  {
+    "value": "695",
+    "label": "Doodle"
+  },
+  {
+    "value": "697",
+    "label": "Doodle Mix"
+  },
+  {
+    "value": "112",
+    "label": "Drentse Patrijshond"
+  },
+  {
+    "value": "111",
+    "label": "Drever"
+  },
+  {
+    "value": "908",
+    "label": "DSH "
+  },
+  {
+    "value": "110",
+    "label": "Dunker"
+  },
+  {
+    "value": "108",
+    "label": "Dutch Shepherd Dog"
+  },
+  {
+    "value": "763",
+    "label": "Dutch Shepherd Mix"
+  },
+  {
+    "value": "107",
+    "label": "Dutch Smoushond"
+  },
+  {
+    "value": "106",
+    "label": "East Siberian Laika"
+  },
+  {
+    "value": "105",
+    "label": "East-European Shepherd"
+  },
+  {
+    "value": "104",
+    "label": "Elo"
+  },
+  {
+    "value": "646",
+    "label": "English Bulldog"
+  },
+  {
+    "value": "771",
+    "label": "English Bulldog Mix"
+  },
+  {
+    "value": "103",
+    "label": "English Cocker Spaniel"
+  },
+  {
+    "value": "785",
+    "label": "English Cream Golden Retriever"
+  },
+  {
+    "value": "101",
+    "label": "English Foxhound"
+  },
+  {
+    "value": "656",
+    "label": "English Golden Retriever"
+  },
+  {
+    "value": "676",
+    "label": "English Lab"
+  },
+  {
+    "value": "96",
+    "label": "English Mastiff"
+  },
+  {
+    "value": "702",
+    "label": "english mastiff mix "
+  },
+  {
+    "value": "827",
+    "label": "english pointer"
+  },
+  {
+    "value": "973",
+    "label": "English Pointer Mix"
+  },
+  {
+    "value": "98",
+    "label": "English Setter"
+  },
+  {
+    "value": "940",
+    "label": "English Setter Mix"
+  },
+  {
+    "value": "95",
+    "label": "English Shepherd"
+  },
+  {
+    "value": "867",
+    "label": "English Shepherd Mix"
+  },
+  {
+    "value": "93",
+    "label": "English Springer Spaniel"
+  },
+  {
+    "value": "92",
+    "label": "English Toy Terrier (Black & Tan)"
+  },
+  {
+    "value": "91",
+    "label": "English Water Spaniel"
+  },
+  {
+    "value": "90",
+    "label": "English White Terrier"
+  },
+  {
+    "value": "89",
+    "label": "Entlebucher Mountain Dog"
+  },
+  {
+    "value": "88",
+    "label": "Épagneul Bleu de Picardie"
+  },
+  {
+    "value": "87",
+    "label": "Estonian Hound"
+  },
+  {
+    "value": "85",
+    "label": "Estrela Mountain Dog"
+  },
+  {
+    "value": "84",
+    "label": "Eurasier"
+  },
+  {
+    "value": "948",
+    "label": "Europian Short Hair"
+  },
+  {
+    "value": "778",
+    "label": "Exotic Long haired lilac Persian"
+  },
+  {
+    "value": "791",
+    "label": "FASTTRGETINFO"
+  },
+  {
+    "value": "83",
+    "label": "Field Spaniel"
+  },
+  {
+    "value": "82",
+    "label": "Fila Brasileiro"
+  },
+  {
+    "value": "81",
+    "label": "Finnish Hound"
+  },
+  {
+    "value": "79",
+    "label": "Finnish Lapphund"
+  },
+  {
+    "value": "78",
+    "label": "Finnish Spitz"
+  },
+  {
+    "value": "950",
+    "label": "Flat Coat Retriever X"
+  },
+  {
+    "value": "77",
+    "label": "Flat-Coated Retriever"
+  },
+  {
+    "value": "76",
+    "label": "Formosan Mountain Dog"
+  },
+  {
+    "value": "963",
+    "label": "Fox Terrier"
+  },
+  {
+    "value": "75",
+    "label": "Fox Terrier (Smooth)"
+  },
+  {
+    "value": "847",
+    "label": "Fox Terrier Mix"
+  },
+  {
+    "value": "73",
+    "label": "Fox Terrier, Wire"
+  },
+  {
+    "value": "960",
+    "label": "Foxhound"
+  },
+  {
+    "value": "929",
+    "label": "Foxhound Mix"
+  },
+  {
+    "value": "72",
+    "label": "French Brittany"
+  },
+  {
+    "value": "14",
+    "label": "French Bulldog"
+  },
+  {
+    "value": "883",
+    "label": "French Bulldog mix"
+  },
+  {
+    "value": "897",
+    "label": "French Mastiff"
+  },
+  {
+    "value": "70",
+    "label": "French Spaniel"
+  },
+  {
+    "value": "68",
+    "label": "Gaddi Dog"
+  },
+  {
+    "value": "69",
+    "label": "Galgo Español"
+  },
+  {
+    "value": "67",
+    "label": "Galician Cattle Dog"
+  },
+  {
+    "value": "66",
+    "label": "Garafía Shepherd Dog"
+  },
+  {
+    "value": "65",
+    "label": "Gascon Saintongeois"
+  },
+  {
+    "value": "64",
+    "label": "Georgian Shepherd Dog"
+  },
+  {
+    "value": "786",
+    "label": "german hound"
+  },
+  {
+    "value": "680",
+    "label": "German Husky"
+  },
+  {
+    "value": "776",
+    "label": "German Husky Mix"
+  },
+  {
+    "value": "63",
+    "label": "German Longhaired Pointer"
+  },
+  {
+    "value": "57",
+    "label": "German Pinscher"
+  },
+  {
+    "value": "55",
+    "label": "German Rough-haired Pointer"
+  },
+  {
+    "value": "53",
+    "label": "German Shepherd Dog"
+  },
+  {
+    "value": "677",
+    "label": "German Shepherd Mix"
+  },
+  {
+    "value": "52",
+    "label": "German Shorthaired Pointer"
+  },
+  {
+    "value": "800",
+    "label": "German Shorthaired Pointer Mix"
+  },
+  {
+    "value": "50",
+    "label": "German Spaniel"
+  },
+  {
+    "value": "51",
+    "label": "German Spitz"
+  },
+  {
+    "value": "976",
+    "label": "German Spitz Mix"
+  },
+  {
+    "value": "49",
+    "label": "German Wirehaired Pointer"
+  },
+  {
+    "value": "887",
+    "label": "Giant Schnauzer"
+  },
+  {
+    "value": "47",
+    "label": "Glen of Imaal Terrier"
+  },
+  {
+    "value": "915",
+    "label": "Goldador"
+  },
+  {
+    "value": "987",
+    "label": "Golden Doodle"
+  },
+  {
+    "value": "989",
+    "label": "Golden mix"
+  },
+  {
+    "value": "28",
+    "label": "Golden Retriever"
+  },
+  {
+    "value": "682",
+    "label": "Golden Retriever Mix"
+  },
+  {
+    "value": "31",
+    "label": "Goldendoodle"
+  },
+  {
+    "value": "696",
+    "label": "Goldendoodle Mix"
+  },
+  {
+    "value": "45",
+    "label": "Gordon Setter"
+  },
+  {
+    "value": "44",
+    "label": "Gran Mastín de Borínquen"
+  },
+  {
+    "value": "42",
+    "label": "Grand Anglo-Français Blanc et Noir"
+  },
+  {
+    "value": "40",
+    "label": "Grand Anglo-Français Blanc et Orange"
+  },
+  {
+    "value": "37",
+    "label": "Grand Anglo-Français Tricolore"
+  },
+  {
+    "value": "34",
+    "label": "Grand Griffon Vendéen"
+  },
+  {
+    "value": "939",
+    "label": "Gray and white tabby"
+  },
+  {
+    "value": "942",
+    "label": "Gray cat"
+  },
+  {
+    "value": "804",
+    "label": "Gray Tabby"
+  },
+  {
+    "value": "917",
+    "label": "Gray/White"
+  },
+  {
+    "value": "364",
+    "label": "Great Dane"
+  },
+  {
+    "value": "717",
+    "label": "Great Dane Mix"
+  },
+  {
+    "value": "655",
+    "label": "Great Dane/ Lab"
+  },
+  {
+    "value": "365",
+    "label": "Great Pyrenees"
+  },
+  {
+    "value": "711",
+    "label": "Great Pyrenees Mix"
+  },
+  {
+    "value": "366",
+    "label": "Greater Swiss Mountain Dog"
+  },
+  {
+    "value": "367",
+    "label": "Greek Harehound"
+  },
+  {
+    "value": "368",
+    "label": "Greenland Dog"
+  },
+  {
+    "value": "911",
+    "label": "Grey Cat"
+  },
+  {
+    "value": "799",
+    "label": "Grey Tabby"
+  },
+  {
+    "value": "842",
+    "label": "Grey Tiger Cat"
+  },
+  {
+    "value": "369",
+    "label": "Greyhound"
+  },
+  {
+    "value": "853",
+    "label": "Greyhound  Mix"
+  },
+  {
+    "value": "370",
+    "label": "Griffon Bleu de Gascogne"
+  },
+  {
+    "value": "371",
+    "label": "Griffon Bruxellois"
+  },
+  {
+    "value": "372",
+    "label": "Griffon Fauve de Bretagne"
+  },
+  {
+    "value": "373",
+    "label": "Griffon Nivernais"
+  },
+  {
+    "value": "374",
+    "label": "Guatemalan Dogo"
+  },
+  {
+    "value": "375",
+    "label": "Gull Terrier"
+  },
+  {
+    "value": "376",
+    "label": "Hamiltonstövare"
+  },
+  {
+    "value": "377",
+    "label": "Hanover Hound"
+  },
+  {
+    "value": "378",
+    "label": "Hare Indian Dog"
+  },
+  {
+    "value": "379",
+    "label": "Harrier"
+  },
+  {
+    "value": "788",
+    "label": "Harrier Mix"
+  },
+  {
+    "value": "380",
+    "label": "Havanese"
+  },
+  {
+    "value": "775",
+    "label": "Havanese Mix"
+  },
+  {
+    "value": "381",
+    "label": "Hawaiian Poi Dog"
+  },
+  {
+    "value": "982",
+    "label": "Heeler"
+  },
+  {
+    "value": "936",
+    "label": "Highland lynx "
+  },
+  {
+    "value": "923",
+    "label": "Himalayan Mix"
+  },
+  {
+    "value": "382",
+    "label": "Himalayan Sheepdog"
+  },
+  {
+    "value": "383",
+    "label": "Hokkaido Ken"
+  },
+  {
+    "value": "384",
+    "label": "Hortaya Borzaya"
+  },
+  {
+    "value": "937",
+    "label": "Hound"
+  },
+  {
+    "value": "978",
+    "label": "Hound "
+  },
+  {
+    "value": "811",
+    "label": "Hound  Mix"
+  },
+  {
+    "value": "992",
+    "label": "Hound Mix"
+  },
+  {
+    "value": "385",
+    "label": "Hovawart"
+  },
+  {
+    "value": "979",
+    "label": "Hungarian Breed"
+  },
+  {
+    "value": "980",
+    "label": "Hungarian Scottish Terrier"
+  },
+  {
+    "value": "386",
+    "label": "Huntaway"
+  },
+  {
+    "value": "684",
+    "label": "Husky"
+  },
+  {
+    "value": "681",
+    "label": "Husky Mix"
+  },
+  {
+    "value": "387",
+    "label": "Hygenhund"
+  },
+  {
+    "value": "388",
+    "label": "Ibizan Hound"
+  },
+  {
+    "value": "904",
+    "label": "Ibizan Hound Mix"
+  },
+  {
+    "value": "389",
+    "label": "Icelandic Sheepdog"
+  },
+  {
+    "value": "751",
+    "label": "Imperial Shih Tzu"
+  },
+  {
+    "value": "390",
+    "label": "Indian pariah dog"
+  },
+  {
+    "value": "391",
+    "label": "Indian Spitz"
+  },
+  {
+    "value": "392",
+    "label": "Irish Red and White Setter"
+  },
+  {
+    "value": "393",
+    "label": "Irish Setter"
+  },
+  {
+    "value": "850",
+    "label": "Irish Setter Mix"
+  },
+  {
+    "value": "394",
+    "label": "Irish Terrier"
+  },
+  {
+    "value": "916",
+    "label": "Irish Terrier Mix"
+  },
+  {
+    "value": "395",
+    "label": "Irish Water Spaniel"
+  },
+  {
+    "value": "396",
+    "label": "Irish Wolfhound"
+  },
+  {
+    "value": "905",
+    "label": "Irish Wolfhound Mix"
+  },
+  {
+    "value": "397",
+    "label": "Istrian Coarse-haired Hound"
+  },
+  {
+    "value": "398",
+    "label": "Istrian Shorthaired Hound"
+  },
+  {
+    "value": "399",
+    "label": "Italian Greyhound"
+  },
+  {
+    "value": "898",
+    "label": "Italian Greyhound Mix"
+  },
+  {
+    "value": "859",
+    "label": "Italian Water Dog"
+  },
+  {
+    "value": "15",
+    "label": "Jack Russell Terrier"
+  },
+  {
+    "value": "665",
+    "label": "Jack Russell Terrier Mix"
+  },
+  {
+    "value": "401",
+    "label": "Jagdterrier"
+  },
+  {
+    "value": "403",
+    "label": "Japanese Chin"
+  },
+  {
+    "value": "930",
+    "label": "Japanese Chin Mix"
+  },
+  {
+    "value": "404",
+    "label": "Japanese Spitz"
+  },
+  {
+    "value": "405",
+    "label": "Japanese Terrier"
+  },
+  {
+    "value": "402",
+    "label": "Jämthund"
+  },
+  {
+    "value": "407",
+    "label": "Kai Ken"
+  },
+  {
+    "value": "406",
+    "label": "Kaikadi"
+  },
+  {
+    "value": "408",
+    "label": "Kangal Dog"
+  },
+  {
+    "value": "409",
+    "label": "Kanni"
+  },
+  {
+    "value": "410",
+    "label": "Karakachan Dog"
+  },
+  {
+    "value": "411",
+    "label": "Karelian Bear Dog"
+  },
+  {
+    "value": "412",
+    "label": "Karst Shepherd"
+  },
+  {
+    "value": "413",
+    "label": "Keeshond"
+  },
+  {
+    "value": "941",
+    "label": "Keeshond Mix"
+  },
+  {
+    "value": "414",
+    "label": "Kerry Beagle"
+  },
+  {
+    "value": "415",
+    "label": "Kerry Blue Terrier"
+  },
+  {
+    "value": "416",
+    "label": "King Charles Spaniel"
+  },
+  {
+    "value": "417",
+    "label": "King Shepherd"
+  },
+  {
+    "value": "418",
+    "label": "Kintamani"
+  },
+  {
+    "value": "419",
+    "label": "Kishu Ken"
+  },
+  {
+    "value": "420",
+    "label": "Komondor"
+  },
+  {
+    "value": "421",
+    "label": "Kooikerhondje"
+  },
+  {
+    "value": "422",
+    "label": "Koolie"
+  },
+  {
+    "value": "423",
+    "label": "Korean Jindo Dog"
+  },
+  {
+    "value": "424",
+    "label": "Kromfohrländer"
+  },
+  {
+    "value": "425",
+    "label": "Kumaon Mastiff"
+  },
+  {
+    "value": "426",
+    "label": "Kunming Wolfdog"
+  },
+  {
+    "value": "427",
+    "label": "Kuvasz"
+  },
+  {
+    "value": "428",
+    "label": "Kyi-Leo"
+  },
+  {
+    "value": "651",
+    "label": "Lab Mix"
+  },
+  {
+    "value": "657",
+    "label": "Lab/Mastiff Mix"
+  },
+  {
+    "value": "25",
+    "label": "Labradoodle"
+  },
+  {
+    "value": "653",
+    "label": "Labrador / German Shepard Cross"
+  },
+  {
+    "value": "429",
+    "label": "Labrador Husky"
+  },
+  {
+    "value": "663",
+    "label": "Labrador Mix"
+  },
+  {
+    "value": "27",
+    "label": "Labrador Retriever"
+  },
+  {
+    "value": "430",
+    "label": "Lagotto Romagnolo"
+  },
+  {
+    "value": "431",
+    "label": "Lakeland Terrier"
+  },
+  {
+    "value": "432",
+    "label": "Lancashire Heeler"
+  },
+  {
+    "value": "433",
+    "label": "Landseer"
+  },
+  {
+    "value": "434",
+    "label": "Lapponian Herder"
+  },
+  {
+    "value": "435",
+    "label": "Leonberger"
+  },
+  {
+    "value": "970",
+    "label": "Leonberger Mix"
+  },
+  {
+    "value": "436",
+    "label": "Lhasa Apso"
+  },
+  {
+    "value": "729",
+    "label": "Lhasa Apso Mix"
+  },
+  {
+    "value": "437",
+    "label": "Lithuanian Hound"
+  },
+  {
+    "value": "974",
+    "label": "llewellin setter"
+  },
+  {
+    "value": "921",
+    "label": "Long Hair Calico"
+  },
+  {
+    "value": "742",
+    "label": "Long hair cat"
+  },
+  {
+    "value": "805",
+    "label": "Long Hair Maine Coon"
+  },
+  {
+    "value": "874",
+    "label": "Longhair Persian"
+  },
+  {
+    "value": "925",
+    "label": "Longhaired"
+  },
+  {
+    "value": "886",
+    "label": "Longhaired Calico"
+  },
+  {
+    "value": "438",
+    "label": "Longhaired Whippet"
+  },
+  {
+    "value": "439",
+    "label": "Löwchen"
+  },
+  {
+    "value": "440",
+    "label": "Magyar Agár"
+  },
+  {
+    "value": "441",
+    "label": "Mahratta Greyhound"
+  },
+  {
+    "value": "754",
+    "label": "Maine Coon"
+  },
+  {
+    "value": "745",
+    "label": "Maine Coon Mix"
+  },
+  {
+    "value": "442",
+    "label": "Majorca Shepherd Dog"
+  },
+  {
+    "value": "851",
+    "label": "Malamute"
+  },
+  {
+    "value": "870",
+    "label": "Malamute Mix"
+  },
+  {
+    "value": "443",
+    "label": "Maltese"
+  },
+  {
+    "value": "781",
+    "label": "Maltese Mix"
+  },
+  {
+    "value": "86",
+    "label": "Maltipoo"
+  },
+  {
+    "value": "983",
+    "label": "Maltise"
+  },
+  {
+    "value": "444",
+    "label": "Manchester Terrier"
+  },
+  {
+    "value": "955",
+    "label": "Manx Cat"
+  },
+  {
+    "value": "445",
+    "label": "Maremma Sheepdog"
+  },
+  {
+    "value": "814",
+    "label": "Mastiff"
+  },
+  {
+    "value": "764",
+    "label": "Mastiff Mix"
+  },
+  {
+    "value": "446",
+    "label": "McNab"
+  },
+  {
+    "value": "972",
+    "label": "Med Mix"
+  },
+  {
+    "value": "852",
+    "label": "Med Mix Breed"
+  },
+  {
+    "value": "837",
+    "label": "Med Mixed"
+  },
+  {
+    "value": "945",
+    "label": "medium hair tabby"
+  },
+  {
+    "value": "447",
+    "label": "Mexican Hairless Dog"
+  },
+  {
+    "value": "807",
+    "label": "Mini Aussiedoodle"
+  },
+  {
+    "value": "962",
+    "label": "Mini Bull Terrier"
+  },
+  {
+    "value": "765",
+    "label": "Mini Doodle"
+  },
+  {
+    "value": "990",
+    "label": "mini goldendoodle"
+  },
+  {
+    "value": "914",
+    "label": "Mini Labradoodle"
+  },
+  {
+    "value": "984",
+    "label": "Mini-Aussiedoodle"
+  },
+  {
+    "value": "449",
+    "label": "Miniature American Shepherd"
+  },
+  {
+    "value": "448",
+    "label": "Miniature Australian Shepherd"
+  },
+  {
+    "value": "143",
+    "label": "Miniature Dachshund"
+  },
+  {
+    "value": "450",
+    "label": "Miniature Fox Terrier"
+  },
+  {
+    "value": "451",
+    "label": "Miniature Pinscher"
+  },
+  {
+    "value": "798",
+    "label": "miniature pinscher mix"
+  },
+  {
+    "value": "724",
+    "label": "Miniature Poodle"
+  },
+  {
+    "value": "797",
+    "label": "Miniature Poodle Mix"
+  },
+  {
+    "value": "17",
+    "label": "Miniature Schnauzer"
+  },
+  {
+    "value": "831",
+    "label": "Miniature schnauzer mix"
+  },
+  {
+    "value": "453",
+    "label": "Miniature Shar Pei"
+  },
+  {
+    "value": "981",
+    "label": "Miniature Welsh Terrier"
+  },
+  {
+    "value": "454",
+    "label": "Mioritic"
+  },
+  {
+    "value": "58",
+    "label": "Mixed"
+  },
+  {
+    "value": "988",
+    "label": "miz"
+  },
+  {
+    "value": "455",
+    "label": "Molossus"
+  },
+  {
+    "value": "456",
+    "label": "Montenegrin Mountain Hound"
+  },
+  {
+    "value": "712",
+    "label": "Morkie"
+  },
+  {
+    "value": "457",
+    "label": "Moscow Watchdog"
+  },
+  {
+    "value": "458",
+    "label": "Moscow Water Dog"
+  },
+  {
+    "value": "459",
+    "label": "Mountain Cur"
+  },
+  {
+    "value": "780",
+    "label": "Moyen Poodle"
+  },
+  {
+    "value": "460",
+    "label": "Mucuchies"
+  },
+  {
+    "value": "461",
+    "label": "Mudhol Hound"
+  },
+  {
+    "value": "462",
+    "label": "Mudi"
+  },
+  {
+    "value": "660",
+    "label": "Multi-poo"
+  },
+  {
+    "value": "463",
+    "label": "Münsterländer, Large"
+  },
+  {
+    "value": "464",
+    "label": "Münsterländer, Small"
+  },
+  {
+    "value": "933",
+    "label": "Native Indian"
+  },
+  {
+    "value": "465",
+    "label": "Neapolitan Mastiff"
+  },
+  {
+    "value": "467",
+    "label": "New Zealand Heading Dog"
+  },
+  {
+    "value": "466",
+    "label": "Newfoundland"
+  },
+  {
+    "value": "855",
+    "label": "Newfoundland Mix"
+  },
+  {
+    "value": "468",
+    "label": "Norfolk Spaniel"
+  },
+  {
+    "value": "469",
+    "label": "Norfolk Terrier"
+  },
+  {
+    "value": "470",
+    "label": "Norrbottenspets"
+  },
+  {
+    "value": "471",
+    "label": "North Country Beagle"
+  },
+  {
+    "value": "472",
+    "label": "Northern Inuit Dog"
+  },
+  {
+    "value": "473",
+    "label": "Norwegian Buhund"
+  },
+  {
+    "value": "474",
+    "label": "Norwegian Elkhound"
+  },
+  {
+    "value": "893",
+    "label": "Norwegian Forest Cat"
+  },
+  {
+    "value": "475",
+    "label": "Norwegian Lundehund"
+  },
+  {
+    "value": "476",
+    "label": "Norwich Terrier"
+  },
+  {
+    "value": "477",
+    "label": "Nova Scotia Duck-Tolling Retriever"
+  },
+  {
+    "value": "478",
+    "label": "Old Croatian Sighthound"
+  },
+  {
+    "value": "479",
+    "label": "Old Danish Pointer"
+  },
+  {
+    "value": "720",
+    "label": "Old English Bulldog"
+  },
+  {
+    "value": "480",
+    "label": "Old English Sheepdog"
+  },
+  {
+    "value": "481",
+    "label": "Old English Terrier"
+  },
+  {
+    "value": "482",
+    "label": "Old German Shepherd Dog"
+  },
+  {
+    "value": "483",
+    "label": "Old Time Farm Shepherd"
+  },
+  {
+    "value": "650",
+    "label": "Orange Tabby"
+  },
+  {
+    "value": "485",
+    "label": "Otterhound"
+  },
+  {
+    "value": "486",
+    "label": "Pachon Navarro"
+  },
+  {
+    "value": "488",
+    "label": "Paisley Terrier"
+  },
+  {
+    "value": "487",
+    "label": "Pandikona"
+  },
+  {
+    "value": "489",
+    "label": "Papillon"
+  },
+  {
+    "value": "909",
+    "label": "Papillon MIX"
+  },
+  {
+    "value": "490",
+    "label": "Parson Russell Terrier"
+  },
+  {
+    "value": "971",
+    "label": "Parson Terrier Mix"
+  },
+  {
+    "value": "491",
+    "label": "Patterdale Terrier"
+  },
+  {
+    "value": "843",
+    "label": "Patterdale Terrior X"
+  },
+  {
+    "value": "849",
+    "label": "Peekapoo"
+  },
+  {
+    "value": "492",
+    "label": "Pekingese"
+  },
+  {
+    "value": "880",
+    "label": "Pekingese  Mix"
+  },
+  {
+    "value": "674",
+    "label": "Pembroke Welsh Corgi"
+  },
+  {
+    "value": "493",
+    "label": "Perro de Presa Canario"
+  },
+  {
+    "value": "494",
+    "label": "Perro de Presa Mallorquin"
+  },
+  {
+    "value": "495",
+    "label": "Perro fino Colombiano"
+  },
+  {
+    "value": "964",
+    "label": "Persian"
+  },
+  {
+    "value": "496",
+    "label": "Peruvian Hairless Dog"
+  },
+  {
+    "value": "497",
+    "label": "Phalène"
+  },
+  {
+    "value": "498",
+    "label": "Pharaoh Hound"
+  },
+  {
+    "value": "968",
+    "label": "Pharaoh Hound Mix"
+  },
+  {
+    "value": "499",
+    "label": "Phu Quoc ridgeback dog"
+  },
+  {
+    "value": "500",
+    "label": "Picardy Spaniel"
+  },
+  {
+    "value": "666",
+    "label": "Pit Bull"
+  },
+  {
+    "value": "56",
+    "label": "Pit Bull mix"
+  },
+  {
+    "value": "501",
+    "label": "Plott Hound"
+  },
+  {
+    "value": "825",
+    "label": "Plott Hound Mix"
+  },
+  {
+    "value": "502",
+    "label": "Podenco Canario"
+  },
+  {
+    "value": "503",
+    "label": "Pointer"
+  },
+  {
+    "value": "109",
+    "label": "Pointer Mix"
+  },
+  {
+    "value": "504",
+    "label": "Poitevin"
+  },
+  {
+    "value": "505",
+    "label": "Polish Greyhound"
+  },
+  {
+    "value": "506",
+    "label": "Polish Hound"
+  },
+  {
+    "value": "507",
+    "label": "Polish Hunting Dog"
+  },
+  {
+    "value": "508",
+    "label": "Polish Lowland Sheepdog"
+  },
+  {
+    "value": "509",
+    "label": "Polish Tatra Sheepdog"
+  },
+  {
+    "value": "951",
+    "label": "Pomapoo"
+  },
+  {
+    "value": "18",
+    "label": "Pomeranian"
+  },
+  {
+    "value": "698",
+    "label": "Pomeranian Mix"
+  },
+  {
+    "value": "750",
+    "label": "Pomsky"
+  },
+  {
+    "value": "511",
+    "label": "Pont-Audemer Spaniel"
+  },
+  {
+    "value": "19",
+    "label": "Poodle"
+  },
+  {
+    "value": "730",
+    "label": "Poodle Mix"
+  },
+  {
+    "value": "513",
+    "label": "Porcelaine"
+  },
+  {
+    "value": "514",
+    "label": "Portuguese Podengo"
+  },
+  {
+    "value": "515",
+    "label": "Portuguese Pointer"
+  },
+  {
+    "value": "516",
+    "label": "Portuguese Water Dog"
+  },
+  {
+    "value": "517",
+    "label": "Posavac Hound"
+  },
+  {
+    "value": "518",
+    "label": "Pudelpointer"
+  },
+  {
+    "value": "519",
+    "label": "Pug"
+  },
+  {
+    "value": "793",
+    "label": "Pug Mix"
+  },
+  {
+    "value": "875",
+    "label": "Puggle"
+  },
+  {
+    "value": "802",
+    "label": "Puggle Mix"
+  },
+  {
+    "value": "520",
+    "label": "Puli"
+  },
+  {
+    "value": "521",
+    "label": "Pumi"
+  },
+  {
+    "value": "522",
+    "label": "Pungsan Dog"
+  },
+  {
+    "value": "523",
+    "label": "Pyrenean Mastiff"
+  },
+  {
+    "value": "524",
+    "label": "Pyrenean Shepherd"
+  },
+  {
+    "value": "525",
+    "label": "Rafeiro do Alentejo"
+  },
+  {
+    "value": "953",
+    "label": "Ragdoll"
+  },
+  {
+    "value": "902",
+    "label": "Ragdoll Mix"
+  },
+  {
+    "value": "526",
+    "label": "Rajapalayam"
+  },
+  {
+    "value": "527",
+    "label": "Rampur Greyhound"
+  },
+  {
+    "value": "528",
+    "label": "Rastreador Brasileiro"
+  },
+  {
+    "value": "531",
+    "label": "Rat Terrier"
+  },
+  {
+    "value": "671",
+    "label": "Rat Terrier Mix"
+  },
+  {
+    "value": "529",
+    "label": "Ratonero Bodeguero Andaluz"
+  },
+  {
+    "value": "530",
+    "label": "Ratonero Valenciano"
+  },
+  {
+    "value": "532",
+    "label": "Redbone Coonhound"
+  },
+  {
+    "value": "841",
+    "label": "Redbone Coonhound Mix"
+  },
+  {
+    "value": "947",
+    "label": "Redtick Coonhound"
+  },
+  {
+    "value": "838",
+    "label": "Redtick coonhound mix"
+  },
+  {
+    "value": "652",
+    "label": "Retriever Mix"
+  },
+  {
+    "value": "533",
+    "label": "Rhodesian Ridgeback"
+  },
+  {
+    "value": "714",
+    "label": "Rhodesian Ridgeback Mix"
+  },
+  {
+    "value": "534",
+    "label": "Rottweiler"
+  },
+  {
+    "value": "691",
+    "label": "Rottweiler Mix"
+  },
+  {
+    "value": "539",
+    "label": "Russell Terrier"
+  },
+  {
+    "value": "918",
+    "label": "Russell Terrier Mix"
+  },
+  {
+    "value": "705",
+    "label": "Russian Blue"
+  },
+  {
+    "value": "535",
+    "label": "Russian Spaniel"
+  },
+  {
+    "value": "536",
+    "label": "Russian Toy"
+  },
+  {
+    "value": "537",
+    "label": "Russian Tracker"
+  },
+  {
+    "value": "538",
+    "label": "Russo-European Laika"
+  },
+  {
+    "value": "540",
+    "label": "Saarlooswolfhond"
+  },
+  {
+    "value": "541",
+    "label": "Sabueso Español"
+  },
+  {
+    "value": "659",
+    "label": "Saint Bernard"
+  },
+  {
+    "value": "794",
+    "label": "Saint bernard mix"
+  },
+  {
+    "value": "542",
+    "label": "Saint-Usuge Spaniel"
+  },
+  {
+    "value": "543",
+    "label": "Sakhalin Husky"
+  },
+  {
+    "value": "544",
+    "label": "Saluki"
+  },
+  {
+    "value": "919",
+    "label": "Saluki Mix"
+  },
+  {
+    "value": "545",
+    "label": "Samoyed"
+  },
+  {
+    "value": "954",
+    "label": "Samoyed Mix"
+  },
+  {
+    "value": "546",
+    "label": "Santal Hound"
+  },
+  {
+    "value": "547",
+    "label": "Sapsali"
+  },
+  {
+    "value": "876",
+    "label": "Sarplananiac"
+  },
+  {
+    "value": "548",
+    "label": "Schapendoes"
+  },
+  {
+    "value": "549",
+    "label": "Schillerstövare"
+  },
+  {
+    "value": "550",
+    "label": "Schipperke"
+  },
+  {
+    "value": "688",
+    "label": "Schnauzer"
+  },
+  {
+    "value": "759",
+    "label": "Schnauzer Mix"
+  },
+  {
+    "value": "80",
+    "label": "Schnauzer/Poodle"
+  },
+  {
+    "value": "726",
+    "label": "Schnoodle"
+  },
+  {
+    "value": "552",
+    "label": "Schweizer Laufhund"
+  },
+  {
+    "value": "553",
+    "label": "Schweizerischer Niederlaufhund"
+  },
+  {
+    "value": "554",
+    "label": "Scotch Collie"
+  },
+  {
+    "value": "555",
+    "label": "Scottish Deerhound"
+  },
+  {
+    "value": "956",
+    "label": "Scottish Fold"
+  },
+  {
+    "value": "556",
+    "label": "Scottish Terrier"
+  },
+  {
+    "value": "715",
+    "label": "Scottish Terrier Mix"
+  },
+  {
+    "value": "557",
+    "label": "Sealyham Terrier"
+  },
+  {
+    "value": "558",
+    "label": "Segugio Italiano"
+  },
+  {
+    "value": "559",
+    "label": "Seppala Siberian Sleddog"
+  },
+  {
+    "value": "560",
+    "label": "Serbian Hound"
+  },
+  {
+    "value": "561",
+    "label": "Serbian Tricolour Hound"
+  },
+  {
+    "value": "562",
+    "label": "Seskar Seal Dog"
+  },
+  {
+    "value": "563",
+    "label": "Shar Pei"
+  },
+  {
+    "value": "833",
+    "label": "Shar Pei Mix"
+  },
+  {
+    "value": "888",
+    "label": "Sheep Dog Mix"
+  },
+  {
+    "value": "741",
+    "label": "Sheepadoodle"
+  },
+  {
+    "value": "732",
+    "label": "Sheltie"
+  },
+  {
+    "value": "133",
+    "label": "Shepherd Mix"
+  },
+  {
+    "value": "20",
+    "label": "Shetland Sheepdog"
+  },
+  {
+    "value": "564",
+    "label": "Shetland Sheepdog"
+  },
+  {
+    "value": "783",
+    "label": "Shetland Sheepdog Mix"
+  },
+  {
+    "value": "565",
+    "label": "Shiba Inu"
+  },
+  {
+    "value": "857",
+    "label": "Shiba Inu Mix"
+  },
+  {
+    "value": "21",
+    "label": "Shih Tzu"
+  },
+  {
+    "value": "701",
+    "label": "Shih Tzu Mix"
+  },
+  {
+    "value": "993",
+    "label": "Shihpoo"
+  },
+  {
+    "value": "567",
+    "label": "Shikoku Ken"
+  },
+  {
+    "value": "568",
+    "label": "Shiloh Shepherd Dog"
+  },
+  {
+    "value": "858",
+    "label": "Siamese"
+  },
+  {
+    "value": "755",
+    "label": "Siamese Mix"
+  },
+  {
+    "value": "22",
+    "label": "Siberian Husky"
+  },
+  {
+    "value": "762",
+    "label": "Siberian Husky Mix"
+  },
+  {
+    "value": "570",
+    "label": "Silken Windhound"
+  },
+  {
+    "value": "957",
+    "label": "Silky Terrier"
+  },
+  {
+    "value": "571",
+    "label": "Sinhala Hound"
+  },
+  {
+    "value": "572",
+    "label": "Skye Terrier"
+  },
+  {
+    "value": "573",
+    "label": "Sloughi"
+  },
+  {
+    "value": "574",
+    "label": "Slovak Cuvac"
+  },
+  {
+    "value": "575",
+    "label": "Slovakian Rough-Haired Pointer"
+  },
+  {
+    "value": "576",
+    "label": "Slovenský Kopov"
+  },
+  {
+    "value": "578",
+    "label": "Small Greek Domestic Dog"
+  },
+  {
+    "value": "577",
+    "label": "Smålandsstövare"
+  },
+  {
+    "value": "23",
+    "label": "Soft-Coated Wheaten Terrier"
+  },
+  {
+    "value": "580",
+    "label": "South Russian Ovcharka"
+  },
+  {
+    "value": "581",
+    "label": "Southern Hound"
+  },
+  {
+    "value": "926",
+    "label": "Spaniel Mix"
+  },
+  {
+    "value": "845",
+    "label": "Spanish Grey Hound"
+  },
+  {
+    "value": "582",
+    "label": "Spanish Mastiff"
+  },
+  {
+    "value": "583",
+    "label": "Spanish Water Dog"
+  },
+  {
+    "value": "840",
+    "label": "Sphynx"
+  },
+  {
+    "value": "584",
+    "label": "Spinone Italiano"
+  },
+  {
+    "value": "932",
+    "label": "Spitz"
+  },
+  {
+    "value": "585",
+    "label": "Sporting Lucas Terrier"
+  },
+  {
+    "value": "844",
+    "label": "Springer Spaniel"
+  },
+  {
+    "value": "901",
+    "label": "Springer Spaniel Mix"
+  },
+  {
+    "value": "586",
+    "label": "St. Bernard"
+  },
+  {
+    "value": "737",
+    "label": "St. Bernard Mix"
+  },
+  {
+    "value": "587",
+    "label": "St. John's water dog"
+  },
+  {
+    "value": "588",
+    "label": "Stabyhoun"
+  },
+  {
+    "value": "589",
+    "label": "Staffordshire Bull Terrier"
+  },
+  {
+    "value": "699",
+    "label": "Staffordshire Mix"
+  },
+  {
+    "value": "661",
+    "label": "Standard Poodle"
+  },
+  {
+    "value": "869",
+    "label": "Standard Poodle Mix"
+  },
+  {
+    "value": "551",
+    "label": "Standard Schnauzer"
+  },
+  {
+    "value": "590",
+    "label": "Stephens Cur"
+  },
+  {
+    "value": "591",
+    "label": "Styrian Coarse-haired Hound"
+  },
+  {
+    "value": "592",
+    "label": "Sussex Spaniel"
+  },
+  {
+    "value": "593",
+    "label": "Swedish Lapphund"
+  },
+  {
+    "value": "594",
+    "label": "Swedish Vallhund"
+  },
+  {
+    "value": "595",
+    "label": "Tahltan Bear Dog"
+  },
+  {
+    "value": "596",
+    "label": "Taigan"
+  },
+  {
+    "value": "597",
+    "label": "Talbot"
+  },
+  {
+    "value": "598",
+    "label": "Tamaskan Dog"
+  },
+  {
+    "value": "599",
+    "label": "Teddy Roosevelt Terrier"
+  },
+  {
+    "value": "600",
+    "label": "Telomian"
+  },
+  {
+    "value": "601",
+    "label": "Tennessee Treeing Brindle"
+  },
+  {
+    "value": "602",
+    "label": "Tenterfield Terrier"
+  },
+  {
+    "value": "603",
+    "label": "Terceira Mastiff"
+  },
+  {
+    "value": "704",
+    "label": "Terrier Mix"
+  },
+  {
+    "value": "864",
+    "label": "Texas Heeler"
+  },
+  {
+    "value": "604",
+    "label": "Thai Bangkaew Dog"
+  },
+  {
+    "value": "605",
+    "label": "Thai Ridgeback"
+  },
+  {
+    "value": "606",
+    "label": "Tibetan Mastiff"
+  },
+  {
+    "value": "931",
+    "label": "Tibetan Mix"
+  },
+  {
+    "value": "607",
+    "label": "Tibetan Spaniel"
+  },
+  {
+    "value": "608",
+    "label": "Tibetan Terrier"
+  },
+  {
+    "value": "609",
+    "label": "Tornjak"
+  },
+  {
+    "value": "610",
+    "label": "Tosa"
+  },
+  {
+    "value": "848",
+    "label": "Tosa/Rod Ridgebck"
+  },
+  {
+    "value": "611",
+    "label": "Toy Bulldog"
+  },
+  {
+    "value": "612",
+    "label": "Toy Fox Terrier"
+  },
+  {
+    "value": "613",
+    "label": "Toy Manchester Terrier"
+  },
+  {
+    "value": "709",
+    "label": "Toy Poodle"
+  },
+  {
+    "value": "892",
+    "label": "Toy Poodle Mix"
+  },
+  {
+    "value": "614",
+    "label": "Toy Trawler Spaniel"
+  },
+  {
+    "value": "615",
+    "label": "Transylvanian Hound"
+  },
+  {
+    "value": "616",
+    "label": "Treeing Cur"
+  },
+  {
+    "value": "617",
+    "label": "Treeing Walker Coonhound"
+  },
+  {
+    "value": "910",
+    "label": "Treeing walker coonhound mix"
+  },
+  {
+    "value": "618",
+    "label": "Trigg Hound"
+  },
+  {
+    "value": "949",
+    "label": "Turkish Van"
+  },
+  {
+    "value": "619",
+    "label": "Tweed Water Spaniel"
+  },
+  {
+    "value": "620",
+    "label": "Tyrolean Hound"
+  },
+  {
+    "value": "621",
+    "label": "Uruguayan Cimarron"
+  },
+  {
+    "value": "622",
+    "label": "Vanjari Hound"
+  },
+  {
+    "value": "924",
+    "label": "Victorian Bulldog"
+  },
+  {
+    "value": "623",
+    "label": "Villano de las Encartaciones"
+  },
+  {
+    "value": "644",
+    "label": "Vizsla"
+  },
+  {
+    "value": "946",
+    "label": "Vizsla Mix"
+  },
+  {
+    "value": "625",
+    "label": "Volpino Italiano"
+  },
+  {
+    "value": "626",
+    "label": "Weimaraner"
+  },
+  {
+    "value": "885",
+    "label": "Weimaraner Mix"
+  },
+  {
+    "value": "779",
+    "label": "Welsh Corgi"
+  },
+  {
+    "value": "815",
+    "label": "Welsh Corgi Mix"
+  },
+  {
+    "value": "627",
+    "label": "Welsh Corgi, Cardigan"
+  },
+  {
+    "value": "628",
+    "label": "Welsh Corgi, Pembroke"
+  },
+  {
+    "value": "629",
+    "label": "Welsh Sheepdog"
+  },
+  {
+    "value": "630",
+    "label": "Welsh Springer Spaniel"
+  },
+  {
+    "value": "631",
+    "label": "Welsh Terrier"
+  },
+  {
+    "value": "116",
+    "label": "West Highland Terrier"
+  },
+  {
+    "value": "632",
+    "label": "West Highland White Terrier"
+  },
+  {
+    "value": "633",
+    "label": "West Siberian Laika"
+  },
+  {
+    "value": "700",
+    "label": "Westie Mix"
+  },
+  {
+    "value": "634",
+    "label": "Westphalian Dachsbracke"
+  },
+  {
+    "value": "635",
+    "label": "Wetterhound"
+  },
+  {
+    "value": "927",
+    "label": "Wheaten Mix"
+  },
+  {
+    "value": "913",
+    "label": "Wheaten Terrier"
+  },
+  {
+    "value": "636",
+    "label": "Whippet"
+  },
+  {
+    "value": "734",
+    "label": "Whippet Mix"
+  },
+  {
+    "value": "637",
+    "label": "White Shepherd"
+  },
+  {
+    "value": "647",
+    "label": "Wire Fox Terrier"
+  },
+  {
+    "value": "719",
+    "label": "Wire Hair Fox Terrier"
+  },
+  {
+    "value": "773",
+    "label": "Wirehair Terrier Mix"
+  },
+  {
+    "value": "638",
+    "label": "Wirehaired Pointing Griffon"
+  },
+  {
+    "value": "639",
+    "label": "Wirehaired Vizsla"
+  },
+  {
+    "value": "884",
+    "label": "Wolf Hybrid"
+  },
+  {
+    "value": "686",
+    "label": "Yorkie"
+  },
+  {
+    "value": "673",
+    "label": "Yorkie Mix"
+  },
+  {
+    "value": "731",
+    "label": "Yorkie poo "
+  },
+  {
+    "value": "24",
+    "label": "Yorkshire Terrier"
+  }
+]
