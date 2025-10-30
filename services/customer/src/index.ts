@@ -101,6 +101,9 @@ app.use(cors({
 // Add OPTIONS handling for preflight requests
 app.options('*', cors());
 
+// Serve static files (uploaded photos)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 // Rate limiting to prevent abuse
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes

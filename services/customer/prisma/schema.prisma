@@ -280,6 +280,7 @@ model Staff {
   position             String?
   resetToken           String?
   resetTokenExpiry     DateTime?
+  profilePhoto         String?
   address              String?
   city                 String?
   state                String?

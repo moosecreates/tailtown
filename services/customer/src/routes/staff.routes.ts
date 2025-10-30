@@ -28,9 +28,13 @@ import {
   deleteStaffSchedule,
   bulkCreateSchedules,
   // Test endpoint
-  testSchedulesEndpoint
+  testSchedulesEndpoint,
+  // Profile photo endpoints
+  uploadProfilePhoto,
+  deleteProfilePhoto
 } from '../controllers/staff.controller';
 import { loginRateLimiter, passwordResetRateLimiter } from '../middleware/rateLimiter.middleware';
+import { uploadProfilePhoto as uploadMiddleware } from '../middleware/upload.middleware';
 
 const router = Router();
 
@@ -87,5 +91,9 @@ router.delete('/schedules/:scheduleId', deleteStaffSchedule);
 // Staff member specific schedule routes
 router.get('/:staffId/schedules', getStaffSchedules);
 router.post('/:staffId/schedules', createStaffSchedule);
+
+// Profile photo routes
+router.post('/:id/photo', uploadMiddleware, uploadProfilePhoto);
+router.delete('/:id/photo', deleteProfilePhoto);
 
 export { router as staffRoutes };
