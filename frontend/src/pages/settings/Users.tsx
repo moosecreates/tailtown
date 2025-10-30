@@ -45,7 +45,7 @@ import StaffSchedulingTabs from '../../components/staff/StaffSchedulingTabs';
 import { validatePassword, getPasswordStrength } from '../../utils/passwordValidator';
 
 // Available roles, departments, and positions
-const roles = ['Administrator', 'Manager', 'Staff'];
+const roles = ['Administrator', 'Manager', 'Staff', 'Instructor'];
 const departments = ['Management', 'Front Desk', 'Grooming', 'Training', 'Kennel', 'Veterinary'];
 const positions = [
   'General Manager',
@@ -54,6 +54,7 @@ const positions = [
   'Lead Groomer',
   'Groomer',
   'Dog Trainer',
+  'Instructor',
   'Kennel Manager',
   'Kennel Technician',
   'Veterinarian',
@@ -95,16 +96,16 @@ const Users: React.FC = () => {
     if (user) {
       setEditingUser(user);
       setFormData({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        password: user.password,
-        confirmPassword: user.password,
-        role: user.role,
-        department: user.department,
-        position: user.position,
-        status: user.status,
-        hireDate: user.hireDate,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        password: user.password || '',
+        confirmPassword: user.password || '',
+        role: user.role || '',
+        department: user.department || '',
+        position: user.position || '',
+        status: user.status || 'Active',
+        hireDate: user.hireDate || '',
         phone: user.phone || '',
         address: user.address || '',
         city: user.city || '',
