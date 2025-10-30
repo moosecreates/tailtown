@@ -142,14 +142,22 @@ const Profile = () => {
       // Update profile via API
       const response = await api.put(`/staff/${user?.id}`, values);
 
-      // Update user context
-      if (updateUser) {
-        updateUser(response.data);
+      // Update user context with the returned data
+      if (updateUser && response.data) {
+        const updatedData = response.data.data || response.data;
+        updateUser({
+          firstName: updatedData.firstName,
+          lastName: updatedData.lastName,
+          email: updatedData.email,
+          phone: updatedData.phone,
+          isActive: updatedData.isActive,
+        });
       }
 
       setProfileSuccess('Profile updated successfully!');
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to update profile';
+      console.error('Profile update error:', error);
+      const message = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to update profile';
       setProfileError(message);
     } finally {
       setSubmitting(false);
