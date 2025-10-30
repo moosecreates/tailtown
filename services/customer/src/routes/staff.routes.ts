@@ -38,21 +38,9 @@ import { uploadProfilePhoto as uploadMiddleware } from '../middleware/upload.mid
 
 const router = Router();
 
-// GET all staff members
-router.get('/', getAllStaff);
+// IMPORTANT: Specific routes must come BEFORE generic :id routes!
 
-// GET a single staff member by ID
-router.get('/:id', getStaffById);
-
-// POST create a new staff member
-router.post('/', createStaff);
-
-// PUT update a staff member
-router.put('/:id', updateStaff);
-
-// DELETE a staff member
-router.delete('/:id', deleteStaff);
-
+// Authentication routes (no :id parameter)
 // POST login (with rate limiting)
 router.post('/login', loginRateLimiter, loginStaff);
 
@@ -61,6 +49,26 @@ router.post('/request-reset', passwordResetRateLimiter, requestPasswordReset);
 
 // POST reset password
 router.post('/reset-password', resetPassword);
+
+// Profile photo routes (must be before /:id routes!)
+router.post('/:id/photo', uploadMiddleware, uploadProfilePhoto);
+router.delete('/:id/photo', deleteProfilePhoto);
+
+// GET all staff members
+router.get('/', getAllStaff);
+
+// POST create a new staff member
+router.post('/', createStaff);
+
+// Generic :id routes (must be AFTER specific routes)
+// GET a single staff member by ID
+router.get('/:id', getStaffById);
+
+// PUT update a staff member
+router.put('/:id', updateStaff);
+
+// DELETE a staff member
+router.delete('/:id', deleteStaff);
 
 // Staff Availability Routes
 router.get('/:staffId/availability', getStaffAvailability);
@@ -91,9 +99,5 @@ router.delete('/schedules/:scheduleId', deleteStaffSchedule);
 // Staff member specific schedule routes
 router.get('/:staffId/schedules', getStaffSchedules);
 router.post('/:staffId/schedules', createStaffSchedule);
-
-// Profile photo routes
-router.post('/:id/photo', uploadMiddleware, uploadProfilePhoto);
-router.delete('/:id/photo', deleteProfilePhoto);
 
 export { router as staffRoutes };
