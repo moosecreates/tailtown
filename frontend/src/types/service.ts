@@ -36,6 +36,7 @@ export interface Service {
   depositRequired?: boolean;
   depositType?: DepositType;
   depositAmount?: number;
+  externalId?: string; // Gingr ID for imported services
   createdAt?: string;
   updatedAt?: string;
   availableAddOns?: AddOnService[];

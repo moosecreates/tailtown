@@ -19,11 +19,20 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  TableRow
+  TableRow,
+  ToggleButtonGroup,
+  ToggleButton,
+  TextField,
+  InputAdornment,
+  Tooltip
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
+import LinkIcon from '@mui/icons-material/Link';
+import LinkOffIcon from '@mui/icons-material/LinkOff';
+import WarningIcon from '@mui/icons-material/Warning';
 
 import { serviceManagement } from '../../services/serviceManagement';
 import { Service } from '../../types/service';
@@ -35,6 +44,8 @@ const Services: React.FC = () => {
   const [error] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -150,6 +161,36 @@ const Services: React.FC = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  // Filter services
+  const filteredServices = services.filter(service => {
+    // Category filter
+    if (categoryFilter !== 'ALL' && service.serviceCategory !== categoryFilter) {
+      return false;
+    }
+    
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        service.name.toLowerCase().includes(query) ||
+        (service.description && service.description.toLowerCase().includes(query))
+      );
+    }
+    
+    return true;
+  });
+
+  // Calculate statistics
+  const stats = {
+    total: services.length,
+    withGingrId: services.filter(s => s.externalId).length,
+    withoutPrice: services.filter(s => s.price === 0).length,
+    byCategory: services.reduce((acc, s) => {
+      acc[s.serviceCategory] = (acc[s.serviceCategory] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>)
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg">
@@ -173,7 +214,7 @@ const Services: React.FC = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ py: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
           <Typography variant="h4" component="h1">
             Services
           </Typography>
@@ -187,6 +228,74 @@ const Services: React.FC = () => {
           </Button>
         </Box>
 
+        {/* Statistics Cards */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 2, mb: 3 }}>
+          <Paper sx={{ p: 2 }}>
+            <Typography variant="body2" color="textSecondary">Total Services</Typography>
+            <Typography variant="h4">{stats.total}</Typography>
+          </Paper>
+          <Paper sx={{ p: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <LinkIcon color="primary" />
+              <Box>
+                <Typography variant="body2" color="textSecondary">Linked to Gingr</Typography>
+                <Typography variant="h4">{stats.withGingrId}</Typography>
+              </Box>
+            </Box>
+          </Paper>
+          <Paper sx={{ p: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <WarningIcon color="warning" />
+              <Box>
+                <Typography variant="body2" color="textSecondary">Need Pricing</Typography>
+                <Typography variant="h4">{stats.withoutPrice}</Typography>
+              </Box>
+            </Box>
+          </Paper>
+        </Box>
+
+        {/* Filters */}
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+            <TextField
+              placeholder="Search services..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              size="small"
+              sx={{ minWidth: 300 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <ToggleButtonGroup
+              value={categoryFilter}
+              exclusive
+              onChange={(_, value) => value && setCategoryFilter(value)}
+              size="small"
+            >
+              <ToggleButton value="ALL">
+                All ({stats.total})
+              </ToggleButton>
+              <ToggleButton value="BOARDING">
+                Boarding ({stats.byCategory.BOARDING || 0})
+              </ToggleButton>
+              <ToggleButton value="DAYCARE">
+                Daycare ({stats.byCategory.DAYCARE || 0})
+              </ToggleButton>
+              <ToggleButton value="GROOMING">
+                Grooming ({stats.byCategory.GROOMING || 0})
+              </ToggleButton>
+              <ToggleButton value="TRAINING">
+                Training ({stats.byCategory.TRAINING || 0})
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+        </Paper>
+
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -196,12 +305,22 @@ const Services: React.FC = () => {
                 <TableCell>Description</TableCell>
                 <TableCell>Price</TableCell>
                 <TableCell>Duration</TableCell>
+                <TableCell>Gingr</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {services.map((service) => (
+              {filteredServices.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} align="center">
+                    <Typography variant="body2" color="textSecondary" sx={{ py: 3 }}>
+                      No services found
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredServices.map((service) => (
                 <TableRow key={service.id}>
                   <TableCell>{service.name}</TableCell>
                   <TableCell>
@@ -238,6 +357,15 @@ const Services: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>
+                    <Tooltip title={service.externalId ? `Gingr ID: ${service.externalId}` : 'Not linked to Gingr'}>
+                      {service.externalId ? (
+                        <LinkIcon color="primary" fontSize="small" />
+                      ) : (
+                        <LinkOffIcon color="disabled" fontSize="small" />
+                      )}
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell>
                     <Chip
                       label={service.isActive ? 'Active' : 'Inactive'}
                       color={service.isActive ? 'success' : 'error'}
@@ -263,7 +391,8 @@ const Services: React.FC = () => {
                     </IconButton>
                   </TableCell>
                 </TableRow>
-              ))}
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
