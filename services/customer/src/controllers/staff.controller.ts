@@ -1294,8 +1294,10 @@ export const uploadProfilePhoto = async (
       }
     }
     
-    // Generate URL for the uploaded photo
-    const photoUrl = `/uploads/profile-photos/${req.file.filename}`;
+    // Generate full URL for the uploaded photo
+    // Use the API base URL so the frontend can access it
+    const apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:4004';
+    const photoUrl = `${apiBaseUrl}/uploads/profile-photos/${req.file.filename}`;
     
     // Update staff with new photo URL
     const updatedStaff = await prisma.staff.update({
