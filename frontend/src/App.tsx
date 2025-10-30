@@ -17,6 +17,8 @@ const AuthLayout = lazy(() => import('./components/layouts/AuthLayout'));
 // Pages - Lazy loaded for code splitting
 // All pages lazy loaded for optimal code splitting
 const Login = lazy(() => import('./pages/auth/Login'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -138,6 +140,8 @@ const AppRoutes = () => {
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
+          <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPassword /> : <Navigate to="/dashboard" />} />
+          <Route path="/reset-password" element={!isAuthenticated ? <ResetPassword /> : <Navigate to="/dashboard" />} />
         </Route>
 
         {/* Protected Routes */}
