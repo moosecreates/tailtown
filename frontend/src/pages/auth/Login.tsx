@@ -36,14 +36,8 @@ const Login = () => {
     { setSubmitting }: FormikHelpers<LoginFormValues>
   ) => {
     try {
-      // Development bypass - accept any email with "bypass" as password
-      if (values.password === 'bypass' || process.env.NODE_ENV === 'development') {
-        await login(values.email, values.password);
-        navigate('/dashboard');
-      } else {
-        await login(values.email, values.password);
-        navigate('/dashboard');
-      }
+      await login(values.email, values.password);
+      navigate('/dashboard');
     } catch (error) {
       setErrorMessage('Invalid email or password');
     } finally {
@@ -57,12 +51,6 @@ const Login = () => {
         Sign In
       </Typography>
       
-      {process.env.NODE_ENV === 'development' && (
-        <Alert severity="info" sx={{ mb: 3 }}>
-          <strong>Development Mode:</strong> Use any email and password "bypass" to login quickly, or any password will work.
-        </Alert>
-      )}
-      
       {errorMessage && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {errorMessage}
@@ -71,8 +59,8 @@ const Login = () => {
       
       <Formik
         initialValues={{ 
-          email: process.env.NODE_ENV === 'development' ? 'admin@tailtown.com' : '', 
-          password: process.env.NODE_ENV === 'development' ? 'bypass' : '' 
+          email: '', 
+          password: '' 
         }}
         validationSchema={LoginSchema}
         onSubmit={handleSubmit}

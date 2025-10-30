@@ -94,28 +94,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error('Email and password are required');
       }
 
-      // Development bypass - allow login with "bypass" password or any password in development
-      if (password === 'bypass' || process.env.NODE_ENV === 'development') {
-        // Create a mock user for bypass login
-        const userData: User = {
-          id: 'dev-user-123',
-          email: email,
-          firstName: 'Dev',
-          lastName: 'User',
-          role: 'admin'
-        };
-        
-        const token = 'dev-token-123';
-        
-        // Store in localStorage with timestamp
-        localStorage.setItem('token', token);
-        localStorage.setItem('tokenTimestamp', Date.now().toString());
-        localStorage.setItem('user', JSON.stringify(userData));
-        
-        setUser(userData);
-        return;
-      }
-
       // Real API call to login endpoint
       const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4004'}/api/staff/login`, {
         method: 'POST',
