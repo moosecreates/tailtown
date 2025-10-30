@@ -387,7 +387,11 @@ See [Quick Start Guide](QUICK-START.md) for detailed instructions.
 
 ## 📊 Project Metrics
 
-- **Lines of Code:** 50,000+
+- **Lines of Code:** 133,321
+  - Frontend: 74,874 lines
+  - Backend Services: 52,497 lines
+  - Scripts: 632 lines
+  - Tests: 5,318 lines
 - **Test Cases:** 500+
 - **Test Coverage:** 80%+
 - **API Endpoints:** 100+
