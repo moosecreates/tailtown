@@ -1438,7 +1438,7 @@ model InventoryLog {
   tenantId    String   @default("dev") @map("tenant_id")
   
   productId   String   @map("product_id")
-  changeType  String   // PURCHASE, SALE, ADJUSTMENT, RETURN, DAMAGE, RESTOCK
+  changeType  String   @map("change_type") // PURCHASE, SALE, ADJUSTMENT, RETURN, DAMAGE, RESTOCK
   quantity    Int      // Positive for additions, negative for subtractions
   previousStock Int    @map("previous_stock")
   newStock    Int      @map("new_stock")

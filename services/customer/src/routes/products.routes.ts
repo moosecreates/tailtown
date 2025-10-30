@@ -14,6 +14,10 @@ import {
 
 const router = Router();
 
+// Category routes (must come before /:id routes)
+router.get('/categories', getAllCategories);
+router.post('/categories', createCategory);
+
 // Product routes
 router.get('/', getAllProducts);
 router.get('/low-stock', getLowStockProducts);
@@ -25,9 +29,5 @@ router.delete('/:id', deleteProduct);
 // Inventory routes
 router.post('/:id/inventory/adjust', adjustInventory);
 router.get('/:id/inventory/logs', getInventoryLogs);
-
-// Category routes  
-router.get('/categories', getAllCategories);
-router.post('/categories', createCategory);
 
 export default router;

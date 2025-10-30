@@ -124,7 +124,11 @@ const Products: React.FC = () => {
 
   const loadProducts = async () => {
     try {
-      const response = await fetch('http://localhost:4004/api/products');
+      const response = await fetch('http://localhost:4004/api/products', {
+        headers: {
+          'x-tenant-id': 'dev'
+        }
+      });
       const data = await response.json();
       if (data.status === 'success') {
         setProducts(data.data);
@@ -136,7 +140,11 @@ const Products: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      const response = await fetch('http://localhost:4004/api/products/categories');
+      const response = await fetch('http://localhost:4004/api/products/categories', {
+        headers: {
+          'x-tenant-id': 'dev'
+        }
+      });
       const data = await response.json();
       if (data.status === 'success') {
         setCategories(data.data);
