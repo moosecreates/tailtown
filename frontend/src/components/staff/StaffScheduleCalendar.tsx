@@ -484,6 +484,7 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
         isEditing={isEditing}
         allStaff={!staffId ? staff : undefined}
         initialDate={selectedDay || undefined}
+        existingSchedules={schedules}
       />
     </Paper>
   );

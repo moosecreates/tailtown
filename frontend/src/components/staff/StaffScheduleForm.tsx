@@ -29,6 +29,7 @@ interface StaffScheduleFormProps {
   isEditing: boolean;
   allStaff?: Staff[];
   initialDate?: Date;
+  existingSchedules?: StaffSchedule[];
 }
 
 const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
@@ -39,7 +40,8 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
   onSave,
   isEditing,
   allStaff,
-  initialDate
+  initialDate,
+  existingSchedules = []
 }) => {
   const [formData, setFormData] = useState<Partial<StaffSchedule>>({
     id: schedule?.id || undefined, // Keep the ID for updates to prevent duplicates
@@ -110,7 +112,7 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
     }
   };
   
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.staffId) {
@@ -129,8 +131,49 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
       newErrors.endTime = 'End time is required';
     }
     
+    if (formData.startTime && formData.endTime) {
+      const start = parseTimeString(formData.startTime);
+      const end = parseTimeString(formData.endTime);
+      if (start >= end) {
+        newErrors.endTime = 'End time must be after start time';
+      }
+    }
+    
+    // Check for overlapping schedules
+    if (formData.staffId && formData.date && formData.startTime && formData.endTime) {
+      const hasOverlap = existingSchedules.some(existingSchedule => {
+        // Skip if it's the same schedule we're editing
+        if (isEditing && existingSchedule.id === formData.id) {
+          return false;
+        }
+        
+        // Check if same staff member and same date
+        if (existingSchedule.staffId === formData.staffId && existingSchedule.date === formData.date) {
+          // Parse times for comparison
+          const newStart = parseTimeString(formData.startTime!);
+          const newEnd = parseTimeString(formData.endTime!);
+          const existingStart = parseTimeString(existingSchedule.startTime);
+          const existingEnd = parseTimeString(existingSchedule.endTime);
+          
+          // Check for time overlap
+          // Overlap occurs if: (newStart < existingEnd) AND (newEnd > existingStart)
+          return newStart < existingEnd && newEnd > existingStart;
+        }
+        
+        return false;
+      });
+      
+      if (hasOverlap) {
+        newErrors.startTime = 'This staff member already has a schedule during this time';
+      }
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+  
+  const parseTimeString = (timeString: string): Date => {
+    return parse(timeString, 'HH:mm', new Date());
   };
   
   const handleSubmit = async () => {
@@ -139,10 +182,6 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
     }
     
     onSave(formData as StaffSchedule);
-  };
-  
-  const parseTimeString = (timeString: string): Date => {
-    return parse(timeString, 'HH:mm', new Date());
   };
   
   return (
