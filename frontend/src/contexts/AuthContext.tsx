@@ -10,6 +10,7 @@ type User = {
   phone?: string;
   isActive?: boolean;
   createdAt?: string;
+  lastLogin?: string;
 };
 
 type AuthContextType = {

@@ -463,28 +463,34 @@ const Profile = () => {
               </Typography>
               <Divider sx={{ my: 2 }} />
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={4}>
                   <Typography variant="body2" color="text.secondary">
-                    Role
+                    Account Type
                   </Typography>
                   <Typography variant="body1">
                     {user?.role || 'Staff'}
                   </Typography>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={4}>
                   <Typography variant="body2" color="text.secondary">
                     Status
                   </Typography>
-                  <Typography variant="body1">
+                  <Typography 
+                    variant="body1"
+                    sx={{ 
+                      color: user?.isActive ? 'success.main' : 'error.main',
+                      fontWeight: 'medium'
+                    }}
+                  >
                     {user?.isActive ? 'Active' : 'Inactive'}
                   </Typography>
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={4}>
                   <Typography variant="body2" color="text.secondary">
-                    Member Since
+                    Last Login
                   </Typography>
                   <Typography variant="body1">
-                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                    {user?.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Just now'}
                   </Typography>
                 </Grid>
               </Grid>
