@@ -17,7 +17,10 @@ import {
   Checkbox,
   CircularProgress,
   Alert,
-  Snackbar
+  Snackbar,
+  Autocomplete,
+  FormGroup,
+  FormLabel
 } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import VaccinationStatus from '../../components/VaccinationStatus';
@@ -27,6 +30,7 @@ import VaccineComplianceBadge from '../../components/pets/VaccineComplianceBadge
 import { SelectChangeEvent } from '@mui/material/Select';
 import { Pet, petService } from '../../services/petService';
 import { customerService } from '../../services/customerService';
+import referenceDataService, { Breed, Veterinarian, TemperamentType } from '../../services/referenceDataService';
 
 
 /**
@@ -42,6 +46,10 @@ const PetDetails = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [breeds, setBreeds] = useState<Breed[]>([]);
+  const [vets, setVets] = useState<Veterinarian[]>([]);
+  const [temperamentTypes, setTemperamentTypes] = useState<TemperamentType[]>([]);
+  const [selectedTemperaments, setSelectedTemperaments] = useState<string[]>([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -80,6 +88,17 @@ const PetDetails = () => {
       const customersData = await customerService.getAllCustomers();
       setCustomers(customersData.data || []);
 
+      // Load reference data
+      const [breedsData, vetsData, temperamentsData] = await Promise.all([
+        referenceDataService.getBreeds(),
+        referenceDataService.getVeterinarians(),
+        referenceDataService.getTemperamentTypes()
+      ]);
+      
+      setBreeds(breedsData);
+      setVets(vetsData);
+      setTemperamentTypes(temperamentsData);
+
       if (!isNewPet) {
         const petData = await petService.getPetById(id!);
 
@@ -91,6 +110,14 @@ const PetDetails = () => {
         // Pet icons and notes are now loaded from the database with the pet data
         
         setPet(petData);
+        
+        // Load pet temperaments
+        try {
+          const petTemperaments = await referenceDataService.getPetTemperaments(id!);
+          setSelectedTemperaments(petTemperaments.map(t => t.temperament));
+        } catch (err) {
+          console.log('No temperaments found for pet');
+        }
       }
     } catch (err) {
       console.error('Error loading data:', err);
@@ -202,10 +229,22 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
         isActive: pet.isActive
       };
 
+      let savedPetId = id;
+      
       if (isNewPet) {
-        await petService.createPet(cleanPetData as Omit<Pet, 'id'>);
+        const newPet = await petService.createPet(cleanPetData as Omit<Pet, 'id'>);
+        savedPetId = newPet.id;
       } else {
         await petService.updatePet(id!, cleanPetData);
+      }
+      
+      // Save temperaments
+      if (savedPetId && selectedTemperaments.length > 0) {
+        try {
+          await referenceDataService.updatePetTemperaments(savedPetId, selectedTemperaments);
+        } catch (err) {
+          console.error('Error saving temperaments:', err);
+        }
       }
 
       setSnackbar({
@@ -393,11 +432,30 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
             </FormControl>
 
             <FormControl fullWidth>
-              <TextField
-                label="Breed"
-                name="breed"
-                value={pet.breed || ''}
-                onChange={handleTextChange}
+              <Autocomplete<Breed, false, false, true>
+                options={breeds.filter(b => b.species === pet.type)}
+                getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
+                value={breeds.find(b => b.name === pet.breed) || null}
+                onChange={(_, newValue) => {
+                  if (typeof newValue === 'string') {
+                    setPet(prev => ({ ...prev, breed: newValue }));
+                  } else {
+                    setPet(prev => ({ ...prev, breed: newValue?.name || null }));
+                  }
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Breed"
+                    placeholder="Search breeds..."
+                  />
+                )}
+                freeSolo
+                onInputChange={(_, newInputValue) => {
+                  if (newInputValue && !breeds.find(b => b.name === newInputValue)) {
+                    setPet(prev => ({ ...prev, breed: newInputValue }));
+                  }
+                }}
               />
             </FormControl>
 
@@ -512,11 +570,45 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
             <Typography variant="h6" gutterBottom>Medical Information</Typography>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
               <FormControl fullWidth>
-                <TextField
-                  label="Veterinarian Name"
-                  name="vetName"
-                  value={pet.vetName || ''}
-                  onChange={handleTextChange}
+                <Autocomplete<Veterinarian, false, false, true>
+                  options={vets}
+                  getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
+                  value={vets.find(v => v.name === pet.vetName) || null}
+                  onChange={(_, newValue) => {
+                    if (typeof newValue === 'string') {
+                      setPet(prev => ({ ...prev, vetName: newValue, vetPhone: null }));
+                    } else if (newValue) {
+                      setPet(prev => ({ ...prev, vetName: newValue.name, vetPhone: newValue.phone || null }));
+                    } else {
+                      setPet(prev => ({ ...prev, vetName: null, vetPhone: null }));
+                    }
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Veterinarian"
+                      placeholder="Search veterinarians..."
+                    />
+                  )}
+                  renderOption={(props, option) => (
+                    <li {...props}>
+                      <Box>
+                        <Typography variant="body1">{option.name}</Typography>
+                        {option.phone && (
+                          <Typography variant="caption" color="textSecondary">
+                            {option.phone}
+                            {option.city && option.state && ` • ${option.city}, ${option.state}`}
+                          </Typography>
+                        )}
+                      </Box>
+                    </li>
+                  )}
+                  freeSolo
+                  onInputChange={(_, newInputValue) => {
+                    if (newInputValue && !vets.find(v => v.name === newInputValue)) {
+                      setPet(prev => ({ ...prev, vetName: newInputValue }));
+                    }
+                  }}
                 />
               </FormControl>
 
@@ -526,8 +618,34 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
                   name="vetPhone"
                   value={pet.vetPhone || ''}
                   onChange={handleTextChange}
+                  helperText="Auto-filled when selecting from list"
                 />
               </FormControl>
+            </Box>
+            
+            {/* Temperament Section */}
+            <Box sx={{ mt: 2 }}>
+              <FormLabel component="legend">Temperament</FormLabel>
+              <FormGroup row>
+                {temperamentTypes.map((temp) => (
+                  <FormControlLabel
+                    key={temp.id}
+                    control={
+                      <Checkbox
+                        checked={selectedTemperaments.includes(temp.name)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedTemperaments(prev => [...prev, temp.name]);
+                          } else {
+                            setSelectedTemperaments(prev => prev.filter(t => t !== temp.name));
+                          }
+                        }}
+                      />
+                    }
+                    label={temp.name}
+                  />
+                ))}
+              </FormGroup>
             </Box>
 
             <Box sx={{ display: 'grid', gap: 2 }}>
