@@ -26,6 +26,8 @@ import {
   Lock as LockIcon,
   Visibility,
   VisibilityOff,
+  PhotoCamera as PhotoCameraIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
@@ -76,6 +78,9 @@ const Profile = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const [profileData, setProfileData] = useState<ProfileFormValues>({
     firstName: '',
@@ -100,6 +105,11 @@ const Profile = () => {
             email: freshData.email || '',
             phone: freshData.phone || '',
           });
+          
+          // Set profile photo if exists
+          if (freshData.profilePhoto) {
+            setProfilePhoto(freshData.profilePhoto);
+          }
           
           // Update user context with fresh data
           if (updateUser) {
@@ -165,6 +175,83 @@ const Profile = () => {
     }
   };
 
+  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setProfileError('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setProfileError('Image size must be less than 5MB');
+        return;
+      }
+      
+      setPhotoFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handlePhotoUpload = async () => {
+    if (!photoFile) return;
+    
+    try {
+      setProfileError(null);
+      const formData = new FormData();
+      formData.append('photo', photoFile);
+      
+      const response = await api.post(`/staff/${user?.id}/photo`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      const photoUrl = response.data.data?.profilePhoto || response.data.profilePhoto;
+      setProfilePhoto(photoUrl);
+      setPhotoPreview(null);
+      setPhotoFile(null);
+      setProfileSuccess('Profile photo updated successfully!');
+      
+      // Update user context
+      if (updateUser) {
+        updateUser({ profilePhoto: photoUrl });
+      }
+    } catch (error: any) {
+      console.error('Photo upload error:', error);
+      const message = error.response?.data?.message || 'Failed to upload photo';
+      setProfileError(message);
+    }
+  };
+
+  const handlePhotoDelete = async () => {
+    try {
+      setProfileError(null);
+      await api.delete(`/staff/${user?.id}/photo`);
+      
+      setProfilePhoto(null);
+      setPhotoPreview(null);
+      setPhotoFile(null);
+      setProfileSuccess('Profile photo removed successfully!');
+      
+      // Update user context
+      if (updateUser) {
+        updateUser({ profilePhoto: null });
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to remove photo';
+      setProfileError(message);
+    }
+  };
+
   const handlePasswordSubmit = async (
     values: PasswordFormValues,
     { setSubmitting, resetForm }: FormikHelpers<PasswordFormValues>
@@ -199,25 +286,95 @@ const Profile = () => {
 
   return (
     <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Avatar
-          sx={{
-            width: 80,
-            height: 80,
-            bgcolor: 'primary.main',
-            fontSize: '2rem',
-          }}
-        >
-          {user?.firstName?.[0]}{user?.lastName?.[0]}
-        </Avatar>
-        <Box>
+      {/* Header with Photo */}
+      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 3 }}>
+        <Box sx={{ position: 'relative' }}>
+          <Avatar
+            src={photoPreview || profilePhoto || undefined}
+            sx={{
+              width: 120,
+              height: 120,
+              bgcolor: 'primary.main',
+              fontSize: '2.5rem',
+              border: '4px solid',
+              borderColor: 'background.paper',
+              boxShadow: 3,
+            }}
+          >
+            {!photoPreview && !profilePhoto && (
+              <>{user?.firstName?.[0]}{user?.lastName?.[0]}</>
+            )}
+          </Avatar>
+          <input
+            accept="image/*"
+            style={{ display: 'none' }}
+            id="profile-photo-upload"
+            type="file"
+            onChange={handlePhotoChange}
+          />
+          <label htmlFor="profile-photo-upload">
+            <IconButton
+              component="span"
+              sx={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                bgcolor: 'primary.main',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: 'primary.dark',
+                },
+                boxShadow: 2,
+              }}
+            >
+              <PhotoCameraIcon />
+            </IconButton>
+          </label>
+        </Box>
+        <Box sx={{ flexGrow: 1 }}>
           <Typography variant="h4" component="h1">
-            My Profile
+            {user?.firstName} {user?.lastName}
+          </Typography>
+          <Typography variant="body1" color="text.secondary" gutterBottom>
+            {user?.email}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Manage your account settings and preferences
           </Typography>
+          {photoPreview && (
+            <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+              <Button
+                size="small"
+                variant="contained"
+                onClick={handlePhotoUpload}
+                startIcon={<SaveIcon />}
+              >
+                Save Photo
+              </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => {
+                  setPhotoPreview(null);
+                  setPhotoFile(null);
+                }}
+              >
+                Cancel
+              </Button>
+            </Box>
+          )}
+          {profilePhoto && !photoPreview && (
+            <Button
+              size="small"
+              variant="outlined"
+              color="error"
+              onClick={handlePhotoDelete}
+              startIcon={<DeleteIcon />}
+              sx={{ mt: 2 }}
+            >
+              Remove Photo
+            </Button>
+          )}
         </Box>
       </Box>
 

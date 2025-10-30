@@ -281,19 +281,35 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             {navItems.find((item) => item.path === location.pathname)?.label || 'Dashboard'}
           </Typography>
-          <IconButton
-            size="large"
-            edge="end"
-            color="inherit"
-            aria-label="account of current user"
-            aria-controls="menu-appbar"
-            aria-haspopup="true"
-            onClick={handleProfileMenuOpen}
-          >
-            <Avatar sx={{ bgcolor: 'secondary.main' }}>
-              {user?.firstName?.[0] || 'U'}
-            </Avatar>
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+              <Typography variant="body2" sx={{ textAlign: 'right', lineHeight: 1.2 }}>
+                {user?.firstName} {user?.lastName}
+              </Typography>
+              <Typography variant="caption" color="inherit" sx={{ opacity: 0.8 }}>
+                {user?.role || 'Staff'}
+              </Typography>
+            </Box>
+            <IconButton
+              size="large"
+              edge="end"
+              color="inherit"
+              aria-label="account of current user"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleProfileMenuOpen}
+            >
+              <Avatar 
+                src={(user as any)?.profilePhoto || undefined}
+                sx={{ 
+                  bgcolor: 'secondary.main',
+                  border: '2px solid white',
+                }}
+              >
+                {!(user as any)?.profilePhoto && (user?.firstName?.[0] || 'U')}
+              </Avatar>
+            </IconButton>
+          </Box>
           <Menu
             id="menu-appbar"
             anchorEl={anchorEl}

@@ -8,6 +8,7 @@ type User = {
   lastName: string;
   role: string;
   phone?: string;
+  profilePhoto?: string | null;
   isActive?: boolean;
   createdAt?: string;
   lastLogin?: string;
