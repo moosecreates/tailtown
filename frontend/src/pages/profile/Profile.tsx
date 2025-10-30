@@ -107,7 +107,6 @@ const Profile = () => {
           });
           
           // Set profile photo if exists
-          console.log('Profile data loaded:', { profilePhoto: freshData.profilePhoto });
           if (freshData.profilePhoto) {
             setProfilePhoto(freshData.profilePhoto);
           }
@@ -217,7 +216,6 @@ const Profile = () => {
       });
       
       const photoUrl = response.data.data?.profilePhoto || response.data.profilePhoto;
-      console.log('Photo uploaded, URL:', photoUrl);
       setProfilePhoto(photoUrl);
       setPhotoPreview(null);
       setPhotoFile(null);
