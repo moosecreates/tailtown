@@ -90,7 +90,8 @@ const Profile = () => {
         // Fetch fresh profile data from server
         if (user?.id) {
           const response = await api.get(`/staff/${user.id}`);
-          const freshData = response.data;
+          // Backend returns { status: 'success', data: staff }
+          const freshData = response.data.data || response.data;
           
           // Update local state
           setProfileData({
