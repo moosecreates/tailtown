@@ -87,7 +87,34 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        // Get current user profile
+        // Fetch fresh profile data from server
+        if (user?.id) {
+          const response = await api.get(`/staff/${user.id}`);
+          const freshData = response.data;
+          
+          // Update local state
+          setProfileData({
+            firstName: freshData.firstName || '',
+            lastName: freshData.lastName || '',
+            email: freshData.email || '',
+            phone: freshData.phone || '',
+          });
+          
+          // Update user context with fresh data
+          if (updateUser) {
+            updateUser({
+              firstName: freshData.firstName,
+              lastName: freshData.lastName,
+              email: freshData.email,
+              phone: freshData.phone,
+              isActive: freshData.isActive,
+              lastLogin: freshData.lastLogin,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        // Fallback to cached user data
         if (user) {
           setProfileData({
             firstName: user.firstName || '',
@@ -96,15 +123,13 @@ const Profile = () => {
             phone: user.phone || '',
           });
         }
-      } catch (error) {
-        console.error('Error fetching profile:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfile();
-  }, [user]);
+  }, [user?.id]);
 
   const handleProfileSubmit = async (
     values: ProfileFormValues,
