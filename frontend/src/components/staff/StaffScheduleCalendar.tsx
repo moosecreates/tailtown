@@ -79,8 +79,15 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
       }
       setSchedules(fetchedSchedules);
       
-      if (!staffId) {
-        // Fetch all staff for the dropdown
+      // Fetch staff members
+      if (staffId) {
+        // For individual view, fetch just this staff member
+        const staffMember = await staffService.getStaffById(staffId);
+        if (staffMember) {
+          setStaff([staffMember]);
+        }
+      } else {
+        // For all staff view, fetch all staff
         const allStaff = await staffService.getAllStaff();
         // Sort staff alphabetically by last name, then first name
         const sortedStaff = allStaff.sort((a, b) => {
