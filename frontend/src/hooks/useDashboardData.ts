@@ -14,6 +14,8 @@ interface DashboardData extends DashboardMetrics {
   loading: boolean;
   error: string | null;
   appointmentFilter: 'in' | 'out' | 'all';
+  selectedDate: Date;
+  setSelectedDate: (date: Date) => void;
 }
 
 /**
@@ -75,6 +77,7 @@ export const useDashboardData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [appointmentFilter, setAppointmentFilter] = useState<'in' | 'out' | 'all'>('all'); // Default to all reservations
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Always default to today
 
   /**
    * Filter reservations based on check-in or check-out status
@@ -123,10 +126,10 @@ export const useDashboardData = () => {
     setError(null);
     
     try {
-      const today = new Date();
-      const formattedToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      // Use selected date for calculations
+      const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
       
-      console.log('[Dashboard] Loading data for date:', formattedToday);
+      console.log('[Dashboard] Loading data for date:', formattedDate);
       
       // Only fetch active/current reservations, exclude COMPLETED (past) reservations
       const activeStatuses = 'PENDING,CONFIRMED,CHECKED_IN';
@@ -153,13 +156,13 @@ export const useDashboardData = () => {
       const checkIns = reservations.filter((res: any) => {
         const startDate = new Date(res.startDate);
         const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
-        return startDateStr === formattedToday;
+        return startDateStr === formattedDate;
       }).length;
 
       const checkOuts = reservations.filter((res: any) => {
         const endDate = new Date(res.endDate);
         const endDateStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}`;
-        return endDateStr === formattedToday;
+        return endDateStr === formattedDate;
       }).length;
 
       const overnight = reservations.filter((res: any) => {
@@ -167,7 +170,7 @@ export const useDashboardData = () => {
         const endDate = new Date(res.endDate);
         const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
         const endDateStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}`;
-        return startDateStr < formattedToday && endDateStr >= formattedToday;
+        return startDateStr < formattedDate && endDateStr >= formattedDate;
       }).length;
 
       console.log('[Dashboard] Calculated metrics:', {
@@ -194,13 +197,13 @@ export const useDashboardData = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // No dependencies - stable function
+  }, [selectedDate]); // Reload when date changes
 
-  // Load data on mount
+  // Load data on mount and when date changes
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run on mount
+  }, [selectedDate]); // Reload when date changes
 
   // Refresh on window focus
   useEffect(() => {
@@ -221,6 +224,8 @@ export const useDashboardData = () => {
     loading,
     error,
     appointmentFilter,
+    selectedDate,
+    setSelectedDate,
     filterReservations,
     refreshData: loadData
   };
