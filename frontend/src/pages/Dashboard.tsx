@@ -1,6 +1,6 @@
 import React from 'react';
-import { Box, Typography, TextField, Button } from '@mui/material';
-import { Today as TodayIcon } from '@mui/icons-material';
+import { Box, Typography, TextField, Button, IconButton } from '@mui/material';
+import { Today as TodayIcon, ChevronLeft, ChevronRight } from '@mui/icons-material';
 import DashboardMetrics from '../components/dashboard/DashboardMetrics';
 import ReservationList from '../components/dashboard/ReservationList';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -47,6 +47,20 @@ const Dashboard = () => {
     setSelectedDate(new Date());
   };
 
+  // Navigate to previous day
+  const handlePreviousDay = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() - 1);
+    setSelectedDate(newDate);
+  };
+
+  // Navigate to next day
+  const handleNextDay = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + 1);
+    setSelectedDate(newDate);
+  };
+
   return (
     <Box>
       {/* Header with Date Selector */}
@@ -56,6 +70,21 @@ const Dashboard = () => {
         </Typography>
         
         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          {/* Previous Day Button */}
+          <IconButton
+            size="small"
+            onClick={handlePreviousDay}
+            sx={{ 
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 1
+            }}
+            title="Previous day"
+          >
+            <ChevronLeft />
+          </IconButton>
+          
+          {/* Date Picker */}
           <TextField
             type="date"
             size="small"
@@ -66,6 +95,22 @@ const Dashboard = () => {
             }}
             sx={{ width: 180 }}
           />
+          
+          {/* Next Day Button */}
+          <IconButton
+            size="small"
+            onClick={handleNextDay}
+            sx={{ 
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 1
+            }}
+            title="Next day"
+          >
+            <ChevronRight />
+          </IconButton>
+          
+          {/* Today Button */}
           <Button
             variant="outlined"
             size="small"
