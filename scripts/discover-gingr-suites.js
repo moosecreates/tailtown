@@ -34,20 +34,28 @@ if (!subdomain || !apiKey) {
   process.exit(1);
 }
 
-const BASE_URL = `https://${subdomain}.gingrapp.com/api/v2`;
+const BASE_URL = `https://${subdomain}.gingrapp.com/api/v1`;
 
 /**
- * Make API request to Gingr
+ * Make POST request to Gingr (for reservations)
  */
-async function gingrRequest(endpoint, params = {}) {
-  const url = new URL(`${BASE_URL}${endpoint}`);
-  url.searchParams.append('api_key', apiKey);
+async function gingrPostRequest(endpoint, data = {}) {
+  const formData = new URLSearchParams();
+  formData.append('key', apiKey);
   
-  Object.entries(params).forEach(([key, value]) => {
-    url.searchParams.append(key, value);
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      formData.append(key, String(value));
+    }
   });
   
-  const response = await fetch(url.toString());
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: formData.toString()
+  });
   
   if (!response.ok) {
     throw new Error(`Gingr API error: ${response.status} ${response.statusText}`);
@@ -87,7 +95,7 @@ async function fetchAllReservations(start, end) {
     process.stdout.write(`  Fetching ${startStr} to ${endStr}... `);
     
     try {
-      const response = await gingrRequest('/reservations', {
+      const response = await gingrPostRequest('/reservations', {
         start_date: startStr,
         end_date: endStr
       });
@@ -128,15 +136,22 @@ function extractLodging(reservation) {
     || reservation.kennel
     || reservation.suite_label
     || reservation.suite_id
+    || reservation.suite
+    || reservation.area
+    || reservation.location
     || null;
   
   // Also check nested structures
   if (!lodging && reservation.lodging) {
-    return reservation.lodging.label || reservation.lodging.id || null;
+    return reservation.lodging.label || reservation.lodging.id || reservation.lodging.name || null;
   }
   
   if (!lodging && reservation.room) {
-    return reservation.room.label || reservation.room.id || null;
+    return reservation.room.label || reservation.room.id || reservation.room.name || null;
+  }
+  
+  if (!lodging && reservation.area) {
+    return reservation.area.label || reservation.area.id || reservation.area.name || null;
   }
   
   return lodging;
