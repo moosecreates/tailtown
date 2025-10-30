@@ -30,6 +30,7 @@ import {
   // Test endpoint
   testSchedulesEndpoint
 } from '../controllers/staff.controller';
+import { loginRateLimiter, passwordResetRateLimiter } from '../middleware/rateLimiter.middleware';
 
 const router = Router();
 
@@ -48,11 +49,11 @@ router.put('/:id', updateStaff);
 // DELETE a staff member
 router.delete('/:id', deleteStaff);
 
-// POST login
-router.post('/login', loginStaff);
+// POST login (with rate limiting)
+router.post('/login', loginRateLimiter, loginStaff);
 
-// POST request password reset
-router.post('/request-reset', requestPasswordReset);
+// POST request password reset (with rate limiting)
+router.post('/request-reset', passwordResetRateLimiter, requestPasswordReset);
 
 // POST reset password
 router.post('/reset-password', resetPassword);

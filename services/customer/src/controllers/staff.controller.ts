@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 import bcrypt from 'bcrypt';
+import { validatePasswordOrThrow } from '../utils/passwordValidator';
 
 // Extend the Express Request type to include user information
 interface AuthenticatedRequest extends Request {
@@ -154,9 +155,16 @@ export const createStaff = async (
       return next(new AppError('Email already in use', 400));
     }
     
-    // Hash the password
+    // Validate and hash the password
     if (!staffData.password) {
       return next(new AppError('Password is required', 400));
+    }
+    
+    // Validate password strength
+    try {
+      validatePasswordOrThrow(staffData.password);
+    } catch (error: any) {
+      return next(new AppError(error.message, 400));
     }
     
     const hashedPassword = await bcrypt.hash(staffData.password, 10);
@@ -233,8 +241,15 @@ export const updateStaff = async (
       }
     }
     
-    // If updating password, hash it
+    // If updating password, validate and hash it
     if (staffData.password) {
+      // Validate password strength
+      try {
+        validatePasswordOrThrow(staffData.password);
+      } catch (error: any) {
+        return next(new AppError(error.message, 400));
+      }
+      
       staffData.password = await bcrypt.hash(staffData.password, 10);
     }
     
@@ -417,13 +432,17 @@ export const requestPasswordReset = async (
       } as any
     });
     
-    // In a real application, you would send an email with the reset link
-    // For now, we'll just return the token in the response
+    // TODO: Send email with reset link
+    // Reset link format: https://app.tailtown.com/reset-password?token={resetToken}
+    // For now, log the token (remove in production)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Password reset token for ${staff.email}: ${resetToken}`);
+      console.log(`Reset link: http://localhost:3000/reset-password?token=${resetToken}`);
+    }
+    
     res.status(200).json({
       status: 'success',
-      message: 'If your email is registered, you will receive a password reset link',
-      // Only for development purposes
-      resetToken
+      message: 'If your email is registered, you will receive a password reset link'
     });
   } catch (error) {
     next(error);
@@ -457,6 +476,13 @@ export const resetPassword = async (
     
     if (!staff) {
       return next(new AppError('Invalid or expired token', 400));
+    }
+    
+    // Validate password strength
+    try {
+      validatePasswordOrThrow(password);
+    } catch (error: any) {
+      return next(new AppError(error.message, 400));
     }
     
     // Hash the new password
