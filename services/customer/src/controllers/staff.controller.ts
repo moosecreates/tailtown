@@ -109,6 +109,7 @@ export const getStaffById = async (
         lastName: true,
         email: true,
         phone: true,
+        profilePhoto: true,
         address: true,
         city: true,
         state: true,
