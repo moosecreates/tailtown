@@ -205,9 +205,14 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
   
   // Function to get schedules for a specific staff member and day
   const getSchedulesForStaffAndDay = (staffId: string, day: Date) => {
-    return schedules.filter(schedule => 
-      schedule.staffId === staffId && isSameDay(new Date(schedule.date), day)
-    );
+    return schedules.filter(schedule => {
+      // Parse date in local timezone to avoid timezone shift
+      // schedule.date is in format 'YYYY-MM-DD'
+      const [year, month, dayOfMonth] = schedule.date.split('-').map(Number);
+      const scheduleDate = new Date(year, month - 1, dayOfMonth);
+      
+      return schedule.staffId === staffId && isSameDay(scheduleDate, day);
+    });
   };
 
   /**

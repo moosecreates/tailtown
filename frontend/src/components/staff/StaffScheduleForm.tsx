@@ -96,7 +96,13 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
   
   const handleDateChange = (date: Date | null) => {
     if (date) {
-      setFormData(prev => ({ ...prev, date: format(date, 'yyyy-MM-dd') }));
+      // Format date in local timezone to avoid timezone shift
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const localDateString = `${year}-${month}-${day}`;
+      
+      setFormData(prev => ({ ...prev, date: localDateString }));
       if (errors.date) {
         setErrors(prev => ({ ...prev, date: '' }));
       }
