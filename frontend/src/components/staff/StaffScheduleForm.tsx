@@ -153,20 +153,34 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
           return false;
         }
         
-        // Check if same staff member and same date
-        if (existingSchedule.staffId === formData.staffId && existingSchedule.date === formData.date) {
-          // Parse times for comparison
-          const newStart = parseTimeString(formData.startTime!);
-          const newEnd = parseTimeString(formData.endTime!);
-          const existingStart = parseTimeString(existingSchedule.startTime);
-          const existingEnd = parseTimeString(existingSchedule.endTime);
-          
-          // Check for time overlap
-          // Overlap occurs if: (newStart < existingEnd) AND (newEnd > existingStart)
-          return newStart < existingEnd && newEnd > existingStart;
+        // Check if same staff member
+        if (existingSchedule.staffId !== formData.staffId) {
+          return false;
         }
         
-        return false;
+        // Compare dates - handle both ISO format and simple date string
+        let existingDateStr: string;
+        if (typeof existingSchedule.date === 'string' && existingSchedule.date.includes('T')) {
+          // ISO format: extract date part before 'T'
+          existingDateStr = existingSchedule.date.split('T')[0];
+        } else {
+          existingDateStr = String(existingSchedule.date);
+        }
+        
+        // Check if same date
+        if (existingDateStr !== formData.date) {
+          return false;
+        }
+        
+        // Parse times for comparison
+        const newStart = parseTimeString(formData.startTime!);
+        const newEnd = parseTimeString(formData.endTime!);
+        const existingStart = parseTimeString(existingSchedule.startTime);
+        const existingEnd = parseTimeString(existingSchedule.endTime);
+        
+        // Check for time overlap
+        // Overlap occurs if: (newStart < existingEnd) AND (newEnd > existingStart)
+        return newStart < existingEnd && newEnd > existingStart;
       });
       
       if (hasOverlap) {
