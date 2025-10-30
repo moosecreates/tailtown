@@ -156,7 +156,7 @@ const staffService = {
         firstName: staffData.firstName,
         lastName: staffData.lastName,
         email: staffData.email,
-        password: staffData.password || 'defaultPassword123', // Provide a default if not set
+        password: staffData.password || 'TempPass@2024!', // Strong default password meeting all requirements
         role: staffData.role,
         department: staffData.department,
         position: staffData.position,
