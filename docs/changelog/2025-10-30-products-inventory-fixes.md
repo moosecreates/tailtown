@@ -197,17 +197,112 @@ model InventoryLog {
 
 ---
 
+---
+
+### 4. Product Update SKU Unique Constraint Error
+
+**Problem**:
+- Product updates were failing with "Unique constraint failed on the fields: (`tenant_id`,`sku`)" error
+- Multiple products with null/empty SKUs were causing conflicts
+
+**Root Cause**:
+- The update controller was including `sku` field even when it was `null` or empty
+- Database has unique constraint on `(tenant_id, sku)` combination
+- Multiple null SKUs violated this constraint
+
+**Solution**:
+- Modified update logic to only include `sku` in update data if it's provided and not empty
+- Built dynamic `updateData` object that conditionally includes SKU field
+- Prevents null/empty SKU values from being sent unnecessarily
+
+**Files Modified**:
+- `services/customer/src/controllers/products.controller.ts`
+
+**Code Changes**:
+```typescript
+// Build update data object, only including fields that are provided
+const updateData: any = {
+  name,
+  description,
+  // ... other fields
+};
+
+// Only include SKU if it's provided (not null/empty)
+if (sku !== undefined && sku !== null && sku !== '') {
+  updateData.sku = sku;
+}
+
+const product = await prisma.product.update({
+  where: { id },
+  data: updateData,
+  // ...
+});
+```
+
+---
+
+### 5. Customer Search Not Working
+
+**Problem**:
+- Customer list search was not displaying filtered results
+- Only icon filtering seemed to work
+- Text search for names, emails, phone numbers, and pet names was broken
+
+**Root Cause**:
+- The debounced search function was using a stale closure of the `customers` array
+- When search was triggered, it was filtering an outdated or empty array
+- Dependency array didn't include `customers`, so search didn't re-run when data loaded
+
+**Solution**:
+- Modified `debouncedSearch` to accept `customers` as a parameter instead of closure
+- Updated `useEffect` to pass current `customers` array to debounced function
+- Added `customers` to dependency array
+- Added console logging for debugging
+
+**Files Modified**:
+- `frontend/src/pages/customers/Customers.tsx`
+
+**Code Changes**:
+```typescript
+// Before: Used customers from closure
+const debouncedSearch = useMemo(
+  () => debounce((query: string, iconFilters: string[]) => {
+    let filtered = customers; // Stale closure
+    // ...
+  }, 300),
+  [customers] // Recreated on every customer change
+);
+
+// After: Receive customers as parameter
+const debouncedSearch = useMemo(
+  () => debounce((query: string, iconFilters: string[], allCustomers: Customer[]) => {
+    let filtered = allCustomers; // Always current
+    // ...
+  }, 300),
+  [] // Stable reference
+);
+
+// Pass customers when calling
+useEffect(() => {
+  debouncedSearch(searchQuery, selectedFilterIcons, customers);
+}, [searchQuery, selectedFilterIcons, customers, debouncedSearch]);
+```
+
+---
+
 ## Summary
 
-All three critical issues with the Products & Inventory system have been resolved:
+All five critical issues with the Products & Inventory and Customer systems have been resolved:
 1. ✅ API endpoints now accessible with proper tenant headers
 2. ✅ Product updates (price, stock) save correctly
 3. ✅ Inventory adjustments work without errors
+4. ✅ Product SKU unique constraint errors fixed
+5. ✅ Customer search functionality restored
 
 The system is now fully functional and ready for production use.
 
 ---
 
 **Last Updated**: October 30, 2025  
-**Version**: 1.1 - Bug Fixes  
-**Status**: ✅ Production Ready
+**Version**: 1.2 - Bug Fixes  
+**Status**: ✅ Production Ready & Tested

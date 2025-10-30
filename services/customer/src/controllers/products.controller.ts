@@ -266,29 +266,36 @@ export const updateProduct = async (req: Request, res: Response) => {
       }
     }
     
+    // Build update data object, only including fields that are provided
+    const updateData: any = {
+      name,
+      description,
+      categoryId,
+      price,
+      cost,
+      taxable,
+      trackInventory,
+      currentStock,
+      lowStockAlert,
+      reorderPoint,
+      reorderQuantity,
+      isService,
+      isPackage,
+      isActive,
+      isFeatured,
+      imageUrl,
+      barcode,
+      notes
+    };
+    
+    // Only include SKU if it's provided (not null/empty)
+    if (sku !== undefined && sku !== null && sku !== '') {
+      updateData.sku = sku;
+    }
+    
     const product = await prisma.product.update({
       where: { id },
-      data: {
-        sku,
-        name,
-        description,
-        categoryId,
-        price,
-        cost,
-        taxable,
-        trackInventory,
-        currentStock,
-        lowStockAlert,
-        reorderPoint,
-        reorderQuantity,
-        isService,
-        isPackage,
-        isActive,
-        isFeatured,
-        imageUrl,
-        barcode,
-        notes
-      },
+      data: updateData,
       include: {
         category: true,
         packageContents: {

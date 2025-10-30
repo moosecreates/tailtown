@@ -40,8 +40,9 @@ const Customers = () => {
   const [filterIconsOpen, setFilterIconsOpen] = useState(false);
   
   const debouncedSearch = useMemo(
-    () => debounce((query: string, iconFilters: string[]) => {
-      let filtered = customers;
+    () => debounce((query: string, iconFilters: string[], allCustomers: Customer[]) => {
+      console.log('Debounced search triggered:', { query, iconFilters, customerCount: allCustomers.length });
+      let filtered = allCustomers;
       
       // Apply text search
       if (query) {
@@ -52,6 +53,7 @@ const Customers = () => {
           // Search through pet names
           (customer.pets || []).some(pet => pet.name.toLowerCase().includes(query))
         );
+        console.log('After text search:', filtered.length, 'customers');
       }
       
       // Apply icon filters (customer must have ALL selected icons)
@@ -60,19 +62,20 @@ const Customers = () => {
           const customerIcons = customer.customerIcons || [];
           return iconFilters.every(iconId => customerIcons.includes(iconId));
         });
+        console.log('After icon filter:', filtered.length, 'customers');
       }
       
       setFilteredCustomers(filtered);
     }, 300),
-    [customers]
+    []
   );
 
   useEffect(() => {
-    debouncedSearch(searchQuery, selectedFilterIcons);
+    debouncedSearch(searchQuery, selectedFilterIcons, customers);
     return () => {
       debouncedSearch.cancel();
     };
-  }, [searchQuery, selectedFilterIcons, debouncedSearch]);
+  }, [searchQuery, selectedFilterIcons, customers, debouncedSearch]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
