@@ -19,6 +19,7 @@ const AuthLayout = lazy(() => import('./components/layouts/AuthLayout'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
+const Profile = lazy(() => import('./pages/profile/Profile'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -148,6 +149,7 @@ const AppRoutes = () => {
         <Route element={<MainLayout />}>
         <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
         <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
         <Route path="/customers" element={isAuthenticated ? <Customers /> : <Navigate to="/login" />} />
         <Route path="/customers/:id" element={isAuthenticated ? <CustomerDetails /> : <Navigate to="/login" />} />
         <Route path="/pets" element={isAuthenticated ? <Pets /> : <Navigate to="/login" />} />

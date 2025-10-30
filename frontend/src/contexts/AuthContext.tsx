@@ -7,6 +7,9 @@ type User = {
   firstName: string;
   lastName: string;
   role: string;
+  phone?: string;
+  isActive?: boolean;
+  createdAt?: string;
 };
 
 type AuthContextType = {
@@ -15,6 +18,7 @@ type AuthContextType = {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (userData: Partial<User>) => void;
   error: string | null;
 };
 
@@ -163,12 +167,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
   };
 
+  // Update user function
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
     isLoading,
     login,
     logout,
+    updateUser,
     error,
   };
 
