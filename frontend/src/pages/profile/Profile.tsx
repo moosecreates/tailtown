@@ -216,6 +216,7 @@ const Profile = () => {
       });
       
       const photoUrl = response.data.data?.profilePhoto || response.data.profilePhoto;
+      console.log('Photo uploaded, URL:', photoUrl);
       setProfilePhoto(photoUrl);
       setPhotoPreview(null);
       setPhotoFile(null);
@@ -290,6 +291,7 @@ const Profile = () => {
       <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 3 }}>
         <Box sx={{ position: 'relative' }}>
           <Avatar
+            key={profilePhoto || 'no-photo'}
             src={photoPreview || profilePhoto || undefined}
             sx={{
               width: 120,
