@@ -12,10 +12,7 @@
  *   node scripts/import-gingr-employees.js tailtown abc123xyz456
  */
 
-const https = require('https');
-
-// Configuration
-const GINGR_API_BASE = 'api.gingrapp.com';
+const fetch = require('node-fetch');
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -29,6 +26,7 @@ if (args.length < 2) {
 }
 
 const [subdomain, apiKey] = args;
+const BASE_URL = `https://${subdomain}.gingrapp.com/api/v1`;
 
 console.log('\n👥 Gingr Employee Import Tool');
 console.log('═══════════════════════════════');
@@ -36,46 +34,32 @@ console.log(`Subdomain: ${subdomain}`);
 console.log('');
 
 /**
- * Make HTTPS request to Gingr API
+ * Make POST request to Gingr API (using form data with key parameter)
  */
-function makeGingrRequest(path) {
-  return new Promise((resolve, reject) => {
-    const options = {
-      hostname: GINGR_API_BASE,
-      path: `/v1/${subdomain}${path}`,
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      }
-    };
-
-    const req = https.request(options, (res) => {
-      let data = '';
-
-      res.on('data', (chunk) => {
-        data += chunk;
-      });
-
-      res.on('end', () => {
-        if (res.statusCode === 200) {
-          try {
-            resolve(JSON.parse(data));
-          } catch (error) {
-            reject(new Error(`Failed to parse JSON: ${error.message}`));
-          }
-        } else {
-          reject(new Error(`Gingr API error: ${res.statusCode} ${res.statusMessage}\n${data}`));
-        }
-      });
-    });
-
-    req.on('error', (error) => {
-      reject(new Error(`Request failed: ${error.message}`));
-    });
-
-    req.end();
+async function makeGingrRequest(endpoint, data = {}) {
+  const formData = new URLSearchParams();
+  formData.append('key', apiKey);
+  
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      formData.append(key, String(value));
+    }
   });
+  
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: formData.toString()
+  });
+  
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Gingr API error: ${response.status} ${response.statusText}\n${text}`);
+  }
+  
+  return response.json();
 }
 
 /**
@@ -216,29 +200,43 @@ async function main() {
     let endpoint = '';
     
     try {
-      // Try /staff endpoint
-      endpoint = '/staff';
+      // Try /get_staff endpoint (common Gingr pattern)
+      endpoint = '/get_staff';
       const response = await makeGingrRequest(endpoint);
       employees = response.staff || response.data || response;
-      console.log(`✅ Found ${employees.length} employees using ${endpoint} endpoint\n`);
+      if (Array.isArray(employees)) {
+        console.log(`✅ Found ${employees.length} employees using ${endpoint} endpoint\n`);
+      } else {
+        throw new Error('Response is not an array');
+      }
     } catch (error) {
       try {
-        // Try /employees endpoint
-        endpoint = '/employees';
+        // Try /staff endpoint
+        endpoint = '/staff';
         const response = await makeGingrRequest(endpoint);
-        employees = response.employees || response.data || response;
-        console.log(`✅ Found ${employees.length} employees using ${endpoint} endpoint\n`);
+        employees = response.staff || response.data || response;
+        if (Array.isArray(employees)) {
+          console.log(`✅ Found ${employees.length} employees using ${endpoint} endpoint\n`);
+        } else {
+          throw new Error('Response is not an array');
+        }
       } catch (error2) {
         try {
-          // Try /users endpoint
-          endpoint = '/users';
+          // Try /get_employees endpoint
+          endpoint = '/get_employees';
           const response = await makeGingrRequest(endpoint);
-          employees = (response.users || response.data || response).filter(u => u.role !== 'customer');
-          console.log(`✅ Found ${employees.length} employees using ${endpoint} endpoint\n`);
+          employees = response.employees || response.data || response;
+          if (Array.isArray(employees)) {
+            console.log(`✅ Found ${employees.length} employees using ${endpoint} endpoint\n`);
+          } else {
+            throw new Error('Response is not an array');
+          }
         } catch (error3) {
           console.error('❌ Could not fetch employees from any known endpoint');
-          console.error('   Tried: /staff, /employees, /users');
+          console.error('   Tried: /get_staff, /staff, /get_employees');
           console.error(`   Last error: ${error3.message}`);
+          console.error('\n💡 Gingr might not expose employee data via API,');
+          console.error('   or your API key may not have permission to access it.');
           process.exit(1);
         }
       }
