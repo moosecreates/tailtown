@@ -136,7 +136,7 @@ const Products: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      const response = await fetch('http://localhost:4004/api/product-categories');
+      const response = await fetch('http://localhost:4004/api/products/categories');
       const data = await response.json();
       if (data.status === 'success') {
         setCategories(data.data);
