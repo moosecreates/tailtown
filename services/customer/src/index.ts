@@ -39,6 +39,7 @@ import customIconRoutes from './routes/custom-icons.routes';
 import productsRoutes from './routes/products.routes';
 import reportRoutes from './routes/reports.routes';
 import gingrRoutes from './routes/gingr.routes';
+import referenceDataRoutes from './routes/referenceData.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 import { enforceHTTPS, securityHeaders, sanitizeInput } from './middleware/security.middleware';
@@ -320,6 +321,9 @@ app.use('/api/reports', requireTenant, reportRoutes);
 
 // Gingr Migration Routes (no tenant required - for super admin)
 app.use('/api/gingr', gingrRoutes);
+
+// Reference Data Routes (breeds, vets, temperaments)
+app.use('/api', requireTenant, referenceDataRoutes);
 
 // Serve uploaded icons statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
