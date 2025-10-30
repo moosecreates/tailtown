@@ -207,9 +207,25 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
   const getSchedulesForStaffAndDay = (staffId: string, day: Date) => {
     return schedules.filter(schedule => {
       // Parse date in local timezone to avoid timezone shift
-      // schedule.date is in format 'YYYY-MM-DD'
-      const [year, month, dayOfMonth] = schedule.date.split('-').map(Number);
-      const scheduleDate = new Date(year, month - 1, dayOfMonth);
+      // schedule.date could be 'YYYY-MM-DD' or ISO string from database
+      let scheduleDate: Date;
+      
+      if (typeof schedule.date === 'string') {
+        if (schedule.date.includes('T')) {
+          // ISO string format from database (e.g., "2025-11-01T00:00:00.000Z")
+          // Extract just the date part and parse in local timezone
+          const dateOnly = schedule.date.split('T')[0];
+          const [year, month, dayOfMonth] = dateOnly.split('-').map(Number);
+          scheduleDate = new Date(year, month - 1, dayOfMonth);
+        } else {
+          // Simple date string format (e.g., "2025-11-01")
+          const [year, month, dayOfMonth] = schedule.date.split('-').map(Number);
+          scheduleDate = new Date(year, month - 1, dayOfMonth);
+        }
+      } else {
+        // Already a Date object
+        scheduleDate = new Date(schedule.date);
+      }
       
       return schedule.staffId === staffId && isSameDay(scheduleDate, day);
     });
