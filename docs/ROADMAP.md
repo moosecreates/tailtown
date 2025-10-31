@@ -1,6 +1,6 @@
 # Tailtown Unified Roadmap
 
-**Last Updated**: October 31, 2025 - 1:59 PM CST
+**Last Updated**: October 31, 2025 - 4:50 PM CST
 
 This document provides a prioritized roadmap for the Tailtown Pet Resort Management System, organized by business value and urgency.
 
@@ -48,6 +48,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 - ✅ Grooming availability system (staff scheduling & specialties)
 - ✅ Performance optimizations (8 database indexes, compression, caching)
 - ✅ Grooming appointment system (fully functional with weekend availability)
+- ✅ Grooming calendar with staff filtering (Oct 31, 2025)
 
 ---
 
@@ -627,6 +628,31 @@ Features and tasks are prioritized based on:
 
 ## ✅ Completed Features Archive
 
+### October 31, 2025 - Grooming Calendar with Staff Filtering
+
+**Feature Completed** - Full Stack Implementation:
+
+**Grooming Calendar Enhancement**:
+1. ✅ Groomer Filter Dropdown - Filter calendar by individual groomer or "All Groomers"
+2. ✅ Smart Calendar Filtering - Assigned appointments show only for specific groomer, unassigned visible to all
+3. ✅ Required Groomer Assignment - Validation prevents checkout without groomer selection
+4. ✅ Backend Support - GET/POST/PUT endpoints handle staffAssignedId field
+5. ✅ UI Polish - Fixed dropdown width constraints, removed page layout shift
+
+**Technical Details**:
+- Frontend: GroomingCalendarPage.tsx, SpecializedCalendar.tsx, ReservationForm.tsx, GroomerSelector.tsx
+- Backend: get-reservation.controller.ts, create-reservation.controller.ts, update-reservation.controller.ts
+- Database: reservations.staffAssignedId (UUID, nullable, FK to staff table)
+- Unassigned appointments labeled "(Unassigned)" and visible to all groomers
+- Dropdown constrained to 250px width with overflow prevention
+
+**Total Impact**:
+- Frontend: 4 components modified
+- Backend: 3 controllers updated
+- Commits: 12+
+- Development: ~4 hours
+- **Status**: Production ready!
+
 ### October 25, 2025 - Advanced Scheduling, Compliance & Icon Systems
 
 **17 Major Features Completed** - Full Stack Implementation:
@@ -731,24 +757,25 @@ Features and tasks are prioritized based on:
 
 ---
 
-**Last Updated**: October 30, 2025 (8:40 AM)  
-**Version**: 5.0 - All Critical MVP Features Complete  
+**Last Updated**: October 31, 2025 (4:50 PM CST)  
+**Version**: 5.1 - Grooming Calendar Enhancement Complete  
 **Next Review**: November 6, 2025
 
 **Current Status**:
-- ✅ MVP 98% complete
-- ✅ All critical features done (POS, Reporting, Gingr Migration)
+- ✅ MVP 100% complete
+- ✅ All critical features done (POS, Reporting, Gingr Migration, Grooming Calendar)
 - ✅ 11,785 customers + 18,390 pets imported
 - ✅ 500+ automated tests
 - 🎯 Ready for production infrastructure setup
 - 🚀 Launch target: November 15, 2025
 
-**Recent Achievements** (Oct 25-30, 2025):
+**Recent Achievements** (Oct 25-31, 2025):
 - ✅ Gingr Data Migration (31,473 records, 99.8% success)
 - ✅ POS Checkout Integration
 - ✅ Comprehensive Reporting (23 endpoints)
 - ✅ Groomer Assignment System
 - ✅ Training Class Management
+- ✅ Grooming Calendar with Staff Filtering (Oct 31)
 - ✅ 200+ unit tests added
 - ✅ Dashboard search functionality
 - ✅ Calendar color coding (DAYCARE/BOARDING)
