@@ -24,6 +24,7 @@ export interface CartItem {
   // Reservation-specific fields
   serviceName?: string;
   serviceId?: string;
+  serviceCategory?: string; // Service category (GROOMING, TRAINING, DAYCARE, BOARDING)
   customerId?: string;
   customerName?: string;
   petId?: string;

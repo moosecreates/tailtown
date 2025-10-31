@@ -36,6 +36,7 @@ interface CartItemWithAddOns extends CartItem {
   quantity?: number;
   addOns?: AddOn[];
   serviceName?: string;
+  serviceCategory?: string;
   petName?: string;
   startDate?: Date;
   endDate?: Date;
@@ -347,7 +348,21 @@ const CheckoutPage: React.FC = () => {
   };
   
   const handleContinueShopping = () => {
-    navigate('/calendar');
+    // Determine which calendar to navigate to based on service category
+    const hasGroomingService = cartItems.some((item: CartItemWithAddOns) => 
+      item.serviceCategory === 'GROOMING'
+    );
+    const hasTrainingService = cartItems.some((item: CartItemWithAddOns) => 
+      item.serviceCategory === 'TRAINING'
+    );
+    
+    if (hasGroomingService) {
+      navigate('/calendar/grooming');
+    } else if (hasTrainingService) {
+      navigate('/calendar/training');
+    } else {
+      navigate('/calendar');
+    }
   };
   
   // If payment was successful, show success message
@@ -367,7 +382,7 @@ const CheckoutPage: React.FC = () => {
           <Button 
             variant="contained" 
             color="primary" 
-            onClick={() => navigate('/calendar')}
+            onClick={handleContinueShopping}
             sx={{ mt: 2, mr: 2 }}
           >
             View Calendar

@@ -54,12 +54,12 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
       const allEvents: EventInput[] = [];
       
       // Get all relevant reservations (PENDING, CONFIRMED or CHECKED_IN)
-      // We don't filter by date to ensure we see all current reservations
+      // Sort by startDate descending to get recent/upcoming reservations first
       const response = await reservationService.getAllReservations(
         1,  // page
-        100, // limit - increased to show more reservations
+        500, // limit - increased to show more reservations (was 100)
         'startDate', // sortBy
-        'asc', // sortOrder
+        'desc', // sortOrder - changed from 'asc' to 'desc' to get newest first
         'PENDING,CONFIRMED,CHECKED_IN' // status - include pending reservations too
       );
       
