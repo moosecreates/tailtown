@@ -733,6 +733,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         quantity: 1,
         serviceName: selectedServiceObj.name,
         serviceId: selectedServiceObj.id,
+        serviceCategory: selectedServiceObj.serviceCategory, // Add service category for checkout navigation
         customerId: selectedCustomerObj.id,
         customerName: `${selectedCustomerObj.firstName} ${selectedCustomerObj.lastName}`,
         petId: selectedPetObj.id,
