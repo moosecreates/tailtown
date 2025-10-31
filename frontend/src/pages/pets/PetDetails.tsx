@@ -36,7 +36,7 @@ import referenceDataService, { Breed, Veterinarian, TemperamentType } from '../.
 /**
  * Map vaccination data from lowercase keys to component-expected capitalized keys
  */
-const mapVaccinationData = (vaccinationStatus: any) => {
+export const mapVaccinationData = (vaccinationStatus: any) => {
   if (!vaccinationStatus) return {};
   
   const mapped: any = {};
@@ -60,7 +60,7 @@ const mapVaccinationData = (vaccinationStatus: any) => {
 /**
  * Map vaccination expirations from lowercase keys to component-expected capitalized keys
  */
-const mapVaccinationExpirations = (vaccineExpirations: any) => {
+export const mapVaccinationExpirations = (vaccineExpirations: any) => {
   if (!vaccineExpirations) return {};
   
   const mapped: any = {};
