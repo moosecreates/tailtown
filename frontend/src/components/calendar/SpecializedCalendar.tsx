@@ -455,17 +455,10 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
 
   return (
     <Box sx={{ height: 'calc(100vh - 200px)', p: 2 }}>
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6">
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h5" component="h2">
           {calendarTitle || 'Specialized Calendar'} ({events.length} reservations)
         </Typography>
-        <Button 
-          variant="outlined" 
-          onClick={loadReservations}
-          size="small"
-        >
-          Refresh
-        </Button>
       </Box>
       <Paper elevation={3} sx={{ height: 'calc(100% - 60px)', p: 2 }}>
         <FullCalendar
