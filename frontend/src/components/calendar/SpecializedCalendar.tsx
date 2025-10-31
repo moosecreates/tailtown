@@ -96,9 +96,19 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
         // Note: Also shows unassigned appointments (staffAssignedId is null/undefined)
         // so groomers can see and claim them
         if (staffId) {
+          console.log('Filtering by staffId:', staffId);
+          console.log('All reservations:', filteredReservations.map((r: any) => ({
+            id: r.id,
+            pet: r.pet?.name,
+            staffAssignedId: r.staffAssignedId,
+            service: r.service?.name
+          })));
+          
           filteredReservations = filteredReservations.filter((reservation: any) => 
             reservation.staffAssignedId === staffId || !reservation.staffAssignedId
           );
+          
+          console.log('After filtering:', filteredReservations.length, 'reservations');
         }
         
         const calendarEvents = filteredReservations.map((reservation: any) => {

@@ -853,6 +853,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       // For single pet, selectedSuiteId can be empty (auto-assign) or have a value
       // No validation needed as auto-assign is acceptable
     }
+    
+    // Validate groomer assignment for grooming services
+    const requiresGroomer = selectedServiceObj && selectedServiceObj.serviceCategory === 'GROOMING';
+    if (requiresGroomer && !selectedGroomerId) {
+      setError('Please select a groomer for this grooming service');
+      setLoading(false);
+      return;
+    }
 
     // Store service ID for later use with add-ons
     if (selectedService) {

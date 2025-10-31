@@ -222,6 +222,7 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
           petId: true,
           serviceId: true,
           resourceId: true,
+          staffAssignedId: true, // For groomer/trainer assignment
           // Relations (keep minimal, safe fields)
           customer: {
             select: {
