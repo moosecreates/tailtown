@@ -50,11 +50,11 @@ class ReferenceDataService {
   async getBreeds(species?: string): Promise<Breed[]> {
     try {
       const params = species ? { species } : {};
-      const response = await api.get('/breeds', { params });
+      const response = await api.get('/api/breeds', { params });
       return response.data.data || response.data || [];
     } catch (error) {
       console.error('Error fetching breeds:', error);
-      throw error;
+      return []; // Return empty array on error instead of throwing
     }
   }
 
@@ -63,11 +63,11 @@ class ReferenceDataService {
    */
   async getVeterinarians(): Promise<Veterinarian[]> {
     try {
-      const response = await api.get('/veterinarians');
+      const response = await api.get('/api/veterinarians');
       return response.data.data || response.data || [];
     } catch (error) {
       console.error('Error fetching veterinarians:', error);
-      throw error;
+      return []; // Return empty array on error instead of throwing
     }
   }
 
@@ -76,11 +76,11 @@ class ReferenceDataService {
    */
   async getTemperamentTypes(): Promise<TemperamentType[]> {
     try {
-      const response = await api.get('/temperament-types');
+      const response = await api.get('/api/temperament-types');
       return response.data.data || response.data || [];
     } catch (error) {
       console.error('Error fetching temperament types:', error);
-      throw error;
+      return []; // Return empty array on error instead of throwing
     }
   }
 
@@ -89,11 +89,11 @@ class ReferenceDataService {
    */
   async getPetTemperaments(petId: string): Promise<PetTemperament[]> {
     try {
-      const response = await api.get(`/pets/${petId}/temperaments`);
+      const response = await api.get(`/api/pets/${petId}/temperaments`);
       return response.data.data || response.data || [];
     } catch (error) {
       console.error('Error fetching pet temperaments:', error);
-      throw error;
+      return []; // Return empty array on error instead of throwing
     }
   }
 
@@ -102,7 +102,7 @@ class ReferenceDataService {
    */
   async updatePetTemperaments(petId: string, temperaments: string[]): Promise<void> {
     try {
-      await api.put(`/pets/${petId}/temperaments`, { temperaments });
+      await api.put(`/api/pets/${petId}/temperaments`, { temperaments });
     } catch (error) {
       console.error('Error updating pet temperaments:', error);
       throw error;

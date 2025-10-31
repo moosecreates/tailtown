@@ -40,42 +40,52 @@ const Customers = () => {
   const [filterIconsOpen, setFilterIconsOpen] = useState(false);
   
   const debouncedSearch = useMemo(
-    () => debounce((query: string, iconFilters: string[], allCustomers: Customer[]) => {
-      console.log('Debounced search triggered:', { query, iconFilters, customerCount: allCustomers.length });
-      let filtered = allCustomers;
+    () => debounce(async (query: string, iconFilters: string[]) => {
+      console.log('Debounced search triggered:', { query, iconFilters });
       
-      // Apply text search
-      if (query) {
-        filtered = filtered.filter(customer => 
-          `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(query) ||
-          (customer.email || '').toLowerCase().includes(query) ||
-          (customer.phone || '').toLowerCase().includes(query) ||
-          // Search through pet names
-          (customer.pets || []).some(pet => pet.name.toLowerCase().includes(query))
-        );
-        console.log('After text search:', filtered.length, 'customers');
+      try {
+        setLoading(true);
+        let result;
+        
+        // Use server-side search if there's a text query
+        if (query) {
+          console.log('Using server-side search for:', query);
+          result = await customerService.searchCustomers(query, 1, 1000); // Get up to 1000 results
+        } else {
+          console.log('Loading all customers (first 1000)');
+          result = await customerService.getAllCustomers(1, 1000); // Load more customers
+        }
+        
+        let filtered = result.data || [];
+        console.log('Server returned:', filtered.length, 'customers');
+        
+        // Apply icon filters client-side (customer must have ALL selected icons)
+        if (iconFilters.length > 0) {
+          filtered = filtered.filter(customer => {
+            const customerIcons = customer.customerIcons || [];
+            return iconFilters.every(iconId => customerIcons.includes(iconId));
+          });
+          console.log('After icon filter:', filtered.length, 'customers');
+        }
+        
+        setCustomers(filtered);
+        setFilteredCustomers(filtered);
+      } catch (err) {
+        console.error('Error searching customers:', err);
+        setError('Failed to search customers');
+      } finally {
+        setLoading(false);
       }
-      
-      // Apply icon filters (customer must have ALL selected icons)
-      if (iconFilters.length > 0) {
-        filtered = filtered.filter(customer => {
-          const customerIcons = customer.customerIcons || [];
-          return iconFilters.every(iconId => customerIcons.includes(iconId));
-        });
-        console.log('After icon filter:', filtered.length, 'customers');
-      }
-      
-      setFilteredCustomers(filtered);
     }, 300),
     []
   );
 
   useEffect(() => {
-    debouncedSearch(searchQuery, selectedFilterIcons, customers);
+    debouncedSearch(searchQuery, selectedFilterIcons);
     return () => {
       debouncedSearch.cancel();
     };
-  }, [searchQuery, selectedFilterIcons, customers, debouncedSearch]);
+  }, [searchQuery, selectedFilterIcons, debouncedSearch]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
@@ -88,7 +98,8 @@ const Customers = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await customerService.getAllCustomers();
+      // Load first 1000 customers instead of just 10
+      const data = await customerService.getAllCustomers(1, 1000);
       console.log('Loaded customers:', data);
       setCustomers(data.data || []);
       setFilteredCustomers(data.data || []);

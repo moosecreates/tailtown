@@ -30,6 +30,7 @@ export interface Pet {
   allergies: string | null;
   vetName: string | null;
   vetPhone: string | null;
+  veterinarianId?: string | null;
   customerId: string;
   isActive: boolean;
   createdAt?: string;

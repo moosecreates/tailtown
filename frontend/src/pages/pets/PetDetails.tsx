@@ -46,6 +46,7 @@ const PetDetails = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [petOwner, setPetOwner] = useState<any | null>(null);
   const [breeds, setBreeds] = useState<Breed[]>([]);
   const [vets, setVets] = useState<Veterinarian[]>([]);
   const [temperamentTypes, setTemperamentTypes] = useState<TemperamentType[]>([]);
@@ -84,10 +85,6 @@ const PetDetails = () => {
 
   const loadData = useCallback(async () => {
     try {
-      // Load customers for the dropdown
-      const customersData = await customerService.getAllCustomers();
-      setCustomers(customersData.data || []);
-
       // Load reference data
       const [breedsData, vetsData, temperamentsData] = await Promise.all([
         referenceDataService.getBreeds(),
@@ -100,6 +97,7 @@ const PetDetails = () => {
       setTemperamentTypes(temperamentsData);
 
       if (!isNewPet) {
+        // Load existing pet data
         const petData = await petService.getPetById(id!);
 
         // Format the birthdate from ISO to YYYY-MM-DD for the input field
@@ -107,9 +105,17 @@ const PetDetails = () => {
           petData.birthdate = new Date(petData.birthdate).toISOString().split('T')[0];
         }
         
-        // Pet icons and notes are now loaded from the database with the pet data
-        
         setPet(petData);
+        
+        // Load the specific owner for this pet
+        if (petData.customerId) {
+          try {
+            const ownerData = await customerService.getCustomerById(petData.customerId);
+            setPetOwner(ownerData);
+          } catch (err) {
+            console.error('Error loading pet owner:', err);
+          }
+        }
         
         // Load pet temperaments
         try {
@@ -118,6 +124,10 @@ const PetDetails = () => {
         } catch (err) {
           console.log('No temperaments found for pet');
         }
+      } else {
+        // For new pets, load customers for the dropdown (with search capability)
+        const customersData = await customerService.getAllCustomers(1, 100);
+        setCustomers(customersData.data || []);
       }
     } catch (err) {
       console.error('Error loading data:', err);
@@ -538,21 +548,51 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
           
           <Typography variant="h6" gutterBottom>Owner Information</Typography>
           <Box sx={{ mb: 2 }}>
-            <FormControl fullWidth required>
-              <InputLabel>Owner</InputLabel>
-              <Select
-                name="customerId"
-                value={pet.customerId || ''}
-                label="Owner"
-                onChange={handleSelectChange}
-              >
-                {customers.map(customer => (
-                  <MenuItem key={customer.id} value={customer.id}>
-                    {`${customer.firstName} ${customer.lastName}`}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            {isNewPet ? (
+              <Autocomplete
+                options={customers}
+                getOptionLabel={(option) => `${option.firstName} ${option.lastName}${option.email ? ` (${option.email})` : ''}`}
+                value={customers.find(c => c.id === pet.customerId) || null}
+                onChange={(_, newValue) => {
+                  setPet(prev => ({ ...prev, customerId: newValue?.id || '' }));
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Owner *"
+                    placeholder="Search by name or email..."
+                    required
+                  />
+                )}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+              />
+            ) : (
+              <Box>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Owner
+                </Typography>
+                <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                  <Typography variant="body1">
+                    {petOwner
+                      ? `${petOwner.firstName} ${petOwner.lastName}`
+                      : 'Loading owner information...'}
+                  </Typography>
+                  {petOwner?.email && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                      {petOwner.email}
+                    </Typography>
+                  )}
+                  {petOwner?.phone && (
+                    <Typography variant="body2" color="text.secondary">
+                      {petOwner.phone}
+                    </Typography>
+                  )}
+                </Paper>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  Owner cannot be changed after pet creation. To transfer ownership, please contact support.
+                </Typography>
+              </Box>
+            )}
           </Box>
           
           <Divider sx={{ my: 2 }} />
@@ -573,14 +613,27 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
                 <Autocomplete<Veterinarian, false, false, true>
                   options={vets}
                   getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
-                  value={vets.find(v => v.name === pet.vetName) || null}
+                  value={
+                    // First try to find by veterinarianId (linked), then fall back to vetName (legacy)
+                    (pet.veterinarianId ? vets.find(v => v.id === pet.veterinarianId) : null) ||
+                    vets.find(v => v.name === pet.vetName) || 
+                    null
+                  }
                   onChange={(_, newValue) => {
                     if (typeof newValue === 'string') {
-                      setPet(prev => ({ ...prev, vetName: newValue, vetPhone: null }));
+                      // Free text entry - no veterinarian link
+                      setPet(prev => ({ ...prev, vetName: newValue, vetPhone: null, veterinarianId: null }));
                     } else if (newValue) {
-                      setPet(prev => ({ ...prev, vetName: newValue.name, vetPhone: newValue.phone || null }));
+                      // Selected from list - save the link
+                      setPet(prev => ({ 
+                        ...prev, 
+                        vetName: newValue.name, 
+                        vetPhone: newValue.phone || null,
+                        veterinarianId: newValue.id
+                      }));
                     } else {
-                      setPet(prev => ({ ...prev, vetName: null, vetPhone: null }));
+                      // Cleared
+                      setPet(prev => ({ ...prev, vetName: null, vetPhone: null, veterinarianId: null }));
                     }
                   }}
                   renderInput={(params) => (

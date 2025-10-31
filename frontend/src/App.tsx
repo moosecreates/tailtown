@@ -73,6 +73,7 @@ const PrintKennelCards = lazy(() => import('./pages/kennels/PrintKennelCards'));
 const MarketingHub = lazy(() => import('./pages/admin/marketing/MarketingHub'));
 const SmsMarketing = lazy(() => import('./pages/admin/marketing/SmsMarketing'));
 const EmailMarketing = lazy(() => import('./pages/admin/marketing/EmailMarketing'));
+const MessageTemplates = lazy(() => import('./pages/admin/marketing/MessageTemplates'));
 
 // Lazy loaded pages - Check-In
 const CheckInWorkflow = lazy(() => import('./pages/check-in/CheckInWorkflow'));
@@ -189,6 +190,7 @@ const AppRoutes = () => {
         <Route path="/admin/marketing" element={isAuthenticated ? <MarketingHub /> : <Navigate to="/login" />} />
         <Route path="/admin/marketing/sms" element={isAuthenticated ? <SmsMarketing /> : <Navigate to="/login" />} />
         <Route path="/admin/marketing/email" element={isAuthenticated ? <EmailMarketing /> : <Navigate to="/login" />} />
+        <Route path="/admin/marketing/templates" element={isAuthenticated ? <MessageTemplates /> : <Navigate to="/login" />} />
         
         {/* Check-In Routes */}
         <Route path="/check-in/:reservationId" element={isAuthenticated ? <CheckInWorkflow /> : <Navigate to="/login" />} />

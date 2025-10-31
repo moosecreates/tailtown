@@ -79,8 +79,9 @@ model Pet {
   vaccinationStatus  Json?
   vaccineExpirations Json?
   vaccineRecordFiles Json?           // Array of uploaded vaccine record files
-  vetName            String?
-  vetPhone           String?
+  vetName            String?         // Legacy field - kept for backward compatibility
+  vetPhone           String?         // Legacy field - kept for backward compatibility
+  veterinarianId     String?         // Link to veterinarians table
   profilePhoto       String?
   petIcons           Json?           // Array of icon IDs for quick visual reference
   iconNotes          Json?           // Custom notes for generic flag icons
@@ -104,6 +105,7 @@ model Pet {
   @@index([isActive, type], map: "pets_active_type_idx")
   @@index([lastCheckIn], map: "pets_last_checkin_idx")
   @@index([tenantId, customerId], map: "pets_tenant_customer_idx")
+  @@index([veterinarianId], map: "pets_veterinarian_id_idx")
   @@map("pets")
 }
 
@@ -1454,4 +1456,25 @@ model InventoryLog {
   @@index([tenantId, productId], map: "inventory_logs_tenant_product_idx")
   @@index([createdAt], map: "inventory_logs_date_idx")
   @@map("inventory_logs")
+}
+
+model MessageTemplate {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("dev") @map("tenant_id")
+  
+  name        String
+  type        String   // SMS, EMAIL
+  category    String   // APPOINTMENT_REMINDER, MARKETING, CONFIRMATION, FOLLOW_UP, PROMOTIONAL
+  subject     String?  // For email only
+  body        String   @db.Text
+  variables   String[] @default([])
+  
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@index([tenantId, isActive], map: "message_templates_tenant_active_idx")
+  @@index([type], map: "message_templates_type_idx")
+  @@index([category], map: "message_templates_category_idx")
+  @@map("message_templates")
 }
