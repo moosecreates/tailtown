@@ -58,6 +58,16 @@ const GroomingCalendarPage: React.FC = () => {
             label="Filter by Groomer"
             onChange={handleGroomerChange}
             disabled={loading}
+            MenuProps={{
+              anchorOrigin: {
+                vertical: 'bottom',
+                horizontal: 'left',
+              },
+              transformOrigin: {
+                vertical: 'top',
+                horizontal: 'left',
+              },
+            }}
           >
             <MenuItem value="all">All Groomers</MenuItem>
             {groomers.map((groomer) => (

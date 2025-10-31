@@ -247,6 +247,21 @@ const GroomerSelector: React.FC<GroomerSelectorProps> = ({
         label="Assign Groomer"
         onChange={(e) => onGroomerChange(e.target.value)}
         disabled={disabled}
+        MenuProps={{
+          PaperProps: {
+            style: {
+              maxWidth: '400px',
+            },
+          },
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'left',
+          },
+          transformOrigin: {
+            vertical: 'top',
+            horizontal: 'left',
+          },
+        }}
         renderValue={(selected) => {
           if (!selected) {
             return <em>Select a groomer</em>;
