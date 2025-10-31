@@ -21,20 +21,14 @@ const GroomingCalendarPage: React.FC = () => {
     const loadGroomers = async () => {
       try {
         const staffList = await staffService.getAllStaff();
-        console.log('All staff loaded:', staffList);
-        console.log('Staff with specialties:', staffList.map(s => ({ 
-          name: `${s.firstName} ${s.lastName}`, 
-          specialties: s.specialties 
-        })));
         
         // Filter to only groomers (staff with GROOMING specialty)
-        const groomerList = staffList.filter((staff: any) => {
-          const hasGroomingSpecialty = staff.specialties?.some((s: any) => s.specialty === 'GROOMING');
-          console.log(`${staff.firstName} ${staff.lastName} has GROOMING:`, hasGroomingSpecialty, staff.specialties);
-          return hasGroomingSpecialty;
-        });
+        // specialties is an array of strings like ['GROOMING', 'TRAINING']
+        const groomerList = staffList.filter((staff: any) => 
+          staff.specialties?.includes('GROOMING')
+        );
         
-        console.log('Filtered groomers:', groomerList);
+        console.log('Groomers found:', groomerList.map(g => `${g.firstName} ${g.lastName}`));
         setGroomers(groomerList);
       } catch (error) {
         console.error('Error loading groomers:', error);
