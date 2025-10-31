@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from '@mui/material';
+import { Container, Typography, Box, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, GlobalStyles } from '@mui/material';
 import SpecializedCalendar from '../../components/calendar/SpecializedCalendar';
 import { ServiceCategory } from '../../types/service';
 import staffService from '../../services/staffService';
@@ -44,8 +44,10 @@ const GroomingCalendarPage: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ mt: 4, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <>
+      <GlobalStyles styles={{ body: { overflowX: 'hidden' } }} />
+      <Container maxWidth="xl" sx={{ overflow: 'hidden' }}>
+      <Box sx={{ mt: 4, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', overflow: 'visible' }}>
         <Typography variant="h4" gutterBottom sx={{ mb: 0 }}>
           Grooming Calendar
         </Typography>
@@ -92,6 +94,7 @@ const GroomingCalendarPage: React.FC = () => {
         staffId={selectedGroomer === 'all' ? undefined : selectedGroomer}
       />
     </Container>
+    </>
   );
 };
 
