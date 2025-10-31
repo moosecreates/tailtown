@@ -49,7 +49,7 @@ const GroomingCalendarPage: React.FC = () => {
         <Typography variant="h4" gutterBottom sx={{ mb: 0 }}>
           Grooming Calendar
         </Typography>
-        <FormControl sx={{ minWidth: 200 }}>
+        <FormControl sx={{ minWidth: 200, maxWidth: 250 }}>
           <InputLabel id="groomer-select-label">Filter by Groomer</InputLabel>
           <Select
             labelId="groomer-select-label"
@@ -59,6 +59,12 @@ const GroomingCalendarPage: React.FC = () => {
             onChange={handleGroomerChange}
             disabled={loading}
             MenuProps={{
+              PaperProps: {
+                sx: {
+                  maxWidth: 250,
+                  width: '100%',
+                },
+              },
               anchorOrigin: {
                 vertical: 'bottom',
                 horizontal: 'left',
