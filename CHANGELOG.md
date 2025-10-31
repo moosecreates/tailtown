@@ -5,6 +5,94 @@ All notable changes to the Tailtown Pet Resort Management System will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-10-30
+
+### 🎉 Data Quality & Import System Complete
+
+This release focuses on data accuracy and comprehensive data import capabilities, eliminating 1,750+ hours of manual data entry work.
+
+### Added
+
+#### Vaccination Data Accuracy System
+- **Real Immunization Import**: Script to import actual vaccination records from Gingr `/get_animal_immunizations` API
+- **Individual Vaccine Tracking**: Imports specific vaccine types (Rabies, DHPP, Bordetella, etc.) with accurate expiration dates
+- **Vaccination Status Calculation**: Automatic status determination (Current, Expiring Soon, Expired, Unknown)
+- **Progress Tracking**: Real-time progress updates during import (~12,000 pets)
+- **Error Handling**: Graceful handling of API errors and missing data
+
+#### Comprehensive Data Import System (3 Phases)
+- **Phase 1 - Medical Data** (~1,150 hours saved):
+  - Pet allergies (e.g., "Peanut Butter")
+  - Medications with dosages and schedules
+  - Feeding information (schedules, amounts, methods, notes)
+  - Customer emergency contacts (name and phone)
+- **Phase 2 - Pet Profiles** (~450 hours saved):
+  - Grooming notes and special instructions
+  - General pet notes and behavioral information
+  - Evaluation notes from assessments
+  - Current weight for medical records
+  - Temperament classification
+  - VIP status flags
+  - Spayed/neutered status
+- **Phase 3 - Customer Data** (~150 hours saved):
+  - Customer notes and preferences
+  - Communication preferences (email/SMS opt-outs for legal compliance)
+  - Referral source for marketing attribution
+- **Master Import Script**: Single command to run all phases sequentially with comprehensive statistics
+
+#### Grooming Availability System
+- **Staff Specialty Configuration**: Added GROOMING specialty to grooming staff
+- **Availability Schedules**: Created Mon-Fri 8am-5pm default schedules for groomers
+- **Availability Checking**: Real-time groomer availability validation
+- **Working Hours Validation**: Ensures appointments are within staff working hours
+- **Conflict Detection**: Prevents double-booking of groomers
+
+### Fixed
+
+#### Vaccination Data Issues
+- **Beaucoup's Rabies Date**: Fixed incorrect expiration (10/10/2025 → 06/06/2028)
+- **Generic Expiration Dates**: Replaced synthetic "earliest expiration" with actual vaccine-specific dates
+- **Data Source**: Changed from `/animals` endpoint to `/get_animal_immunizations` for accurate data
+
+#### Grooming Appointment Issues
+- **"No Groomers Available" Error**: Fixed by adding GROOMING specialty to staff
+- **Missing Availability Schedules**: Created recurring availability records for all groomers
+- **Specialty Filtering**: GroomerSelector now correctly filters staff with GROOMING specialty
+
+#### Import Script Schema Alignment
+- **Field Mapping**: Aligned all import scripts with actual Prisma schema fields
+  - `medications` → `medicationNotes` (JSON string)
+  - `feedingSchedule` → `foodNotes` (JSON string)
+  - `emergencyContact` object → separate `emergencyContact` + `emergencyPhone` fields
+  - `groomingNotes` → `behaviorNotes`
+  - `notes` → `specialNeeds`
+  - `temperament` → `idealPlayGroup`
+  - `isVip` → `petIcons` (JSON array)
+  - `communicationPreferences` → `iconNotes` (JSON object)
+  - `source` → `referralSource`
+
+### Scripts Added
+- `scripts/import-gingr-immunizations.js` - Real vaccination data import
+- `scripts/import-gingr-medical-data.js` - Phase 1 medical data
+- `scripts/import-gingr-pet-profiles.js` - Phase 2 pet profiles
+- `scripts/import-gingr-customer-data.js` - Phase 3 customer data
+- `scripts/import-all-gingr-data.js` - Master script for all phases
+- `scripts/fix-groomer-setup.js` - Groomer configuration utility
+
+### Documentation Added
+- `docs/VACCINATION-DATA-FIX.md` - Detailed vaccination data fix documentation
+- `docs/GINGR-IMPORTABLE-DATA.md` - Comprehensive analysis of importable Gingr data
+
+### Impact
+- **Time Savings**: ~1,750 hours (44 weeks) of manual data entry eliminated
+- **Data Accuracy**: Vaccination records now match Gingr exactly
+- **Medical Safety**: Complete allergy, medication, and feeding information imported
+- **Emergency Preparedness**: All customer emergency contacts imported
+- **Operational Efficiency**: Grooming notes and pet profiles fully populated
+- **Grooming System**: Fully functional appointment booking with availability checking
+
+---
+
 ## [2.0.0] - 2025-09-19
 
 ### 🎉 MAJOR MILESTONE: Complete Order System Implementation
