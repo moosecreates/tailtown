@@ -13,8 +13,10 @@ interface MetricCardProps {
 /**
  * MetricCard - Displays a single metric with icon and optional click handler
  * Used on the Dashboard to show key business metrics
+ * 
+ * Performance: Memoized to prevent unnecessary re-renders when parent updates
  */
-const MetricCard: React.FC<MetricCardProps> = ({
+const MetricCard: React.FC<MetricCardProps> = React.memo(({
   title,
   value,
   icon,
@@ -22,9 +24,12 @@ const MetricCard: React.FC<MetricCardProps> = ({
   isActive = false,
   isLoading = false
 }) => {
-  const displayValue = isLoading || value === null 
-    ? <CircularProgress size={20} /> 
-    : value;
+  const displayValue = React.useMemo(() => 
+    isLoading || value === null 
+      ? <CircularProgress size={20} /> 
+      : value,
+    [isLoading, value]
+  );
 
   return (
     <Paper
@@ -63,6 +68,8 @@ const MetricCard: React.FC<MetricCardProps> = ({
       </Box>
     </Paper>
   );
-};
+});
+
+MetricCard.displayName = 'MetricCard';
 
 export default MetricCard;

@@ -148,8 +148,10 @@ interface KennelCardProps {
 /**
  * Printable kennel card component to be hung on each kennel
  * Displays pet information, icons, alerts, and reservation details
+ * 
+ * Performance: Memoized with useMemo for expensive date formatting
  */
-const KennelCard: React.FC<KennelCardProps> = ({
+const KennelCard: React.FC<KennelCardProps> = React.memo(({
   kennelNumber,
   suiteType,
   petName,
@@ -165,33 +167,40 @@ const KennelCard: React.FC<KennelCardProps> = ({
   endDate,
   alerts = [],
 }) => {
-  // Format suite type for display
-  const formattedSuiteType = suiteType
-    .replace('_', ' ')
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  // Format suite type for display (memoized)
+  const formattedSuiteType = React.useMemo(() => 
+    suiteType
+      .replace('_', ' ')
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' '),
+    [suiteType]
+  );
 
-  // Format dates for display
-  const formattedStartDate = format(startDate, 'MMM d, yyyy');
-  const formattedStartTime = format(startDate, 'h:mm a');
-  const formattedEndDate = format(endDate, 'MMM d, yyyy');
-  const formattedEndTime = format(endDate, 'h:mm a');
+  // Format dates for display (memoized to avoid re-formatting on every render)
+  const formattedDates = React.useMemo(() => ({
+    startDate: format(startDate, 'MMM d, yyyy'),
+    startTime: format(startDate, 'h:mm a'),
+    endDate: format(endDate, 'MMM d, yyyy'),
+    endTime: format(endDate, 'h:mm a'),
+  }), [startDate, endDate]);
   
   // Always use today's date for the printed date
-  const today = new Date();
+  const today = React.useMemo(() => new Date(), []);
   
-  // Generate week days for the schedule table starting from check-in date
-  const weekStart = startOfWeek(startDate, { weekStartsOn: 0 }); // 0 = Sunday
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const day = addDays(weekStart, i);
-    return {
-      date: day,
-      dayName: format(day, 'EEE'), // Short day name (Mon, Tue, etc.)
-      dayNumber: format(day, 'd'), // Day of month
-    };
-  });
+  // Generate week days for the schedule table (memoized)
+  const weekDays = React.useMemo(() => {
+    const weekStart = startOfWeek(startDate, { weekStartsOn: 0 }); // 0 = Sunday
+    return Array.from({ length: 7 }, (_, i) => {
+      const day = addDays(weekStart, i);
+      return {
+        date: day,
+        dayName: format(day, 'EEE'), // Short day name (Mon, Tue, etc.)
+        dayNumber: format(day, 'd'), // Day of month
+      };
+    });
+  }, [startDate]);
 
   return (
     <PrintableCard>
@@ -234,10 +243,10 @@ const KennelCard: React.FC<KennelCardProps> = ({
               <SectionTitle variant="h5" sx={{ fontSize: '1.5rem', mb: 2 }}>Stay Information</SectionTitle>
               <Box sx={{ pl: 2 }}>
                 <Typography variant="h6" sx={{ mb: 1 }}>
-                  <strong>Check-In:</strong> {formattedStartDate} at {formattedStartTime}
+                  <strong>Check-In:</strong> {formattedDates.startDate} at {formattedDates.startTime}
                 </Typography>
                 <Typography variant="h6" sx={{ mb: 1 }}>
-                  <strong>Check-Out:</strong> {formattedEndDate} at {formattedEndTime}
+                  <strong>Check-Out:</strong> {formattedDates.endDate} at {formattedDates.endTime}
                 </Typography>
               </Box>
             </Box>
@@ -385,6 +394,8 @@ const KennelCard: React.FC<KennelCardProps> = ({
       </CardContent>
     </PrintableCard>
   );
-};
+});
+
+KennelCard.displayName = 'KennelCard';
 
 export default KennelCard;
