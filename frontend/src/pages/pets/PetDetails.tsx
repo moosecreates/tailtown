@@ -732,6 +732,50 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
               </FormControl>
             </Box>
             
+            {/* Vaccination Status */}
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="h6" gutterBottom>Vaccination Status</Typography>
+              <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                {pet.vaccinationStatus && Object.keys(pet.vaccinationStatus).length > 0 ? (
+                  <Box>
+                    {Object.entries(pet.vaccinationStatus).map(([vaccineType, vaccineInfo]: [string, any]) => (
+                      <Box key={vaccineType} sx={{ mb: 1 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                          <Typography variant="body1" fontWeight="medium">
+                            {vaccineType}
+                          </Typography>
+                          <Chip 
+                            label={vaccineInfo.status} 
+                            size="small" 
+                            color={
+                              vaccineInfo.status === 'CURRENT' ? 'success' :
+                              vaccineInfo.status === 'EXPIRED' ? 'error' :
+                              'warning'
+                            }
+                            variant="outlined"
+                          />
+                        </Box>
+                        {vaccineInfo.expiration && (
+                          <Typography variant="body2" color="text.secondary">
+                            Expires: {new Date(vaccineInfo.expiration).toLocaleDateString()}
+                          </Typography>
+                        )}
+                        {vaccineInfo.lastChecked && (
+                          <Typography variant="caption" color="text.secondary">
+                            Last checked: {new Date(vaccineInfo.lastChecked).toLocaleDateString()}
+                          </Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No vaccination records available
+                  </Typography>
+                )}
+              </Paper>
+            </Box>
+            
             {/* Temperament Section */}
             <Box sx={{ mt: 2 }}>
               <FormLabel component="legend">Temperament</FormLabel>
