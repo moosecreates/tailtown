@@ -78,8 +78,15 @@ export const getAllPets = async (
         skip,
         take: limit,
         orderBy: { name: 'asc' },
-        // Temporarily removing include clause to avoid TypeScript errors
-        // Will need to regenerate Prisma client if owner relation is needed
+        include: {
+          owner: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true
+            }
+          }
+        }
       }),
       prisma.pet.count({ where }),
     ]);

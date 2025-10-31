@@ -21,23 +21,26 @@ export const getBreeds = async (
     const { species } = req.query;
     const tenantId = req.headers['x-tenant-id'] as string || 'dev';
 
-    const where: any = {
-      tenantId,
-      isActive: true
-    };
-
+    let breeds;
+    
     if (species) {
-      where.species = species;
+      breeds = await prisma.$queryRaw`
+        SELECT id, name, species, "gingrId", "isActive"
+        FROM breeds
+        WHERE "tenantId" = ${tenantId}
+          AND "isActive" = true
+          AND species = ${species}
+        ORDER BY name ASC
+      `;
+    } else {
+      breeds = await prisma.$queryRaw`
+        SELECT id, name, species, "gingrId", "isActive"
+        FROM breeds
+        WHERE "tenantId" = ${tenantId}
+          AND "isActive" = true
+        ORDER BY name ASC
+      `;
     }
-
-    const breeds = await prisma.$queryRaw`
-      SELECT id, name, species, "gingrId", "isActive"
-      FROM breeds
-      WHERE "tenantId" = ${tenantId}
-        AND "isActive" = true
-        ${species ? prisma.$queryRaw`AND species = ${species}` : prisma.$queryRaw``}
-      ORDER BY name ASC
-    `;
 
     res.status(200).json({
       status: 'success',

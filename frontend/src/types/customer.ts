@@ -21,6 +21,7 @@ export interface Customer {
   iconColor?: string; // Customer avatar color (blue, green, purple, etc.)
   customerIcons?: string[]; // Array of icon IDs for quick visual reference
   iconNotes?: Record<string, string>; // Custom notes for generic flag icons
+  veterinarianId?: string; // Link to preferred veterinarian
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;

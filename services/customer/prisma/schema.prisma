@@ -33,6 +33,7 @@ model Customer {
   customerIcons    Json?                   // Array of icon IDs for quick visual reference (VIP, payment issues, etc.)
   iconNotes        Json?                   // Custom notes for generic flag icons
   externalId       String?                 // ID from external system (Gingr, etc.) for migration tracking
+  veterinarianId   String?                 // Link to preferred veterinarian
   isActive         Boolean                 @default(true)
   createdAt        DateTime                @default(now())
   updatedAt        DateTime                @updatedAt

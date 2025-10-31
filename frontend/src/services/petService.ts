@@ -32,6 +32,11 @@ export interface Pet {
   vetPhone: string | null;
   veterinarianId?: string | null;
   customerId: string;
+  owner?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;

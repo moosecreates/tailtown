@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Veterinarian Management & Auto-Fill System with Gingr API integration
+- Enhanced pet list display with customer last names for easier identification
+- Compact table design with configurable page sizes (25, 50, 100, 200 pets per page)
+- Automatic veterinarian population for 14,125+ customers (75% coverage)
+- Bulk veterinarian association import from Gingr API data
 - Documentation for calendar components in `docs/features/CalendarComponents.md`
 - Analytics dashboard with service revenue breakdown and filtering options
 - Customer value reporting with transaction history and service type breakdown

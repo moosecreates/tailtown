@@ -75,6 +75,7 @@ const PetDetails = () => {
     allergies: null,
     vetName: null,
     vetPhone: null,
+    veterinarianId: null,
     customerId: '',
     isActive: true,
     petIcons: [],
@@ -95,6 +96,8 @@ const PetDetails = () => {
       setBreeds(breedsData);
       setVets(vetsData);
       setTemperamentTypes(temperamentsData);
+      
+      console.log('Loaded veterinarians:', vetsData.length);
 
       if (!isNewPet) {
         // Load existing pet data
@@ -107,11 +110,42 @@ const PetDetails = () => {
         
         setPet(petData);
         
+        console.log('Loaded pet data:', {
+          name: petData.name,
+          vetName: petData.vetName,
+          vetPhone: petData.vetPhone,
+          veterinarianId: petData.veterinarianId
+        });
+        
         // Load the specific owner for this pet
         if (petData.customerId) {
           try {
             const ownerData = await customerService.getCustomerById(petData.customerId);
+            console.log('Loaded customer data:', ownerData);
             setPetOwner(ownerData);
+            
+            // Auto-populate veterinarian from customer's preferred vet if pet has no vet
+            console.log('Checking auto-fill conditions:');
+            console.log('- pet.veterinarianId:', petData.veterinarianId);
+            console.log('- pet.vetName:', petData.vetName);
+            console.log('- owner.veterinarianId:', ownerData.veterinarianId);
+            
+            if (!petData.veterinarianId && !petData.vetName && ownerData.veterinarianId) {
+              console.log('Auto-populating veterinarian from customer:', ownerData.veterinarianId);
+              
+              // Find the veterinarian in our list
+              const customerVet = vetsData.find(v => v.id === ownerData.veterinarianId);
+              if (customerVet) {
+                petData.veterinarianId = customerVet.id;
+                petData.vetName = customerVet.name;
+                petData.vetPhone = customerVet.phone || null;
+                console.log('Auto-filled veterinarian:', customerVet.name);
+              } else {
+                console.log('Customer veterinarian not found in vets list');
+              }
+            } else {
+              console.log('Auto-fill conditions not met');
+            }
           } catch (err) {
             console.error('Error loading pet owner:', err);
           }
@@ -231,6 +265,7 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
         allergies: pet.allergies,
         vetName: pet.vetName,
         vetPhone: pet.vetPhone,
+        veterinarianId: pet.veterinarianId,
         petIcons: pet.petIcons || [],
         iconNotes: pet.iconNotes || {},
         vaccinationStatus: pet.vaccinationStatus || {},
@@ -612,14 +647,28 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
               <FormControl fullWidth>
                 <Autocomplete<Veterinarian, false, false, true>
                   options={vets}
-                  getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
-                  value={
-                    // First try to find by veterinarianId (linked), then fall back to vetName (legacy)
-                    (pet.veterinarianId ? vets.find(v => v.id === pet.veterinarianId) : null) ||
-                    vets.find(v => v.name === pet.vetName) || 
-                    null
-                  }
+                  loading={vets.length === 0}
+                  getOptionLabel={(option) => {
+                    if (typeof option === 'string') return option;
+                    return option.name || '';
+                  }}
+                  value={(() => {
+                    // First try to find by veterinarianId (linked)
+                    if (pet.veterinarianId) {
+                      const foundVet = vets.find(v => v.id === pet.veterinarianId);
+                      if (foundVet) return foundVet;
+                    }
+                    // Then try to match by vetName (legacy)
+                    if (pet.vetName) {
+                      const foundVet = vets.find(v => v.name === pet.vetName);
+                      if (foundVet) return foundVet;
+                      // If not found in list, return the name as string for freeSolo
+                      return pet.vetName;
+                    }
+                    return null;
+                  })()}
                   onChange={(_, newValue) => {
+                    console.log('Veterinarian changed:', newValue);
                     if (typeof newValue === 'string') {
                       // Free text entry - no veterinarian link
                       setPet(prev => ({ ...prev, vetName: newValue, vetPhone: null, veterinarianId: null }));
@@ -640,7 +689,8 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
                     <TextField
                       {...params}
                       label="Veterinarian"
-                      placeholder="Search veterinarians..."
+                      placeholder="Type to search or enter custom name..."
+                      helperText={vets.length > 0 ? `${vets.length} veterinarians available` : 'Loading veterinarians...'}
                     />
                   )}
                   renderOption={(props, option) => (
@@ -657,10 +707,16 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
                     </li>
                   )}
                   freeSolo
-                  onInputChange={(_, newInputValue) => {
-                    if (newInputValue && !vets.find(v => v.name === newInputValue)) {
-                      setPet(prev => ({ ...prev, vetName: newInputValue }));
-                    }
+                  filterOptions={(options, state) => {
+                    // Limit to first 100 results for performance
+                    const filtered = options.filter(option =>
+                      option.name.toLowerCase().includes(state.inputValue.toLowerCase())
+                    );
+                    return filtered.slice(0, 100);
+                  }}
+                  isOptionEqualToValue={(option, value) => {
+                    if (typeof value === 'string') return option.name === value;
+                    return option.id === value.id;
                   }}
                 />
               </FormControl>
