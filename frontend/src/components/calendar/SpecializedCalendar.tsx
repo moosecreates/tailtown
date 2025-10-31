@@ -33,6 +33,12 @@ interface SpecializedCalendarProps {
    * Optional title for the calendar
    */
   calendarTitle?: string;
+  
+  /**
+   * Optional staff ID to filter reservations by
+   * If provided, only reservations assigned to this staff member will be shown
+   */
+  staffId?: string;
 }
 
 /**
@@ -43,7 +49,7 @@ interface SpecializedCalendarProps {
  * 
  * @component
  */
-const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate, serviceCategories, calendarTitle }) => {
+const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate, serviceCategories, calendarTitle, staffId }) => {
   const [events, setEvents] = useState<EventInput[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<{ start: Date; end: Date } | null>(null);
@@ -64,10 +70,12 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
       );
       
       if (response?.status === 'success' && (response as any)?.data?.reservations && Array.isArray((response as any).data.reservations)) {
-        // Filter reservations by service category if specified
+        // Filter reservations by service category and/or staff ID if specified
         let filteredReservations = (response as any).data.reservations;
+        
+        // Filter by service category
         if (serviceCategories && serviceCategories.length > 0) {
-          filteredReservations = (response as any).data.reservations.filter((reservation: any) => {
+          filteredReservations = filteredReservations.filter((reservation: any) => {
             // Check if the reservation's service category matches any of the specified categories
             if (!reservation.service || typeof reservation.service !== 'object') {
               return false;
@@ -80,8 +88,15 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
             }
             
             const serviceCategory = serviceObj.serviceCategory;
-            return serviceCategories.some(category => serviceCategory === category);
+            return serviceCategories.includes(serviceObj.serviceCategory);
           });
+        }
+        
+        // Filter by staff ID if specified
+        if (staffId) {
+          filteredReservations = filteredReservations.filter((reservation: any) => 
+            reservation.staffId === staffId
+          );
         }
         
         const calendarEvents = filteredReservations.map((reservation: any) => {
@@ -186,7 +201,7 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
       setEvents([]);
       return [];
     }
-  }, [serviceCategories]);
+  }, [serviceCategories, staffId]);
 
   // Load reservations when the component mounts or when serviceCategories changes
   useEffect(() => {
