@@ -172,28 +172,11 @@ const GroomerSelector: React.FC<GroomerSelectorProps> = ({
         }
       }
 
-      // 4. Check existing appointments/schedules for conflicts
-      const schedules = await staffService.getStaffSchedules(groomerId, dateStr, dateStr);
-      
-      if (schedules.length > 0 && startTime && endTime) {
-        const appointmentStart = format(startTime, 'HH:mm');
-        const appointmentEnd = format(endTime, 'HH:mm');
-        
-        for (const schedule of schedules) {
-          // Check for time overlap
-          if (
-            (appointmentStart >= schedule.startTime && appointmentStart < schedule.endTime) ||
-            (appointmentEnd > schedule.startTime && appointmentEnd <= schedule.endTime) ||
-            (appointmentStart <= schedule.startTime && appointmentEnd >= schedule.endTime)
-          ) {
-            return {
-              available: false,
-              reason: `Busy ${schedule.startTime}-${schedule.endTime}`,
-              status: 'busy'
-            };
-          }
-        }
-      }
+      // 4. Check existing grooming appointments for conflicts
+      // Note: We don't check staff schedules here because those represent working hours,
+      // not busy times. We need to check actual grooming appointments.
+      // TODO: Implement grooming appointment conflict checking via API
+      // For now, assume groomer is available if they have availability set for this day
 
       // All checks passed - groomer is available
       return {
