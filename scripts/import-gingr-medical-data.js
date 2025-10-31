@@ -156,11 +156,26 @@ function processFeedingInfo(feedingData) {
  * Process medication information
  */
 function processMedicationInfo(medicationData) {
-  if (!medicationData || !medicationData.animal_medication_schedules || medicationData.animal_medication_schedules.length === 0) {
+  if (!medicationData || !medicationData.animal_medication_schedules) {
     return null;
   }
   
-  return medicationData.animal_medication_schedules.map(med => ({
+  // Handle both array and object formats
+  let schedules = medicationData.animal_medication_schedules;
+  if (!Array.isArray(schedules)) {
+    // If it's an object, try to extract values or wrap it
+    if (typeof schedules === 'object') {
+      schedules = Object.values(schedules);
+    } else {
+      return null;
+    }
+  }
+  
+  if (schedules.length === 0) {
+    return null;
+  }
+  
+  return schedules.map(med => ({
     name: med.medication_name || med.label,
     dosage: med.dosage || null,
     schedule: med.schedule || [],
