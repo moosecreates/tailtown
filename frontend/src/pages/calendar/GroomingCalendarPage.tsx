@@ -58,11 +58,13 @@ const GroomingCalendarPage: React.FC = () => {
             label="Filter by Groomer"
             onChange={handleGroomerChange}
             disabled={loading}
+            autoWidth={false}
+            sx={{ overflow: 'hidden' }}
             MenuProps={{
               PaperProps: {
                 sx: {
-                  maxWidth: 250,
-                  width: '100%',
+                  width: '250px !important',
+                  maxWidth: '250px !important',
                 },
               },
               anchorOrigin: {
