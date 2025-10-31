@@ -102,9 +102,14 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
         }
         
         const calendarEvents = filteredReservations.map((reservation: any) => {
+          // Add "(Unassigned)" label for grooming appointments without a groomer
+          const isGrooming = reservation.service?.serviceCategory === 'GROOMING';
+          const isUnassigned = isGrooming && !reservation.staffAssignedId;
+          const unassignedLabel = isUnassigned ? ' (Unassigned)' : '';
+          
           return {
             id: reservation.id,
-            title: `${reservation.pet?.name || 'Pet'} - ${reservation.service?.name || 'Service'}`,
+            title: `${reservation.pet?.name || 'Pet'} - ${reservation.service?.name || 'Service'}${unassignedLabel}`,
             start: reservation.startDate,
             end: reservation.endDate,
             backgroundColor: getStatusColor(reservation.status),
