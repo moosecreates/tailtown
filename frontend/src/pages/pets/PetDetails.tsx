@@ -34,6 +34,54 @@ import referenceDataService, { Breed, Veterinarian, TemperamentType } from '../.
 
 
 /**
+ * Map vaccination data from lowercase keys to component-expected capitalized keys
+ */
+const mapVaccinationData = (vaccinationStatus: any) => {
+  if (!vaccinationStatus) return {};
+  
+  const mapped: any = {};
+  const keyMap: { [key: string]: string } = {
+    'rabies': 'Rabies',
+    'dhpp': 'DHPP', 
+    'bordetella': 'Bordetella',
+    'fvrcp': 'FVRCP',
+    'canine_influenza': 'Influenza',
+    'feline_leukemia': 'Lepto' // Map to existing Lepto field
+  };
+  
+  Object.entries(vaccinationStatus).forEach(([key, value]) => {
+    const mappedKey = keyMap[key] || key;
+    mapped[mappedKey] = value;
+  });
+  
+  return mapped;
+};
+
+/**
+ * Map vaccination expirations from lowercase keys to component-expected capitalized keys
+ */
+const mapVaccinationExpirations = (vaccineExpirations: any) => {
+  if (!vaccineExpirations) return {};
+  
+  const mapped: any = {};
+  const keyMap: { [key: string]: string } = {
+    'rabies': 'Rabies',
+    'dhpp': 'DHPP',
+    'bordetella': 'Bordetella', 
+    'fvrcp': 'FVRCP',
+    'canine_influenza': 'Influenza',
+    'feline_leukemia': 'Lepto' // Map to existing Lepto field
+  };
+  
+  Object.entries(vaccineExpirations).forEach(([key, value]) => {
+    const mappedKey = keyMap[key] || key;
+    mapped[mappedKey] = value;
+  });
+  
+  return mapped;
+};
+
+/**
  * PetDetails component handles the creation and editing of pet profiles.
  * It manages pet data, photo uploads, and customer associations.
  */
@@ -735,23 +783,27 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
             {/* Vaccination Status */}
             <Box sx={{ mt: 2 }}>
               <VaccinationStatus
-                vaccinationStatus={pet.vaccinationStatus}
-                vaccineExpirations={pet.vaccineExpirations}
+                vaccinationStatus={mapVaccinationData(pet.vaccinationStatus)}
+                vaccineExpirations={mapVaccinationExpirations(pet.vaccineExpirations)}
                 onVaccinationStatusChange={(key, value) => {
+                  // Map back to lowercase when saving
+                  const lowercaseKey = key.toLowerCase();
                   setPet(prev => ({
                     ...prev,
                     vaccinationStatus: {
                       ...(prev.vaccinationStatus || {}),
-                      [key]: value
+                      [lowercaseKey]: value
                     }
                   }));
                 }}
                 onVaccineExpirationChange={(key, value) => {
+                  // Map back to lowercase when saving
+                  const lowercaseKey = key.toLowerCase();
                   setPet(prev => ({
                     ...prev,
                     vaccineExpirations: {
                       ...(prev.vaccineExpirations || {}),
-                      [key]: value
+                      [lowercaseKey]: value
                     }
                   }));
                 }}
@@ -840,40 +892,6 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
               </FormControl>
             </Box>
           </Box>
-
-          <Divider sx={{ my: 2 }} />
-
-          {/* Vaccination Status */}
-          <VaccinationStatus
-            vaccinationStatus={pet.vaccinationStatus}
-            vaccineExpirations={pet.vaccineExpirations}
-            onVaccinationStatusChange={(key, value) => {
-              setPet(prev => {
-                const newPet = {
-                  ...prev,
-                  vaccinationStatus: {
-                    ...(prev.vaccinationStatus || {}),
-                    [key]: value
-                  }
-                };
-                console.log('Updated pet state:', newPet);
-                return newPet;
-              });
-            }}
-            onVaccineExpirationChange={(key, value) => {
-              setPet(prev => {
-                const newPet = {
-                  ...prev,
-                  vaccineExpirations: {
-                    ...(prev.vaccineExpirations || {}),
-                    [key]: value
-                  }
-                };
-                console.log('Updated pet state:', newPet);
-                return newPet;
-              });
-            }}
-          />
         </Paper>
 
         <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
