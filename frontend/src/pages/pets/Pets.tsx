@@ -36,7 +36,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { Pet, petService } from '../../services/petService';
 import PetNameWithIcons from '../../components/pets/PetNameWithIcons';
-import VaccineComplianceBadge from '../../components/pets/VaccineComplianceBadge';
+import SimpleVaccinationBadge from '../../components/pets/SimpleVaccinationBadge';
 import { debounce } from 'lodash';
 
 
@@ -243,9 +243,9 @@ const Pets = () => {
                         {pet.weight ? `${pet.weight} lbs` : 'N/A'}
                       </TableCell>
                       <TableCell onClick={() => handleRowClick(pet.id)} sx={{ cursor: 'pointer', py: 0.5 }}>
-                        <VaccineComplianceBadge 
-                          petId={pet.id} 
-                          showDetails={false}
+                        <SimpleVaccinationBadge 
+                          pet={pet} 
+                          showDetails={true}
                         />
                       </TableCell>
                       <TableCell align="right" sx={{ py: 0.5 }}>
