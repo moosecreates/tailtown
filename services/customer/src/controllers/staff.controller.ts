@@ -70,6 +70,7 @@ export const getAllStaff = async (
         role: true,
         department: true,
         position: true,
+        specialties: true, // Include specialties for grooming/training staff
         isActive: true,
         createdAt: true,
         updatedAt: true,
