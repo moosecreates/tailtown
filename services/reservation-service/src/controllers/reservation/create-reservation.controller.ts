@@ -73,6 +73,7 @@ export const createReservation = catchAsync(async (req: TenantRequest, res: Resp
     deposit,
     notes,
     staffNotes,
+    staffAssignedId, // For groomer/trainer assignment
     addOnServices
   } = req.body;
 
@@ -400,6 +401,11 @@ export const createReservation = catchAsync(async (req: TenantRequest, res: Resp
   if (assignedResourceId) {
     reservationData.resource = {
       connect: { id: assignedResourceId }
+    };
+  }
+  if (staffAssignedId) {
+    reservationData.staffAssigned = {
+      connect: { id: staffAssignedId }
     };
   }
   if (price !== undefined) reservationData.price = parseFloat(String(price));

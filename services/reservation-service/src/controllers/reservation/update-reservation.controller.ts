@@ -126,6 +126,7 @@ export const updateReservation = catchAsync(async (
     deposit,
     notes,
     staffNotes,
+    staffAssignedId,
     addOnServices
   } = req.body;
 
@@ -428,6 +429,14 @@ export const updateReservation = catchAsync(async (
   if (deposit !== undefined) updateData.deposit = parseFloat(String(deposit));
   if (notes !== undefined) updateData.notes = notes;
   if (staffNotes !== undefined) updateData.staffNotes = staffNotes;
+  if (staffAssignedId !== undefined) {
+    if (staffAssignedId) {
+      updateData.staffAssignedId = staffAssignedId;
+    } else {
+      // Allow unsetting the staff assignment
+      updateData.staffAssignedId = null;
+    }
+  }
   
   logger.info(`Updating reservation with data:`, { requestId, updateData });
   
