@@ -51,6 +51,7 @@ const CheckoutPage: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [savePaymentInfo, setSavePaymentInfo] = useState(false);
+  const [completedServiceCategory, setCompletedServiceCategory] = useState<string | null>(null);
   
   // Use items from the shopping cart state
   const cartItems = state.items as CartItemWithAddOns[];
@@ -313,6 +314,22 @@ const CheckoutPage: React.FC = () => {
       // Process successful payment
       setSuccess(true);
       
+      // Store the service category before clearing cart (for navigation)
+      const hasGroomingService = cartItems.some((item: CartItemWithAddOns) => 
+        item.serviceCategory === 'GROOMING'
+      );
+      const hasTrainingService = cartItems.some((item: CartItemWithAddOns) => 
+        item.serviceCategory === 'TRAINING'
+      );
+      
+      if (hasGroomingService) {
+        setCompletedServiceCategory('GROOMING');
+      } else if (hasTrainingService) {
+        setCompletedServiceCategory('TRAINING');
+      } else {
+        setCompletedServiceCategory('OTHER');
+      }
+      
       // Clear the cart after successful payment
       clearCart();
       
@@ -348,17 +365,10 @@ const CheckoutPage: React.FC = () => {
   };
   
   const handleContinueShopping = () => {
-    // Determine which calendar to navigate to based on service category
-    const hasGroomingService = cartItems.some((item: CartItemWithAddOns) => 
-      item.serviceCategory === 'GROOMING'
-    );
-    const hasTrainingService = cartItems.some((item: CartItemWithAddOns) => 
-      item.serviceCategory === 'TRAINING'
-    );
-    
-    if (hasGroomingService) {
+    // Navigate to appropriate calendar based on completed service category
+    if (completedServiceCategory === 'GROOMING') {
       navigate('/calendar/grooming');
-    } else if (hasTrainingService) {
+    } else if (completedServiceCategory === 'TRAINING') {
       navigate('/calendar/training');
     } else {
       navigate('/calendar');
