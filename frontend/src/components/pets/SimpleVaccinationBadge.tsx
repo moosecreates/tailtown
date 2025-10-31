@@ -92,10 +92,10 @@ const SimpleVaccinationBadge: React.FC<SimpleVaccinationBadgeProps> = ({
 
   // Get detailed vaccine info for tooltip
   const getDetailedTooltip = () => {
-    const vaccineDetails = [];
+    const vaccineDetails: string[] = [];
     
     requiredVaccines.forEach(vaccine => {
-      const vaccineRecord = pet.vaccinationStatus?.[vaccine];
+      const vaccineRecord = pet.vaccinationStatus?.[vaccine] as any;
       const vaccineName = vaccine.charAt(0).toUpperCase() + vaccine.slice(1);
       
       if (!vaccineRecord) {
