@@ -34,8 +34,9 @@ import {
   FilterList as FilterIcon
 } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
-import { petService, Pet } from '../../services/petService';
+import { Pet, petService } from '../../services/petService';
 import PetNameWithIcons from '../../components/pets/PetNameWithIcons';
+import VaccineComplianceBadge from '../../components/pets/VaccineComplianceBadge';
 import { debounce } from 'lodash';
 
 
@@ -91,47 +92,7 @@ const Pets = () => {
     return () => debouncedSearch.cancel();
   }, [searchTerm, initialLoad, debouncedSearch]);
 
-  const getVaccinationStatus = (pet: Pet) => {
-    if (!pet.vaccinationStatus || Object.keys(pet.vaccinationStatus).length === 0) {
-      return (
-        <Chip 
-          label="No Record" 
-          size="small" 
-          variant="outlined"
-          sx={{ fontSize: '0.7rem', height: '20px' }}
-        />
-      );
-    }
-
-    // Get the first vaccination status (we're using "General" as the key from import)
-    const vaccinationKey = Object.keys(pet.vaccinationStatus)[0];
-    const vaccination = pet.vaccinationStatus[vaccinationKey];
-    
-    if (!vaccination) {
-      return (
-        <Chip 
-          label="No Record" 
-          size="small" 
-          variant="outlined"
-          sx={{ fontSize: '0.7rem', height: '20px' }}
-        />
-      );
-    }
-
-    const status = vaccination.status;
-    const isExpired = status === 'EXPIRED';
-    
-    return (
-      <Chip 
-        label={isExpired ? 'Expired' : 'Current'} 
-        size="small" 
-        color={isExpired ? 'error' : 'success'}
-        variant="outlined"
-        sx={{ fontSize: '0.7rem', height: '20px' }}
-      />
-    );
-  };
-
+  
   const handleRowClick = (id: string) => {
     navigate(`/pets/${id}`);
   };
@@ -282,7 +243,10 @@ const Pets = () => {
                         {pet.weight ? `${pet.weight} lbs` : 'N/A'}
                       </TableCell>
                       <TableCell onClick={() => handleRowClick(pet.id)} sx={{ cursor: 'pointer', py: 0.5 }}>
-                        {getVaccinationStatus(pet)}
+                        <VaccineComplianceBadge 
+                          petId={pet.id} 
+                          showDetails={false}
+                        />
                       </TableCell>
                       <TableCell align="right" sx={{ py: 0.5 }}>
                         <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
