@@ -94,14 +94,9 @@ const SpecializedCalendar: React.FC<SpecializedCalendarProps> = ({ onEventUpdate
         
         // Filter by staff ID if specified
         if (staffId) {
-          console.log('Filtering by staffId:', staffId);
-          console.log('Sample reservation fields:', filteredReservations[0]);
-          filteredReservations = filteredReservations.filter((reservation: any) => {
-            const match = reservation.staffId === staffId;
-            console.log(`Reservation ${reservation.id}: staffId=${reservation.staffId}, match=${match}`);
-            return match;
-          });
-          console.log('Filtered reservations count:', filteredReservations.length);
+          filteredReservations = filteredReservations.filter((reservation: any) => 
+            reservation.staffAssignedId === staffId
+          );
         }
         
         const calendarEvents = filteredReservations.map((reservation: any) => {
