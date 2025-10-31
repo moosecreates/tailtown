@@ -1,10 +1,11 @@
 import express from 'express';
 import * as resourceController from '../controllers/resource.controller';
+import { CacheStrategies } from '../middleware/cache.middleware';
 
 export const resourceRoutes = express.Router();
 
 // Resource routes
-resourceRoutes.get('/', resourceController.getAllResources);
+resourceRoutes.get('/', CacheStrategies.medium(), resourceController.getAllResources);
 
 // Specific routes must come before parameter routes
 // Resource availability routes
