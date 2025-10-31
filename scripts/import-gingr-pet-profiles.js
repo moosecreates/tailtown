@@ -140,26 +140,26 @@ async function importPetProfiles() {
         const updateData = {};
         let hasUpdates = false;
         
-        // Grooming notes
+        // Grooming notes - store in behaviorNotes
         const groomingNotes = stripHtml(animalData.grooming_notes);
         if (groomingNotes) {
-          updateData.groomingNotes = groomingNotes;
+          updateData.behaviorNotes = groomingNotes;
           petsWithGroomingNotes++;
           hasUpdates = true;
         }
         
-        // General notes
+        // General notes - store in specialNeeds
         const generalNotes = stripHtml(animalData.notes);
         if (generalNotes) {
-          updateData.notes = generalNotes;
+          updateData.specialNeeds = generalNotes;
           petsWithGeneralNotes++;
           hasUpdates = true;
         }
         
-        // Evaluation notes
+        // Evaluation notes - append to behaviorNotes if grooming notes don't exist
         const evaluationNotes = stripHtml(animalData.evaluation_notes);
-        if (evaluationNotes) {
-          updateData.evaluationNotes = evaluationNotes;
+        if (evaluationNotes && !groomingNotes) {
+          updateData.behaviorNotes = evaluationNotes;
           petsWithEvaluationNotes++;
           hasUpdates = true;
         }
@@ -171,23 +171,23 @@ async function importPetProfiles() {
           hasUpdates = true;
         }
         
-        // Temperament
+        // Temperament - store in idealPlayGroup as JSON
         if (animalData.temperment) {
-          updateData.temperament = animalData.temperment;
+          updateData.idealPlayGroup = animalData.temperment;
           petsWithTemperament++;
           hasUpdates = true;
         }
         
-        // VIP status
+        // VIP status - store in petIcons as JSON
         if (animalData.vip === '1' || animalData.vip === 1) {
-          updateData.isVip = true;
+          updateData.petIcons = JSON.stringify(['vip']);
           vipPets++;
           hasUpdates = true;
         }
         
         // Fixed status (spayed/neutered)
         if (animalData.fixed !== undefined && animalData.fixed !== null) {
-          updateData.isFixed = animalData.fixed === '1' || animalData.fixed === 1;
+          updateData.isNeutered = animalData.fixed === '1' || animalData.fixed === 1;
           hasUpdates = true;
         }
         
@@ -237,31 +237,32 @@ async function importPetProfiles() {
     const examples = await prisma.pet.findMany({
       where: {
         OR: [
-          { groomingNotes: { not: null } },
-          { notes: { not: null } },
+          { behaviorNotes: { not: null } },
+          { specialNeeds: { not: null } },
           { weight: { not: null } },
-          { temperament: { not: null } }
+          { idealPlayGroup: { not: null } }
         ],
         isActive: true
       },
       select: {
         name: true,
-        groomingNotes: true,
-        notes: true,
+        behaviorNotes: true,
+        specialNeeds: true,
         weight: true,
-        temperament: true,
-        isVip: true
+        idealPlayGroup: true,
+        petIcons: true
       },
       take: 3
     });
     
     console.log('\n🐕 Examples of Imported Profile Data:');
     examples.forEach(pet => {
-      console.log(`\n🐕 ${pet.name}${pet.isVip ? ' ⭐ VIP' : ''}:`);
-      if (pet.groomingNotes) console.log(`  ✂️  Grooming: ${pet.groomingNotes}`);
-      if (pet.notes) console.log(`  📝 Notes: ${pet.notes}`);
+      const isVip = pet.petIcons && pet.petIcons.includes('vip');
+      console.log(`\n🐕 ${pet.name}${isVip ? ' ⭐ VIP' : ''}:`);
+      if (pet.behaviorNotes) console.log(`  ✂️  Grooming/Behavior: ${pet.behaviorNotes.substring(0, 50)}...`);
+      if (pet.specialNeeds) console.log(`  📝 Notes: ${pet.specialNeeds.substring(0, 50)}...`);
       if (pet.weight) console.log(`  ⚖️  Weight: ${pet.weight} lbs`);
-      if (pet.temperament) console.log(`  🎭 Temperament: ${pet.temperament}`);
+      if (pet.idealPlayGroup) console.log(`  🎭 Temperament: ${pet.idealPlayGroup}`);
     });
     
   } catch (error) {

@@ -232,18 +232,18 @@ async function importMedicalData() {
           hasUpdates = true;
         }
         
-        // Medications
+        // Medications - store as JSON string in medicationNotes
         const medications = processMedicationInfo(medicationInfo);
         if (medications && medications.length > 0) {
-          updateData.medications = medications;
+          updateData.medicationNotes = JSON.stringify(medications, null, 2);
           petsWithMedications++;
           hasUpdates = true;
         }
         
-        // Feeding information
+        // Feeding information - store as JSON string in foodNotes
         const feeding = processFeedingInfo(feedingInfo);
         if (feeding) {
-          updateData.feedingSchedule = feeding;
+          updateData.foodNotes = JSON.stringify(feeding, null, 2);
           petsWithFeeding++;
           hasUpdates = true;
         }
@@ -299,10 +299,12 @@ async function importMedicalData() {
         
         // Emergency contact
         if (ownerData.emergency_contact_name || ownerData.emergency_contact_phone) {
-          updateData.emergencyContact = {
-            name: ownerData.emergency_contact_name || null,
-            phone: ownerData.emergency_contact_phone || null
-          };
+          if (ownerData.emergency_contact_name) {
+            updateData.emergencyContact = ownerData.emergency_contact_name;
+          }
+          if (ownerData.emergency_contact_phone) {
+            updateData.emergencyPhone = ownerData.emergency_contact_phone;
+          }
           customersWithEmergencyContact++;
           hasUpdates = true;
         }
@@ -346,16 +348,16 @@ async function importMedicalData() {
       where: {
         OR: [
           { allergies: { not: null } },
-          { medications: { not: null } },
-          { feedingSchedule: { not: null } }
+          { medicationNotes: { not: null } },
+          { foodNotes: { not: null } }
         ],
         isActive: true
       },
       select: {
         name: true,
         allergies: true,
-        medications: true,
-        feedingSchedule: true
+        medicationNotes: true,
+        foodNotes: true
       },
       take: 3
     });
@@ -364,8 +366,8 @@ async function importMedicalData() {
     examples.forEach(pet => {
       console.log(`\n🐕 ${pet.name}:`);
       if (pet.allergies) console.log(`  🩺 Allergies: ${pet.allergies}`);
-      if (pet.medications) console.log(`  💊 Medications: ${JSON.stringify(pet.medications, null, 2)}`);
-      if (pet.feedingSchedule) console.log(`  🍽️  Feeding: ${JSON.stringify(pet.feedingSchedule, null, 2)}`);
+      if (pet.medicationNotes) console.log(`  💊 Medications: ${pet.medicationNotes.substring(0, 100)}...`);
+      if (pet.foodNotes) console.log(`  🍽️  Feeding: ${pet.foodNotes.substring(0, 100)}...`);
     });
     
   } catch (error) {

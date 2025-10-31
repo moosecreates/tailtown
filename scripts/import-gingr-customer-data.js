@@ -135,7 +135,7 @@ async function importCustomerData() {
           hasUpdates = true;
         }
         
-        // Communication preferences
+        // Communication preferences - store as JSON in notes or customerIcons
         const commPrefs = {
           emailOptOut: ownerData.opt_out_email === '1' || ownerData.opt_out_email === 1,
           smsOptOut: ownerData.opt_out_sms === '1' || ownerData.opt_out_sms === 1,
@@ -147,38 +147,22 @@ async function importCustomerData() {
           rewardsOptOut: ownerData.opt_out_rewards === '1' || ownerData.opt_out_rewards === 1
         };
         
-        // Only update if at least one opt-out is set
+        // Only update if at least one opt-out is set - store in iconNotes as JSON
         if (Object.values(commPrefs).some(val => val === true)) {
-          updateData.communicationPreferences = commPrefs;
+          updateData.iconNotes = commPrefs;
           customersWithCommPrefs++;
           hasUpdates = true;
         }
         
-        // Payment information
-        if (ownerData.current_balance || ownerData.default_payment_method_fk) {
-          const paymentInfo = {};
-          
-          if (ownerData.current_balance && ownerData.current_balance !== '0') {
-            paymentInfo.currentBalance = parseFloat(ownerData.current_balance);
-          }
-          
-          if (ownerData.default_payment_method_fk) {
-            paymentInfo.defaultPaymentMethod = ownerData.default_payment_method_fk;
-          }
-          
-          if (Object.keys(paymentInfo).length > 0) {
-            updateData.paymentInfo = paymentInfo;
-            customersWithPaymentInfo++;
-            hasUpdates = true;
-          }
-        }
-        
-        // Source (how they found the business)
+        // Source (how they found the business) - store in referralSource
         if (ownerData.source && ownerData.source.trim()) {
-          updateData.source = ownerData.source.trim();
+          updateData.referralSource = ownerData.source.trim();
           customersWithSource++;
           hasUpdates = true;
         }
+        
+        // Note: Payment information (current_balance) is not stored as it's transactional data
+        // that should be managed by the billing system, not imported as static data
         
         // Update customer if we have any data
         if (hasUpdates) {
@@ -214,7 +198,6 @@ async function importCustomerData() {
     console.log(`✅ Customers updated: ${customersUpdated}`);
     console.log(`   📝 With notes: ${customersWithNotes}`);
     console.log(`   📧 With communication preferences: ${customersWithCommPrefs}`);
-    console.log(`   💳 With payment info: ${customersWithPaymentInfo}`);
     console.log(`   📍 With source info: ${customersWithSource}`);
     console.log(`⚠️  Customers skipped (no data): ${customersSkipped}`);
     console.log(`❌ Errors: ${errorCount}`);
@@ -225,9 +208,8 @@ async function importCustomerData() {
       where: {
         OR: [
           { notes: { not: null } },
-          { communicationPreferences: { not: null } },
-          { paymentInfo: { not: null } },
-          { source: { not: null } }
+          { iconNotes: { not: null } },
+          { referralSource: { not: null } }
         ],
         isActive: true
       },
@@ -235,9 +217,8 @@ async function importCustomerData() {
         firstName: true,
         lastName: true,
         notes: true,
-        communicationPreferences: true,
-        paymentInfo: true,
-        source: true
+        iconNotes: true,
+        referralSource: true
       },
       take: 3
     });
@@ -246,17 +227,14 @@ async function importCustomerData() {
     examples.forEach(customer => {
       console.log(`\n👤 ${customer.firstName} ${customer.lastName}:`);
       if (customer.notes) console.log(`  📝 Notes: ${customer.notes.substring(0, 100)}${customer.notes.length > 100 ? '...' : ''}`);
-      if (customer.communicationPreferences) {
-        const prefs = customer.communicationPreferences;
+      if (customer.iconNotes) {
+        const prefs = customer.iconNotes;
         const optOuts = Object.entries(prefs).filter(([_, val]) => val === true).map(([key]) => key);
         if (optOuts.length > 0) {
           console.log(`  📧 Opt-outs: ${optOuts.join(', ')}`);
         }
       }
-      if (customer.paymentInfo) {
-        console.log(`  💳 Payment Info: ${JSON.stringify(customer.paymentInfo)}`);
-      }
-      if (customer.source) console.log(`  📍 Source: ${customer.source}`);
+      if (customer.referralSource) console.log(`  📍 Source: ${customer.referralSource}`);
     });
     
   } catch (error) {
@@ -278,9 +256,8 @@ async function main() {
     console.log('💡 Additional Customer Data Imported:');
     console.log('✅ Customer Notes - General context and preferences');
     console.log('✅ Communication Preferences - Legal compliance (GDPR, CAN-SPAM)');
-    console.log('✅ Payment Information - Billing efficiency and account balances');
     console.log('✅ Source Information - Marketing attribution');
-    console.log('\n⏱️  Estimated Time Saved: ~200 hours of manual data entry');
+    console.log('\n⏱️  Estimated Time Saved: ~150 hours of manual data entry');
     
   } catch (error) {
     console.error('❌ Fatal error:', error);
