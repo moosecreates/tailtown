@@ -41,6 +41,7 @@ import reportRoutes from './routes/reports.routes';
 import gingrRoutes from './routes/gingr.routes';
 import referenceDataRoutes from './routes/referenceData.routes';
 import messageTemplatesRoutes from './routes/messageTemplates.routes';
+import announcementRoutes from './routes/announcement.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 import { enforceHTTPS, securityHeaders, sanitizeInput } from './middleware/security.middleware';
@@ -328,6 +329,9 @@ app.use('/api', requireTenant, referenceDataRoutes);
 
 // Message Templates Routes
 app.use('/api/message-templates', requireTenant, messageTemplatesRoutes);
+
+// Announcement Routes
+app.use('/api', requireTenant, announcementRoutes);
 
 // Serve uploaded icons statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

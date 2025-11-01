@@ -93,6 +93,9 @@ const VaccineRequirements = lazy(() => import('./pages/admin/VaccineRequirements
 // Lazy loaded pages - Custom Icons
 const CustomIcons = lazy(() => import('./pages/admin/CustomIcons'));
 
+// Lazy loaded pages - Announcements
+const AnnouncementManager = lazy(() => import('./pages/admin/AnnouncementManager'));
+
 // Lazy loaded pages - Products/POS
 const Products = lazy(() => import('./pages/products/Products'));
 
@@ -209,6 +212,9 @@ const AppRoutes = () => {
         
         {/* Custom Icons Route */}
         <Route path="/admin/custom-icons" element={isAuthenticated ? <CustomIcons /> : <Navigate to="/login" />} />
+        
+        {/* Announcement Routes */}
+        <Route path="/admin/announcements" element={isAuthenticated ? <AnnouncementManager /> : <Navigate to="/login" />} />
         
         {/* Products/POS Routes */}
         <Route path="/products" element={isAuthenticated ? <Products /> : <Navigate to="/login" />} />
