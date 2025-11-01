@@ -14,6 +14,7 @@ Welcome to Tailtown - a modern, comprehensive pet resort management system built
 1. **[Quick Start Guide](QUICK-START.md)** - Get up and running in 5 minutes
 2. **[System Features Overview](SYSTEM-FEATURES-OVERVIEW.md)** - See what Tailtown can do
 3. **[MVP Readiness Analysis](MVP-READINESS-ANALYSIS.md)** - Current project status
+4. **[Service Management Guide](development/SERVICE-MANAGEMENT.md)** - Start/stop services and troubleshoot
 
 ### For Developers
 1. **[Development Guide](development/GUIDE.md)** - Setup and coding standards
@@ -37,9 +38,17 @@ Welcome to Tailtown - a modern, comprehensive pet resort management system built
 - ✅ **Performance:** Optimized (10-100x faster queries, 60-80% smaller responses)
 - ✅ **Help System:** Contextual help with search and video support
 - ✅ **Announcements:** Staff notification system with priority levels
+- ✅ **Service Management:** Automated monitoring and recovery tools
 - ✅ **Timeline:** READY FOR PRODUCTION LAUNCH NOW
 
 ### Recent Achievements (November 1, 2025)
+- ✅ **Service Management & Monitoring** - Automated health checking and recovery
+  - Real-time service health monitor with hang detection
+  - One-command service startup (`npm run start:services`)
+  - Clean shutdown procedures (`npm run stop:services`)
+  - MCP RAG server management and health checks
+  - Comprehensive service health testing suite
+  - Recovery procedures for common issues (process hangs, port conflicts)
 - ✅ **Announcement System** - Full-featured staff notifications
   - Admin panel for creating/managing announcements
   - Priority levels (LOW, NORMAL, HIGH, URGENT) with color coding
