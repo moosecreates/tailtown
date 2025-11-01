@@ -16,16 +16,19 @@ import InfoIcon from '@mui/icons-material/Info';
 import WarningIcon from '@mui/icons-material/Warning';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
+import AddIcon from '@mui/icons-material/Add';
 import { Announcement } from './AnnouncementModal';
 
 interface AnnouncementBellProps {
   announcements: Announcement[];
   onAnnouncementClick: () => void;
+  onCreateClick?: () => void;
 }
 
 const AnnouncementBell: React.FC<AnnouncementBellProps> = ({
   announcements,
-  onAnnouncementClick
+  onAnnouncementClick,
+  onCreateClick
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -41,6 +44,13 @@ const AnnouncementBell: React.FC<AnnouncementBellProps> = ({
   const handleViewAll = () => {
     handleClose();
     onAnnouncementClick();
+  };
+
+  const handleCreate = () => {
+    handleClose();
+    if (onCreateClick) {
+      onCreateClick();
+    }
   };
 
   const getTypeIcon = (type: string) => {
@@ -182,6 +192,34 @@ const AnnouncementBell: React.FC<AnnouncementBellProps> = ({
                 </MenuItem>
               </>
             )}
+          </>
+        )}
+
+        {onCreateClick && (
+          <>
+            <Divider />
+            <MenuItem
+              onClick={handleCreate}
+              sx={{
+                py: 1.5,
+                backgroundColor: 'primary.main',
+                color: 'primary.contrastText',
+                '&:hover': {
+                  backgroundColor: 'primary.dark'
+                }
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
+                <AddIcon />
+              </ListItemIcon>
+              <ListItemText
+                primary={
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    Create Announcement
+                  </Typography>
+                }
+              />
+            </MenuItem>
           </>
         )}
       </Menu>

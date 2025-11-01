@@ -327,6 +327,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
             <AnnouncementBell
               announcements={announcements}
               onAnnouncementClick={() => setShowAnnouncementModal(true)}
+              onCreateClick={() => navigate('/admin/announcements')}
             />
             <IconButton
               size="large"
