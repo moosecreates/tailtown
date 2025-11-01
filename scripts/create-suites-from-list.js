@@ -17,17 +17,30 @@ const fetch = require('node-fetch');
 // ============================================================================
 
 const SUITES = [
-  // Example format - replace with your actual suite names:
-  // 'A01', 'A02', 'A03', ... 'A27',
-  // 'B01', 'B02', 'B03', ... 'B15',
-  // 'V01', 'V02', 'V03', ... (VIP suites)
+  // Actual suites from facility diagram
+  // Last updated: November 1, 2025
+  // Leading digit removed: 1xxx -> A, 2xxx -> B, 3xxx -> C, 4xxx -> D
   
-  // Indoor Suites (A)
-  'A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08', 'A09', 'A10',
-  'A11', 'A12', 'A13', 'A14', 'A15', 'A16', 'A17', 'A18', 'A19', 'A20',
-  'A21', 'A22', 'A23', 'A24', 'A25', 'A26', 'A27',
+  // A Area (previously 1xxx) - 16 suites
+  'A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08',
+  'A09R', 'A10R', 'A11R', 'A12R', 'A13R', 'A14R', 'A15R', 'A16R',
   
-  // Add more suites as needed...
+  // B Area (previously 2xxx) - 32 suites
+  'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08',
+  'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16',
+  'B17', 'B18', 'B19', 'B20', 'B21', 'B22', 'B23', 'B24',
+  'B25', 'B26', 'B27', 'B28', 'B29', 'B30', 'B31', 'B32',
+  
+  // C Area (previously 3xxx) - 24 suites
+  'C01', 'C02', 'C03', 'C04', 'C05', 'C06', 'C07', 'C08',
+  'C09', 'C10', 'C11', 'C12', 'C13', 'C14', 'C15', 'C16',
+  'C17', 'C18', 'C19', 'C20', 'C21', 'C22', 'C23', 'C24',
+  
+  // D Area (previously 4xxx) - 32 suites
+  'D01', 'D02', 'D03', 'D04', 'D05', 'D06', 'D07', 'D08',
+  'D09', 'D10', 'D11', 'D12', 'D13', 'D14', 'D15', 'D16',
+  'D17', 'D18', 'D19', 'D20', 'D21', 'D22', 'D23', 'D24',
+  'D25', 'D26', 'D27', 'D28', 'D29', 'D30', 'D31', 'D32',
 ];
 
 // ============================================================================
