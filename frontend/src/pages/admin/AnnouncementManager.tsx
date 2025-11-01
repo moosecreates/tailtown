@@ -30,6 +30,7 @@ import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Announcement } from '../../components/announcements/AnnouncementModal';
+import announcementService from '../../services/announcementService';
 
 const AnnouncementManager: React.FC = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -49,17 +50,12 @@ const AnnouncementManager: React.FC = () => {
     isActive: true
   });
 
-  // TODO: Replace with actual API call after migration
   const loadAnnouncements = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Placeholder - will be replaced with actual API call
-      // const response = await fetch('/api/announcements/all');
-      // const data = await response.json();
-      // setAnnouncements(data.data);
-      
-      // Mock data for now
-      setAnnouncements([]);
+      const data = await announcementService.getAllAnnouncements();
+      setAnnouncements(data);
     } catch (err) {
       setError('Failed to load announcements');
       console.error(err);
@@ -115,22 +111,14 @@ const AnnouncementManager: React.FC = () => {
     setError(null);
 
     try {
-      // TODO: Replace with actual API call after migration
-      // const url = editingAnnouncement
-      //   ? `/api/announcements/${editingAnnouncement.id}`
-      //   : '/api/announcements';
-      // const method = editingAnnouncement ? 'PUT' : 'POST';
-      // 
-      // const response = await fetch(url, {
-      //   method,
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // });
-      // 
-      // if (!response.ok) throw new Error('Failed to save announcement');
+      if (editingAnnouncement) {
+        await announcementService.updateAnnouncement(editingAnnouncement.id, formData);
+      } else {
+        await announcementService.createAnnouncement(formData);
+      }
       
       handleCloseDialog();
-      loadAnnouncements();
+      await loadAnnouncements();
     } catch (err) {
       setError('Failed to save announcement');
       console.error(err);
@@ -146,10 +134,8 @@ const AnnouncementManager: React.FC = () => {
 
     setLoading(true);
     try {
-      // TODO: Replace with actual API call after migration
-      // await fetch(`/api/announcements/${id}`, { method: 'DELETE' });
-      
-      loadAnnouncements();
+      await announcementService.deleteAnnouncement(id);
+      await loadAnnouncements();
     } catch (err) {
       setError('Failed to delete announcement');
       console.error(err);
