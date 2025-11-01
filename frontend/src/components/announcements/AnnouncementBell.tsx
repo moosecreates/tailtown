@@ -127,8 +127,8 @@ const AnnouncementBell: React.FC<AnnouncementBellProps> = ({
             />
           </MenuItem>
         ) : (
-          <>
-            {announcements.slice(0, 5).map((announcement) => (
+          [
+            ...announcements.slice(0, 5).map((announcement) => (
               <MenuItem
                 key={announcement.id}
                 onClick={handleViewAll}
@@ -176,51 +176,46 @@ const AnnouncementBell: React.FC<AnnouncementBellProps> = ({
                   }
                 />
               </MenuItem>
-            ))}
-
-            {announcements.length > 5 && (
-              <>
-                <Divider />
-                <MenuItem onClick={handleViewAll}>
-                  <ListItemText
-                    primary={
-                      <Typography variant="body2" color="primary" sx={{ textAlign: 'center' }}>
-                        View all {announcements.length} announcements
-                      </Typography>
-                    }
-                  />
-                </MenuItem>
-              </>
-            )}
-          </>
-        )}
-
-        {onCreateClick && (
-          <>
-            <Divider />
-            <MenuItem
-              onClick={handleCreate}
-              sx={{
-                py: 1.5,
-                backgroundColor: 'primary.main',
-                color: 'primary.contrastText',
-                '&:hover': {
-                  backgroundColor: 'primary.dark'
-                }
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
-                <AddIcon />
-              </ListItemIcon>
-              <ListItemText
-                primary={
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    Create Announcement
-                  </Typography>
-                }
-              />
-            </MenuItem>
-          </>
+            )),
+            ...(announcements.length > 5 ? [
+              <Divider key="divider-1" />,
+              <MenuItem key="view-all" onClick={handleViewAll}>
+                <ListItemText
+                  primary={
+                    <Typography variant="body2" color="primary" sx={{ textAlign: 'center' }}>
+                      View all {announcements.length} announcements
+                    </Typography>
+                  }
+                />
+              </MenuItem>
+            ] : []),
+            ...(onCreateClick ? [
+              <Divider key="divider-2" />,
+              <MenuItem
+                key="create"
+                onClick={handleCreate}
+                sx={{
+                  py: 1.5,
+                  backgroundColor: 'primary.main',
+                  color: 'primary.contrastText',
+                  '&:hover': {
+                    backgroundColor: 'primary.dark'
+                  }
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
+                  <AddIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary={
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      Create Announcement
+                    </Typography>
+                  }
+                />
+              </MenuItem>
+            ] : [])
+          ]
         )}
       </Menu>
     </>
