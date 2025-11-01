@@ -53,7 +53,7 @@ const PetIconDisplay: React.FC<PetIconDisplayProps> = ({
           return null;
         }
         
-        const customNote = customNotes[iconId];
+        const customNote = customNotes?.[iconId];
         const tooltipTitle = (
           <>
             <Typography variant="subtitle2">{icon.label}</Typography>
