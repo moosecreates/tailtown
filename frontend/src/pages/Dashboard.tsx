@@ -53,10 +53,13 @@ const Dashboard = () => {
   const handleDismissAnnouncement = async (id: string) => {
     try {
       await announcementService.dismissAnnouncement(id);
-      // Remove from local state
+      // Only remove if dismiss was successful
       setAnnouncements(prev => prev.filter(a => a.id !== id));
+      console.log('Announcement dismissed successfully');
     } catch (error) {
       console.error('Failed to dismiss announcement:', error);
+      // Don't remove from state if dismiss failed
+      alert('Unable to dismiss announcement. Please try again later.');
     }
   };
 
