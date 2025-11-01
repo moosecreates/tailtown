@@ -135,8 +135,23 @@ export function transformAnimalToPet(animal: GingrAnimal, customerId: string) {
   const petIcons: string[] = [];
   if (animal.vip === '1') petIcons.push('vip');
   if (animal.banned === '1') petIcons.push('red-flag');
-  if (animal.medicines) petIcons.push('medication-required');
-  if (animal.allergies) petIcons.push('allergies');
+  
+  // Only add medication icon if there's actual medication info (not just "no" or "none")
+  if (animal.medicines) {
+    const medLower = animal.medicines.toLowerCase().trim();
+    if (medLower && !['no', 'none', 'n/a', 'na', 'no medications'].includes(medLower)) {
+      petIcons.push('medication-required');
+    }
+  }
+  
+  // Only add allergy icon if there's actual allergy info (not just "no" or "none")
+  if (animal.allergies) {
+    const allergyLower = animal.allergies.toLowerCase().trim();
+    if (allergyLower && !['no', 'none', 'n/a', 'na', 'no allergies'].includes(allergyLower)) {
+      petIcons.push('allergies');
+    }
+  }
+  
   if (animal.temperment && ['1', '2'].includes(animal.temperment)) {
     // Temperament 1-2 might indicate behavioral concerns
     petIcons.push('behavioral-note');
