@@ -40,7 +40,15 @@ const AnnouncementManager: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    message: string;
+    priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+    type: 'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR';
+    startDate: string;
+    endDate: string;
+    isActive: boolean;
+  }>({
     title: '',
     message: '',
     priority: 'NORMAL',
