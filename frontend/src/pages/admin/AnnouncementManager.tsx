@@ -319,7 +319,7 @@ const AnnouncementManager: React.FC = () => {
                 <Select
                   value={formData.priority}
                   label="Priority"
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT' })}
                 >
                   <MenuItem value="LOW">Low</MenuItem>
                   <MenuItem value="NORMAL">Normal</MenuItem>
@@ -333,7 +333,7 @@ const AnnouncementManager: React.FC = () => {
                 <Select
                   value={formData.type}
                   label="Type"
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, type: e.target.value as 'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR' })}
                 >
                   <MenuItem value="INFO">Info</MenuItem>
                   <MenuItem value="WARNING">Warning</MenuItem>
