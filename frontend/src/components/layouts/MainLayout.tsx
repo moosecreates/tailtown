@@ -52,6 +52,8 @@ import AnnouncementBell from '../announcements/AnnouncementBell';
 import AnnouncementModal from '../announcements/AnnouncementModal';
 import announcementService from '../../services/announcementService';
 import type { Announcement } from '../announcements/AnnouncementModal';
+import { useHelp } from '../../contexts/HelpContext';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 const drawerWidth = 240;
 
@@ -70,6 +72,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const { user, logout, isLoading } = useAuth();
+  const { openHelp } = useHelp();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -333,6 +336,14 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
               onAnnouncementClick={() => setShowAnnouncementModal(true)}
               onCreateClick={() => navigate('/admin/announcements')}
             />
+            <IconButton
+              color="inherit"
+              onClick={() => openHelp()}
+              aria-label="help"
+              sx={{ ml: 1 }}
+            >
+              <HelpOutlineIcon />
+            </IconButton>
             <IconButton
               size="large"
               edge="end"

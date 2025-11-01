@@ -5,8 +5,10 @@ import DashboardMetrics from '../components/dashboard/DashboardMetrics';
 import ReservationList from '../components/dashboard/ReservationList';
 import AnnouncementModal from '../components/announcements/AnnouncementModal';
 import { useDashboardData } from '../hooks/useDashboardData';
+import { usePageHelp } from '../hooks/usePageHelp';
 import announcementService from '../services/announcementService';
 import type { Announcement } from '../components/announcements/AnnouncementModal';
+import { dashboardHelp } from '../content/help/dashboardHelp';
 
 /**
  * Dashboard component displays key business metrics and upcoming reservations.
@@ -18,6 +20,9 @@ import type { Announcement } from '../components/announcements/AnnouncementModal
  * - ReservationList component for appointment display
  */
 const Dashboard = () => {
+  // Set up page help
+  usePageHelp(dashboardHelp);
+
   const {
     inCount,
     outCount,

@@ -5,6 +5,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import theme from './theme';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ShoppingCartProvider } from './contexts/ShoppingCartContext';
+import { HelpProvider } from './contexts/HelpContext';
 import AccessibilityFix from './components/AccessibilityFix';
 import ScrollFix from './components/ScrollFix';
 import ApiTester from './components/debug/ApiTester';
@@ -249,13 +250,15 @@ const App = () => {
           <RouteChangeListener />
           <AuthProvider>
             <ShoppingCartProvider>
-              <React.Suspense fallback={
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                  <CircularProgress />
-                </Box>
-              }>
-                <AppRoutes />
-              </React.Suspense>
+              <HelpProvider>
+                <React.Suspense fallback={
+                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                    <CircularProgress />
+                  </Box>
+                }>
+                  <AppRoutes />
+                </React.Suspense>
+              </HelpProvider>
             </ShoppingCartProvider>
           </AuthProvider>
         </ThemeProvider>
