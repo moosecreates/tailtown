@@ -20,27 +20,28 @@ const SUITES = [
   // Actual suites from facility diagram
   // Last updated: November 1, 2025
   // Leading digit removed: 1xxx -> A, 2xxx -> B, 3xxx -> C, 4xxx -> D
+  // Size designations: R = Regular, Q = Queen, K = King
   
   // A Area (previously 1xxx) - 16 suites
-  'A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08',
+  'A01R', 'A02R', 'A03R', 'A04R', 'A05R', 'A06R', 'A07R', 'A08R',
   'A09R', 'A10R', 'A11R', 'A12R', 'A13R', 'A14R', 'A15R', 'A16R',
   
   // B Area (previously 2xxx) - 32 suites
-  'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08',
-  'B09', 'B10', 'B11', 'B12', 'B13', 'B14', 'B15', 'B16',
-  'B17', 'B18', 'B19', 'B20', 'B21', 'B22', 'B23', 'B24',
-  'B25', 'B26', 'B27', 'B28', 'B29', 'B30', 'B31', 'B32',
+  'B01Q', 'B02Q', 'B03Q', 'B04Q', 'B05Q', 'B06Q', 'B07Q', 'B08Q',
+  'B09Q', 'B10Q', 'B11K', 'B12K', 'B13Q', 'B14K', 'B15Q', 'B16K',
+  'B17Q', 'B18Q', 'B19Q', 'B20Q', 'B21Q', 'B22Q', 'B23Q', 'B24Q',
+  'B25Q', 'B26Q', 'B27K', 'B28K', 'B29Q', 'B30K', 'B31Q', 'B32K',
   
   // C Area (previously 3xxx) - 24 suites
-  'C01', 'C02', 'C03', 'C04', 'C05', 'C06', 'C07', 'C08',
-  'C09', 'C10', 'C11', 'C12', 'C13', 'C14', 'C15', 'C16',
-  'C17', 'C18', 'C19', 'C20', 'C21', 'C22', 'C23', 'C24',
+  'C01Q', 'C02Q', 'C03Q', 'C04Q', 'C05Q', 'C06Q', 'C07Q', 'C08Q',
+  'C09Q', 'C10Q', 'C11K', 'C12K', 'C13Q', 'C14K', 'C15Q', 'C16K',
+  'C17Q', 'C18Q', 'C19Q', 'C20Q', 'C21Q', 'C22Q', 'C23Q', 'C24Q',
   
   // D Area (previously 4xxx) - 32 suites
-  'D01', 'D02', 'D03', 'D04', 'D05', 'D06', 'D07', 'D08',
-  'D09', 'D10', 'D11', 'D12', 'D13', 'D14', 'D15', 'D16',
-  'D17', 'D18', 'D19', 'D20', 'D21', 'D22', 'D23', 'D24',
-  'D25', 'D26', 'D27', 'D28', 'D29', 'D30', 'D31', 'D32',
+  'D01Q', 'D02Q', 'D03Q', 'D04Q', 'D05Q', 'D06Q', 'D07Q', 'D08Q',
+  'D09Q', 'D10Q', 'D11K', 'D12K', 'D13Q', 'D14K', 'D15Q', 'D16K',
+  'D17Q', 'D18Q', 'D19Q', 'D20Q', 'D21Q', 'D22Q', 'D23Q', 'D24Q',
+  'D25Q', 'D26Q', 'D27K', 'D28K', 'D29Q', 'D30K', 'D31Q', 'D32K',
 ];
 
 // ============================================================================
