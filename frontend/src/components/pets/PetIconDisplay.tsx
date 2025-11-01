@@ -47,16 +47,17 @@ const PetIconDisplay: React.FC<PetIconDisplayProps> = ({
       {iconIds.map(iconId => {
         const icon = getIconById(iconId);
         
-        if (!icon) {
+        // Skip if icon not found or missing required properties
+        if (!icon || !icon.icon || !icon.label) {
+          console.warn(`Icon not found or invalid: ${iconId}`);
           return null;
         }
-        
         
         const customNote = customNotes[iconId];
         const tooltipTitle = (
           <>
             <Typography variant="subtitle2">{icon.label}</Typography>
-            <Typography variant="body2">{icon.description}</Typography>
+            {icon.description && <Typography variant="body2">{icon.description}</Typography>}
             {customNote && (
               <Typography variant="body2" sx={{ mt: 0.5, fontStyle: 'italic' }}>
                 Note: {customNote}
