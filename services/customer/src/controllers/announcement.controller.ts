@@ -45,7 +45,7 @@ export const getActiveAnnouncements = async (req: TenantRequest, res: Response) 
     });
 
     // Filter out dismissed announcements for this user
-    const undismissed = announcements.filter(a => 
+    const undismissed = announcements.filter((a: any) => 
       !userId || a.dismissals?.length === 0
     );
 
@@ -185,8 +185,7 @@ export const deleteAnnouncement = async (req: TenantRequest, res: Response) => {
 
     await prisma.announcement.delete({
       where: {
-        id,
-        tenantId
+        id
       }
     });
 
