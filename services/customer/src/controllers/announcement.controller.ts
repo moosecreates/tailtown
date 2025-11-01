@@ -147,8 +147,7 @@ export const updateAnnouncement = async (req: TenantRequest, res: Response) => {
 
     const announcement = await prisma.announcement.update({
       where: {
-        id,
-        tenantId
+        id
       },
       data: {
         ...(title && { title }),
