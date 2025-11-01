@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, IconButton } from '@mui/material';
 import { Today as TodayIcon, ChevronLeft, ChevronRight } from '@mui/icons-material';
 import DashboardMetrics from '../components/dashboard/DashboardMetrics';
 import ReservationList from '../components/dashboard/ReservationList';
+import AnnouncementModal from '../components/announcements/AnnouncementModal';
 import { useDashboardData } from '../hooks/useDashboardData';
+import announcementService from '../services/announcementService';
+import type { Announcement } from '../components/announcements/AnnouncementModal';
 
 /**
  * Dashboard component displays key business metrics and upcoming reservations.
@@ -27,6 +30,35 @@ const Dashboard = () => {
     setSelectedDate,
     filterReservations
   } = useDashboardData();
+
+  // Announcement state
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+
+  // Load announcements on mount
+  useEffect(() => {
+    loadAnnouncements();
+  }, []);
+
+  const loadAnnouncements = async () => {
+    const data = await announcementService.getActiveAnnouncements();
+    setAnnouncements(data);
+    
+    // Show modal if there are announcements
+    if (data.length > 0) {
+      setShowAnnouncementModal(true);
+    }
+  };
+
+  const handleDismissAnnouncement = async (id: string) => {
+    try {
+      await announcementService.dismissAnnouncement(id);
+      // Remove from local state
+      setAnnouncements(prev => prev.filter(a => a.id !== id));
+    } catch (error) {
+      console.error('Failed to dismiss announcement:', error);
+    }
+  };
 
   // Format date for input (YYYY-MM-DD)
   const formatDateForInput = (date: Date) => {
@@ -63,6 +95,14 @@ const Dashboard = () => {
 
   return (
     <Box>
+      {/* Announcement Modal */}
+      <AnnouncementModal
+        open={showAnnouncementModal}
+        announcements={announcements}
+        onClose={() => setShowAnnouncementModal(false)}
+        onDismiss={handleDismissAnnouncement}
+      />
+
       {/* Header with Date Selector */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h5" component="h1">

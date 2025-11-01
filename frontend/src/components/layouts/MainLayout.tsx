@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SvgIconComponent } from '@mui/icons-material';
 import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import logoImage from '../../assets/images/tail town logo.jpg';
@@ -48,6 +48,10 @@ import {
   ShoppingCart as ShoppingCartIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import AnnouncementBell from '../announcements/AnnouncementBell';
+import AnnouncementModal from '../announcements/AnnouncementModal';
+import announcementService from '../../services/announcementService';
+import type { Announcement } from '../announcements/AnnouncementModal';
 
 const drawerWidth = 240;
 
@@ -63,9 +67,30 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const { user, logout, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Load announcements on mount
+  useEffect(() => {
+    loadAnnouncements();
+  }, []);
+
+  const loadAnnouncements = async () => {
+    const data = await announcementService.getActiveAnnouncements();
+    setAnnouncements(data);
+  };
+
+  const handleDismissAnnouncement = async (id: string) => {
+    try {
+      await announcementService.dismissAnnouncement(id);
+      setAnnouncements(prev => prev.filter(a => a.id !== id));
+    } catch (error) {
+      console.error('Failed to dismiss announcement:', error);
+    }
+  };
 
   // 2. Event handlers
   const handleDrawerToggle = () => {
@@ -261,6 +286,15 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
+      
+      {/* Announcement Modal */}
+      <AnnouncementModal
+        open={showAnnouncementModal}
+        announcements={announcements}
+        onClose={() => setShowAnnouncementModal(false)}
+        onDismiss={handleDismissAnnouncement}
+      />
+      
       <AppBar
         position="fixed"
         sx={{
@@ -290,6 +324,10 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
                 {user?.role || 'Staff'}
               </Typography>
             </Box>
+            <AnnouncementBell
+              announcements={announcements}
+              onAnnouncementClick={() => setShowAnnouncementModal(true)}
+            />
             <IconButton
               size="large"
               edge="end"

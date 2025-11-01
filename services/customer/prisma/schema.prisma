@@ -1479,3 +1479,43 @@ model MessageTemplate {
   @@index([category], map: "message_templates_category_idx")
   @@map("message_templates")
 }
+
+model Announcement {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("dev") @map("tenant_id")
+  
+  title       String
+  message     String   @db.Text
+  priority    String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  type        String   @default("INFO") // INFO, WARNING, SUCCESS, ERROR
+  
+  startDate   DateTime @default(now()) @map("start_date")
+  endDate     DateTime? @map("end_date") // Optional expiration
+  
+  isActive    Boolean  @default(true) @map("is_active")
+  createdBy   String?  @map("created_by") // Staff ID who created it
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  dismissals  AnnouncementDismissal[]
+  
+  @@index([tenantId, isActive, startDate], map: "announcements_tenant_active_date_idx")
+  @@index([priority], map: "announcements_priority_idx")
+  @@map("announcements")
+}
+
+model AnnouncementDismissal {
+  id             String   @id @default(uuid())
+  tenantId       String   @default("dev") @map("tenant_id")
+  
+  announcementId String   @map("announcement_id")
+  userId         String   @map("user_id") // Staff member who dismissed it
+  
+  dismissedAt    DateTime @default(now()) @map("dismissed_at")
+  
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  
+  @@unique([announcementId, userId], map: "announcement_dismissal_unique")
+  @@index([tenantId, userId], map: "announcement_dismissals_tenant_user_idx")
+  @@map("announcement_dismissals")
+}
