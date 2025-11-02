@@ -48,7 +48,6 @@
     "test:coverage:watch": "craco test --coverage",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://localhost:3002",
   "eslintConfig": {
     "extends": [
       "react-app",
