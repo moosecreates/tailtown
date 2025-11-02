@@ -75,12 +75,12 @@ const ImpersonationBanner: React.FC<ImpersonationBannerProps> = ({ onExit }) => 
     } catch (error) {
       console.error('Error ending impersonation:', error);
     } finally {
-      // Clear impersonation data
+      // Clear ONLY impersonation data (keep super admin tokens!)
       localStorage.removeItem('impersonationToken');
       localStorage.removeItem('impersonationSession');
       
-      // Redirect to super admin dashboard
-      window.location.href = '/super-admin/dashboard';
+      // Redirect back to tenant list
+      window.location.href = '/admin/tenants';
     }
   };
 
