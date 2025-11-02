@@ -84,6 +84,11 @@ const CheckInWorkflow = lazy(() => import('./pages/check-in/CheckInWorkflow'));
 const SuperAdminLogin = lazy(() => import('./pages/super-admin/Login'));
 const SuperAdminDashboard = lazy(() => import('./pages/super-admin/Dashboard'));
 const SuperAdminRoute = lazy(() => import('./components/auth/SuperAdminRoute'));
+
+// Lazy loaded pages - Tenant Management
+const TenantList = lazy(() => import('./pages/admin/TenantList'));
+const TenantDetail = lazy(() => import('./pages/admin/TenantDetail'));
+const TenantEdit = lazy(() => import('./pages/admin/TenantEdit'));
 const CheckInComplete = lazy(() => import('./pages/check-in/CheckInComplete'));
 const CheckInTemplateManager = lazy(() => import('./pages/admin/CheckInTemplateManager'));
 
@@ -202,7 +207,10 @@ const AppRoutes = () => {
         <Route path="/analytics" element={isAuthenticated ? <AnalyticsDashboard /> : <Navigate to="/login" />} />
         <Route path="/analytics/customers" element={isAuthenticated ? <CustomerValueReport /> : <Navigate to="/login" />} />
         
-        {/* Tenant Management moved to admin-portal app (http://localhost:3001) */}
+        {/* Tenant Management Routes */}
+        <Route path="/admin/tenants" element={isAuthenticated ? <TenantList /> : <Navigate to="/login" />} />
+        <Route path="/admin/tenants/:id" element={isAuthenticated ? <TenantDetail /> : <Navigate to="/login" />} />
+        <Route path="/admin/tenants/:id/edit" element={isAuthenticated ? <TenantEdit /> : <Navigate to="/login" />} />
         
         {/* Marketing Routes */}
         <Route path="/admin/marketing" element={isAuthenticated ? <MarketingHub /> : <Navigate to="/login" />} />
