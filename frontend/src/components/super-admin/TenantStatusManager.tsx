@@ -35,7 +35,6 @@ interface TenantStatusManagerProps {
 }
 
 const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onStatusChange }) => {
-  const { superAdmin } = useSuperAdmin();
   const navigate = useNavigate();
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -46,12 +45,14 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Only show to super admins
-  if (!superAdmin) {
+  const getAccessToken = () => localStorage.getItem('superAdminAccessToken');
+  
+  // Only show to super admins - check localStorage directly
+  const isSuperAdmin = !!getAccessToken();
+  
+  if (!isSuperAdmin) {
     return null;
   }
-
-  const getAccessToken = () => localStorage.getItem('superAdminAccessToken');
 
   const handleSuspend = async () => {
     if (!suspendReason.trim()) {
