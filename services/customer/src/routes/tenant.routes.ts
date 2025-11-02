@@ -4,9 +4,8 @@ import { authenticate, requireSuperAdmin } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// All tenant routes require super admin authentication
+// All tenant routes require authentication (staff can view, super admins can modify)
 router.use(authenticate);
-router.use(requireSuperAdmin);
 
 // Get all tenants (with optional filtering)
 router.get('/', (req, res) => tenantController.getAllTenants(req, res));
