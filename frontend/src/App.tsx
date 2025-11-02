@@ -89,6 +89,7 @@ const SuperAdminRoute = lazy(() => import('./components/auth/SuperAdminRoute'));
 const TenantList = lazy(() => import('./pages/admin/TenantList'));
 const TenantDetail = lazy(() => import('./pages/admin/TenantDetail'));
 const TenantEdit = lazy(() => import('./pages/admin/TenantEdit'));
+const CreateTenant = lazy(() => import('./pages/admin/CreateTenant'));
 const CheckInComplete = lazy(() => import('./pages/check-in/CheckInComplete'));
 const CheckInTemplateManager = lazy(() => import('./pages/admin/CheckInTemplateManager'));
 
@@ -209,6 +210,7 @@ const AppRoutes = () => {
         
         {/* Tenant Management Routes */}
         <Route path="/admin/tenants" element={isAuthenticated ? <TenantList /> : <Navigate to="/login" />} />
+        <Route path="/admin/tenants/new" element={isAuthenticated ? <CreateTenant /> : <Navigate to="/login" />} />
         <Route path="/admin/tenants/:id" element={isAuthenticated ? <TenantDetail /> : <Navigate to="/login" />} />
         <Route path="/admin/tenants/:id/edit" element={isAuthenticated ? <TenantEdit /> : <Navigate to="/login" />} />
         
