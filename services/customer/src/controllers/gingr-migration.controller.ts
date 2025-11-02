@@ -62,15 +62,10 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
     const gingr = new GingrApiClient({ subdomain, apiKey });
     console.log('[Migration] Starting Gingr migration...');
 
-    // Phase 1: Fetch all data
+    // Phase 1: Fetch only what we need (skip customers/pets if already imported)
     progress.phase = 'Fetching data from Gingr';
-    console.log('[Migration] Phase 1: Fetching data...');
-
-    const owners = await gingr.fetchAllOwners();
-    console.log(`[Migration] Fetched ${owners.length} owners`);
-
-    const animals = await gingr.fetchAllAnimals();
-    console.log(`[Migration] Fetched ${animals.length} animals`);
+    console.log('[Migration] Phase 1: Fetching reservations and services only...');
+    console.log('[Migration] Skipping customers/pets fetch (already in database)');
 
     const reservations = await gingr.fetchAllReservations(
       new Date(startDate),
@@ -81,7 +76,7 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
     const reservationTypes = await gingr.fetchReservationTypes();
     console.log(`[Migration] Fetched ${reservationTypes.length} reservation types`);
 
-    progress.total = owners.length + animals.length + reservations.length + reservationTypes.length;
+    progress.total = reservations.length + reservationTypes.length;
 
     // Phase 2: Import reservation types (services)
     progress.phase = 'Importing services';
@@ -128,12 +123,27 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
       }
     }
 
-    // Phase 3: Import customers
-    progress.phase = 'Importing customers';
-    console.log('[Migration] Phase 3: Importing customers...');
+    // Phase 3: Build customer map from existing database records
+    progress.phase = 'Mapping existing customers';
+    console.log('[Migration] Phase 3: Building customer map from database...');
 
     const customerMap = new Map<string, string>(); // Gingr owner ID -> Tailtown customer ID
-
+    
+    // Get all existing customers with their externalId
+    const existingCustomers = await prisma.customer.findMany({
+      where: { tenantId: 'dev', externalId: { not: null } },
+      select: { id: true, externalId: true }
+    });
+    
+    for (const customer of existingCustomers) {
+      if (customer.externalId) {
+        customerMap.set(customer.externalId, customer.id);
+      }
+    }
+    console.log(`[Migration] Mapped ${customerMap.size} existing customers`);
+    
+    // Skip customer import loop since we're using existing data
+    const owners: any[] = []; // Empty array to avoid errors
     for (const owner of owners) {
       try {
         // Check if customer already exists by externalId or email
@@ -171,12 +181,27 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
       }
     }
 
-    // Phase 4: Import pets
-    progress.phase = 'Importing pets';
-    console.log('[Migration] Phase 4: Importing pets...');
+    // Phase 4: Build pet map from existing database records
+    progress.phase = 'Mapping existing pets';
+    console.log('[Migration] Phase 4: Building pet map from database...');
 
     const petMap = new Map<string, string>(); // Gingr animal ID -> Tailtown pet ID
-
+    
+    // Get all existing pets with their externalId
+    const existingPets = await prisma.pet.findMany({
+      where: { externalId: { not: null } },
+      select: { id: true, externalId: true }
+    });
+    
+    for (const pet of existingPets) {
+      if (pet.externalId) {
+        petMap.set(pet.externalId, pet.id);
+      }
+    }
+    console.log(`[Migration] Mapped ${petMap.size} existing pets`);
+    
+    // Skip pet import loop since we're using existing data
+    const animals: any[] = []; // Empty array to avoid errors
     for (const animal of animals) {
       try {
         const customerId = customerMap.get(animal.owner_id);

@@ -11,6 +11,7 @@ const prisma = new PrismaClient();
 
 /**
  * Get all breeds, optionally filtered by species
+ * Returns breeds from the Gingr reference data file
  */
 export const getBreeds = async (
   req: Request,
@@ -19,27 +20,29 @@ export const getBreeds = async (
 ) => {
   try {
     const { species } = req.query;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
-
-    let breeds;
     
-    if (species) {
-      breeds = await prisma.$queryRaw`
-        SELECT id, name, species, "gingrId", "isActive"
-        FROM breeds
-        WHERE "tenantId" = ${tenantId}
-          AND "isActive" = true
-          AND species = ${species}
-        ORDER BY name ASC
-      `;
-    } else {
-      breeds = await prisma.$queryRaw`
-        SELECT id, name, species, "gingrId", "isActive"
-        FROM breeds
-        WHERE "tenantId" = ${tenantId}
-          AND "isActive" = true
-        ORDER BY name ASC
-      `;
+    // Load breeds from the reference data file
+    const fs = require('fs');
+    const path = require('path');
+    // From services/customer/src/controllers to project root is ../../../../
+    const breedsPath = path.join(__dirname, '../../../../data/gingr-reference/breeds.json');
+    
+    let breeds: any[] = [];
+    
+    if (fs.existsSync(breedsPath)) {
+      const breedsData = JSON.parse(fs.readFileSync(breedsPath, 'utf8'));
+      
+      // Transform to expected format
+      breeds = breedsData.map((breed: any) => ({
+        id: breed.value,
+        name: breed.label,
+        species: breed.label.includes('Cat') || breed.label.includes('Feline') ? 'CAT' : 'DOG'
+      }));
+      
+      // Filter by species if provided
+      if (species) {
+        breeds = breeds.filter((breed: any) => breed.species === species.toString().toUpperCase());
+      }
     }
 
     res.status(200).json({
@@ -54,6 +57,7 @@ export const getBreeds = async (
 
 /**
  * Get all veterinarians
+ * Returns unique veterinarians from pets table
  */
 export const getVeterinarians = async (
   req: Request,
@@ -63,14 +67,16 @@ export const getVeterinarians = async (
   try {
     const tenantId = req.headers['x-tenant-id'] as string || 'dev';
 
+    // Get unique veterinarians from pets table
     const vets = await prisma.$queryRaw`
-      SELECT id, name, phone, fax, email, 
-             "address1", "address2", city, state, zip,
-             notes, "isActive"
-      FROM veterinarians
+      SELECT DISTINCT 
+        "vetName" as name, 
+        "vetPhone" as phone
+      FROM pets
       WHERE "tenantId" = ${tenantId}
-        AND "isActive" = true
-      ORDER BY name ASC
+        AND "vetName" IS NOT NULL
+        AND "vetName" != ''
+      ORDER BY "vetName" ASC
     `;
 
     res.status(200).json({
@@ -85,6 +91,7 @@ export const getVeterinarians = async (
 
 /**
  * Get all temperament types
+ * Returns static list based on PlayGroupType enum
  */
 export const getTemperamentTypes = async (
   req: Request,
@@ -92,15 +99,16 @@ export const getTemperamentTypes = async (
   next: NextFunction
 ) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
-
-    const temperaments = await prisma.$queryRaw`
-      SELECT id, name, description, "isActive"
-      FROM temperament_types
-      WHERE "tenantId" = ${tenantId}
-        AND "isActive" = true
-      ORDER BY name ASC
-    `;
+    // Return static temperament types based on PlayGroupType enum
+    const temperaments = [
+      { id: 'SMALL_CALM', name: 'Small & Calm', description: 'Small dogs with calm temperament' },
+      { id: 'SMALL_ACTIVE', name: 'Small & Active', description: 'Small dogs with active temperament' },
+      { id: 'MEDIUM_CALM', name: 'Medium & Calm', description: 'Medium dogs with calm temperament' },
+      { id: 'MEDIUM_ACTIVE', name: 'Medium & Active', description: 'Medium dogs with active temperament' },
+      { id: 'LARGE_CALM', name: 'Large & Calm', description: 'Large dogs with calm temperament' },
+      { id: 'LARGE_ACTIVE', name: 'Large & Active', description: 'Large dogs with active temperament' },
+      { id: 'SOLO', name: 'Solo', description: 'Prefers to play alone' }
+    ];
 
     res.status(200).json({
       status: 'success',
@@ -114,6 +122,7 @@ export const getTemperamentTypes = async (
 
 /**
  * Get temperaments for a specific pet
+ * Returns the idealPlayGroup from the pet record
  */
 export const getPetTemperaments = async (
   req: Request,
@@ -124,12 +133,14 @@ export const getPetTemperaments = async (
     const { petId } = req.params;
     const tenantId = req.headers['x-tenant-id'] as string || 'dev';
 
-    const temperaments = await prisma.$queryRaw`
-      SELECT id, "petId", temperament
-      FROM pet_temperaments
-      WHERE "petId" = ${petId}
-        AND "tenantId" = ${tenantId}
-    `;
+    // Get the pet's idealPlayGroup
+    const pet = await prisma.pet.findFirst({
+      where: { id: petId, tenantId },
+      select: { idealPlayGroup: true }
+    });
+
+    // Return as array for compatibility
+    const temperaments = pet?.idealPlayGroup ? [pet.idealPlayGroup] : [];
 
     res.status(200).json({
       status: 'success',
@@ -143,6 +154,7 @@ export const getPetTemperaments = async (
 
 /**
  * Update temperaments for a pet
+ * Updates the idealPlayGroup field on the pet
  */
 export const updatePetTemperaments = async (
   req: Request,
@@ -154,22 +166,13 @@ export const updatePetTemperaments = async (
     const { temperaments } = req.body;
     const tenantId = req.headers['x-tenant-id'] as string || 'dev';
 
-    // Delete existing temperaments
-    await prisma.$executeRaw`
-      DELETE FROM pet_temperaments
-      WHERE "petId" = ${petId}
-        AND "tenantId" = ${tenantId}
-    `;
-
-    // Insert new temperaments
-    if (temperaments && temperaments.length > 0) {
-      for (const temperament of temperaments) {
-        await prisma.$executeRaw`
-          INSERT INTO pet_temperaments ("petId", temperament, "tenantId")
-          VALUES (${petId}, ${temperament}, ${tenantId})
-        `;
-      }
-    }
+    // Update the pet's idealPlayGroup (take first temperament if multiple)
+    const idealPlayGroup = temperaments && temperaments.length > 0 ? temperaments[0] : null;
+    
+    await prisma.pet.update({
+      where: { id: petId },
+      data: { idealPlayGroup }
+    });
 
     res.status(200).json({
       status: 'success',

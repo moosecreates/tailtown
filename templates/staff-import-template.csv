@@ -1,0 +1,6 @@
+firstName,lastName,email,phone,role,title,department,position,isActive,address,city,state,zipCode,specialties
+John,Smith,john.smith@tailtown.com,(555) 123-4567,Manager,General Manager,Management,General Manager,true,123 Main St,Anytown,ST,12345,"[""Leadership"",""Operations""]"
+Jane,Doe,jane.doe@tailtown.com,(555) 234-5678,Groomer,Lead Groomer,Grooming,Lead Groomer,true,456 Oak Ave,Anytown,ST,12345,"[""Grooming"",""Pet Handling""]"
+Mike,Johnson,mike.johnson@tailtown.com,(555) 345-6789,Trainer,Dog Trainer,Training,Dog Trainer,true,789 Pine St,Anytown,ST,12345,"[""Training"",""Behavior""]"
+Sarah,Wilson,sarah.wilson@tailtown.com,(555) 456-7890,Kennel Tech,Kennel Technician,Kennel,Kennel Technician,true,321 Elm Dr,Anytown,ST,12345,"[""Animal Care"",""Kennel Management""]"
+Emily,Brown,emily.brown@tailtown.com,(555) 567-8901,Receptionist,Front Desk Associate,Front Desk,Front Desk Associate,true,654 Maple Ln,Anytown,ST,12345,"[""Customer Service"",""Scheduling""]"

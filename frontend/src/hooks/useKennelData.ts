@@ -246,10 +246,36 @@ export const useKennelData = ({
     }
   }, [currentDate, getDaysToDisplay]);
 
+  // Function to load reservations for the date range
+  const loadReservations = useCallback(async () => {
+    try {
+      const days = getDaysToDisplay();
+      const startDate = formatDateToYYYYMMDD(days[0]);
+      const endDate = formatDateToYYYYMMDD(days[days.length - 1]);
+      
+      // Use the reservation API directly to get reservations for the date range
+      const response = await reservationApi.get('/api/reservations', {
+        params: {
+          startDate,
+          endDate,
+          limit: 1000
+        }
+      });
+      
+      // Handle the nested response format: data.reservations
+      const reservationsData = response?.data?.data?.reservations || response?.data?.reservations || [];
+      setReservations(reservationsData);
+    } catch (error) {
+      console.error('Error loading reservations:', error);
+      setReservations([]);
+    }
+  }, [getDaysToDisplay]);
+
   // Load data when dependencies change
   useEffect(() => {
     loadKennelsAndAvailability();
-  }, [loadKennelsAndAvailability]);
+    loadReservations();
+  }, [loadKennelsAndAvailability, loadReservations]);
 
   // Filter kennels based on type filter
   const filteredKennels = kennels.filter((kennel) => {

@@ -119,7 +119,8 @@ export interface StaffScheduleResponse {
 const staffService = {
   getAllStaff: async (): Promise<Staff[]> => {
     try {
-      const response = await api.get('/api/staff');
+      // Fetch all staff with a large limit to get everyone
+      const response = await api.get('/api/staff?limit=100');
       if (response.data && response.data.status === 'success') {
         // Transform the backend data to match the frontend interface
         const staffList = Array.isArray(response.data.data) ? response.data.data : [];

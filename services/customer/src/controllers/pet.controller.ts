@@ -115,6 +115,13 @@ export const getPetById = async (
     
     const pet = await prisma.pet.findFirst({
       where: { id, tenantId },
+      include: {
+        medicalRecords: {
+          orderBy: {
+            recordDate: 'desc'
+          }
+        }
+      }
     });
 
     // Photo handling removed as profilePhoto is not in the current schema

@@ -34,7 +34,12 @@
     "coverage": "./scripts/generate-coverage-report.sh",
     "coverage:badge": "node scripts/coverage-badge.js",
     "coverage:open": "open frontend/coverage/lcov-report/index.html && open services/reservation-service/coverage/lcov-report/index.html",
-    "build": "lerna run build"
+    "build": "lerna run build",
+    "import:staff": "node scripts/import-staff-data.js",
+    "import:staff:gingr": "node scripts/import-staff-data.js gingr",
+    "import:staff:csv": "node scripts/import-staff-data.js csv",
+    "import:staff:json": "node scripts/import-staff-data.js json",
+    "hash:password": "node scripts/import-staff-data.js hash-password"
   },
   "engines": {
     "node": ">=16.0.0",
@@ -54,6 +59,9 @@
     "@mui/system": "^5.14.20",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
+    "bcrypt": "^6.0.0",
+    "csv-parse": "^6.1.0",
+    "node-fetch": "^3.3.2",
     "pg": "^8.16.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
