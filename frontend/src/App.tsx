@@ -4,6 +4,7 @@ import { Box, CircularProgress, CssBaseline, ThemeProvider } from '@mui/material
 import { HelmetProvider } from 'react-helmet-async';
 import theme from './theme';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SuperAdminProvider } from './contexts/SuperAdminContext';
 import { ShoppingCartProvider } from './contexts/ShoppingCartContext';
 import { HelpProvider } from './contexts/HelpContext';
 import AccessibilityFix from './components/AccessibilityFix';
@@ -78,6 +79,11 @@ const MessageTemplates = lazy(() => import('./pages/admin/marketing/MessageTempl
 
 // Lazy loaded pages - Check-In
 const CheckInWorkflow = lazy(() => import('./pages/check-in/CheckInWorkflow'));
+
+// Lazy loaded pages - Super Admin
+const SuperAdminLogin = lazy(() => import('./pages/super-admin/Login'));
+const SuperAdminDashboard = lazy(() => import('./pages/super-admin/Dashboard'));
+const SuperAdminRoute = lazy(() => import('./components/auth/SuperAdminRoute'));
 const CheckInComplete = lazy(() => import('./pages/check-in/CheckInComplete'));
 const CheckInTemplateManager = lazy(() => import('./pages/admin/CheckInTemplateManager'));
 
@@ -140,6 +146,14 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
+        {/* Super Admin Routes - Separate authentication */}
+        <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+        <Route path="/super-admin/dashboard" element={
+          <SuperAdminRoute>
+            <SuperAdminDashboard />
+          </SuperAdminRoute>
+        } />
+        
         {/* Public Booking Portal - No authentication required */}
         <Route path="/book" element={<BookingPortal />} />
         
@@ -248,19 +262,21 @@ const App = () => {
           <AccessibilityFix />
           <ScrollFix />
           <RouteChangeListener />
-          <AuthProvider>
-            <ShoppingCartProvider>
-              <HelpProvider>
-                <React.Suspense fallback={
-                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                    <CircularProgress />
-                  </Box>
-                }>
-                  <AppRoutes />
-                </React.Suspense>
-              </HelpProvider>
-            </ShoppingCartProvider>
-          </AuthProvider>
+          <SuperAdminProvider>
+            <AuthProvider>
+              <ShoppingCartProvider>
+                <HelpProvider>
+                  <React.Suspense fallback={
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                      <CircularProgress />
+                    </Box>
+                  }>
+                    <AppRoutes />
+                  </React.Suspense>
+                </HelpProvider>
+              </ShoppingCartProvider>
+            </AuthProvider>
+          </SuperAdminProvider>
         </ThemeProvider>
       </BrowserRouter>
     </HelmetProvider>
