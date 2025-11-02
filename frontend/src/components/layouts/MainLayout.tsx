@@ -186,74 +186,13 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
       </Toolbar>
       <Divider />
       <List>
-        {navItems.map((item) => (
-          <React.Fragment key={item.path}>
-            {item.children ? (
-              <>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    onClick={() => handleSubMenuToggle(item.label)}
-                    selected={location.pathname.startsWith(item.path)}
-                    sx={{
-                      '&.Mui-selected': {
-                        backgroundColor: 'primary.light',
-                        color: 'primary.contrastText',
-                        '&:hover': {
-                          backgroundColor: 'primary.main',
-                        },
-                        '& .MuiListItemIcon-root': {
-                          color: 'primary.contrastText',
-                        },
-                      },
-                    }}
-                  >
-                    <ListItemIcon>
-                      <item.icon />
-                    </ListItemIcon>
-                    <ListItemText primary={item.label} />
-                    {openSubMenu === item.label ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  </ListItemButton>
-                </ListItem>
-                {openSubMenu === item.label && (
-                  <List component="div" disablePadding>
-                    {item.children.map((child) => (
-                      <ListItem key={child.path} disablePadding>
-                        <ListItemButton
-                          component={Link}
-                          to={child.path}
-                          selected={location.pathname === child.path}
-                          onClick={handleDrawerToggle}
-                          sx={{
-                            pl: 4,
-                            '&.Mui-selected': {
-                              backgroundColor: 'primary.light',
-                              color: 'primary.contrastText',
-                              '&:hover': {
-                                backgroundColor: 'primary.main',
-                              },
-                              '& .MuiListItemIcon-root': {
-                                color: 'primary.contrastText',
-                              },
-                            },
-                          }}
-                        >
-                          <ListItemIcon>
-                            <child.icon />
-                          </ListItemIcon>
-                          <ListItemText primary={child.label} />
-                        </ListItemButton>
-                      </ListItem>
-                    ))}
-                  </List>
-                )}
-              </>
-            ) : (
+        {navItems.map((item) => 
+          item.children ? (
+            <React.Fragment key={item.path}>
               <ListItem disablePadding>
                 <ListItemButton
-                  component={Link}
-                  to={item.path}
-                  selected={location.pathname === item.path}
-                  onClick={handleDrawerToggle}
+                  onClick={() => handleSubMenuToggle(item.label)}
+                  selected={location.pathname.startsWith(item.path)}
                   sx={{
                     '&.Mui-selected': {
                       backgroundColor: 'primary.light',
@@ -271,11 +210,70 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
                     <item.icon />
                   </ListItemIcon>
                   <ListItemText primary={item.label} />
+                  {openSubMenu === item.label ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </ListItemButton>
               </ListItem>
-            )}
-          </React.Fragment>
-        ))}
+              {openSubMenu === item.label && (
+                <List component="div" disablePadding>
+                  {item.children.map((child) => (
+                    <ListItem key={child.path} disablePadding>
+                      <ListItemButton
+                        component={Link}
+                        to={child.path}
+                        selected={location.pathname === child.path}
+                        onClick={handleDrawerToggle}
+                        sx={{
+                          pl: 4,
+                          '&.Mui-selected': {
+                            backgroundColor: 'primary.light',
+                            color: 'primary.contrastText',
+                            '&:hover': {
+                              backgroundColor: 'primary.main',
+                            },
+                            '& .MuiListItemIcon-root': {
+                              color: 'primary.contrastText',
+                            },
+                          },
+                        }}
+                      >
+                        <ListItemIcon>
+                          <child.icon />
+                        </ListItemIcon>
+                        <ListItemText primary={child.label} />
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </React.Fragment>
+          ) : (
+            <ListItem key={item.path} disablePadding>
+              <ListItemButton
+                component={Link}
+                to={item.path}
+                selected={location.pathname === item.path}
+                onClick={handleDrawerToggle}
+                sx={{
+                  '&.Mui-selected': {
+                    backgroundColor: 'primary.light',
+                    color: 'primary.contrastText',
+                    '&:hover': {
+                      backgroundColor: 'primary.main',
+                    },
+                    '& .MuiListItemIcon-root': {
+                      color: 'primary.contrastText',
+                    },
+                  },
+                }}
+              >
+                <ListItemIcon>
+                  <item.icon />
+                </ListItemIcon>
+                <ListItemText primary={item.label} />
+              </ListItemButton>
+            </ListItem>
+          )
+        )}
       </List>
       <Divider />
       <List>
