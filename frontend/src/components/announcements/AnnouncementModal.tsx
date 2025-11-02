@@ -12,6 +12,7 @@ import {
   Alert
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
 import WarningIcon from '@mui/icons-material/Warning';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -191,12 +192,17 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
             </>
           )}
         </Box>
-        <Box>
-          <Button onClick={handleClose} color="inherit">
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button onClick={handleClose} variant="contained" color="primary">
             Close
           </Button>
-          <Button onClick={handleDismiss} variant="contained" color="primary">
-            Dismiss
+          <Button 
+            onClick={handleDismiss} 
+            variant="outlined" 
+            color="error"
+            startIcon={<DeleteIcon />}
+          >
+            Dismiss Forever
           </Button>
         </Box>
       </DialogActions>
