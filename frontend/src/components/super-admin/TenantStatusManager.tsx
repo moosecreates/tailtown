@@ -22,10 +22,12 @@ import {
   Block as SuspendIcon,
   CheckCircle as ActivateIcon,
   Delete as DeleteIcon,
-  Restore as RestoreIcon
+  Restore as RestoreIcon,
+  Login as LoginIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useSuperAdmin } from '../../contexts/SuperAdminContext';
+import { useNavigate } from 'react-router-dom';
 
 interface TenantStatusManagerProps {
   tenant: any;
@@ -34,10 +36,13 @@ interface TenantStatusManagerProps {
 
 const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onStatusChange }) => {
   const { superAdmin } = useSuperAdmin();
+  const navigate = useNavigate();
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [impersonateDialogOpen, setImpersonateDialogOpen] = useState(false);
   const [suspendReason, setSuspendReason] = useState('');
   const [deleteReason, setDeleteReason] = useState('');
+  const [impersonateReason, setImpersonateReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -149,6 +154,41 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
     }
   };
 
+  const handleImpersonate = async () => {
+    if (!impersonateReason.trim()) {
+      setError('Reason for impersonation is required');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.post(
+        `http://localhost:4004/api/super-admin/impersonate/${tenant.id}`,
+        { reason: impersonateReason },
+        {
+          headers: {
+            'Authorization': `Bearer ${getAccessToken()}`
+          }
+        }
+      );
+
+      if (response.data.success) {
+        // Store impersonation token and session info
+        localStorage.setItem('impersonationToken', response.data.data.impersonationToken);
+        localStorage.setItem('impersonationSession', JSON.stringify(response.data.data.session));
+        
+        // Redirect to main app (tenant context)
+        window.location.href = '/dashboard';
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to start impersonation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ACTIVE': return 'success';
@@ -198,6 +238,18 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
 
       {/* Action Buttons */}
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        {(isActive || isSuspended) && !isDeleted && (
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<LoginIcon />}
+            onClick={() => setImpersonateDialogOpen(true)}
+            disabled={loading}
+          >
+            Login as Tenant
+          </Button>
+        )}
+
         {isActive && (
           <Button
             variant="outlined"
@@ -309,6 +361,42 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
             disabled={loading}
           >
             {loading ? 'Deleting...' : 'Delete Tenant'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Impersonate Dialog */}
+      <Dialog open={impersonateDialogOpen} onClose={() => setImpersonateDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Login as Tenant</DialogTitle>
+        <DialogContent>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            You will be logged in as this tenant for support purposes.
+            Session will automatically expire after 30 minutes.
+          </Alert>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            <strong>Tenant:</strong> {tenant.businessName} ({tenant.subdomain})
+          </Typography>
+          <TextField
+            fullWidth
+            label="Reason for Impersonation"
+            multiline
+            rows={3}
+            value={impersonateReason}
+            onChange={(e) => setImpersonateReason(e.target.value)}
+            required
+            helperText="Required: Why are you logging in as this tenant?"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setImpersonateDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleImpersonate}
+            color="primary"
+            variant="contained"
+            disabled={loading || !impersonateReason.trim()}
+            startIcon={<LoginIcon />}
+          >
+            {loading ? 'Starting Session...' : 'Login as Tenant'}
           </Button>
         </DialogActions>
       </Dialog>

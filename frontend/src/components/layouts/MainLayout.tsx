@@ -48,6 +48,7 @@ import {
   ShoppingCart as ShoppingCartIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import ImpersonationBanner from '../super-admin/ImpersonationBanner';
 import AnnouncementBell from '../announcements/AnnouncementBell';
 import AnnouncementModal from '../announcements/AnnouncementModal';
 import announcementService from '../../services/announcementService';
@@ -438,6 +439,10 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
         }}
       >
         <Toolbar />
+        {/* Show impersonation banner if active */}
+        {localStorage.getItem('impersonationSession') && (
+          <ImpersonationBanner onExit={() => {}} />
+        )}
         {children || <Outlet />}
       </Box>
     </Box>
