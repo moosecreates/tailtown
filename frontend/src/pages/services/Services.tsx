@@ -54,7 +54,7 @@ const Services: React.FC = () => {
 
   const loadServices = useCallback(async () => {
     try {
-      const response = await serviceManagement.getAllServices();
+      const response = await serviceManagement.getAllServices({ limit: 100 });
       if (Array.isArray(response)) {
         setServices(response);
       } else if (response?.data?.data && Array.isArray(response.data.data)) {
@@ -288,9 +288,6 @@ const Services: React.FC = () => {
               </ToggleButton>
               <ToggleButton value="GROOMING">
                 Grooming ({stats.byCategory.GROOMING || 0})
-              </ToggleButton>
-              <ToggleButton value="TRAINING">
-                Training ({stats.byCategory.TRAINING || 0})
               </ToggleButton>
             </ToggleButtonGroup>
           </Box>

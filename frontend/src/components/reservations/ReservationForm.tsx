@@ -163,17 +163,24 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       
       try {
         setLoading(true);
+        
+        // Build service query params - use category filter if only one category specified
+        const serviceParams: { limit: number; category?: string } = { limit: 100 };
+        if (serviceCategories && serviceCategories.length === 1) {
+          serviceParams.category = serviceCategories[0];
+        }
+        
         const [customersResponse, servicesResponse] = await Promise.all([
           customerService.getAllCustomers(1, 100), // Load more customers initially
-          serviceManagement.getAllServices()
+          serviceManagement.getAllServices(serviceParams)
         ]);
         
         setCustomers(customersResponse.data || []);
         selectsWithOptions.current.customer = (customersResponse.data || []).length > 0;
         
-        // Filter services by categories if provided
+        // Filter services by categories if multiple categories provided
         let filteredServices = servicesResponse.data || [];
-        if (serviceCategories && serviceCategories.length > 0) {
+        if (serviceCategories && serviceCategories.length > 1) {
           filteredServices = filteredServices.filter((service: any) => 
             serviceCategories.includes(service.serviceCategory)
           );

@@ -1,7 +1,5 @@
 import React from 'react';
-import { Container, Typography, Box, Button } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { School as ClassIcon } from '@mui/icons-material';
+import { Container, Typography, Box } from '@mui/material';
 import SpecializedCalendar from '../../components/calendar/SpecializedCalendar';
 import UpcomingClasses from '../../components/dashboard/UpcomingClasses';
 import { ServiceCategory } from '../../types/service';
@@ -11,24 +9,17 @@ import { ServiceCategory } from '../../types/service';
  * 
  * Displays a calendar view filtered to show only training service reservations.
  * Uses the SpecializedCalendar component with fixed time formatting.
+ * 
+ * Note: Class management has been moved to Admin section to prevent accidental
+ * schedule modifications by staff. Access via Admin > Training Classes.
  */
 const TrainingCalendarPage: React.FC = () => {
-  const navigate = useNavigate();
-
   return (
     <Container maxWidth="xl">
-      <Box sx={{ mt: 4, mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box sx={{ mt: 4, mb: 2 }}>
         <Typography variant="h4" gutterBottom>
           Training Calendar
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<ClassIcon />}
-          onClick={() => navigate('/training/classes')}
-        >
-          Manage Classes & Enrollment
-        </Button>
       </Box>
 
       {/* Upcoming Classes Widget */}

@@ -20,6 +20,8 @@ export const getAllServices = async (
     const category = req.query.category as ServiceCategory | undefined;
     const tenantId = req.tenantId!;
     
+    console.log('[getAllServices] Filtering by tenantId:', tenantId);
+    
     // Build where condition with tenant filter
     const where: any = {
       tenantId
@@ -36,6 +38,8 @@ export const getAllServices = async (
         { description: { contains: search, mode: 'insensitive' } }
       ];
     }
+    
+    console.log('[getAllServices] Where clause:', JSON.stringify(where));
     
     const services = await prisma.service.findMany({
       where,
@@ -65,6 +69,8 @@ export const getAllServices = async (
         }
       }
     });
+    
+    console.log('[getAllServices] Found services:', services.length);
     
     // Add a softDeleted flag to services that have been deactivated due to having reservations
     const servicesWithMetadata = services.map(service => {
@@ -149,53 +155,56 @@ export const createService = async (
     // Add tenantId to service data
     mainServiceData.tenantId = tenantId;
     
-    // Create service with transaction to handle add-ons
-    const newService = await prisma.$transaction(async (prismaClient: any) => {
-      // Create the main service
-      const service = await prismaClient.service.create({
-        data: {
-          tenantId: mainServiceData.tenantId,
-          name: mainServiceData.name,
-          description: mainServiceData.description,
-          duration: mainServiceData.duration,
-          price: mainServiceData.price,
-          color: mainServiceData.color,
-          serviceCategory: mainServiceData.serviceCategory,
-          isActive: mainServiceData.isActive !== undefined ? mainServiceData.isActive : true,
-          capacityLimit: mainServiceData.capacityLimit || 0,
-          requiresStaff: mainServiceData.requiresStaff || false,
-          notes: mainServiceData.notes
-        }
-      });
-      
-      // Create any add-on services if provided
-      if (availableAddOns && availableAddOns.length > 0) {
-        await Promise.all(
-          availableAddOns.map((addOn: any) => 
-            prismaClient.addOnService.create({
-              data: {
-                ...addOn,
-                serviceId: service.id
-              }
-            })
-          )
-        );
-      }
-      
-      // Return the service with add-ons included
-      return prismaClient.service.findUnique({
-        where: { id: service.id },
-        include: {
-          availableAddOns: true
-        }
-      });
+    console.log('[createService] Creating service:', {
+      name: mainServiceData.name,
+      tenantId: mainServiceData.tenantId,
+      serviceCategory: mainServiceData.serviceCategory
     });
+    
+    // Create the main service WITHOUT transaction
+    const service = await prisma.service.create({
+      data: {
+        tenantId: mainServiceData.tenantId,
+        name: mainServiceData.name,
+        description: mainServiceData.description,
+        duration: mainServiceData.duration,
+        price: mainServiceData.price,
+        color: mainServiceData.color,
+        serviceCategory: mainServiceData.serviceCategory,
+        isActive: mainServiceData.isActive !== undefined ? mainServiceData.isActive : true,
+        capacityLimit: mainServiceData.capacityLimit || 0,
+        requiresStaff: mainServiceData.requiresStaff || false,
+        notes: mainServiceData.notes,
+        taxable: mainServiceData.taxable !== undefined ? mainServiceData.taxable : true
+      }
+    });
+    
+    console.log('[createService] Service created:', service.id);
+    
+    // Create any add-on services if provided
+    if (availableAddOns && availableAddOns.length > 0) {
+      await Promise.all(
+        availableAddOns.map((addOn: any) => 
+          prisma.addOnService.create({
+            data: {
+              ...addOn,
+              serviceId: service.id
+            }
+          })
+        )
+      );
+    }
+    
+    const newService = service;
+    
+    console.log('[createService] Returning service:', newService ? newService.id : 'NULL');
     
     res.status(201).json({
       status: 'success',
       data: newService
     });
   } catch (error) {
+    console.error('[createService] Error creating service:', error);
     next(error);
   }
 };

@@ -3,8 +3,8 @@ import api from './api';
 
 export const serviceManagement = {
   // Get all services
-  getAllServices: async () => {
-    const response = await api.get('/api/services');
+  getAllServices: async (params?: { category?: string; limit?: number; page?: number }) => {
+    const response = await api.get('/api/services', { params });
     return response.data;
   },
 

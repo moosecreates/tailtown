@@ -275,11 +275,13 @@ const ServiceDetails: React.FC = () => {
                       onChange={handleCategoryChange}
                       label="Category"
                     >
-                      {Object.values(ServiceCategory).map((category: ServiceCategory) => (
-                        <MenuItem key={category} value={category}>
-                          {category}
-                        </MenuItem>
-                      ))}
+                      {Object.values(ServiceCategory)
+                        .filter((category: ServiceCategory) => category !== ServiceCategory.TRAINING)
+                        .map((category: ServiceCategory) => (
+                          <MenuItem key={category} value={category}>
+                            {category}
+                          </MenuItem>
+                        ))}
                     </Select>
                   </FormControl>
                 </Grid>

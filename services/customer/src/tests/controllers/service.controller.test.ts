@@ -67,7 +67,9 @@ describe('Service Controller', () => {
   let prisma: any;
 
   beforeEach(() => {
-    mockReq = {};
+    mockReq = {
+      tenantId: 'test-tenant'  // Default tenantId for all tests
+    } as any;
     mockRes = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn()
@@ -220,7 +222,7 @@ describe('Service Controller', () => {
   });
 
   describe('createService', () => {
-    it('should create a new service', async () => {
+    it('should create a new service with tenantId', async () => {
       // Setup
       mockReq.body = {
         name: 'New Service',
@@ -235,33 +237,86 @@ describe('Service Controller', () => {
       
       const mockCreatedService = {
         id: '1',
+        tenantId: 'test-tenant',
         ...mockReq.body,
         availableAddOns: [
           { id: '101', name: 'Add-on 1', price: 10.0, serviceId: '1' }
         ]
       };
       
-      prisma.service.create.mockResolvedValue({ id: '1', ...mockReq.body });
+      prisma.service.create.mockResolvedValue({ id: '1', tenantId: 'test-tenant', ...mockReq.body });
       prisma.service.findUnique.mockResolvedValue(mockCreatedService);
 
       // Execute
       await serviceController.createService(mockReq as Request, mockRes as Response, mockNext);
 
-      // Assert
-      expect(prisma.service.create).toHaveBeenCalledWith({
-        data: {
-          name: 'New Service',
-          description: 'Description',
-          price: 50.0,
-          duration: 60,
-          serviceCategory: ServiceCategory.GROOMING
-        }
-      });
+      // Assert - Verify tenantId is included in the create call
+      expect(prisma.service.create).toHaveBeenCalled();
+      const createCall = (prisma.service.create as jest.Mock).mock.calls[0][0];
+      expect(createCall.data.tenantId).toBe('test-tenant');
+      expect(createCall.data.name).toBe('New Service');
+      expect(createCall.data.description).toBe('Description');
+      expect(createCall.data.price).toBe(50.0);
+      expect(createCall.data.duration).toBe(60);
+      expect(createCall.data.serviceCategory).toBe(ServiceCategory.GROOMING);
+      
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
         status: 'success',
         data: mockCreatedService
       });
+    });
+
+    it('should fail to create service without tenantId', async () => {
+      // Setup - simulate missing tenantId
+      (mockReq as any).tenantId = undefined;
+      mockReq.body = {
+        name: 'New Service',
+        description: 'Description',
+        price: 50.0,
+        duration: 60,
+        serviceCategory: ServiceCategory.GROOMING
+      };
+
+      // Execute
+      await serviceController.createService(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert - should call next with error since tenantId is required
+      expect(mockNext).toHaveBeenCalled();
+      expect(mockRes.status).not.toHaveBeenCalled();
+    });
+
+    it('should set default values for optional fields', async () => {
+      // Setup - minimal service data
+      mockReq.body = {
+        name: 'Minimal Service',
+        description: 'Description',
+        price: 50.0,
+        duration: 60,
+        serviceCategory: ServiceCategory.GROOMING
+        // No isActive, capacityLimit, or requiresStaff provided
+      };
+      
+      const mockCreatedService = {
+        id: '1',
+        tenantId: 'test-tenant',
+        ...mockReq.body,
+        isActive: true,
+        capacityLimit: 0,
+        requiresStaff: false
+      };
+      
+      prisma.service.create.mockResolvedValue(mockCreatedService);
+      prisma.service.findUnique.mockResolvedValue(mockCreatedService);
+
+      // Execute
+      await serviceController.createService(mockReq as Request, mockRes as Response, mockNext);
+
+      // Assert - Verify default values are set
+      const createCall = (prisma.service.create as jest.Mock).mock.calls[0][0];
+      expect(createCall.data.isActive).toBe(true);
+      expect(createCall.data.capacityLimit).toBe(0);
+      expect(createCall.data.requiresStaff).toBe(false);
     });
   });
 
