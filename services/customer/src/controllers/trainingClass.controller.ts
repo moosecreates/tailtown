@@ -133,9 +133,21 @@ export const createTrainingClass = async (req: Request, res: Response, next: Nex
     const tenantId = req.headers['x-tenant-id'] as string;
     
     // Validate required fields
-    if (!name || !level || !category || !instructorId || !maxCapacity || 
+    if (!name || !level || !category || !maxCapacity || 
         !startDate || !totalWeeks || !daysOfWeek || !startTime || !endTime || !pricePerSeries) {
       return next(new AppError('Missing required fields', 400));
+    }
+    
+    // If instructorId is 'default-instructor' or missing, find the first available staff member
+    let validInstructorId = instructorId;
+    if (!instructorId || instructorId === 'default-instructor') {
+      const firstStaff = await prisma.staff.findFirst({
+        where: { tenantId, isActive: true }
+      });
+      if (!firstStaff) {
+        return next(new AppError('No active staff members found to assign as instructor', 400));
+      }
+      validInstructorId = firstStaff.id;
     }
     
     // Calculate end date if not provided
@@ -149,7 +161,7 @@ export const createTrainingClass = async (req: Request, res: Response, next: Nex
         description,
         level,
         category,
-        instructorId,
+        instructorId: validInstructorId,
         maxCapacity,
         startDate: new Date(startDate),
         endDate: new Date(calculatedEndDate),
