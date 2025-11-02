@@ -19,6 +19,12 @@ import {
   restoreTenant,
   getTenantStats
 } from '../controllers/super-admin/tenant-management.controller';
+import {
+  startImpersonation,
+  endImpersonation,
+  getActiveSessions,
+  getImpersonationHistory
+} from '../controllers/super-admin/impersonation.controller';
 import { requireSuperAdmin } from '../middleware/require-super-admin.middleware';
 
 const router = express.Router();
@@ -37,5 +43,11 @@ router.post('/tenants/:id/activate', requireSuperAdmin, activateTenant);
 router.delete('/tenants/:id', requireSuperAdmin, deleteTenant);
 router.post('/tenants/:id/restore', requireSuperAdmin, restoreTenant);
 router.get('/tenants/:id/stats', requireSuperAdmin, getTenantStats);
+
+// Impersonation routes (Phase 3)
+router.post('/impersonate/:tenantId', requireSuperAdmin, startImpersonation);
+router.post('/impersonate/end/:sessionId', requireSuperAdmin, endImpersonation);
+router.get('/impersonate/active', requireSuperAdmin, getActiveSessions);
+router.get('/impersonate/history', requireSuperAdmin, getImpersonationHistory);
 
 export default router;
