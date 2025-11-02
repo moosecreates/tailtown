@@ -84,18 +84,18 @@ const SuperAdminDashboard: React.FC = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                 <StatsIcon sx={{ fontSize: 40, color: 'success.main', mr: 2 }} />
                 <Box>
-                  <Typography variant="h6">Platform Statistics</Typography>
+                  <Typography variant="h6">Platform Analytics</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    View system metrics
+                    Multi-tenant statistics & insights
                   </Typography>
                 </Box>
               </Box>
               <Button
-                variant="outlined"
+                variant="contained"
                 fullWidth
-                disabled
+                onClick={() => window.open('http://localhost:3001/analytics', '_blank')}
               >
-                Coming Soon
+                View Analytics
               </Button>
             </CardContent>
           </Card>
