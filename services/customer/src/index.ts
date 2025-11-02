@@ -42,6 +42,7 @@ import gingrRoutes from './routes/gingr.routes';
 import referenceDataRoutes from './routes/referenceData.routes';
 import messageTemplatesRoutes from './routes/messageTemplates.routes';
 import announcementRoutes from './routes/announcement.routes';
+import superAdminRoutes from './routes/super-admin.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 import { enforceHTTPS, securityHeaders, sanitizeInput } from './middleware/security.middleware';
@@ -273,6 +274,9 @@ app.get('/test-file/:filename', (req, res) => {
 });
 
 // Routes
+// Super Admin routes (no tenant context required - platform management)
+app.use('/api/super-admin', superAdminRoutes);
+
 // Tenant management routes (no tenant context required - for super admins)
 app.use('/api/tenants', tenantRoutes);
 

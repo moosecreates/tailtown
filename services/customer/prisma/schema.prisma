@@ -1519,3 +1519,48 @@ model AnnouncementDismissal {
   @@index([tenantId, userId], map: "announcement_dismissals_tenant_user_idx")
   @@map("announcement_dismissals")
 }
+
+// Super Admin Models - Phase 1: Authentication
+
+model SuperAdmin {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  passwordHash  String      @map("password_hash")
+  firstName     String?     @map("first_name")
+  lastName      String?     @map("last_name")
+  role          String      @default("SUPER_ADMIN") // SUPER_ADMIN, SUPPORT, DEVELOPER
+  isActive      Boolean     @default(true) @map("is_active")
+  require2fa    Boolean     @default(false) @map("require_2fa")
+  lastLogin     DateTime?   @map("last_login")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  
+  auditLogs     AuditLog[]
+  
+  @@index([email], map: "idx_super_admins_email")
+  @@index([isActive], map: "idx_super_admins_active")
+  @@index([role], map: "idx_super_admins_role")
+  @@map("super_admins")
+}
+
+model AuditLog {
+  id            String      @id @default(uuid())
+  superAdminId  String?     @map("super_admin_id")
+  action        String      // LOGIN, LOGOUT, CREATE_TENANT, DELETE_TENANT, IMPERSONATE, etc.
+  entityType    String?     @map("entity_type") // TENANT, USER, RESERVATION, etc.
+  entityId      String?     @map("entity_id")
+  tenantId      String?     @map("tenant_id")
+  details       Json?       // Additional context
+  ipAddress     String?     @map("ip_address")
+  userAgent     String?     @map("user_agent")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  
+  superAdmin    SuperAdmin? @relation(fields: [superAdminId], references: [id], onDelete: SetNull)
+  
+  @@index([superAdminId], map: "idx_audit_logs_admin")
+  @@index([action], map: "idx_audit_logs_action")
+  @@index([tenantId], map: "idx_audit_logs_tenant")
+  @@index([createdAt], map: "idx_audit_logs_created")
+  @@index([entityType, entityId], map: "idx_audit_logs_entity")
+  @@map("audit_logs")
+}
