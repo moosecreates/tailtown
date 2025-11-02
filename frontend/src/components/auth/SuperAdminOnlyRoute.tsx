@@ -18,7 +18,9 @@ const SuperAdminOnlyRoute: React.FC<SuperAdminOnlyRouteProps> = ({ children }) =
 
   // If no super admin token, redirect to super admin login
   if (!superAdminToken) {
-    return <Navigate to="/super-admin/login" replace />;
+    // Force full redirect to ensure correct path
+    window.location.href = '/super-admin/login';
+    return null;
   }
 
   // Render protected content
