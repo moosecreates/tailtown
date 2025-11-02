@@ -984,6 +984,14 @@ model Tenant {
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
   
+  // Super Admin Management (Phase 2)
+  suspendedAt           DateTime?    @map("suspended_at")
+  suspendedReason       String?      @map("suspended_reason")
+  suspendedBy           String?      @map("suspended_by")
+  deletedBy             String?      @map("deleted_by")
+  suspendedByAdmin      SuperAdmin?  @relation("TenantSuspensions", fields: [suspendedBy], references: [id], onDelete: SetNull)
+  deletedByAdmin        SuperAdmin?  @relation("TenantDeletions", fields: [deletedBy], references: [id], onDelete: SetNull)
+  
   // Settings
   timezone              String       @default("America/New_York")
   currency              String       @default("USD")
@@ -1535,7 +1543,9 @@ model SuperAdmin {
   createdAt     DateTime    @default(now()) @map("created_at")
   updatedAt     DateTime    @updatedAt @map("updated_at")
   
-  auditLogs     AuditLog[]
+  auditLogs            AuditLog[]
+  suspendedTenants     Tenant[]   @relation("TenantSuspensions")
+  deletedTenants       Tenant[]   @relation("TenantDeletions")
   
   @@index([email], map: "idx_super_admins_email")
   @@index([isActive], map: "idx_super_admins_active")
