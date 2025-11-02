@@ -42,6 +42,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import { tenantService, Tenant, TenantUsage } from '../../services/tenantService';
+import TenantStatusManager from '../../components/super-admin/TenantStatusManager';
 
 const TenantDetail: React.FC = () => {
   const navigate = useNavigate();
@@ -513,6 +514,12 @@ const TenantDetail: React.FC = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Super Admin Controls */}
+      <TenantStatusManager
+        tenant={tenant}
+        onStatusChange={loadTenant}
+      />
 
       {/* Confirm Dialog */}
       <Dialog
