@@ -120,12 +120,41 @@ const AnnouncementBell: React.FC<AnnouncementBellProps> = ({
         </Box>
 
         {announcements.length === 0 ? (
-          <MenuItem disabled>
-            <ListItemText
-              primary="No announcements"
-              secondary="You're all caught up!"
-            />
-          </MenuItem>
+          <>
+            <MenuItem disabled>
+              <ListItemText
+                primary="No announcements"
+                secondary="You're all caught up!"
+              />
+            </MenuItem>
+            {onCreateClick && (
+              <>
+                <Divider />
+                <MenuItem
+                  onClick={handleCreate}
+                  sx={{
+                    py: 1.5,
+                    backgroundColor: 'primary.main',
+                    color: 'primary.contrastText',
+                    '&:hover': {
+                      backgroundColor: 'primary.dark'
+                    }
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}>
+                    <AddIcon />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        Create Announcement
+                      </Typography>
+                    }
+                  />
+                </MenuItem>
+              </>
+            )}
+          </>
         ) : (
           [
             ...announcements.slice(0, 5).map((announcement) => (
