@@ -154,15 +154,16 @@ export const createService = async (
       // Create the main service
       const service = await prismaClient.service.create({
         data: {
+          tenantId: mainServiceData.tenantId,
           name: mainServiceData.name,
           description: mainServiceData.description,
           duration: mainServiceData.duration,
           price: mainServiceData.price,
           color: mainServiceData.color,
           serviceCategory: mainServiceData.serviceCategory,
-          isActive: mainServiceData.isActive,
-          capacityLimit: mainServiceData.capacityLimit,
-          requiresStaff: mainServiceData.requiresStaff,
+          isActive: mainServiceData.isActive !== undefined ? mainServiceData.isActive : true,
+          capacityLimit: mainServiceData.capacityLimit || 0,
+          requiresStaff: mainServiceData.requiresStaff || false,
           notes: mainServiceData.notes
         }
       });
