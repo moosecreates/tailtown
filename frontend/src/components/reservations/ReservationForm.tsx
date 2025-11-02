@@ -107,6 +107,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   const [pets, setPets] = useState<Pet[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [selectedCustomerObj, setSelectedCustomerObj] = useState<Customer | null>(null);
   const [customerSearchInput, setCustomerSearchInput] = useState<string>('');
   const [customerSearchResults, setCustomerSearchResults] = useState<Customer[]>([]);
   const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false);
@@ -332,8 +333,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
    * Loads the selected customer's pets and updates the form state
    * @param customerId - The selected customer ID
    */
-  const handleCustomerChange = async (customerId: string) => {
+  const handleCustomerChange = async (customerId: string, customerObj?: Customer | null) => {
     setSelectedCustomer(customerId);
+    setSelectedCustomerObj(customerObj || null);
     setSelectedPet(''); // Reset pet selection when customer changes
     setSelectedPets([]); // Reset multiple pet selection when customer changes
     setPetSuiteAssignments({}); // Reset suite assignments when customer changes
@@ -1062,16 +1064,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             }}
             onChange={(event, newValue: Customer | null) => {
               if (newValue) {
-                handleCustomerChange(newValue.id);
+                handleCustomerChange(newValue.id, newValue);
               } else {
-                handleCustomerChange('');
+                handleCustomerChange('', null);
               }
             }}
-            value={selectedCustomer ? (
-              customers.find(c => c.id === selectedCustomer) || 
-              customerSearchResults.find(c => c.id === selectedCustomer) || 
-              null
-            ) : null}
+            value={selectedCustomerObj}
             renderInput={(params) => (
               <TextField
                 {...params}
