@@ -76,7 +76,7 @@ export const useDashboardData = () => {
   const [filteredReservations, setFilteredReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [appointmentFilter, setAppointmentFilter] = useState<'in' | 'out' | 'all'>('all'); // Default to all reservations
+  const [appointmentFilter, setAppointmentFilter] = useState<'in' | 'out' | 'all'>('in'); // Default to check-ins (today's appointments)
   const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Always default to today
 
   /**
@@ -85,38 +85,45 @@ export const useDashboardData = () => {
    * Performs client-side filtering for instant updates without API calls.
    * Compares dates in YYYY-MM-DD format to handle timezone correctly.
    * 
-   * @param filter - Filter type: 'in' (check-ins), 'out' (check-outs), or 'all'
+   * @param filter - Filter type: 'in' (check-ins), 'out' (check-outs), or 'all' (both for selected date)
    * @param reservations - Optional array to filter (defaults to allReservations)
    */
   const filterReservations = useCallback((filter: 'in' | 'out' | 'all', reservations?: any[]) => {
     const reservationsToFilter = reservations || allReservations;
     
-    // Get today's date in YYYY-MM-DD format (local timezone)
-    const today = new Date();
-    const formattedToday = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    // Use selected date for filtering
+    const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
     
     let filtered = reservationsToFilter;
     
     if (filter === 'in') {
-      // Show only check-ins (reservations starting today)
+      // Show only check-ins (reservations starting on selected date)
       filtered = reservationsToFilter.filter((res: any) => {
         const startDate = new Date(res.startDate);
         const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
-        return startDateStr === formattedToday;
+        return startDateStr === formattedDate;
       });
     } else if (filter === 'out') {
-      // Show only check-outs (reservations ending today)
+      // Show only check-outs (reservations ending on selected date)
       filtered = reservationsToFilter.filter((res: any) => {
         const endDate = new Date(res.endDate);
         const endDateStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}`;
-        return endDateStr === formattedToday;
+        return endDateStr === formattedDate;
+      });
+    } else if (filter === 'all') {
+      // Show both check-ins AND check-outs for selected date
+      filtered = reservationsToFilter.filter((res: any) => {
+        const startDate = new Date(res.startDate);
+        const endDate = new Date(res.endDate);
+        const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
+        const endDateStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}`;
+        return startDateStr === formattedDate || endDateStr === formattedDate;
       });
     }
-    // 'all' filter shows everything (no filtering needed)
     
     setFilteredReservations(filtered);
     setAppointmentFilter(filter);
-  }, [allReservations]);
+  }, [allReservations, selectedDate]);
 
   /**
    * Load all dashboard data
@@ -188,8 +195,13 @@ export const useDashboardData = () => {
 
       setAllReservations(reservations);
       
-      // Apply initial filter (all reservations by default)
-      setFilteredReservations(reservations);
+      // Apply initial filter (check-ins by default to show today's appointments)
+      const checkInsToday = reservations.filter((res: any) => {
+        const startDate = new Date(res.startDate);
+        const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
+        return startDateStr === formattedDate;
+      });
+      setFilteredReservations(checkInsToday);
       
     } catch (err: any) {
       logger.error('Failed to load dashboard data', { error: err.message });
