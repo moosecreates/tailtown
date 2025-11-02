@@ -59,16 +59,6 @@ const TenantDetail: React.FC = () => {
     action: null,
   });
 
-  // Check for super admin authentication
-  useEffect(() => {
-    const superAdminToken = localStorage.getItem('superAdminAccessToken');
-    if (!superAdminToken) {
-      // Not a super admin, redirect to super admin login
-      navigate('/super-admin/login');
-      return;
-    }
-  }, [navigate]);
-
   useEffect(() => {
     if (id) {
       loadTenant();
