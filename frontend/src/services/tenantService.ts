@@ -2,6 +2,12 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_CUSTOMER_SERVICE_URL || 'http://localhost:4004';
 
+// Helper to get auth headers
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 export interface Tenant {
   id: string;
   businessName: string;
@@ -109,7 +115,9 @@ class TenantService {
     if (filters?.isActive !== undefined) params.append('isActive', filters.isActive.toString());
     if (filters?.isPaused !== undefined) params.append('isPaused', filters.isPaused.toString());
 
-    const response = await axios.get(`${API_URL}/api/tenants?${params.toString()}`);
+    const response = await axios.get(`${API_URL}/api/tenants?${params.toString()}`, {
+      headers: getAuthHeaders()
+    });
     return response.data.data;
   }
 
@@ -117,7 +125,9 @@ class TenantService {
    * Get tenant by ID
    */
   async getTenantById(id: string): Promise<Tenant> {
-    const response = await axios.get(`${API_URL}/api/tenants/${id}`);
+    const response = await axios.get(`${API_URL}/api/tenants/${id}`, {
+      headers: getAuthHeaders()
+    });
     return response.data.data;
   }
 
@@ -125,7 +135,9 @@ class TenantService {
    * Get tenant by subdomain
    */
   async getTenantBySubdomain(subdomain: string): Promise<Tenant> {
-    const response = await axios.get(`${API_URL}/api/tenants/subdomain/${subdomain}`);
+    const response = await axios.get(`${API_URL}/api/tenants/subdomain/${subdomain}`, {
+      headers: getAuthHeaders()
+    });
     return response.data.data;
   }
 
@@ -133,7 +145,9 @@ class TenantService {
    * Create new tenant
    */
   async createTenant(data: CreateTenantDto): Promise<Tenant> {
-    const response = await axios.post(`${API_URL}/api/tenants`, data);
+    const response = await axios.post(`${API_URL}/api/tenants`, data, {
+      headers: getAuthHeaders()
+    });
     return response.data.data;
   }
 
@@ -141,39 +155,46 @@ class TenantService {
    * Update tenant
    */
   async updateTenant(id: string, data: UpdateTenantDto): Promise<Tenant> {
-    const response = await axios.put(`${API_URL}/api/tenants/${id}`, data);
+    const response = await axios.put(`${API_URL}/api/tenants/${id}`, data, {
+      headers: getAuthHeaders()
+    });
     return response.data.data;
   }
 
   /**
    * Pause tenant
    */
-  async pauseTenant(id: string): Promise<Tenant> {
-    const response = await axios.post(`${API_URL}/api/tenants/${id}/pause`);
-    return response.data.data;
+  async pauseTenant(id: string): Promise<void> {
+    await axios.post(`${API_URL}/api/tenants/${id}/pause`, {}, {
+      headers: getAuthHeaders()
+    });
   }
 
   /**
    * Reactivate tenant
    */
-  async reactivateTenant(id: string): Promise<Tenant> {
-    const response = await axios.post(`${API_URL}/api/tenants/${id}/reactivate`);
-    return response.data.data;
+  async reactivateTenant(id: string): Promise<void> {
+    await axios.post(`${API_URL}/api/tenants/${id}/reactivate`, {}, {
+      headers: getAuthHeaders()
+    });
   }
 
   /**
    * Delete tenant (soft delete)
    */
-  async deleteTenant(id: string): Promise<Tenant> {
-    const response = await axios.delete(`${API_URL}/api/tenants/${id}`);
-    return response.data.data;
+  async deleteTenant(id: string): Promise<void> {
+    await axios.delete(`${API_URL}/api/tenants/${id}`, {
+      headers: getAuthHeaders()
+    });
   }
 
   /**
    * Get tenant usage statistics
    */
   async getTenantUsage(id: string): Promise<TenantUsage> {
-    const response = await axios.get(`${API_URL}/api/tenants/${id}/usage`);
+    const response = await axios.get(`${API_URL}/api/tenants/${id}/usage`, {
+      headers: getAuthHeaders()
+    });
     return response.data.data;
   }
 }
