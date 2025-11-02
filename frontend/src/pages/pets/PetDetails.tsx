@@ -160,6 +160,8 @@ const PetDetails = () => {
         if (petData.medicalRecords && petData.medicalRecords.length > 0) {
           const vaccinationStatus: any = {};
           const vaccineExpirations: any = {};
+          const today = new Date();
+          today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
           
           petData.medicalRecords.forEach((record: any) => {
             if (record.recordType === 'VACCINATION' && record.description) {
@@ -176,9 +178,22 @@ const PetDetails = () => {
               
               const vaccineName = vaccineMap[record.description];
               if (vaccineName) {
-                vaccinationStatus[vaccineName] = 'Current';
+                // Determine status based on expiration date
                 if (record.expirationDate) {
+                  const expirationDate = new Date(record.expirationDate);
+                  expirationDate.setHours(0, 0, 0, 0);
+                  
+                  // Set status based on whether vaccine is expired
+                  if (expirationDate >= today) {
+                    vaccinationStatus[vaccineName] = 'Current';
+                  } else {
+                    vaccinationStatus[vaccineName] = 'Expired';
+                  }
+                  
                   vaccineExpirations[vaccineName] = new Date(record.expirationDate).toISOString().split('T')[0];
+                } else {
+                  // No expiration date, mark as current
+                  vaccinationStatus[vaccineName] = 'Current';
                 }
               }
             }
@@ -189,7 +204,8 @@ const PetDetails = () => {
           
           console.log('Populated vaccination data from medical records:', {
             vaccinationStatus,
-            vaccineExpirations
+            vaccineExpirations,
+            today: today.toISOString().split('T')[0]
           });
         }
         
