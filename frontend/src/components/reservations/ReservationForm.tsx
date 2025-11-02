@@ -214,6 +214,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             
             if (customerExists) {
               setSelectedCustomer(initialData.customerId);
+              // Also set the customer object for the Autocomplete
+              const customerObj = customersList.find((c: Customer) => c.id === initialData.customerId);
+              if (customerObj) {
+                setSelectedCustomerObj(customerObj);
+              }
               selectsWithOptions.current.customer = true;
               
               // Load pets for the selected customer
