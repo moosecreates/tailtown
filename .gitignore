@@ -43,6 +43,8 @@ reservation.log
 *.backup
 *.old
 *.swo
+backups/
+.pids/
 
 # Cache
 .cache

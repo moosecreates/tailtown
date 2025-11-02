@@ -119,18 +119,17 @@ const AnnouncementBell: React.FC<AnnouncementBellProps> = ({
           </Typography>
         </Box>
 
-        {announcements.length === 0 ? (
-          <>
-            <MenuItem disabled>
+        {announcements.length === 0 ? [
+            <MenuItem key="no-announcements" disabled>
               <ListItemText
                 primary="No announcements"
                 secondary="You're all caught up!"
               />
-            </MenuItem>
-            {onCreateClick && (
-              <>
-                <Divider />
+            </MenuItem>,
+            ...(onCreateClick ? [
+                <Divider key="divider-create" />,
                 <MenuItem
+                  key="create"
                   onClick={handleCreate}
                   sx={{
                     py: 1.5,
@@ -152,11 +151,8 @@ const AnnouncementBell: React.FC<AnnouncementBellProps> = ({
                     }
                   />
                 </MenuItem>
-              </>
-            )}
-          </>
-        ) : (
-          [
+            ] : [])
+          ] : [
             ...announcements.slice(0, 5).map((announcement) => (
               <MenuItem
                 key={announcement.id}
@@ -245,7 +241,7 @@ const AnnouncementBell: React.FC<AnnouncementBellProps> = ({
               </MenuItem>
             ] : [])
           ]
-        )}
+        }
       </Menu>
     </>
   );
