@@ -184,16 +184,17 @@ const PetDetails = () => {
                   expirationDate.setHours(0, 0, 0, 0);
                   
                   // Set status based on whether vaccine is expired
+                  // VaccinationStatus component expects uppercase status values
                   if (expirationDate >= today) {
-                    vaccinationStatus[vaccineName] = 'Current';
+                    vaccinationStatus[vaccineName] = { status: 'CURRENT' };
                   } else {
-                    vaccinationStatus[vaccineName] = 'Expired';
+                    vaccinationStatus[vaccineName] = { status: 'EXPIRED' };
                   }
                   
                   vaccineExpirations[vaccineName] = new Date(record.expirationDate).toISOString().split('T')[0];
                 } else {
                   // No expiration date, mark as current
-                  vaccinationStatus[vaccineName] = 'Current';
+                  vaccinationStatus[vaccineName] = { status: 'CURRENT' };
                 }
               }
             }
