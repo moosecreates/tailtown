@@ -704,14 +704,16 @@ ALTER TABLE tenants ADD COLUMN IF NOT EXISTS suspended_by UUID REFERENCES super_
 
 ---
 
-## 📞 Questions & Decisions Needed
+## 📞 Configuration Decisions ✅
 
-1. **Initial Super Admin**: Who should be the first super admin account?
-2. **2FA Requirement**: Should 2FA be mandatory for super admins?
-3. **Impersonation Limits**: Should there be time limits on impersonation sessions?
-4. **Audit Retention**: How long should audit logs be retained?
-5. **Tenant Deletion**: Should deleted tenants be recoverable? For how long?
-6. **IP Whitelist**: Should super admin access be restricted to specific IPs?
+1. **Initial Super Admin**: Rob Weinstein ✅
+2. **2FA Requirement**: Not for MVP, mandatory in future ✅
+3. **Impersonation Limits**: 30 minutes per session ✅
+4. **Audit Retention**: 90 days (quarterly review) ✅
+5. **Tenant Deletion**: Recoverable for 1 year (soft delete) ✅
+6. **IP Whitelist**: Not enforced (remote work flexibility) ✅
+
+**See:** `docs/SUPER-ADMIN-CONFIG.md` for complete configuration details
 
 ---
 
