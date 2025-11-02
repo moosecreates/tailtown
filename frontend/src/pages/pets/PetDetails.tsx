@@ -156,6 +156,43 @@ const PetDetails = () => {
           petData.birthdate = new Date(petData.birthdate).toISOString().split('T')[0];
         }
         
+        // Process medical records to populate vaccination status
+        if (petData.medicalRecords && petData.medicalRecords.length > 0) {
+          const vaccinationStatus: any = {};
+          const vaccineExpirations: any = {};
+          
+          petData.medicalRecords.forEach((record: any) => {
+            if (record.recordType === 'VACCINATION' && record.description) {
+              // Map vaccine descriptions to field names
+              const vaccineMap: { [key: string]: string } = {
+                'Rabies vaccination': 'Rabies',
+                'DHPP vaccination': 'DHPP',
+                'Bordetella vaccination': 'Bordetella',
+                'FVRCP vaccination': 'FVRCP',
+                'Canine Influenza vaccination': 'Influenza',
+                'Lepto vaccination': 'Lepto',
+                'Leptospirosis vaccination': 'Lepto'
+              };
+              
+              const vaccineName = vaccineMap[record.description];
+              if (vaccineName) {
+                vaccinationStatus[vaccineName] = 'Current';
+                if (record.expirationDate) {
+                  vaccineExpirations[vaccineName] = new Date(record.expirationDate).toISOString().split('T')[0];
+                }
+              }
+            }
+          });
+          
+          petData.vaccinationStatus = vaccinationStatus;
+          petData.vaccineExpirations = vaccineExpirations;
+          
+          console.log('Populated vaccination data from medical records:', {
+            vaccinationStatus,
+            vaccineExpirations
+          });
+        }
+        
         setPet(petData);
         
         console.log('Loaded pet data:', {
