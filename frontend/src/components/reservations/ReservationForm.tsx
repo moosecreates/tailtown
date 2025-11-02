@@ -1067,7 +1067,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 handleCustomerChange('');
               }
             }}
-            value={selectedCustomer ? customers.find(c => c.id === selectedCustomer) || null : null}
+            value={selectedCustomer ? (
+              customers.find(c => c.id === selectedCustomer) || 
+              customerSearchResults.find(c => c.id === selectedCustomer) || 
+              null
+            ) : null}
             renderInput={(params) => (
               <TextField
                 {...params}
