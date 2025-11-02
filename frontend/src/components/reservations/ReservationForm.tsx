@@ -110,6 +110,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   const [selectedCustomerObj, setSelectedCustomerObj] = useState<Customer | null>(null);
   const [customerSearchInput, setCustomerSearchInput] = useState<string>('');
   const [customerSearchResults, setCustomerSearchResults] = useState<Customer[]>([]);
+  const [petSearchResults, setPetSearchResults] = useState<Pet[]>([]);
   const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false);
   const [selectedPet, setSelectedPet] = useState<string>('');
   const [selectedPets, setSelectedPets] = useState<string[]>([]);
@@ -386,8 +387,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   };
   
   /**
-   * Handle customer search input change
-   * Searches for customers matching the input text using the customerService API
+   * Handle customer/pet search input change
+   * Searches for BOTH customers and pets matching the input text
    * Only triggers search when at least 2 characters are entered
    * @param searchText - The search text entered by the user
    */
@@ -396,20 +397,36 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     
     if (!searchText || searchText.length < 2) {
       setCustomerSearchResults([]);
+      setPetSearchResults([]);
       return;
     }
     
     try {
       setCustomerSearchLoading(true);
-      const response = await customerService.searchCustomers(searchText);
-      if (response && response.data) {
-        setCustomerSearchResults(response.data || []);
+      
+      // Search both customers and pets in parallel
+      const [customerResponse, petResponse] = await Promise.all([
+        customerService.searchCustomers(searchText),
+        petService.searchPets(searchText)
+      ]);
+      
+      // Set customer results
+      if (customerResponse && customerResponse.data) {
+        setCustomerSearchResults(customerResponse.data || []);
       } else {
         setCustomerSearchResults([]);
       }
+      
+      // Set pet results
+      if (petResponse && petResponse.data) {
+        setPetSearchResults(petResponse.data || []);
+      } else {
+        setPetSearchResults([]);
+      }
     } catch (error) {
-      console.error('Error searching for customers:', error);
+      console.error('Error searching for customers/pets:', error);
       setCustomerSearchResults([]);
+      setPetSearchResults([]);
     } finally {
       setCustomerSearchLoading(false);
     }
@@ -1043,45 +1060,69 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               </Typography>
             </Box>
           )}
-          {/* Customer search autocomplete - shows search results when user types 2+ characters */}
+          {/* Customer/Pet search autocomplete - shows both customers and pets when user types 2+ characters */}
           <Autocomplete
             id="customer-search"
-            options={customerSearchInput.length >= 2 ? customerSearchResults : customers}
-            getOptionLabel={(option: Customer) => {
-              // Ensure we handle null/undefined values gracefully
-              if (!option) return '';
-              return `${option.firstName} ${option.lastName}`;
-            }}
-            isOptionEqualToValue={(option: Customer, value: Customer) => {
-              // Handle null values safely
-              if (!option || !value) return false;
-              
-              // If value has an empty ID but has other properties, try matching by email as a fallback
-              if (!value.id && value.email && option.email) {
-                return option.email === value.email;
+            options={customerSearchInput.length >= 2 ? [
+              ...customerSearchResults.map(c => ({ type: 'customer' as const, data: c })),
+              ...petSearchResults.map(p => ({ type: 'pet' as const, data: p }))
+            ] : customers.map(c => ({ type: 'customer' as const, data: c }))}
+            getOptionLabel={(option: { type: 'customer' | 'pet', data: Customer | Pet }) => {
+              if (!option || !option.data) return '';
+              if (option.type === 'customer') {
+                const customer = option.data as Customer;
+                return `${customer.firstName} ${customer.lastName}`;
+              } else {
+                const pet = option.data as Pet;
+                const owner = pet.owner;
+                return `${pet.name} (${owner ? `${owner.firstName} ${owner.lastName}` : 'Unknown Owner'}) - ${pet.breed || pet.type}`;
               }
-              
-              return option.id === value.id;
             }}
+            isOptionEqualToValue={(option, value) => {
+              if (!option || !value) return false;
+              if (option.type !== value.type) return false;
+              return option.data.id === value.data.id;
+            }}
+            groupBy={(option) => option.type === 'customer' ? '👤 Customers' : '🐕 Pets'}
             loading={customerSearchLoading}
             onInputChange={(event, newInputValue) => {
               handleCustomerSearch(newInputValue);
             }}
-            onChange={(event, newValue: Customer | null) => {
+            onChange={(event, newValue: { type: 'customer' | 'pet', data: Customer | Pet } | null) => {
               if (newValue) {
-                handleCustomerChange(newValue.id, newValue);
+                if (newValue.type === 'customer') {
+                  const customer = newValue.data as Customer;
+                  handleCustomerChange(customer.id, customer);
+                } else {
+                  // Pet selected - auto-select the customer
+                  const pet = newValue.data as Pet;
+                  if (pet.owner) {
+                    // Create a customer object from pet.owner
+                    const customerObj: Customer = {
+                      id: pet.customerId,
+                      firstName: pet.owner.firstName,
+                      lastName: pet.owner.lastName,
+                      email: '',
+                      isActive: true
+                    };
+                    handleCustomerChange(pet.customerId, customerObj);
+                    // Also pre-select this pet
+                    setSelectedPet(pet.id);
+                    setSelectedPets([pet.id]);
+                  }
+                }
               } else {
                 handleCustomerChange('', null);
               }
             }}
-            value={selectedCustomerObj}
+            value={selectedCustomerObj ? { type: 'customer' as const, data: selectedCustomerObj } : null}
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Customer"
+                label="Customer or Pet"
                 size="small"
                 required
-                placeholder="Search by name, email or phone"
+                placeholder="Search by customer name, pet name, email, or phone"
                 InputLabelProps={{
                   shrink: true,
                 }}
@@ -1103,8 +1144,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 }}
               />
             )}
-            noOptionsText="No customers found. Try a different search term."
-            loadingText="Searching for customers..."
+            noOptionsText="No customers or pets found. Try a different search term."
+            loadingText="Searching for customers and pets..."
             size="small"
             sx={{ mb: 1 }}
           />

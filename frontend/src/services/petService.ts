@@ -171,5 +171,15 @@ export const petService = {
       console.error('Response:', error.response);
       throw error;
     }
+  },
+
+  searchPets: async (searchText: string): Promise<PaginatedResponse<Pet>> => {
+    try {
+      // Use getAllPets with search parameter
+      return await petService.getAllPets(1, 50, searchText);
+    } catch (error: any) {
+      console.error('Error in searchPets:', error);
+      throw error;
+    }
   }
 };
