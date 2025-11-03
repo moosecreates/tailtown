@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { createService, tenantMiddleware } from './utils/service';
 import reservationRoutes from './routes/reservation.routes';
 import resourceRoutes from './routes/resourceRoutes';
