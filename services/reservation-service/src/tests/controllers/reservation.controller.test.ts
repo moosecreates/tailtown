@@ -37,6 +37,9 @@ jest.mock('@prisma/client', () => {
     pet: {
       findFirst: jest.fn(),
     },
+    invoice: {
+      updateMany: jest.fn(),
+    },
     $transaction: jest.fn((callback) => callback()),
   };
   return {

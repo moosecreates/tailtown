@@ -27,6 +27,9 @@ jest.mock('@prisma/client', () => {
         deleteMany: jest.fn(),
         createMany: jest.fn(),
       },
+    invoice: {
+      updateMany: jest.fn(),
+    },
       resource: {
         findFirst: jest.fn(),
         findMany: jest.fn(),

@@ -26,6 +26,9 @@ jest.mock('@prisma/client', () => {
     reservationAddOn: {
       deleteMany: jest.fn(),
     },
+    invoice: {
+      updateMany: jest.fn(),
+    },
     $transaction: jest.fn((callback) => callback()),
   };
   
