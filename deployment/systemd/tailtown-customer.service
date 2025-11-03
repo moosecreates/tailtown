@@ -5,12 +5,15 @@ Wants=postgresql.service
 
 [Service]
 Type=simple
-User=tailtown
-Group=tailtown
+User=root
+Group=root
 WorkingDirectory=/opt/tailtown/services/customer
 Environment="NODE_ENV=production"
 Environment="PORT=4004"
-Environment="DATABASE_URL=postgresql://postgres:password@localhost:5432/customer"
+Environment="DATA_DIR=/opt/tailtown/data"
+Environment="DISABLE_HTTPS_REDIRECT=true"
+Environment="ALLOWED_ORIGINS=http://129.212.178.244:3000"
+Environment="DATABASE_URL=postgresql://postgres:TailtownSecure2025ProductionDB@localhost:5432/customer"
 ExecStartPre=/bin/sleep 5
 ExecStart=/usr/bin/node dist/index.js
 Restart=always
