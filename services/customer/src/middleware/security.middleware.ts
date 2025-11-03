@@ -10,6 +10,11 @@ export const enforceHTTPS = (req: Request, res: Response, next: NextFunction) =>
     return next();
   }
 
+  // Skip if HTTPS enforcement is explicitly disabled (for HTTP-only deployments)
+  if (process.env.DISABLE_HTTPS_REDIRECT === 'true') {
+    return next();
+  }
+
   // Check if request is already HTTPS
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
     return next();

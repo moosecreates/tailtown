@@ -24,8 +24,9 @@ export const getBreeds = async (
     // Load breeds from the reference data file
     const fs = require('fs');
     const path = require('path');
-    // From services/customer/src/controllers to project root is ../../../../
-    const breedsPath = path.join(__dirname, '../../../../data/gingr-reference/breeds.json');
+    // Use environment variable or default to relative path
+    const dataDir = process.env.DATA_DIR || path.join(__dirname, '../../../../data');
+    const breedsPath = path.join(dataDir, 'gingr-reference/breeds.json');
     
     let breeds: any[] = [];
     
