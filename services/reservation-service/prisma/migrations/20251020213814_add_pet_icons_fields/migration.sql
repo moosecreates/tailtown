@@ -4,53 +4,102 @@
   - You are about to drop the `reservation_errors` table. If the table is not empty, all the data it contains will be lost.
 
 */
--- CreateEnum
-CREATE TYPE "PetType" AS ENUM ('DOG', 'CAT', 'BIRD', 'RABBIT', 'REPTILE', 'OTHER');
+-- CreateEnum (with IF NOT EXISTS to handle existing types)
+DO $$ BEGIN
+    CREATE TYPE "PetType" AS ENUM ('DOG', 'CAT', 'BIRD', 'RABBIT', 'REPTILE', 'OTHER');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'UNKNOWN');
+DO $$ BEGIN
+    CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE', 'UNKNOWN');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "ReservationStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED', 'NO_SHOW', 'COMPLETED');
+DO $$ BEGIN
+    CREATE TYPE "ReservationStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED', 'NO_SHOW', 'COMPLETED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "PlayGroupType" AS ENUM ('SMALL_DOGS', 'MEDIUM_DOGS', 'LARGE_DOGS', 'HIGH_ENERGY', 'LOW_ENERGY', 'PUPPIES', 'SENIORS', 'SPECIAL_NEEDS');
+DO $$ BEGIN
+    CREATE TYPE "PlayGroupType" AS ENUM ('SMALL_DOGS', 'MEDIUM_DOGS', 'LARGE_DOGS', 'HIGH_ENERGY', 'LOW_ENERGY', 'PUPPIES', 'SENIORS', 'SPECIAL_NEEDS');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "ContactMethod" AS ENUM ('EMAIL', 'SMS', 'BOTH', 'NONE');
+DO $$ BEGIN
+    CREATE TYPE "ContactMethod" AS ENUM ('EMAIL', 'SMS', 'BOTH', 'NONE');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "PaymentMethod" AS ENUM ('CREDIT_CARD', 'DEBIT_CARD', 'CASH', 'CHECK', 'BANK_TRANSFER', 'STORE_CREDIT', 'GIFT_CARD');
+DO $$ BEGIN
+    CREATE TYPE "PaymentMethod" AS ENUM ('CREDIT_CARD', 'DEBIT_CARD', 'CASH', 'CHECK', 'BANK_TRANSFER', 'STORE_CREDIT', 'GIFT_CARD');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'PAID', 'FAILED', 'REFUNDED', 'PARTIALLY_REFUNDED');
+DO $$ BEGIN
+    CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'PAID', 'FAILED', 'REFUNDED', 'PARTIALLY_REFUNDED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "InvoiceStatus" AS ENUM ('DRAFT', 'SENT', 'PAID', 'OVERDUE', 'CANCELLED', 'REFUNDED');
+DO $$ BEGIN
+    CREATE TYPE "InvoiceStatus" AS ENUM ('DRAFT', 'SENT', 'PAID', 'OVERDUE', 'CANCELLED', 'REFUNDED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "ResourceType" AS ENUM ('KENNEL', 'RUN', 'SUITE', 'STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE', 'PLAY_AREA', 'OUTDOOR_PLAY_YARD', 'PRIVATE_PLAY_AREA', 'GROOMING_TABLE', 'BATHING_STATION', 'DRYING_STATION', 'TRAINING_ROOM', 'AGILITY_COURSE', 'GROOMER', 'TRAINER', 'ATTENDANT', 'BATHER', 'OTHER');
+DO $$ BEGIN
+    CREATE TYPE "ResourceType" AS ENUM ('KENNEL', 'RUN', 'SUITE', 'STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE', 'PLAY_AREA', 'OUTDOOR_PLAY_YARD', 'PRIVATE_PLAY_AREA', 'GROOMING_TABLE', 'BATHING_STATION', 'DRYING_STATION', 'TRAINING_ROOM', 'AGILITY_COURSE', 'GROOMER', 'TRAINER', 'ATTENDANT', 'BATHER', 'OTHER');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "AvailabilityStatus" AS ENUM ('AVAILABLE', 'RESERVED', 'MAINTENANCE', 'OUT_OF_SERVICE');
+DO $$ BEGIN
+    CREATE TYPE "AvailabilityStatus" AS ENUM ('AVAILABLE', 'RESERVED', 'MAINTENANCE', 'OUT_OF_SERVICE');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "TimeOffType" AS ENUM ('VACATION', 'SICK', 'PERSONAL', 'BEREAVEMENT', 'JURY_DUTY', 'OTHER');
+DO $$ BEGIN
+    CREATE TYPE "TimeOffType" AS ENUM ('VACATION', 'SICK', 'PERSONAL', 'BEREAVEMENT', 'JURY_DUTY', 'OTHER');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "TimeOffStatus" AS ENUM ('PENDING', 'APPROVED', 'DENIED', 'CANCELLED');
+DO $$ BEGIN
+    CREATE TYPE "TimeOffStatus" AS ENUM ('PENDING', 'APPROVED', 'DENIED', 'CANCELLED');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "ScheduleStatus" AS ENUM ('SCHEDULED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW');
+DO $$ BEGIN
+    CREATE TYPE "ScheduleStatus" AS ENUM ('SCHEDULED', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "ServiceCategory" AS ENUM ('DAYCARE', 'BOARDING', 'GROOMING', 'TRAINING', 'OTHER');
+DO $$ BEGIN
+    CREATE TYPE "ServiceCategory" AS ENUM ('DAYCARE', 'BOARDING', 'GROOMING', 'TRAINING', 'OTHER');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "PriceRuleType" AS ENUM ('DAY_OF_WEEK', 'MULTI_DAY', 'MULTI_PET', 'SEASONAL', 'PROMOTIONAL', 'CUSTOM');
+DO $$ BEGIN
+    CREATE TYPE "PriceRuleType" AS ENUM ('DAY_OF_WEEK', 'MULTI_DAY', 'MULTI_PET', 'SEASONAL', 'PROMOTIONAL', 'CUSTOM');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
--- CreateEnum
-CREATE TYPE "DiscountType" AS ENUM ('PERCENTAGE', 'FIXED_AMOUNT');
+DO $$ BEGIN
+    CREATE TYPE "DiscountType" AS ENUM ('PERCENTAGE', 'FIXED_AMOUNT');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- DropTable
 DROP TABLE "reservation_errors";
