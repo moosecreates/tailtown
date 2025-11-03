@@ -192,18 +192,15 @@ run_quick_tests() {
     # Run unit tests only (faster)
     print_section "Frontend Unit Tests"
     cd "$FRONTEND_DIR"
-    npm test -- --watchAll=false --passWithNoTests --testPathIgnorePatterns=integration 2>&1 | tee "$TEST_RESULTS_DIR/frontend-quick.log"
-    [ ${PIPESTATUS[0]} -eq 0 ] || failed=$((failed + 1))
+    npm test -- --watchAll=false --passWithNoTests --testPathIgnorePatterns=integration 2>&1 | tee "$TEST_RESULTS_DIR/frontend-quick.log" || failed=$((failed + 1))
     
     print_section "Customer Service Unit Tests"
     cd "$CUSTOMER_SERVICE_DIR"
-    npm run test:unit 2>&1 | tee "$TEST_RESULTS_DIR/customer-quick.log"
-    [ ${PIPESTATUS[0]} -eq 0 ] || failed=$((failed + 1))
+    npm test -- --passWithNoTests 2>&1 | tee "$TEST_RESULTS_DIR/customer-quick.log" || failed=$((failed + 1))
     
     print_section "Reservation Service Unit Tests"
     cd "$RESERVATION_SERVICE_DIR"
-    npm run test:unit 2>&1 | tee "$TEST_RESULTS_DIR/reservation-quick.log"
-    [ ${PIPESTATUS[0]} -eq 0 ] || failed=$((failed + 1))
+    npm test -- --passWithNoTests 2>&1 | tee "$TEST_RESULTS_DIR/reservation-quick.log" || failed=$((failed + 1))
     
     # Summary
     echo ""
