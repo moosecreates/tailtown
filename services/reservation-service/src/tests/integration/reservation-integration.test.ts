@@ -13,9 +13,8 @@ import { PrismaClient } from '@prisma/client';
 import request from 'supertest';
 import app from '../../index'; // Your Express app
 
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5434/reservation'
-});
+// PrismaClient uses DATABASE_URL from environment automatically
+const prisma = new PrismaClient();
 
 // Test tenant ID
 const TEST_TENANT_ID = 'test-tenant-integration';
