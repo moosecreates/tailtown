@@ -8,6 +8,7 @@ This guide covers the complete development workflow for Tailtown, from starting 
 - [Quick Start](#quick-start)
 - [Daily Workflow](#daily-workflow)
 - [Service Management](#service-management)
+- [Environment Management](#environment-management)
 - [Environment Configuration](#environment-configuration)
 - [Troubleshooting](#troubleshooting)
 - [Best Practices](#best-practices)
@@ -141,6 +142,60 @@ npm run dev:stop
 - **4004**: Customer Service API
 - **5433**: PostgreSQL (main database)
 - **5435**: PostgreSQL (secondary database)
+
+---
+
+## Environment Management
+
+### Quick Environment Commands
+
+```bash
+npm run env:status    # Check current environment
+npm run env:dev       # Switch to development (localhost)
+npm run env:prod      # Switch to production (Digital Ocean)
+npm run env:backups   # List environment backups
+```
+
+### Switching Environments
+
+The environment manager safely switches between development and production:
+
+**Development** (default):
+```bash
+npm run env:dev
+npm run dev:restart
+```
+
+**Production** (requires confirmation):
+```bash
+npm run env:prod
+npm run dev:restart
+```
+
+### Safety Features
+
+- ✅ Automatic backup of current configuration
+- ✅ Production switch requires confirmation
+- ✅ Validates configuration files
+- ✅ Reminds you to restart services
+- ✅ Shows clear status of current environment
+
+### Best Practice
+
+**Always verify your environment before starting work:**
+
+```bash
+# Check environment
+npm run env:status
+
+# If not in development, switch
+npm run env:dev
+
+# Then start services
+npm run dev:start
+```
+
+**📖 See [ENVIRONMENT-MANAGEMENT.md](./ENVIRONMENT-MANAGEMENT.md) for complete guide**
 
 ---
 
