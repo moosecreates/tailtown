@@ -109,3 +109,6 @@ mcp-server/.faiss_index
 
 # macOS
 .DS_Store
+tailtown_data_export.sql
+services/*/dist.tar.gz
+*.tar.gz
