@@ -1,10 +1,12 @@
 # Tailtown Quick Start Guide
 
-## 🚀 Getting Started in 5 Minutes
+**Last Updated**: November 3, 2025
+
+## 🚀 Get Started in 5 Minutes
 
 ### Prerequisites
-- Node.js 16+ (via NVM)
-- PostgreSQL (Docker)
+- Node.js 16.x or 18.x
+- Docker Desktop
 - Git
 
 ### Quick Setup
