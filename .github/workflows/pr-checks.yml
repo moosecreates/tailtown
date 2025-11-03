@@ -144,8 +144,14 @@ jobs:
     - name: Install frontend dependencies
       working-directory: ./frontend
       run: |
-        rm -rf node_modules
+        rm -rf node_modules package-lock.json
         npm install
+        # Verify lodash was installed
+        if [ ! -d "node_modules/lodash" ]; then
+          echo "ERROR: lodash not installed!"
+          exit 1
+        fi
+        echo "✓ Frontend dependencies installed successfully"
     
     - name: Build frontend
       env:
