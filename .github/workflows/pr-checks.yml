@@ -138,7 +138,7 @@ jobs:
     - name: Install dependencies
       run: |
         npm ci
-        cd frontend && npm ci
+        cd frontend && npm install
         cd ../services/customer && npm ci
         cd ../reservation-service && npm ci
     
