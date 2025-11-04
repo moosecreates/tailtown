@@ -25,13 +25,21 @@ import {
   School as TrainingIcon,
   EmojiEmotions as IconsIcon,
   ShoppingCart as ProductsIcon,
-  Payment as PaymentIcon
+  Payment as PaymentIcon,
+  Business as BusinessIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
   
   const adminSections = [
+    {
+      title: 'Business Settings',
+      description: 'Upload your business logo and customize branding',
+      icon: <BusinessIcon sx={{ fontSize: 40, color: 'primary.main' }} />,
+      path: '/settings/business',
+      stats: 'Customize Logo'
+    },
     {
       title: 'Services',
       description: 'Manage boarding, daycare, grooming, and training services',
