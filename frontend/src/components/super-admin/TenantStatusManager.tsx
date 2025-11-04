@@ -16,7 +16,9 @@ import {
   TextField,
   Alert,
   Chip,
-  Typography
+  Typography,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import {
   Block as SuspendIcon,
@@ -206,100 +208,92 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
   const isActive = tenant.status === 'ACTIVE' && tenant.isActive;
 
   return (
-    <Box sx={{ mt: 3, p: 3, bgcolor: 'grey.50', borderRadius: 1 }}>
-      <Typography variant="h6" gutterBottom>
-        🔐 Super Admin Controls
-      </Typography>
-
-      {/* Status Display */}
-      <Box sx={{ mb: 2 }}>
-        <Chip
-          label={tenant.status || 'ACTIVE'}
-          color={getStatusColor(tenant.status)}
-          sx={{ mr: 1 }}
-        />
-        {tenant.suspendedAt && (
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
-            Suspended: {new Date(tenant.suspendedAt).toLocaleDateString()}
-            {tenant.suspendedReason && ` - ${tenant.suspendedReason}`}
-          </Typography>
-        )}
-        {tenant.deletedAt && (
-          <Typography variant="caption" color="error" display="block" sx={{ mt: 1 }}>
-            Deleted: {new Date(tenant.deletedAt).toLocaleDateString()}
-          </Typography>
-        )}
-      </Box>
+    <Box sx={{ display: 'inline-flex', gap: 0.25, alignItems: 'center' }}>
+      {/* Status Chip */}
+      <Chip
+        label={tenant.status || 'ACTIVE'}
+        color={getStatusColor(tenant.status)}
+        size="small"
+        sx={{ height: 20, fontSize: '0.7rem' }}
+      />
 
       {/* Error Display */}
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+        <Alert severity="error" sx={{ position: 'fixed', top: 80, right: 20, zIndex: 9999 }} onClose={() => setError('')}>
           {error}
         </Alert>
       )}
 
-      {/* Action Buttons */}
-      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-        {(isActive || isSuspended) && !isDeleted && (
-          <Button
-            variant="contained"
+      {/* Compact Action Buttons */}
+      {(isActive || isSuspended) && !isDeleted && (
+        <Tooltip title="Login as Tenant">
+          <IconButton
+            size="small"
             color="primary"
-            startIcon={<LoginIcon />}
             onClick={() => setImpersonateDialogOpen(true)}
             disabled={loading}
+            sx={{ p: 0.5 }}
           >
-            Login as Tenant
-          </Button>
-        )}
+            <LoginIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </Tooltip>
+      )}
 
-        {isActive && (
-          <Button
-            variant="outlined"
+      {isActive && (
+        <Tooltip title="Suspend">
+          <IconButton
+            size="small"
             color="warning"
-            startIcon={<SuspendIcon />}
             onClick={() => setSuspendDialogOpen(true)}
             disabled={loading}
+            sx={{ p: 0.5 }}
           >
-            Suspend Tenant
-          </Button>
-        )}
+            <SuspendIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </Tooltip>
+      )}
 
-        {isSuspended && !isDeleted && (
-          <Button
-            variant="outlined"
+      {isSuspended && !isDeleted && (
+        <Tooltip title="Activate">
+          <IconButton
+            size="small"
             color="success"
-            startIcon={<ActivateIcon />}
             onClick={handleActivate}
             disabled={loading}
+            sx={{ p: 0.5 }}
           >
-            Activate Tenant
-          </Button>
-        )}
+            <ActivateIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </Tooltip>
+      )}
 
-        {!isDeleted && (
-          <Button
-            variant="outlined"
+      {!isDeleted && (
+        <Tooltip title="Delete">
+          <IconButton
+            size="small"
             color="error"
-            startIcon={<DeleteIcon />}
             onClick={() => setDeleteDialogOpen(true)}
             disabled={loading}
+            sx={{ p: 0.5 }}
           >
-            Delete Tenant
-          </Button>
-        )}
+            <DeleteIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </Tooltip>
+      )}
 
-        {isDeleted && (
-          <Button
-            variant="contained"
+      {isDeleted && (
+        <Tooltip title="Restore">
+          <IconButton
+            size="small"
             color="success"
-            startIcon={<RestoreIcon />}
             onClick={handleRestore}
             disabled={loading}
+            sx={{ p: 0.5 }}
           >
-            Restore Tenant
-          </Button>
-        )}
-      </Box>
+            <RestoreIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </Tooltip>
+      )}
 
       {/* Suspend Dialog */}
       <Dialog open={suspendDialogOpen} onClose={() => setSuspendDialogOpen(false)} maxWidth="sm" fullWidth>
