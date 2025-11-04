@@ -43,7 +43,7 @@ export class VaccineUploadController {
         mimeType: file.mimetype,
         size: file.size,
         uploadedAt: new Date().toISOString(),
-        uploadedBy: req.user?.id || 'system', // If you have user auth
+        uploadedBy: (req as any).user?.id || 'system', // If you have user auth
       };
 
       const updatedFiles = [...existingFiles, newFile];

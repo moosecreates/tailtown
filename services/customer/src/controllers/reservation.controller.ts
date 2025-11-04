@@ -33,7 +33,7 @@ async function generateOrderNumber(): Promise<string> {
   const orderNumber = `RES-${datePrefix}-${sequentialNumber}`;
   
   // Check if this order number already exists (just to be safe)
-  const existingReservation = await prisma.reservation.findUnique({
+  const existingReservation = await prisma.reservation.findFirst({
     where: { orderNumber }
   });
   
@@ -179,12 +179,7 @@ export const getReservationById = async (
       include: {
         customer: true,
         pet: true,
-        resource: true,
-        addOns: {
-          include: {
-            addOn: true
-          }
-        }
+        resource: true
       },
     });
     
@@ -1001,9 +996,11 @@ export const addAddOnsToReservation = async (
             // Create a temporary add-on service object for processing
             addOnService = {
               id: serviceId, // This will cause a foreign key error in the database
+              tenantId: 'dev', // Add required tenantId field
               name: service.name,
               description: service.description,
               price: service.price,
+              taxable: true, // Add required taxable field
               serviceId: service.id,
               isActive: true,
               createdAt: new Date(),

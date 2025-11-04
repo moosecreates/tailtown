@@ -470,7 +470,7 @@ export const getAvailableResourcesByDate = async (
         // Filter by resource type if we have determined required types
         ...(requiredResourceTypes.length > 0 ? {
           type: {
-            in: requiredResourceTypes
+            in: requiredResourceTypes as any
           }
         } : {}),
         isActive: true,
@@ -584,7 +584,7 @@ export const getResourceAvailability = async (
     
     // Get all resources of the specified type
     // Handle special case for 'suite' to include all suite types
-    const whereClause = resourceType === 'suite' 
+    const whereClause: any = resourceType === 'KENNEL'
       ? {
           type: {
             in: ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE']
@@ -599,7 +599,7 @@ export const getResourceAvailability = async (
     console.log(`Using where clause:`, whereClause);
     
     const resources = await prisma.resource.findMany({
-      where: whereClause,
+      where: whereClause as any,
       include: {
         // Include reservations that overlap with the date
         reservations: {
@@ -638,8 +638,8 @@ export const getResourceAvailability = async (
     });
     
     // Process each resource to determine availability
-    const resourceAvailability = resources.map(resource => {
-      const conflictingReservations = resource.reservations;
+    const resourceAvailability = resources.map((resource: any) => {
+      const conflictingReservations = resource.reservations || [];
       const isAvailable = conflictingReservations.length === 0;
       
       return {
@@ -739,8 +739,8 @@ export const getBatchResourceAvailability = async (
     });
     
     // Process each resource to determine availability
-    const resourceAvailability = resources.map(resource => {
-      const conflictingReservations = resource.reservations;
+    const resourceAvailability = resources.map((resource: any) => {
+      const conflictingReservations = resource.reservations || [];
       const isAvailable = conflictingReservations.length === 0;
       
       return {
