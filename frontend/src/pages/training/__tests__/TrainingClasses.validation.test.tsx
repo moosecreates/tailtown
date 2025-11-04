@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import TrainingClasses from '../TrainingClasses';
 import schedulingService from '../../../services/schedulingService';
@@ -20,15 +21,15 @@ describe('TrainingClasses - Validation', () => {
     jest.clearAllMocks();
     
     // Mock successful getAll call
-    mockSchedulingService.trainingClasses.getAll = jest.fn().mockResolvedValue([]);
+    (mockSchedulingService.trainingClasses.getAll as jest.Mock) = jest.fn().mockResolvedValue([]);
     
     // Mock create call
-    mockSchedulingService.trainingClasses.create = jest.fn();
+    (mockSchedulingService.trainingClasses.create as jest.Mock) = jest.fn();
   });
 
   describe('Required Field Validation', () => {
     it('should show error when name is missing', async () => {
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       // Open create dialog
       const createButton = await screen.findByText(/create class/i);
@@ -47,7 +48,7 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should show error when instructor is not selected', async () => {
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -67,7 +68,7 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should show error when max capacity is missing', async () => {
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -92,7 +93,7 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should show error when start date is missing', async () => {
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -116,7 +117,7 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should show error when total weeks is missing', async () => {
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -136,7 +137,7 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should show error when no days of week selected', async () => {
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -156,7 +157,7 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should show error when start time is missing', async () => {
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -176,7 +177,7 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should show error when end time is missing', async () => {
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -196,7 +197,7 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should show error when price per series is missing', async () => {
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -218,9 +219,9 @@ describe('TrainingClasses - Validation', () => {
 
   describe('Date Formatting', () => {
     it('should convert Date objects to ISO strings before API call', async () => {
-      mockSchedulingService.trainingClasses.create.mockResolvedValue({ id: 'class-1' });
+      (mockSchedulingService.trainingClasses.create as jest.Mock).mockResolvedValue({ id: 'class-1' });
 
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -239,7 +240,7 @@ describe('TrainingClasses - Validation', () => {
         expect(mockSchedulingService.trainingClasses.create).toHaveBeenCalled();
       });
 
-      const callArgs = mockSchedulingService.trainingClasses.create.mock.calls[0][0];
+      const callArgs = (mockSchedulingService.trainingClasses.create as jest.Mock).mock.calls[0][0];
       
       // startDate should be an ISO string, not a Date object
       expect(typeof callArgs.startDate).toBe('string');
@@ -247,9 +248,9 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should handle endDate formatting if provided', async () => {
-      mockSchedulingService.trainingClasses.create.mockResolvedValue({ id: 'class-1' });
+      (mockSchedulingService.trainingClasses.create as jest.Mock).mockResolvedValue({ id: 'class-1' });
 
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -271,7 +272,7 @@ describe('TrainingClasses - Validation', () => {
         expect(mockSchedulingService.trainingClasses.create).toHaveBeenCalled();
       });
 
-      const callArgs = mockSchedulingService.trainingClasses.create.mock.calls[0][0];
+      const callArgs = (mockSchedulingService.trainingClasses.create as jest.Mock).mock.calls[0][0];
       
       if (callArgs.endDate) {
         expect(typeof callArgs.endDate).toBe('string');
@@ -282,7 +283,7 @@ describe('TrainingClasses - Validation', () => {
   describe('API Error Handling', () => {
     it('should display backend error message on 400 error', async () => {
       const errorMessage = 'Missing required fields';
-      mockSchedulingService.trainingClasses.create.mockRejectedValue({
+      (mockSchedulingService.trainingClasses.create as jest.Mock).mockRejectedValue({
         response: {
           data: {
             message: errorMessage
@@ -290,7 +291,7 @@ describe('TrainingClasses - Validation', () => {
         }
       });
 
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -310,11 +311,11 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should display generic error message when backend message not available', async () => {
-      mockSchedulingService.trainingClasses.create.mockRejectedValue(
+      (mockSchedulingService.trainingClasses.create as jest.Mock).mockRejectedValue(
         new Error('Network error')
       );
 
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -337,9 +338,9 @@ describe('TrainingClasses - Validation', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
       const error = new Error('Test error');
       
-      mockSchedulingService.trainingClasses.create.mockRejectedValue(error);
+      (mockSchedulingService.trainingClasses.create as jest.Mock).mockRejectedValue(error);
 
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -363,9 +364,9 @@ describe('TrainingClasses - Validation', () => {
 
   describe('Successful Creation', () => {
     it('should call API with all form data when validation passes', async () => {
-      mockSchedulingService.trainingClasses.create.mockResolvedValue({ id: 'class-1', name: 'Puppy Training' });
+      (mockSchedulingService.trainingClasses.create as jest.Mock).mockResolvedValue({ id: 'class-1', name: 'Puppy Training' });
 
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -399,9 +400,9 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should close dialog after successful creation', async () => {
-      mockSchedulingService.trainingClasses.create.mockResolvedValue({ id: 'class-1' });
+      (mockSchedulingService.trainingClasses.create as jest.Mock).mockResolvedValue({ id: 'class-1' });
 
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -421,11 +422,11 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should reload class list after successful creation', async () => {
-      mockSchedulingService.trainingClasses.create.mockResolvedValue({ id: 'class-1' });
+      (mockSchedulingService.trainingClasses.create as jest.Mock).mockResolvedValue({ id: 'class-1' });
 
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const initialCallCount = mockSchedulingService.trainingClasses.getAll.mock.calls.length;
+      const initialCallCount = (mockSchedulingService.trainingClasses.getAll as jest.Mock).mock.calls.length;
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -440,14 +441,14 @@ describe('TrainingClasses - Validation', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(mockSchedulingService.trainingClasses.getAll.mock.calls.length).toBeGreaterThan(initialCallCount);
+        expect((mockSchedulingService.trainingClasses.getAll as jest.Mock).mock.calls.length).toBeGreaterThan(initialCallCount);
       });
     });
   });
 
   describe('Edge Cases', () => {
     it('should handle zero capacity gracefully', async () => {
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -464,7 +465,7 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should handle negative price gracefully', async () => {
-      render(<TrainingClasses />);
+      render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -479,7 +480,7 @@ describe('TrainingClasses - Validation', () => {
       // Test passes if either validation error shows or API is called with abs value
       await waitFor(() => {
         const hasError = screen.queryByText(/please fill in all required fields/i);
-        const apiCalled = mockSchedulingService.trainingClasses.create.mock.calls.length > 0;
+        const apiCalled = (mockSchedulingService.trainingClasses.create as jest.Mock).mock.calls.length > 0;
         expect(hasError || apiCalled).toBeTruthy();
       });
     });
