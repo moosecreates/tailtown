@@ -87,10 +87,7 @@ const SuperAdminRoute = lazy(() => import('./components/auth/SuperAdminRoute'));
 const SuperAdminOnlyRoute = lazy(() => import('./components/auth/SuperAdminOnlyRoute'));
 
 // Lazy loaded pages - Tenant Management
-const TenantList = lazy(() => import('./pages/admin/TenantList'));
-const TenantDetail = lazy(() => import('./pages/admin/TenantDetail'));
-const TenantEdit = lazy(() => import('./pages/admin/TenantEdit'));
-const CreateTenant = lazy(() => import('./pages/admin/CreateTenant'));
+const TenantManagement = lazy(() => import('./pages/admin/TenantManagement'));
 const CheckInComplete = lazy(() => import('./pages/check-in/CheckInComplete'));
 const CheckInTemplateManager = lazy(() => import('./pages/admin/CheckInTemplateManager'));
 
@@ -210,10 +207,7 @@ const AppRoutes = () => {
         <Route path="/analytics/customers" element={isAuthenticated ? <CustomerValueReport /> : <Navigate to="/login" />} />
         
         {/* Tenant Management Routes - Super Admin Only */}
-        <Route path="/admin/tenants" element={<SuperAdminOnlyRoute><TenantList /></SuperAdminOnlyRoute>} />
-        <Route path="/admin/tenants/new" element={<SuperAdminOnlyRoute><CreateTenant /></SuperAdminOnlyRoute>} />
-        <Route path="/admin/tenants/:id" element={<SuperAdminOnlyRoute><TenantDetail /></SuperAdminOnlyRoute>} />
-        <Route path="/admin/tenants/:id/edit" element={<SuperAdminOnlyRoute><TenantEdit /></SuperAdminOnlyRoute>} />
+        <Route path="/admin/tenants" element={<SuperAdminOnlyRoute><TenantManagement /></SuperAdminOnlyRoute>} />
         
         {/* Marketing Routes */}
         <Route path="/admin/marketing" element={isAuthenticated ? <MarketingHub /> : <Navigate to="/login" />} />

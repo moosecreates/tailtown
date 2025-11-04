@@ -20,6 +20,13 @@ import {
   getTenantStats
 } from '../controllers/super-admin/tenant-management.controller';
 import {
+  listTenants,
+  getTenant,
+  createTenant,
+  updateTenant,
+  cloneTenant
+} from '../controllers/super-admin/tenant-crud.controller';
+import {
   startImpersonation,
   endImpersonation,
   getActiveSessions,
@@ -38,6 +45,11 @@ router.post('/logout', requireSuperAdmin, logout);
 router.get('/me', requireSuperAdmin, getCurrentUser);
 
 // Tenant Management routes (Phase 2)
+router.get('/tenants', requireSuperAdmin, listTenants);  // List all tenants
+router.get('/tenants/:id', requireSuperAdmin, getTenant);  // Get single tenant
+router.post('/tenants', requireSuperAdmin, createTenant);  // Create new tenant
+router.patch('/tenants/:id', requireSuperAdmin, updateTenant);  // Update tenant
+router.post('/tenants/:id/clone', requireSuperAdmin, cloneTenant);  // Clone tenant
 router.post('/tenants/:id/suspend', requireSuperAdmin, suspendTenant);
 router.post('/tenants/:id/activate', requireSuperAdmin, activateTenant);
 router.delete('/tenants/:id', requireSuperAdmin, deleteTenant);
