@@ -55,22 +55,28 @@ const SimpleVaccinationBadge: React.FC<SimpleVaccinationBadgeProps> = ({
     }
   });
 
-  // Determine status and color - only based on expired vaccines
+  // Determine status and color - based on expired OR missing vaccines
   const getStatusColor = () => {
-    if (expiredCount === 0) return 'success';
-    return 'error';
+    const needsAttention = expiredCount + missingCount;
+    if (needsAttention === 0) return 'success';
+    if (expiredCount > 0) return 'error'; // Red if any are expired
+    return 'warning'; // Orange if only missing
   };
 
   const getStatusIcon = () => {
-    if (expiredCount === 0) return <CheckIcon />;
-    return <ErrorIcon />;
+    const needsAttention = expiredCount + missingCount;
+    if (needsAttention === 0) return <CheckIcon />;
+    if (expiredCount > 0) return <ErrorIcon />; // Error icon if expired
+    return <WarningIcon />; // Warning icon if only missing
   };
 
   const getStatusLabel = () => {
-    // Only show expired count, not missing/due
-    if (expiredCount === 0) return 'Current';
-    if (expiredCount === 1) return '1 Expired';
-    return `${expiredCount} Expired`;
+    // Count both expired AND missing vaccines as needing attention
+    const needsAttention = expiredCount + missingCount;
+    
+    if (needsAttention === 0) return 'Current';
+    if (needsAttention === 1) return '1 Due';
+    return `${needsAttention} Due`;
   };
 
   const getTooltipText = () => {
