@@ -237,7 +237,7 @@ export const resourceService = {
           date: formattedDate, // Use single date param to find overlapping reservations
           status: 'PENDING,CONFIRMED,CHECKED_IN',
           page: 1,
-          limit: 1000
+          limit: 500 // Backend max is 500
         }
       });
       
