@@ -28,13 +28,11 @@ jobs:
     - name: Install frontend dependencies
       working-directory: ./frontend
       run: |
-        npm install
-        # Verify craco was installed
-        if [ ! -f "node_modules/.bin/craco" ]; then
-          echo "ERROR: craco not installed!"
-          echo "Installing craco explicitly:"
-          npm install @craco/craco --save-dev
-        fi
+        echo "Installing frontend dependencies..."
+        rm -rf node_modules
+        # Generate package-lock.json first, then use npm ci
+        npm install --package-lock-only
+        npm ci
         echo "✓ Frontend dependencies installed"
     
     - name: Install service dependencies
@@ -132,13 +130,11 @@ jobs:
     - name: Install frontend dependencies
       working-directory: ./frontend
       run: |
-        npm install
-        # Verify craco was installed
-        if [ ! -f "node_modules/.bin/craco" ]; then
-          echo "ERROR: craco not installed!"
-          echo "Installing craco explicitly:"
-          npm install @craco/craco --save-dev
-        fi
+        echo "Installing frontend dependencies..."
+        rm -rf node_modules
+        # Generate package-lock.json first, then use npm ci
+        npm install --package-lock-only
+        npm ci
         echo "✓ Frontend dependencies installed"
     
     - name: Install service dependencies
@@ -198,13 +194,11 @@ jobs:
     - name: Install frontend dependencies
       working-directory: ./frontend
       run: |
-        npm install
-        # Verify craco was installed
-        if [ ! -f "node_modules/.bin/craco" ]; then
-          echo "ERROR: craco not installed!"
-          echo "Installing craco explicitly:"
-          npm install @craco/craco --save-dev
-        fi
+        echo "Installing frontend dependencies..."
+        rm -rf node_modules
+        # Generate package-lock.json first, then use npm ci
+        npm install --package-lock-only
+        npm ci
         echo "✓ Frontend dependencies installed"
     
     - name: Install service dependencies
