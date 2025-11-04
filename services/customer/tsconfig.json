@@ -23,6 +23,7 @@
     "**/*.test.ts",
     "src/tests/**/*",
     "**/__tests__/**/*",
-    "src/scripts/**/*"
+    "src/scripts/**/*",
+    "src/controllers/exampleController.ts"
   ]
 }
