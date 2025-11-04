@@ -4,10 +4,11 @@
  */
 
 import { customerService } from '../customerService';
-import { customerApi } from '../api';
+import api from '../api';
 
 jest.mock('../api', () => ({
-  customerApi: {
+  __esModule: true,
+  default: {
     get: jest.fn(),
     post: jest.fn(),
     put: jest.fn(),
@@ -15,7 +16,7 @@ jest.mock('../api', () => ({
   }
 }));
 
-const mockCustomerApi = customerApi as jest.Mocked<typeof customerApi>;
+const mockApi = api as jest.Mocked<typeof api>;
 
 describe('customerService', () => {
   beforeEach(() => {
@@ -35,11 +36,11 @@ describe('customerService', () => {
         }
       };
 
-      mockCustomerApi.get.mockResolvedValue(mockResponse);
+      mockApi.get.mockResolvedValue(mockResponse);
 
       const result = await customerService.getAllCustomers(1, 10);
 
-      expect(mockCustomerApi.get).toHaveBeenCalledWith('/api/customers', {
+      expect(mockApi.get).toHaveBeenCalledWith('/api/customers', {
         params: { page: 1, limit: 10 }
       });
       expect(result.data).toHaveLength(2);
@@ -48,17 +49,17 @@ describe('customerService', () => {
 
     it('should use default pagination values', async () => {
       const mockResponse = { data: { data: [], totalPages: 0, currentPage: 1 } };
-      mockCustomerApi.get.mockResolvedValue(mockResponse);
+      mockApi.get.mockResolvedValue(mockResponse);
 
       await customerService.getAllCustomers();
 
-      expect(mockCustomerApi.get).toHaveBeenCalledWith('/api/customers', {
+      expect(mockApi.get).toHaveBeenCalledWith('/api/customers', {
         params: { page: 1, limit: 10 }
       });
     });
 
     it('should handle API errors', async () => {
-      mockCustomerApi.get.mockRejectedValue(new Error('Network error'));
+      mockApi.get.mockRejectedValue(new Error('Network error'));
 
       await expect(customerService.getAllCustomers()).rejects.toThrow('Network error');
     });
@@ -74,16 +75,16 @@ describe('customerService', () => {
         phone: '555-1234'
       };
 
-      mockCustomerApi.get.mockResolvedValue({ data: mockCustomer });
+      mockApi.get.mockResolvedValue({ data: mockCustomer });
 
       const result = await customerService.getCustomerById('123');
 
-      expect(mockCustomerApi.get).toHaveBeenCalledWith('/api/customers/123');
+      expect(mockApi.get).toHaveBeenCalledWith('/api/customers/123');
       expect(result).toEqual(mockCustomer);
     });
 
     it('should handle not found errors', async () => {
-      mockCustomerApi.get.mockRejectedValue(new Error('Customer not found'));
+      mockApi.get.mockRejectedValue(new Error('Customer not found'));
 
       await expect(customerService.getCustomerById('999')).rejects.toThrow('Customer not found');
     });
@@ -102,11 +103,11 @@ describe('customerService', () => {
         data: { id: '123', ...newCustomer }
       };
 
-      mockCustomerApi.post.mockResolvedValue(mockResponse);
+      mockApi.post.mockResolvedValue(mockResponse);
 
       const result = await customerService.createCustomer(newCustomer);
 
-      expect(mockCustomerApi.post).toHaveBeenCalledWith('/api/customers', newCustomer);
+      expect(mockApi.post).toHaveBeenCalledWith('/api/customers', newCustomer);
       expect(result.id).toBe('123');
       expect(result.email).toBe('john@example.com');
     });
@@ -114,7 +115,7 @@ describe('customerService', () => {
     it('should handle validation errors', async () => {
       const invalidCustomer = { firstName: '', lastName: '', email: 'invalid' };
 
-      mockCustomerApi.post.mockRejectedValue(new Error('Validation failed'));
+      mockApi.post.mockRejectedValue(new Error('Validation failed'));
 
       await expect(customerService.createCustomer(invalidCustomer as any))
         .rejects.toThrow('Validation failed');
@@ -132,11 +133,11 @@ describe('customerService', () => {
         data: { id: '123', ...updates, lastName: 'Doe', email: 'jane@example.com' }
       };
 
-      mockCustomerApi.put.mockResolvedValue(mockResponse);
+      mockApi.put.mockResolvedValue(mockResponse);
 
       const result = await customerService.updateCustomer('123', updates);
 
-      expect(mockCustomerApi.put).toHaveBeenCalledWith('/api/customers/123', updates);
+      expect(mockApi.put).toHaveBeenCalledWith('/api/customers/123', updates);
       expect(result.firstName).toBe('Jane');
       expect(result.phone).toBe('555-5678');
     });
@@ -144,15 +145,15 @@ describe('customerService', () => {
 
   describe('deleteCustomer', () => {
     it('should delete a customer', async () => {
-      mockCustomerApi.delete.mockResolvedValue({ data: { success: true } });
+      mockApi.delete.mockResolvedValue({ data: { success: true } });
 
       await customerService.deleteCustomer('123');
 
-      expect(mockCustomerApi.delete).toHaveBeenCalledWith('/api/customers/123');
+      expect(mockApi.delete).toHaveBeenCalledWith('/api/customers/123');
     });
 
     it('should handle delete errors', async () => {
-      mockCustomerApi.delete.mockRejectedValue(new Error('Cannot delete customer with active reservations'));
+      mockApi.delete.mockRejectedValue(new Error('Cannot delete customer with active reservations'));
 
       await expect(customerService.deleteCustomer('123'))
         .rejects.toThrow('Cannot delete customer with active reservations');
@@ -171,11 +172,11 @@ describe('customerService', () => {
         }
       };
 
-      mockCustomerApi.get.mockResolvedValue(mockResponse);
+      mockApi.get.mockResolvedValue(mockResponse);
 
       const result = await customerService.searchCustomers('john', 1, 10);
 
-      expect(mockCustomerApi.get).toHaveBeenCalledWith('/api/customers/search', {
+      expect(mockApi.get).toHaveBeenCalledWith('/api/customers/search', {
         params: { q: 'john', page: 1, limit: 10 }
       });
       expect(result.data).toHaveLength(1);
@@ -187,7 +188,7 @@ describe('customerService', () => {
         data: { data: [], totalPages: 0, currentPage: 1 }
       };
 
-      mockCustomerApi.get.mockResolvedValue(mockResponse);
+      mockApi.get.mockResolvedValue(mockResponse);
 
       const result = await customerService.searchCustomers('nonexistent');
 

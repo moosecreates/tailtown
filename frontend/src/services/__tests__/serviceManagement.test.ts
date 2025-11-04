@@ -4,10 +4,11 @@
  */
 
 import { serviceManagement } from '../serviceManagement';
-import { customerApi } from '../api';
+import api from '../api';
 
 jest.mock('../api', () => ({
-  customerApi: {
+  __esModule: true,
+  default: {
     get: jest.fn(),
     post: jest.fn(),
     put: jest.fn(),
@@ -15,7 +16,7 @@ jest.mock('../api', () => ({
   }
 }));
 
-const mockCustomerApi = customerApi as jest.Mocked<typeof customerApi>;
+const mockApi = api as jest.Mocked<typeof api>;
 
 describe('serviceManagement', () => {
   beforeEach(() => {
@@ -33,17 +34,17 @@ describe('serviceManagement', () => {
         }
       };
 
-      mockCustomerApi.get.mockResolvedValue(mockResponse);
+      mockApi.get.mockResolvedValue(mockResponse);
 
       const result = await serviceManagement.getAllServices();
 
-      expect(mockCustomerApi.get).toHaveBeenCalledWith('/api/services');
+      expect(mockApi.get).toHaveBeenCalledWith('/api/services');
       expect(result.data).toHaveLength(2);
     });
 
     it('should handle empty services', async () => {
       const mockResponse = { data: { data: [] } };
-      mockCustomerApi.get.mockResolvedValue(mockResponse);
+      mockApi.get.mockResolvedValue(mockResponse);
 
       const result = await serviceManagement.getAllServices();
 
@@ -51,7 +52,7 @@ describe('serviceManagement', () => {
     });
 
     it('should handle API errors', async () => {
-      mockCustomerApi.get.mockRejectedValue(new Error('Network error'));
+      mockApi.get.mockRejectedValue(new Error('Network error'));
 
       await expect(serviceManagement.getAllServices()).rejects.toThrow('Network error');
     });
@@ -67,16 +68,16 @@ describe('serviceManagement', () => {
         description: 'Overnight boarding'
       };
 
-      mockCustomerApi.get.mockResolvedValue({ data: mockService });
+      mockApi.get.mockResolvedValue({ data: mockService });
 
       const result = await serviceManagement.getServiceById('s1');
 
-      expect(mockCustomerApi.get).toHaveBeenCalledWith('/api/services/s1');
+      expect(mockApi.get).toHaveBeenCalledWith('/api/services/s1');
       expect(result.name).toBe('Boarding');
     });
 
     it('should handle not found', async () => {
-      mockCustomerApi.get.mockRejectedValue(new Error('Service not found'));
+      mockApi.get.mockRejectedValue(new Error('Service not found'));
 
       await expect(serviceManagement.getServiceById('invalid')).rejects.toThrow('Service not found');
     });
@@ -95,11 +96,11 @@ describe('serviceManagement', () => {
         data: { id: 's3', ...newService }
       };
 
-      mockCustomerApi.post.mockResolvedValue(mockResponse);
+      mockApi.post.mockResolvedValue(mockResponse);
 
       const result = await serviceManagement.createService(newService);
 
-      expect(mockCustomerApi.post).toHaveBeenCalledWith('/api/services', newService);
+      expect(mockApi.post).toHaveBeenCalledWith('/api/services', newService);
       expect(result.id).toBe('s3');
       expect(result.name).toBe('Grooming');
     });
@@ -116,22 +117,22 @@ describe('serviceManagement', () => {
         data: { id: 's1', name: 'Boarding', ...updates }
       };
 
-      mockCustomerApi.put.mockResolvedValue(mockResponse);
+      mockApi.put.mockResolvedValue(mockResponse);
 
       const result = await serviceManagement.updateService('s1', updates);
 
-      expect(mockCustomerApi.put).toHaveBeenCalledWith('/api/services/s1', updates);
+      expect(mockApi.put).toHaveBeenCalledWith('/api/services/s1', updates);
       expect(result.price).toBe(50);
     });
   });
 
   describe('deleteService', () => {
     it('should delete a service', async () => {
-      mockCustomerApi.delete.mockResolvedValue({ data: { success: true } });
+      mockApi.delete.mockResolvedValue({ data: { success: true } });
 
       await serviceManagement.deleteService('s1');
 
-      expect(mockCustomerApi.delete).toHaveBeenCalledWith('/api/services/s1');
+      expect(mockApi.delete).toHaveBeenCalledWith('/api/services/s1');
     });
   });
 
@@ -146,11 +147,11 @@ describe('serviceManagement', () => {
         }
       };
 
-      mockCustomerApi.get.mockResolvedValue(mockResponse);
+      mockApi.get.mockResolvedValue(mockResponse);
 
       const result = await serviceManagement.getServicesByCategory('BOARDING');
 
-      expect(mockCustomerApi.get).toHaveBeenCalledWith('/api/services/category/BOARDING');
+      expect(mockApi.get).toHaveBeenCalledWith('/api/services/category/BOARDING');
       expect(result.data).toHaveLength(2);
       expect(result.data[0].serviceCategory).toBe('BOARDING');
     });
@@ -167,11 +168,11 @@ describe('serviceManagement', () => {
         }
       };
 
-      mockCustomerApi.get.mockResolvedValue(mockResponse);
+      mockApi.get.mockResolvedValue(mockResponse);
 
       const result = await serviceManagement.getActiveServices();
 
-      expect(mockCustomerApi.get).toHaveBeenCalledWith('/api/services/active');
+      expect(mockApi.get).toHaveBeenCalledWith('/api/services/active');
       expect(result.data).toHaveLength(2);
     });
   });
