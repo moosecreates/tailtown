@@ -194,7 +194,7 @@ export const getCustomerDemographicsReport = async (
   const petTypeMap = new Map<string, number>();
   for (const customer of customers) {
     for (const pet of customer.pets) {
-      const type = pet.species || 'Unknown';
+      const type = pet.type || 'Unknown';
       petTypeMap.set(type, (petTypeMap.get(type) || 0) + 1);
     }
   }

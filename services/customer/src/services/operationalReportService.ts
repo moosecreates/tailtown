@@ -95,11 +95,7 @@ export const getBookingPatternsReport = async (
       }
     },
     include: {
-      invoices: {
-        where: {
-          status: 'PAID'
-        }
-      }
+      invoice: true
     }
   });
   
@@ -114,7 +110,10 @@ export const getBookingPatternsReport = async (
     const hour = reservation.startDate.getHours();
     const key = `${dayOfWeek}-${hour}`;
     
-    const revenue = reservation.invoices.reduce((sum, inv) => sum + inv.total, 0);
+    // Calculate revenue from invoice if it exists and is paid
+    const revenue = (reservation.invoice && reservation.invoice.status === 'PAID') 
+      ? reservation.invoice.total 
+      : 0;
     
     const existing = patternMap.get(key);
     if (existing) {
