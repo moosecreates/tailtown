@@ -45,6 +45,7 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4004';
   const getAccessToken = () => localStorage.getItem('superAdminAccessToken');
   
   // Only show to super admins - check localStorage directly
@@ -65,7 +66,7 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
 
     try {
       await axios.post(
-        `http://localhost:4004/api/super-admin/tenants/${tenant.id}/suspend`,
+        `${API_URL}/api/super-admin/tenants/${tenant.id}/suspend`,
         { reason: suspendReason },
         {
           headers: {
@@ -90,7 +91,7 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
 
     try {
       await axios.post(
-        `http://localhost:4004/api/super-admin/tenants/${tenant.id}/activate`,
+        `${API_URL}/api/super-admin/tenants/${tenant.id}/activate`,
         {},
         {
           headers: {
@@ -113,7 +114,7 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
 
     try {
       await axios.delete(
-        `http://localhost:4004/api/super-admin/tenants/${tenant.id}`,
+        `${API_URL}/api/super-admin/tenants/${tenant.id}`,
         {
           headers: {
             'Authorization': `Bearer ${getAccessToken()}`
@@ -138,7 +139,7 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
 
     try {
       await axios.post(
-        `http://localhost:4004/api/super-admin/tenants/${tenant.id}/restore`,
+        `${API_URL}/api/super-admin/tenants/${tenant.id}/restore`,
         {},
         {
           headers: {
@@ -166,7 +167,7 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
 
     try {
       const response = await axios.post(
-        `http://localhost:4004/api/super-admin/impersonate/${tenant.id}`,
+        `${API_URL}/api/super-admin/impersonate/${tenant.id}`,
         { reason: impersonateReason },
         {
           headers: {
