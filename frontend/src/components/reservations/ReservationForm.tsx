@@ -33,6 +33,7 @@ import { customerService } from '../../services/customerService';
 import { petService } from '../../services/petService';
 import { serviceManagement } from '../../services/serviceManagement';
 import { resourceService, type Resource } from '../../services/resourceService';
+import { useResponsive, getResponsiveButtonSize } from '../../utils/responsive';
 import AddOnSelectionDialogEnhanced from './AddOnSelectionDialogEnhanced';
 import GroomerSelector from './GroomerSelector';
 import { useShoppingCart } from '../../contexts/ShoppingCartContext';
@@ -103,6 +104,9 @@ interface ReservationFormProps {
  * ```
  */
 const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData, defaultDates, showAddOns = false, serviceCategories, onClose }) => {
+  // Responsive hooks
+  const { isMobile, isTablet } = useResponsive();
+  
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -1677,21 +1681,41 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             </Box>
           )}
 
-          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 1, 
+            justifyContent: 'flex-end', 
+            mt: 1,
+            flexDirection: { xs: 'column', sm: 'row' }
+          }}>
             {!initialData && (
               <>
                 <Button 
                   variant="contained" 
                   color="primary" 
-                  size="large"
+                  size={isMobile ? 'medium' : 'large'}
                   onClick={handleProceedToCheckout}
                   disabled={loading}
-                  sx={{ mr: 1, px: 3, py: 1.5, fontSize: '1.1rem', fontWeight: 'bold' }}
+                  fullWidth={isMobile}
+                  sx={{ 
+                    mr: { xs: 0, sm: 1 }, 
+                    px: { xs: 2, sm: 3 }, 
+                    py: { xs: 1, sm: 1.5 }, 
+                    fontSize: { xs: '1rem', sm: '1.1rem' }, 
+                    fontWeight: 'bold' 
+                  }}
                 >
-                  🛒 Proceed to Checkout (Recommended)
+                  🛒 {isMobile ? 'Checkout' : 'Proceed to Checkout (Recommended)'}
                 </Button>
-                <Button type="submit" variant="outlined" color="secondary" size="small" disabled={loading}>
-                  {loading ? 'Processing...' : 'Quick Create (Staff Only)'}
+                <Button 
+                  type="submit" 
+                  variant="outlined" 
+                  color="secondary" 
+                  size={getResponsiveButtonSize(isMobile)} 
+                  disabled={loading}
+                  fullWidth={isMobile}
+                >
+                  {loading ? 'Processing...' : (isMobile ? 'Quick Create' : 'Quick Create (Staff Only)')}
                 </Button>
               </>
             )}
@@ -1700,16 +1724,24 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 <Button 
                   variant="outlined" 
                   color="error" 
-                  size="small" 
-                  startIcon={<DeleteIcon />}
+                  size={getResponsiveButtonSize(isMobile)} 
+                  startIcon={!isMobile ? <DeleteIcon /> : undefined}
                   onClick={() => setDeleteConfirmOpen(true)}
                   disabled={loading || deleting}
-                  sx={{ mr: 1 }}
+                  fullWidth={isMobile}
+                  sx={{ mr: { xs: 0, sm: 1 }, mb: { xs: 1, sm: 0 } }}
                 >
-                  Delete
+                  {isMobile ? <DeleteIcon /> : 'Delete'}
                 </Button>
-                <Button type="submit" variant="contained" color="primary" size="small" disabled={loading}>
-                  {loading ? 'Processing...' : 'Update Reservation'}
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary" 
+                  size={getResponsiveButtonSize(isMobile)} 
+                  disabled={loading}
+                  fullWidth={isMobile}
+                >
+                  {loading ? 'Processing...' : (isMobile ? 'Update' : 'Update Reservation')}
                 </Button>
               </>
             )}
