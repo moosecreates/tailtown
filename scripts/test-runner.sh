@@ -190,9 +190,9 @@ run_quick_tests() {
     local failed=0
     
     # Ensure database environment variables are set
-    export DATABASE_URL="${DATABASE_URL:-postgresql://postgres:postgres@localhost:5433/customer}"
-    export TEST_DATABASE_URL="${TEST_DATABASE_URL:-postgresql://postgres:postgres@localhost:5433/customer}"
-    export PGUSER="${PGUSER:-postgres}"
+    export DATABASE_URL="${DATABASE_URL:-postgresql://root:postgres@localhost:5433/customer}"
+    export TEST_DATABASE_URL="${TEST_DATABASE_URL:-postgresql://root:postgres@localhost:5433/customer}"
+    export PGUSER="${PGUSER:-root}"
     export PGPASSWORD="${PGPASSWORD:-postgres}"
     export PGDATABASE="${PGDATABASE:-customer}"
     export PGHOST="${PGHOST:-localhost}"
