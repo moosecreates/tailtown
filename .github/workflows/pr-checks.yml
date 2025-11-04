@@ -118,15 +118,14 @@ jobs:
         cd services/customer && npm ci
         cd ../reservation-service && npm ci
     
-    - name: Create root database role
-      run: |
-        PGPASSWORD=postgres psql -h localhost -p 5433 -U postgres -d customer -c "CREATE ROLE root WITH LOGIN SUPERUSER PASSWORD 'postgres';" || echo "Root role may already exist"
-      env:
-        PGPASSWORD: postgres
-    
     - name: Setup database
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5433/customer
+        PGUSER: postgres
+        PGPASSWORD: postgres
+        PGDATABASE: customer
+        PGHOST: localhost
+        PGPORT: 5433
       run: |
         cd services/customer
         npx prisma migrate deploy
@@ -140,6 +139,7 @@ jobs:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5433/customer
         TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5433/customer
         NODE_ENV: test
+        CI: true
         PGUSER: postgres
         PGPASSWORD: postgres
         PGDATABASE: customer
