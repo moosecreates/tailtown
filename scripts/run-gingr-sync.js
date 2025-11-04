@@ -15,7 +15,7 @@
 
 require('dotenv').config({ path: './services/customer/.env' });
 
-const { gingrSyncService } = require('../services/customer/dist/services/gingr-sync.service');
+const { gingrSyncService } = require('./services/customer/dist/services/gingr-sync.service');
 
 async function main() {
   console.log('🔄 Gingr Sync Started');
