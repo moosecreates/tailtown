@@ -9,8 +9,7 @@
  * Usage:
  *   node scripts/run-gingr-sync.js
  *   
- * Cron (every 8 hours):
- *   0 */8 * * * cd /opt/tailtown && node scripts/run-gingr-sync.js >> logs/gingr-sync.log 2>&1
+ * Cron: See scripts/setup-gingr-cron.sh for installation
  */
 
 require('dotenv').config({ path: './services/customer/.env' });
