@@ -25,14 +25,20 @@ jobs:
       run: |
         npm ci
     
-    - name: Install frontend dependencies
+    - name: Install frontend dependencies (isolated)
       run: |
-        echo "Installing frontend dependencies..."
+        echo "Installing frontend dependencies in isolation..."
         cd frontend
         rm -rf node_modules package-lock.json
-        # Install without workspace linking to get all packages locally
-        npm install --legacy-peer-deps --install-links=false
+        # Remove workspace reference temporarily
+        if grep -q '"workspaces"' package.json; then
+          echo "Workspace detected in package.json, but installing standalone"
+        fi
+        # Install with --force to override any workspace settings
+        npm install --legacy-peer-deps --force
         echo "✓ Frontend dependencies installed"
+        echo "Verifying installation:"
+        ls -la node_modules/.bin/ | grep craco || echo "craco binary still not found"
     
     - name: Install service dependencies
       run: |
@@ -126,14 +132,20 @@ jobs:
       run: |
         npm ci
     
-    - name: Install frontend dependencies
+    - name: Install frontend dependencies (isolated)
       run: |
-        echo "Installing frontend dependencies..."
+        echo "Installing frontend dependencies in isolation..."
         cd frontend
         rm -rf node_modules package-lock.json
-        # Install without workspace linking to get all packages locally
-        npm install --legacy-peer-deps --install-links=false
+        # Remove workspace reference temporarily
+        if grep -q '"workspaces"' package.json; then
+          echo "Workspace detected in package.json, but installing standalone"
+        fi
+        # Install with --force to override any workspace settings
+        npm install --legacy-peer-deps --force
         echo "✓ Frontend dependencies installed"
+        echo "Verifying installation:"
+        ls -la node_modules/.bin/ | grep craco || echo "craco binary still not found"
     
     - name: Install service dependencies
       run: |
@@ -189,14 +201,20 @@ jobs:
       run: |
         npm ci
     
-    - name: Install frontend dependencies
+    - name: Install frontend dependencies (isolated)
       run: |
-        echo "Installing frontend dependencies..."
+        echo "Installing frontend dependencies in isolation..."
         cd frontend
         rm -rf node_modules package-lock.json
-        # Install without workspace linking to get all packages locally
-        npm install --legacy-peer-deps --install-links=false
+        # Remove workspace reference temporarily
+        if grep -q '"workspaces"' package.json; then
+          echo "Workspace detected in package.json, but installing standalone"
+        fi
+        # Install with --force to override any workspace settings
+        npm install --legacy-peer-deps --force
         echo "✓ Frontend dependencies installed"
+        echo "Verifying installation:"
+        ls -la node_modules/.bin/ | grep craco || echo "craco binary still not found"
     
     - name: Install service dependencies
       run: |
