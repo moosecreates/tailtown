@@ -123,7 +123,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 describe('ReservationForm - Kennel Assignment Validation', () => {
   const mockOnSubmit = jest.fn();
-  const mockOnCancel = jest.fn();
+  const mockOnClose = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -167,7 +167,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
 
       render(
         <TestWrapper>
-          <ReservationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+          <ReservationForm onSubmit={mockOnSubmit} onClose={mockOnClose} />
         </TestWrapper>
       );
 
@@ -220,7 +220,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
 
       render(
         <TestWrapper>
-          <ReservationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+          <ReservationForm onSubmit={mockOnSubmit} onClose={mockOnClose} />
         </TestWrapper>
       );
 
@@ -249,7 +249,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
 
       render(
         <TestWrapper>
-          <ReservationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+          <ReservationForm onSubmit={mockOnSubmit} onClose={mockOnClose} />
         </TestWrapper>
       );
 
@@ -277,7 +277,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
 
       render(
         <TestWrapper>
-          <ReservationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+          <ReservationForm onSubmit={mockOnSubmit} onClose={mockOnClose} />
         </TestWrapper>
       );
 
@@ -310,7 +310,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
 
       render(
         <TestWrapper>
-          <ReservationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+          <ReservationForm onSubmit={mockOnSubmit} onClose={mockOnClose} />
         </TestWrapper>
       );
 
@@ -360,7 +360,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
 
       render(
         <TestWrapper>
-          <ReservationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+          <ReservationForm onSubmit={mockOnSubmit} onClose={mockOnClose} />
         </TestWrapper>
       );
 
@@ -396,7 +396,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
 
       render(
         <TestWrapper>
-          <ReservationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+          <ReservationForm onSubmit={mockOnSubmit} onClose={mockOnClose} />
         </TestWrapper>
       );
 
@@ -453,7 +453,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
 
       render(
         <TestWrapper>
-          <ReservationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+          <ReservationForm onSubmit={mockOnSubmit} onClose={mockOnClose} />
         </TestWrapper>
       );
 
@@ -489,7 +489,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
 
       render(
         <TestWrapper>
-          <ReservationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+          <ReservationForm onSubmit={mockOnSubmit} onClose={mockOnClose} />
         </TestWrapper>
       );
 
@@ -541,7 +541,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
         <TestWrapper>
           <ReservationForm 
             onSubmit={mockOnSubmit} 
-            onCancel={mockOnCancel}
+            onClose={mockOnClose}
             initialData={initialData}
           />
         </TestWrapper>
@@ -569,7 +569,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
 
       render(
         <TestWrapper>
-          <ReservationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+          <ReservationForm onSubmit={mockOnSubmit} onClose={mockOnClose} />
         </TestWrapper>
       );
 
@@ -593,7 +593,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
 
       render(
         <TestWrapper>
-          <ReservationForm onSubmit={mockOnSubmit} onCancel={mockOnCancel} />
+          <ReservationForm onSubmit={mockOnSubmit} onClose={mockOnClose} />
         </TestWrapper>
       );
 
