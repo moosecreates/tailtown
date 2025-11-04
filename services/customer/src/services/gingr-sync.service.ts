@@ -96,23 +96,43 @@ export class GingrSyncService {
 
       // Sync customers
       console.log('   1️⃣  Syncing customers...');
-      result.customersSync = await this.syncCustomers(tenantId, gingrClient);
-      console.log(`      ✓ Synced ${result.customersSync} customers`);
+      try {
+        result.customersSync = await this.syncCustomers(tenantId, gingrClient);
+        console.log(`      ✓ Synced ${result.customersSync} customers`);
+      } catch (error: any) {
+        console.error(`      ❌ Customer sync failed: ${error.message}`);
+        result.errors.push(`Customers: ${error.message}`);
+      }
 
       // Sync pets
       console.log('   2️⃣  Syncing pets...');
-      result.petsSync = await this.syncPets(tenantId, gingrClient);
-      console.log(`      ✓ Synced ${result.petsSync} pets`);
+      try {
+        result.petsSync = await this.syncPets(tenantId, gingrClient);
+        console.log(`      ✓ Synced ${result.petsSync} pets`);
+      } catch (error: any) {
+        console.error(`      ❌ Pet sync failed: ${error.message}`);
+        result.errors.push(`Pets: ${error.message}`);
+      }
 
       // Sync reservations (last 30 days to next 90 days)
       console.log('   3️⃣  Syncing reservations...');
-      result.reservationsSync = await this.syncReservations(tenantId, gingrClient);
-      console.log(`      ✓ Synced ${result.reservationsSync} reservations`);
+      try {
+        result.reservationsSync = await this.syncReservations(tenantId, gingrClient);
+        console.log(`      ✓ Synced ${result.reservationsSync} reservations`);
+      } catch (error: any) {
+        console.error(`      ❌ Reservation sync failed: ${error.message}`);
+        result.errors.push(`Reservations: ${error.message}`);
+      }
 
       // Sync invoices (last 90 days)
       console.log('   4️⃣  Syncing invoices...');
-      result.invoicesSync = await this.syncInvoices(tenantId, gingrClient);
-      console.log(`      ✓ Synced ${result.invoicesSync} invoices`);
+      try {
+        result.invoicesSync = await this.syncInvoices(tenantId, gingrClient);
+        console.log(`      ✓ Synced ${result.invoicesSync} invoices`);
+      } catch (error: any) {
+        console.error(`      ❌ Invoice sync failed: ${error.message}`);
+        result.errors.push(`Invoices: ${error.message}`);
+      }
 
       result.success = true;
     } catch (error: any) {
@@ -366,7 +386,7 @@ export class GingrSyncService {
           subtotal: invoice.subtotal,
           tax: invoice.tax,
           total: invoice.total,
-          status: invoice.status.toUpperCase(),
+          status: invoice.status ? invoice.status.toUpperCase() : 'DRAFT',
           externalId: invoice.id
         };
 
