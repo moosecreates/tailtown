@@ -25,8 +25,17 @@ async function main() {
 
     if (existing) {
       console.log('⚠️  demo-template tenant already exists');
-      console.log('   To recreate, delete it first from the super admin panel\n');
-      return;
+      console.log('   Cleaning up existing data...\n');
+      
+      // Delete all related data first
+      await prisma.pet.deleteMany({ where: { tenantId: 'demo-template' } });
+      await prisma.customer.deleteMany({ where: { tenantId: 'demo-template' } });
+      await prisma.staff.deleteMany({ where: { tenantId: 'demo-template' } });
+      await prisma.service.deleteMany({ where: { tenantId: 'demo-template' } });
+      await prisma.kennel.deleteMany({ where: { tenantId: 'demo-template' } });
+      await prisma.tenant.delete({ where: { subdomain: 'demo-template' } });
+      
+      console.log('   ✓ Cleaned up existing demo-template\n');
     }
 
     // Create demo-template tenant
