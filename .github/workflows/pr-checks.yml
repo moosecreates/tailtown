@@ -19,7 +19,8 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18.x'
-        cache: 'npm'
+        # Disable cache - it's restoring workspace node_modules
+        # cache: 'npm'
     
     - name: Install frontend dependencies (isolated)
       run: |
@@ -106,7 +107,8 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18.x'
-        cache: 'npm'
+        # Disable cache - it's restoring workspace node_modules
+        # cache: 'npm'
     
     - name: Install frontend dependencies (isolated)
       run: |
@@ -155,7 +157,8 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18.x'
-        cache: 'npm'
+        # Disable cache - it's restoring workspace node_modules
+        # cache: 'npm'
     
     - name: Install frontend dependencies (isolated)
       run: |
