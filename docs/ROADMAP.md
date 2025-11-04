@@ -61,6 +61,34 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 
 ---
 
+## 🎯 HIGH PRIORITY - Post-Launch
+
+### 1. 📊 Import Historical Revenue Data from Gingr
+**Priority**: HIGH | **Effort**: 2-4 hours | **Status**: Not Started
+
+**Why**: Dashboard currently shows only $54 revenue (1 test invoice). Need to import historical invoices from Gingr to show accurate financial data.
+
+**Implementation**:
+- Use existing Gingr API `/list_invoices` endpoint
+- Import all invoices with dates, totals, tax, status
+- Map to Tailtown invoice structure
+- Backfill revenue reports and analytics
+
+**Benefits**:
+- Accurate revenue dashboard and analytics
+- Historical financial reporting
+- Better business insights
+- Complete data migration from Gingr
+
+**API Available**:
+```typescript
+// Gingr provides: id, owner_id, invoice_number, invoice_date, 
+// due_date, subtotal, tax, total, status
+await gingrApi.fetchAllInvoices(fromDate, toDate);
+```
+
+---
+
 ## 🎯 NEXT STEPS - Infrastructure Only
 
 ### ⭐ Production Infrastructure (Optional - Can Launch Without)
