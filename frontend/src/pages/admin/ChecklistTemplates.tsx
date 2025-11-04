@@ -80,8 +80,8 @@ export default function ChecklistTemplates() {
 
   const loadTemplates = async () => {
     try {
-      // TODO: Fix proxy configuration - using direct backend URL for now
-      const response = await fetch('http://localhost:4004/api/checklists/templates', {
+      const apiUrl = process.env.REACT_APP_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/checklists/templates`, {
         headers: { 'x-tenant-id': 'dev' }
       });
       const data = await response.json();
@@ -114,7 +114,8 @@ export default function ChecklistTemplates() {
     if (!window.confirm('Are you sure you want to delete this template?')) return;
     
     try {
-      await fetch(`http://localhost:4004/api/checklists/templates/${id}`, {
+      const apiUrl = process.env.REACT_APP_API_URL || '';
+      await fetch(`${apiUrl}/api/checklists/templates/${id}`, {
         method: 'DELETE',
         headers: { 'x-tenant-id': 'dev' }
       });
@@ -138,9 +139,10 @@ export default function ChecklistTemplates() {
     if (!currentTemplate) return;
 
     try {
+      const apiUrl = process.env.REACT_APP_API_URL || '';
       const url = currentTemplate.id 
-        ? `http://localhost:4004/api/checklists/templates/${currentTemplate.id}`
-        : 'http://localhost:4004/api/checklists/templates';
+        ? `${apiUrl}/api/checklists/templates/${currentTemplate.id}`
+        : `${apiUrl}/api/checklists/templates`;
       
       const method = currentTemplate.id ? 'PUT' : 'POST';
       
