@@ -997,9 +997,7 @@ model Tenant {
   isTemplate            Boolean      @default(false)  @map("is_template")    // Can be cloned to create new tenants
   gingrSyncEnabled      Boolean      @default(false)  @map("gingr_sync_enabled")  // Enable Gingr data sync
   lastGingrSyncAt       DateTime?    @map("last_gingr_sync_at")  // Last successful sync
-  clonedFromId          String?      @map("cloned_from_id")  // Source tenant if cloned
-  clonedFrom            Tenant?      @relation("TenantClones", fields: [clonedFromId], references: [id], onDelete: SetNull)
-  clones                Tenant[]     @relation("TenantClones")
+  clonedFromId          String?      @map("cloned_from_id")  // Source tenant if cloned (no FK for simplicity)
   
   // Settings
   timezone              String       @default("America/New_York")

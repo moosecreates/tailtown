@@ -16,8 +16,8 @@ COMMENT ON COLUMN tenants.gingr_sync_enabled IS 'Enable automatic Gingr data syn
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS last_gingr_sync_at TIMESTAMP;
 COMMENT ON COLUMN tenants.last_gingr_sync_at IS 'Last successful Gingr sync timestamp';
 
--- Add cloning tracking
-ALTER TABLE tenants ADD COLUMN IF NOT EXISTS cloned_from_id UUID REFERENCES tenants(id) ON DELETE SET NULL;
+-- Add cloning tracking (without foreign key constraint for now - will add later if needed)
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS cloned_from_id UUID;
 COMMENT ON COLUMN tenants.cloned_from_id IS 'Source tenant ID if this was cloned from a template';
 
 -- Add indexes for efficient queries
