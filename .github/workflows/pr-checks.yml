@@ -42,6 +42,20 @@ jobs:
         cd services/customer && npm ci
         cd ../reservation-service && npm ci
     
+    - name: Verify craco is available
+      working-directory: ./frontend
+      run: |
+        echo "Testing craco availability..."
+        if npx craco --version; then
+          echo "✓ craco is available and working"
+        else
+          echo "✗ craco is NOT available!"
+          echo "Debugging info:"
+          ls -la node_modules/.bin/craco || echo "craco binary NOT FOUND"
+          grep -A 5 "devDependencies" package.json || echo "No devDependencies"
+          exit 1
+        fi
+    
     - name: Check for console.logs
       run: |
         if git diff origin/${{ github.base_ref }}...HEAD | grep -E '^\+.*console\.(log|debug|info)'; then
@@ -132,6 +146,20 @@ jobs:
         cd services/customer && npm ci
         cd ../reservation-service && npm ci
     
+    - name: Verify craco is available
+      working-directory: ./frontend
+      run: |
+        echo "Testing craco availability..."
+        if npx craco --version; then
+          echo "✓ craco is available and working"
+        else
+          echo "✗ craco is NOT available!"
+          echo "Debugging info:"
+          ls -la node_modules/.bin/craco || echo "craco binary NOT FOUND"
+          grep -A 5 "devDependencies" package.json || echo "No devDependencies"
+          exit 1
+        fi
+    
     - name: Setup database
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5433/customer
@@ -183,6 +211,20 @@ jobs:
       run: |
         cd services/customer && npm ci
         cd ../reservation-service && npm ci
+    
+    - name: Verify craco is available
+      working-directory: ./frontend
+      run: |
+        echo "Testing craco availability..."
+        if npx craco --version; then
+          echo "✓ craco is available and working"
+        else
+          echo "✗ craco is NOT available!"
+          echo "Debugging info:"
+          ls -la node_modules/.bin/craco || echo "craco binary NOT FOUND"
+          grep -A 5 "devDependencies" package.json || echo "No devDependencies"
+          exit 1
+        fi
     
     - name: Build frontend
       env:
