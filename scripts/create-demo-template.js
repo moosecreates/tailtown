@@ -189,7 +189,7 @@ async function main() {
         data: {
           tenantId: tenant.subdomain,
           name: service.name,
-          category: service.category,
+          serviceCategory: service.category,
           price: service.price,
           duration: service.duration,
           isActive: true,
