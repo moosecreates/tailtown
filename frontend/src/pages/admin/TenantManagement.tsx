@@ -270,12 +270,18 @@ const TenantManagement: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="xl" sx={{ mt: 2, mb: 2 }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Tenant Management</Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box>
+          <Typography variant="h5">Tenant Management</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {tenants.length} tenant{tenants.length !== 1 ? 's' : ''}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
+            size="small"
             variant="outlined"
             startIcon={<RefreshIcon />}
             onClick={loadTenants}
@@ -283,11 +289,12 @@ const TenantManagement: React.FC = () => {
             Refresh
           </Button>
           <Button
+            size="small"
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => setCreateDialogOpen(true)}
           >
-            Create Tenant
+            Create
           </Button>
         </Box>
       </Box>
@@ -305,25 +312,26 @@ const TenantManagement: React.FC = () => {
       )}
 
       {/* Filters */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+      <Paper sx={{ p: 1.5, mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
           <TextField
             label="Search"
             size="small"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Business name, subdomain, email..."
-            sx={{ minWidth: 250 }}
+            placeholder="Name, subdomain, email..."
+            sx={{ minWidth: 200, '& .MuiInputBase-root': { fontSize: '0.875rem' } }}
           />
           
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Status</InputLabel>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel sx={{ fontSize: '0.875rem' }}>Status</InputLabel>
             <Select
               value={statusFilter}
               label="Status"
               onChange={(e) => setStatusFilter(e.target.value)}
+              sx={{ fontSize: '0.875rem' }}
             >
-              <MenuItem value="ALL">All Status</MenuItem>
+              <MenuItem value="ALL">All</MenuItem>
               <MenuItem value="ACTIVE">Active</MenuItem>
               <MenuItem value="TRIAL">Trial</MenuItem>
               <MenuItem value="PAUSED">Paused</MenuItem>
@@ -331,29 +339,31 @@ const TenantManagement: React.FC = () => {
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Production</InputLabel>
+          <FormControl size="small" sx={{ minWidth: 100 }}>
+            <InputLabel sx={{ fontSize: '0.875rem' }}>Prod</InputLabel>
             <Select
               value={productionFilter}
-              label="Production"
+              label="Prod"
               onChange={(e) => setProductionFilter(e.target.value)}
+              sx={{ fontSize: '0.875rem' }}
             >
               <MenuItem value="ALL">All</MenuItem>
-              <MenuItem value="true">Production Only</MenuItem>
-              <MenuItem value="false">Non-Production</MenuItem>
+              <MenuItem value="true">Yes</MenuItem>
+              <MenuItem value="false">No</MenuItem>
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Template</InputLabel>
+          <FormControl size="small" sx={{ minWidth: 100 }}>
+            <InputLabel sx={{ fontSize: '0.875rem' }}>Template</InputLabel>
             <Select
               value={templateFilter}
               label="Template"
               onChange={(e) => setTemplateFilter(e.target.value)}
+              sx={{ fontSize: '0.875rem' }}
             >
               <MenuItem value="ALL">All</MenuItem>
-              <MenuItem value="true">Templates Only</MenuItem>
-              <MenuItem value="false">Non-Templates</MenuItem>
+              <MenuItem value="true">Yes</MenuItem>
+              <MenuItem value="false">No</MenuItem>
             </Select>
           </FormControl>
         </Box>
@@ -366,81 +376,86 @@ const TenantManagement: React.FC = () => {
         </Box>
       ) : (
         <TableContainer component={Paper}>
-          <Table>
+          <Table size="small" sx={{ '& .MuiTableCell-root': { py: 0.75, fontSize: '0.8125rem' } }}>
             <TableHead>
-              <TableRow>
-                <TableCell>Business Name</TableCell>
-                <TableCell>Subdomain</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Flags</TableCell>
-                <TableCell>Stats</TableCell>
-                <TableCell>Created</TableCell>
-                <TableCell align="right">Actions</TableCell>
+              <TableRow sx={{ bgcolor: 'grey.50' }}>
+                <TableCell sx={{ fontWeight: 600 }}>Business / Contact</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Subdomain</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Flags</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Stats</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Created</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {tenants.map((tenant) => (
-                <TableRow key={tenant.id}>
+                <TableRow 
+                  key={tenant.id}
+                  sx={{ '&:hover': { bgcolor: 'action.hover' } }}
+                >
                   <TableCell>
-                    <Typography variant="body2" fontWeight="bold">
+                    <Typography variant="body2" fontWeight={500} sx={{ fontSize: '0.8125rem' }}>
                       {tenant.businessName}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                       {tenant.contactEmail}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip label={tenant.subdomain} size="small" />
+                    <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
+                      {tenant.subdomain}
+                    </Typography>
                   </TableCell>
                   <TableCell>
                     <Chip 
                       label={getStatusLabel(tenant)} 
                       color={getStatusColor(tenant)}
                       size="small"
+                      sx={{ height: 20, fontSize: '0.7rem' }}
                     />
                   </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                       {tenant.isProduction && (
-                        <Chip label="PROD" color="error" size="small" />
+                        <Chip label="P" color="error" size="small" sx={{ height: 18, fontSize: '0.65rem', minWidth: 24 }} />
                       )}
                       {tenant.isTemplate && (
-                        <Chip label="TEMPLATE" color="info" size="small" />
+                        <Chip label="T" color="info" size="small" sx={{ height: 18, fontSize: '0.65rem', minWidth: 24 }} />
                       )}
                       {tenant.gingrSyncEnabled && (
-                        <Chip label="GINGR" color="warning" size="small" />
+                        <Chip label="G" color="warning" size="small" sx={{ height: 18, fontSize: '0.65rem', minWidth: 24 }} />
                       )}
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="caption" display="block">
-                      {tenant.customerCount} customers
-                    </Typography>
-                    <Typography variant="caption" display="block">
-                      {tenant.reservationCount} reservations
+                    <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
+                      {tenant.customerCount}c / {tenant.reservationCount}r
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="caption">
-                      {new Date(tenant.createdAt).toLocaleDateString()}
+                    <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
+                      {new Date(tenant.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}
                     </Typography>
                   </TableCell>
                   <TableCell align="right">
-                    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+                    <Box sx={{ display: 'flex', gap: 0.25, justifyContent: 'flex-end' }}>
                       <Tooltip title="Clone">
                         <IconButton 
                           size="small"
                           onClick={() => openCloneDialog(tenant)}
+                          sx={{ p: 0.5 }}
                         >
-                          <CloneIcon fontSize="small" />
+                          <CloneIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Edit Flags">
+                      <Tooltip title="Edit">
                         <IconButton 
                           size="small"
                           onClick={() => openEditDialog(tenant)}
+                          sx={{ p: 0.5 }}
                         >
-                          <EditIcon fontSize="small" />
+                          <EditIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
                       <TenantStatusManager 
