@@ -32,7 +32,6 @@ async function main() {
       await prisma.customer.deleteMany({ where: { tenantId: 'demo-template' } });
       await prisma.staff.deleteMany({ where: { tenantId: 'demo-template' } });
       await prisma.service.deleteMany({ where: { tenantId: 'demo-template' } });
-      await prisma.kennel.deleteMany({ where: { tenantId: 'demo-template' } });
       await prisma.tenant.delete({ where: { subdomain: 'demo-template' } });
       
       console.log('   ✓ Cleaned up existing demo-template\n');
@@ -200,28 +199,6 @@ async function main() {
     }
     console.log(`   ✓ Created ${services.length} services\n`);
 
-    // Create sample kennels/suites
-    console.log('6️⃣  Creating sample kennels...');
-    const kennelTypes = ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'];
-    let kennelCount = 0;
-    
-    for (let i = 1; i <= 20; i++) {
-      const type = kennelTypes[Math.floor(i / 7) % kennelTypes.length];
-      await prisma.kennel.create({
-        data: {
-          tenantId: tenant.subdomain,
-          name: `Suite ${i.toString().padStart(2, '0')}`,
-          type: type,
-          capacity: type === 'VIP_SUITE' ? 1 : 2,
-          isActive: true,
-          floor: Math.floor((i - 1) / 10) + 1,
-          section: i <= 10 ? 'A' : 'B'
-        }
-      });
-      kennelCount++;
-    }
-    console.log(`   ✓ Created ${kennelCount} kennels\n`);
-
     console.log('✅ Demo template tenant created successfully!\n');
     console.log('📋 Summary:');
     console.log(`   Subdomain: demo-template`);
@@ -229,7 +206,6 @@ async function main() {
     console.log(`   Pets: ${petCount}`);
     console.log(`   Staff: ${staffMembers.length}`);
     console.log(`   Services: ${services.length}`);
-    console.log(`   Kennels: ${kennelCount}`);
     console.log('\n🎯 Next steps:');
     console.log('   1. Log in to super admin panel');
     console.log('   2. Navigate to Tenant Management');
