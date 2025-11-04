@@ -5,9 +5,18 @@
 
 **Status:** 🟢 **100% PRODUCTION READY**  
 **Version:** 1.0 MVP + Super Admin Portal  
-**Last Updated:** November 2, 2025
+**Last Updated:** November 3, 2025
 
 A modern, full-featured management system for pet resorts, providing comprehensive tools for reservations, customer management, and pet care services.
+
+## 🐳 Production Deployment
+
+**We use Docker for production servers!**
+
+- **Server:** Digital Ocean (129.212.178.244)
+- **Method:** Docker Compose
+- **Quick Deploy:** `ssh -i ~/ttkey root@129.212.178.244 "cd /opt/tailtown && git pull origin main && docker-compose -f docker-compose.prod.yml up -d --build"`
+- **Documentation:** See [PRODUCTION-DEPLOYMENT-REFERENCE.md](PRODUCTION-DEPLOYMENT-REFERENCE.md) for complete guide
 
 ## 🎉 PRODUCTION READY - November 1, 2025
 
