@@ -49,7 +49,7 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
   onTodayClick
 }) => {
   // Responsive hooks
-  const { isMobile } = useResponsive();
+  const { isMobile, isDesktop } = useResponsive();
   
   // Navigation functions
   const navigatePrevious = () => {
@@ -140,7 +140,7 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
               </IconButton>
             </Tooltip>
             
-            {!isMobile && (
+            {isDesktop && (
               <Tooltip title="Today">
                 <Button
                   variant="outlined"
