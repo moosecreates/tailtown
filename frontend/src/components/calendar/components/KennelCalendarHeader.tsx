@@ -109,7 +109,7 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
             alignItems: 'center', 
             gap: { xs: 0.5, sm: 1 },
             justifyContent: { xs: 'flex-start', md: 'flex-start' },
-            mb: { xs: 1, md: 0 }
+            mb: { xs: 2, md: 0 }
           }}>
             <Tooltip title="Previous">
               <IconButton 
@@ -162,7 +162,7 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
             gap: { xs: 1, md: 2 }, 
             justifyContent: { xs: 'flex-start', md: 'flex-end' },
             flexWrap: 'nowrap',
-            mt: { xs: 1, md: 0 }
+            mt: { xs: 2, md: 0 }
           }}>
             {/* View Type Selector */}
             <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
