@@ -27,7 +27,7 @@ jobs:
     - name: Install frontend dependencies
       working-directory: ./frontend
       run: |
-        npm ci --legacy-peer-deps
+        npm ci
         echo "✓ Frontend dependencies installed"
     
     - name: Install service dependencies
@@ -110,7 +110,7 @@ jobs:
     - name: Install frontend dependencies
       working-directory: ./frontend
       run: |
-        npm ci --legacy-peer-deps
+        npm ci
         echo "✓ Frontend dependencies installed"
     
     - name: Install service dependencies
@@ -155,7 +155,7 @@ jobs:
     - name: Install frontend dependencies
       working-directory: ./frontend
       run: |
-        npm ci --legacy-peer-deps
+        npm ci
         echo "✓ Frontend dependencies installed"
     
     - name: Install service dependencies
