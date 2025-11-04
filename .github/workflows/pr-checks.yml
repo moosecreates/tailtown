@@ -34,11 +34,6 @@ jobs:
         echo "Verifying craco:"
         ls -la node_modules/.bin/craco || echo "craco binary not found"
     
-    - name: Install service dependencies
-      run: |
-        cd services/customer && npm ci
-        cd ../reservation-service && npm ci
-    
     - name: Verify craco is available
       working-directory: ./frontend
       run: |
@@ -56,6 +51,11 @@ jobs:
           echo "✗ npx craco failed!"
           exit 1
         fi
+    
+    - name: Install service dependencies
+      run: |
+        cd services/customer && npm ci
+        cd ../reservation-service && npm ci
     
     - name: Check for console.logs
       run: |
@@ -139,11 +139,6 @@ jobs:
         echo "Verifying craco:"
         ls -la node_modules/.bin/craco || echo "craco binary not found"
     
-    - name: Install service dependencies
-      run: |
-        cd services/customer && npm ci
-        cd ../reservation-service && npm ci
-    
     - name: Verify craco is available
       working-directory: ./frontend
       run: |
@@ -161,6 +156,11 @@ jobs:
           echo "✗ npx craco failed!"
           exit 1
         fi
+    
+    - name: Install service dependencies
+      run: |
+        cd services/customer && npm ci
+        cd ../reservation-service && npm ci
     
     - name: Setup database
       env:
@@ -206,11 +206,6 @@ jobs:
         echo "Verifying craco:"
         ls -la node_modules/.bin/craco || echo "craco binary not found"
     
-    - name: Install service dependencies
-      run: |
-        cd services/customer && npm ci
-        cd ../reservation-service && npm ci
-    
     - name: Verify craco is available
       working-directory: ./frontend
       run: |
@@ -228,6 +223,11 @@ jobs:
           echo "✗ npx craco failed!"
           exit 1
         fi
+    
+    - name: Install service dependencies
+      run: |
+        cd services/customer && npm ci
+        cd ../reservation-service && npm ci
     
     - name: Build frontend
       env:
