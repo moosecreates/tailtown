@@ -35,7 +35,8 @@ jest.mock('../../../services/serviceManagement', () => ({
 jest.mock('../../../services/resourceService', () => ({
   resourceService: {
     getSuites: jest.fn(),
-    getResourceById: jest.fn()
+    getResourceById: jest.fn(),
+    getResourcesByType: jest.fn()
   }
 }));
 
