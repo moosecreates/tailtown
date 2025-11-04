@@ -290,7 +290,8 @@ const CheckoutPage: React.FC = () => {
         if (cartItem.products && cartItem.products.length > 0) {
           for (const product of cartItem.products) {
             try {
-              await fetch(`http://localhost:4004/api/products/${product.id}/inventory/adjust`, {
+              const apiUrl = process.env.REACT_APP_API_URL || '';
+              await fetch(`${apiUrl}/api/products/${product.id}/inventory/adjust`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',

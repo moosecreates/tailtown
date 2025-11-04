@@ -9,6 +9,7 @@ import {
   Error as ErrorIcon,
 } from '@mui/icons-material';
 import { Pet } from '../../services/petService';
+import { recalculateVaccineStatus, getRequiredVaccines } from '../../utils/vaccineUtils';
 
 interface SimpleVaccinationBadgeProps {
   pet: Pet;
@@ -18,24 +19,21 @@ interface SimpleVaccinationBadgeProps {
 /**
  * Simple vaccination badge that uses pet's actual vaccination data
  * instead of making external API calls
+ * 
+ * IMPORTANT: Recalculates vaccine status based on TODAY's date to ensure
+ * expired vaccines are properly detected even if the database hasn't been updated
  */
 const SimpleVaccinationBadge: React.FC<SimpleVaccinationBadgeProps> = ({
   pet,
   showDetails = false,
 }) => {
-  // Get required vaccines based on pet type
-  const getRequiredVaccines = (petType: string) => {
-    switch (petType) {
-      case 'DOG':
-        return ['rabies', 'dhpp', 'bordetella'];
-      case 'CAT':
-        return ['rabies', 'fvrcp'];
-      default:
-        return ['rabies'];
-    }
-  };
-
   const requiredVaccines = getRequiredVaccines(pet.type || 'DOG');
+  
+  // Recalculate vaccine status based on current date
+  const vaccinationStatus = recalculateVaccineStatus(
+    pet.vaccinationStatus,
+    pet.vaccineExpirations
+  );
   
   // Count vaccination status
   let expiredCount = 0;
@@ -43,7 +41,7 @@ const SimpleVaccinationBadge: React.FC<SimpleVaccinationBadgeProps> = ({
   let currentCount = 0;
 
   requiredVaccines.forEach(vaccine => {
-    const vaccineRecord = pet.vaccinationStatus?.[vaccine];
+    const vaccineRecord = vaccinationStatus[vaccine];
     if (!vaccineRecord) {
       missingCount++;
     } else if (vaccineRecord.status === 'EXPIRED') {
@@ -96,7 +94,7 @@ const SimpleVaccinationBadge: React.FC<SimpleVaccinationBadgeProps> = ({
     const vaccineDetails: string[] = [];
     
     requiredVaccines.forEach(vaccine => {
-      const vaccineRecord = pet.vaccinationStatus?.[vaccine] as any;
+      const vaccineRecord = vaccinationStatus[vaccine];
       const vaccineName = vaccine.charAt(0).toUpperCase() + vaccine.slice(1);
       
       if (!vaccineRecord) {
