@@ -137,7 +137,7 @@ async function main() {
           isActive: true,
           specialNeeds: Math.random() > 0.7 ? 'Needs extra attention' : null,
           medicationNotes: Math.random() > 0.8 ? 'Daily medication required' : null,
-          dietaryNotes: Math.random() > 0.8 ? 'Grain-free diet' : null
+          foodNotes: Math.random() > 0.8 ? 'Grain-free diet' : null
         }
       });
       petCount++;
