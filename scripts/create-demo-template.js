@@ -82,8 +82,8 @@ async function main() {
           city: 'Demo City',
           state: 'CA',
           zipCode: '90210',
-          emergencyContactName: 'Emergency Contact',
-          emergencyContactPhone: '(555) 911-9111'
+          emergencyContact: 'Emergency Contact',
+          emergencyPhone: '(555) 911-9111'
         }
       });
       customers.push(customer);
@@ -124,7 +124,7 @@ async function main() {
           breed: pet.breed,
           color: pet.color,
           gender: Math.random() > 0.5 ? 'MALE' : 'FEMALE',
-          birthDate: new Date(2020 + Math.floor(Math.random() * 4), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)),
+          birthdate: new Date(2020 + Math.floor(Math.random() * 4), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)),
           weight: pet.type === 'DOG' ? 30 + Math.floor(Math.random() * 40) : 8 + Math.floor(Math.random() * 8),
           isActive: true,
           specialNeeds: Math.random() > 0.7 ? 'Needs extra attention' : null,
