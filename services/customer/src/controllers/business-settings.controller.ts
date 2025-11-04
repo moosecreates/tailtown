@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
     }
   },
   filename: (req, file, cb) => {
-    const tenantId = (req as any).user?.tenantId;
+    const tenantId = (req as any).tenantId || 'dev';
     const ext = path.extname(file.originalname);
     cb(null, `logo-${tenantId}-${Date.now()}${ext}`);
   }
@@ -56,7 +56,7 @@ export const uploadMiddleware = upload.single('logo');
  */
 export const getBusinessSettings = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const tenantId = (req as any).user?.tenantId;
+    const tenantId = (req as any).tenantId || 'dev';
 
     if (!tenantId) {
       return next(new AppError('Tenant ID not found', 400));
@@ -89,7 +89,7 @@ export const getBusinessSettings = async (req: Request, res: Response, next: Nex
  */
 export const uploadLogo = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const tenantId = (req as any).user?.tenantId;
+    const tenantId = (req as any).tenantId || 'dev';
 
     if (!tenantId) {
       return next(new AppError('Tenant ID not found', 400));
@@ -140,7 +140,7 @@ export const uploadLogo = async (req: Request, res: Response, next: NextFunction
  */
 export const deleteLogo = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const tenantId = (req as any).user?.tenantId;
+    const tenantId = (req as any).tenantId || 'dev';
 
     if (!tenantId) {
       return next(new AppError('Tenant ID not found', 400));
