@@ -10,6 +10,7 @@ import { reservationService } from '../../services/reservationService';
 import { reservationApi } from '../../services/api';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
 import { useKennelData, ExtendedResource, Reservation, KennelType } from '../../hooks/useKennelData';
+import { useResponsive, getResponsiveDialogWidth } from '../../utils/responsive';
 import KennelCalendarHeader from './components/KennelCalendarHeader';
 import KennelGrid from './components/KennelGrid';
 import ReservationFormWrapper from './components/ReservationFormWrapper';
@@ -40,6 +41,9 @@ interface KennelCalendarProps {
  * - Optimized re-render patterns
  */
 const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
+  // Responsive hooks
+  const { isMobile, isTablet } = useResponsive();
+  
   // State for the current date and view
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewType, setViewType] = useState<ViewType>('week');
@@ -275,7 +279,7 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
   }, [selectedReservation, selectedKennel]);
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: { xs: 1, sm: 2 } }}>
       {/* Header with navigation and filters */}
       <KennelCalendarHeader
         currentDate={currentDate}
@@ -312,10 +316,14 @@ const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
       <Dialog 
         open={isFormOpen} 
         onClose={handleFormClose}
-        maxWidth="md"
-        fullWidth
+        maxWidth={isMobile ? false : "md"}
+        fullWidth={!isMobile}
+        fullScreen={isMobile}
         PaperProps={{
-          sx: { maxHeight: '90vh' }
+          sx: { 
+            maxHeight: isMobile ? '100vh' : '90vh',
+            width: isMobile ? '100%' : getResponsiveDialogWidth(isMobile, isTablet)
+          }
         }}
       >
         <DialogTitle>

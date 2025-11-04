@@ -20,6 +20,7 @@ import {
   Today as TodayIcon
 } from '@mui/icons-material';
 import { KennelType } from '../../../hooks/useKennelData';
+import { useResponsive, getResponsiveButtonSize } from '../../../utils/responsive';
 
 // Define the view types
 type ViewType = 'month' | 'week' | 'day';
@@ -47,6 +48,9 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
   onKennelTypeFilterChange,
   onTodayClick
 }) => {
+  // Responsive hooks
+  const { isMobile, isTablet } = useResponsive();
+  
   // Navigation functions
   const navigatePrevious = () => {
     const newDate = new Date(currentDate);
@@ -96,23 +100,42 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
   };
 
   return (
-    <Box sx={{ mb: 3 }}>
-      <Grid container spacing={2} alignItems="center">
+    <Box sx={{ mb: { xs: 2, md: 3 } }}>
+      <Grid container spacing={{ xs: 1, md: 2 }} alignItems="center">
         {/* Date Navigation */}
         <Grid item xs={12} md={6}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: { xs: 0.5, sm: 1 },
+            justifyContent: { xs: 'space-between', md: 'flex-start' }
+          }}>
             <Tooltip title="Previous">
-              <IconButton onClick={navigatePrevious} size="small">
+              <IconButton 
+                onClick={navigatePrevious} 
+                size={getResponsiveButtonSize(isMobile)}
+              >
                 <ChevronLeftIcon />
               </IconButton>
             </Tooltip>
             
-            <Typography variant="h6" sx={{ minWidth: 200, textAlign: 'center' }}>
+            <Typography 
+              variant={isMobile ? 'subtitle1' : 'h6'} 
+              sx={{ 
+                minWidth: { xs: 'auto', sm: 200 },
+                textAlign: 'center',
+                flex: { xs: 1, sm: 'none' },
+                fontSize: { xs: '0.9rem', sm: '1.25rem' }
+              }}
+            >
               {formatCurrentDate()}
             </Typography>
             
             <Tooltip title="Next">
-              <IconButton onClick={navigateNext} size="small">
+              <IconButton 
+                onClick={navigateNext} 
+                size={getResponsiveButtonSize(isMobile)}
+              >
                 <ChevronRightIcon />
               </IconButton>
             </Tooltip>
@@ -120,12 +143,12 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
             <Tooltip title="Today">
               <Button
                 variant="outlined"
-                size="small"
-                startIcon={<TodayIcon />}
+                size={getResponsiveButtonSize(isMobile)}
+                startIcon={!isMobile ? <TodayIcon /> : undefined}
                 onClick={onTodayClick}
-                sx={{ ml: 2 }}
+                sx={{ ml: { xs: 0.5, sm: 2 }, minWidth: { xs: 'auto', sm: 'unset' } }}
               >
-                Today
+                {isMobile ? <TodayIcon /> : 'Today'}
               </Button>
             </Tooltip>
           </Box>
@@ -133,16 +156,22 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
 
         {/* View Type and Filter Controls */}
         <Grid item xs={12} md={6}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'flex-end' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: { xs: 1, md: 2 }, 
+            justifyContent: { xs: 'space-between', md: 'flex-end' },
+            flexWrap: { xs: 'wrap', sm: 'nowrap' }
+          }}>
             {/* View Type Selector */}
             <Box sx={{ display: 'flex', gap: 0.5 }}>
               <Tooltip title="Month View">
                 <IconButton
                   onClick={() => onViewTypeChange('month')}
                   color={viewType === 'month' ? 'primary' : 'default'}
-                  size="small"
+                  size={getResponsiveButtonSize(isMobile)}
                 >
-                  <CalendarViewMonthIcon />
+                  <CalendarViewMonthIcon fontSize={isMobile ? 'small' : 'medium'} />
                 </IconButton>
               </Tooltip>
               
@@ -150,9 +179,9 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
                 <IconButton
                   onClick={() => onViewTypeChange('week')}
                   color={viewType === 'week' ? 'primary' : 'default'}
-                  size="small"
+                  size={getResponsiveButtonSize(isMobile)}
                 >
-                  <CalendarViewWeekIcon />
+                  <CalendarViewWeekIcon fontSize={isMobile ? 'small' : 'medium'} />
                 </IconButton>
               </Tooltip>
               
@@ -160,15 +189,21 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
                 <IconButton
                   onClick={() => onViewTypeChange('day')}
                   color={viewType === 'day' ? 'primary' : 'default'}
-                  size="small"
+                  size={getResponsiveButtonSize(isMobile)}
                 >
-                  <CalendarViewDayIcon />
+                  <CalendarViewDayIcon fontSize={isMobile ? 'small' : 'medium'} />
                 </IconButton>
               </Tooltip>
             </Box>
 
             {/* Kennel Type Filter */}
-            <FormControl size="small" sx={{ minWidth: 150 }}>
+            <FormControl 
+              size={isMobile ? 'small' : 'small'} 
+              sx={{ 
+                minWidth: { xs: 120, sm: 150 },
+                flex: { xs: 1, sm: 'none' }
+              }}
+            >
               <InputLabel>Kennel Type</InputLabel>
               <Select
                 value={kennelTypeFilter}
@@ -176,8 +211,8 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
                 onChange={(e) => onKennelTypeFilterChange(e.target.value as KennelType | 'ALL')}
               >
                 <MenuItem value="ALL">All Types</MenuItem>
-                <MenuItem value="STANDARD_SUITE">Standard</MenuItem>
-                <MenuItem value="STANDARD_PLUS_SUITE">Standard Plus</MenuItem>
+                <MenuItem value="STANDARD_SUITE">{isMobile ? 'Std' : 'Standard'}</MenuItem>
+                <MenuItem value="STANDARD_PLUS_SUITE">{isMobile ? 'Std+' : 'Standard Plus'}</MenuItem>
                 <MenuItem value="VIP_SUITE">VIP</MenuItem>
               </Select>
             </FormControl>
