@@ -32,11 +32,11 @@ describe('TrainingClasses - Validation', () => {
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
       // Open create dialog
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       // Try to save without filling name
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -50,14 +50,14 @@ describe('TrainingClasses - Validation', () => {
     it('should show error when instructor is not selected', async () => {
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       // Fill name but not instructor
       const nameInput = await screen.findByLabelText(/class name/i);
       fireEvent.change(nameInput, { target: { value: 'Puppy Training' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -70,7 +70,7 @@ describe('TrainingClasses - Validation', () => {
     it('should show error when max capacity is missing', async () => {
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       // Fill required fields except capacity
@@ -84,7 +84,7 @@ describe('TrainingClasses - Validation', () => {
       const capacityInput = await screen.findByLabelText(/max capacity/i);
       fireEvent.change(capacityInput, { target: { value: '' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -95,7 +95,7 @@ describe('TrainingClasses - Validation', () => {
     it('should show error when start date is missing', async () => {
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const nameInput = await screen.findByLabelText(/class name/i);
@@ -108,7 +108,7 @@ describe('TrainingClasses - Validation', () => {
       const startDateInput = await screen.findByLabelText(/start date/i);
       fireEvent.change(startDateInput, { target: { value: '' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -119,7 +119,7 @@ describe('TrainingClasses - Validation', () => {
     it('should show error when total weeks is missing', async () => {
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const nameInput = await screen.findByLabelText(/class name/i);
@@ -128,7 +128,7 @@ describe('TrainingClasses - Validation', () => {
       const weeksInput = await screen.findByLabelText(/total weeks/i);
       fireEvent.change(weeksInput, { target: { value: '' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -139,7 +139,7 @@ describe('TrainingClasses - Validation', () => {
     it('should show error when no days of week selected', async () => {
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const nameInput = await screen.findByLabelText(/class name/i);
@@ -148,7 +148,7 @@ describe('TrainingClasses - Validation', () => {
       // Clear days of week (implementation specific)
       // This test assumes there's a way to clear the daysOfWeek array
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -159,7 +159,7 @@ describe('TrainingClasses - Validation', () => {
     it('should show error when start time is missing', async () => {
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const nameInput = await screen.findByLabelText(/class name/i);
@@ -168,7 +168,7 @@ describe('TrainingClasses - Validation', () => {
       const startTimeInput = await screen.findByLabelText(/start time/i);
       fireEvent.change(startTimeInput, { target: { value: '' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -179,7 +179,7 @@ describe('TrainingClasses - Validation', () => {
     it('should show error when end time is missing', async () => {
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const nameInput = await screen.findByLabelText(/class name/i);
@@ -188,7 +188,7 @@ describe('TrainingClasses - Validation', () => {
       const endTimeInput = await screen.findByLabelText(/end time/i);
       fireEvent.change(endTimeInput, { target: { value: '' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -199,7 +199,7 @@ describe('TrainingClasses - Validation', () => {
     it('should show error when price per series is missing', async () => {
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const nameInput = await screen.findByLabelText(/class name/i);
@@ -208,7 +208,7 @@ describe('TrainingClasses - Validation', () => {
       const priceInput = await screen.findByLabelText(/price per series/i);
       fireEvent.change(priceInput, { target: { value: '' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -223,7 +223,7 @@ describe('TrainingClasses - Validation', () => {
 
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       // Fill all required fields
@@ -233,7 +233,7 @@ describe('TrainingClasses - Validation', () => {
       const instructorSelect = await screen.findByLabelText(/instructor/i);
       fireEvent.change(instructorSelect, { target: { value: 'instructor-1' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -252,7 +252,7 @@ describe('TrainingClasses - Validation', () => {
 
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const nameInput = await screen.findByLabelText(/class name/i);
@@ -265,7 +265,7 @@ describe('TrainingClasses - Validation', () => {
       const endDateInput = await screen.findByLabelText(/end date/i);
       fireEvent.change(endDateInput, { target: { value: '2025-12-31' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -293,7 +293,7 @@ describe('TrainingClasses - Validation', () => {
 
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const nameInput = await screen.findByLabelText(/class name/i);
@@ -302,7 +302,7 @@ describe('TrainingClasses - Validation', () => {
       const instructorSelect = await screen.findByLabelText(/instructor/i);
       fireEvent.change(instructorSelect, { target: { value: 'instructor-1' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -317,7 +317,7 @@ describe('TrainingClasses - Validation', () => {
 
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const nameInput = await screen.findByLabelText(/class name/i);
@@ -326,7 +326,7 @@ describe('TrainingClasses - Validation', () => {
       const instructorSelect = await screen.findByLabelText(/instructor/i);
       fireEvent.change(instructorSelect, { target: { value: 'instructor-1' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -342,7 +342,7 @@ describe('TrainingClasses - Validation', () => {
 
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const nameInput = await screen.findByLabelText(/class name/i);
@@ -351,7 +351,7 @@ describe('TrainingClasses - Validation', () => {
       const instructorSelect = await screen.findByLabelText(/instructor/i);
       fireEvent.change(instructorSelect, { target: { value: 'instructor-1' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -368,7 +368,7 @@ describe('TrainingClasses - Validation', () => {
 
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       // Fill all required fields
@@ -384,7 +384,7 @@ describe('TrainingClasses - Validation', () => {
       const priceInput = await screen.findByLabelText(/price per series/i);
       fireEvent.change(priceInput, { target: { value: '200' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -404,7 +404,7 @@ describe('TrainingClasses - Validation', () => {
 
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const nameInput = await screen.findByLabelText(/class name/i);
@@ -413,7 +413,7 @@ describe('TrainingClasses - Validation', () => {
       const instructorSelect = await screen.findByLabelText(/instructor/i);
       fireEvent.change(instructorSelect, { target: { value: 'instructor-1' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -428,7 +428,7 @@ describe('TrainingClasses - Validation', () => {
 
       const initialCallCount = (mockSchedulingService.trainingClasses.getAll as jest.Mock).mock.calls.length;
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const nameInput = await screen.findByLabelText(/class name/i);
@@ -437,7 +437,7 @@ describe('TrainingClasses - Validation', () => {
       const instructorSelect = await screen.findByLabelText(/instructor/i);
       fireEvent.change(instructorSelect, { target: { value: 'instructor-1' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -450,13 +450,13 @@ describe('TrainingClasses - Validation', () => {
     it('should handle zero capacity gracefully', async () => {
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const capacityInput = await screen.findByLabelText(/max capacity/i);
       fireEvent.change(capacityInput, { target: { value: '0' } });
 
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -467,14 +467,14 @@ describe('TrainingClasses - Validation', () => {
     it('should handle negative price gracefully', async () => {
       render(<BrowserRouter><TrainingClasses /></BrowserRouter>);
 
-      const createButton = await screen.findByText(/create class/i);
+      const createButton = await screen.findByRole('button', { name: /new class/i });
       fireEvent.click(createButton);
 
       const priceInput = await screen.findByLabelText(/price per series/i);
       fireEvent.change(priceInput, { target: { value: '-100' } });
 
       // Should either show validation error or convert to positive
-      const saveButton = await screen.findByText(/create/i);
+      const saveButton = await screen.findByRole('button', { name: /create/i });
       fireEvent.click(saveButton);
 
       // Test passes if either validation error shows or API is called with abs value
