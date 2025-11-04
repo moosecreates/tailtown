@@ -34,7 +34,9 @@ export const recalculateVaccineStatus = (
   if (vaccineExpirations && typeof vaccineExpirations === 'object') {
     Object.entries(vaccineExpirations).forEach(([vaccineName, expirationDate]) => {
       if (typeof expirationDate === 'string') {
-        const expDate = new Date(expirationDate);
+        // Parse date as local time to avoid timezone issues
+        const [year, month, day] = expirationDate.split('-').map(Number);
+        const expDate = new Date(year, month - 1, day);
         expDate.setHours(0, 0, 0, 0);
 
         recalculated[vaccineName.toLowerCase()] = {
