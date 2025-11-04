@@ -12,9 +12,11 @@
  * Cron: See scripts/setup-gingr-cron.sh for installation
  */
 
-require('dotenv').config({ path: './services/customer/.env' });
+const path = require('path');
 
-const { gingrSyncService } = require('./services/customer/dist/services/gingr-sync.service');
+require('dotenv').config({ path: path.join(__dirname, '../services/customer/.env') });
+
+const { gingrSyncService } = require(path.join(__dirname, '../services/customer/dist/services/gingr-sync.service'));
 
 async function main() {
   console.log('🔄 Gingr Sync Started');
