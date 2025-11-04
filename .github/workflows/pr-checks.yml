@@ -104,22 +104,20 @@ jobs:
         cd ../reservation-service && npm ci
     
     - name: Install frontend dependencies
-      working-directory: ./frontend
       run: |
+        cd frontend
         rm -rf node_modules package-lock.json
         npm install
-        npm install lodash
-        # Check if lodash is accessible (might be in root node_modules)
-        if node -e "require('lodash')" 2>/dev/null; then
-          echo "✓ lodash is accessible"
-        else
-          echo "ERROR: lodash not accessible!"
-          echo "Checking locations:"
-          ls -la node_modules/ | grep lodash || echo "Not in frontend/node_modules"
-          ls -la ../node_modules/ | grep lodash || echo "Not in root node_modules"
+        # Verify craco is accessible
+        if ! command -v npx craco &> /dev/null; then
+          echo "ERROR: craco not found after install"
+          echo "Checking package.json:"
+          grep craco package.json || echo "craco not in package.json"
+          echo "Checking node_modules:"
+          ls -la node_modules/@craco/ || echo "@craco not in node_modules"
           exit 1
         fi
-        echo "✓ Frontend dependencies installed"
+        echo "✓ Frontend dependencies installed (craco available)"
     
     - name: Setup database
       env:
@@ -159,22 +157,20 @@ jobs:
         cd ../reservation-service && npm ci
     
     - name: Install frontend dependencies
-      working-directory: ./frontend
       run: |
+        cd frontend
         rm -rf node_modules package-lock.json
         npm install
-        npm install lodash
-        # Check if lodash is accessible (might be in root node_modules)
-        if node -e "require('lodash')" 2>/dev/null; then
-          echo "✓ lodash is accessible"
-        else
-          echo "ERROR: lodash not accessible!"
-          echo "Checking locations:"
-          ls -la node_modules/ | grep lodash || echo "Not in frontend/node_modules"
-          ls -la ../node_modules/ | grep lodash || echo "Not in root node_modules"
+        # Verify craco is accessible
+        if ! command -v npx craco &> /dev/null; then
+          echo "ERROR: craco not found after install"
+          echo "Checking package.json:"
+          grep craco package.json || echo "craco not in package.json"
+          echo "Checking node_modules:"
+          ls -la node_modules/@craco/ || echo "@craco not in node_modules"
           exit 1
         fi
-        echo "✓ Frontend dependencies installed successfully"
+        echo "✓ Frontend dependencies installed successfully (craco available)"
     
     - name: Build frontend
       env:
