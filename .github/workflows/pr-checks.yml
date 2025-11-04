@@ -106,9 +106,7 @@ jobs:
     - name: Install frontend dependencies
       run: |
         cd frontend
-        rm -rf node_modules package-lock.json
         npm install
-        npm install lodash --save
         # Verify both craco and lodash are accessible
         if ! npx craco --version &> /dev/null; then
           echo "ERROR: craco not working"
@@ -160,9 +158,7 @@ jobs:
     - name: Install frontend dependencies
       run: |
         cd frontend
-        rm -rf node_modules package-lock.json
         npm install
-        npm install lodash --save
         # Verify both craco and lodash are accessible
         if ! npx craco --version &> /dev/null; then
           echo "ERROR: craco not working"
