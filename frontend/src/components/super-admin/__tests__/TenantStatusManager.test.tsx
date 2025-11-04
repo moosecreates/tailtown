@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import TenantStatusManager from '../TenantStatusManager';
 import { SuperAdminProvider } from '../../../contexts/SuperAdminContext';
 import axios from 'axios';
@@ -38,9 +39,11 @@ describe('TenantStatusManager', () => {
 
   const renderWithContext = (component: React.ReactElement) => {
     return render(
-      <SuperAdminProvider>
-        {component}
-      </SuperAdminProvider>
+      <MemoryRouter>
+        <SuperAdminProvider>
+          {component}
+        </SuperAdminProvider>
+      </MemoryRouter>
     );
   };
 

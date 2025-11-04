@@ -141,23 +141,23 @@ describe('Availability Service - Business Logic', () => {
 
   describe('filterAvailableDates', () => {
     const dates: DateAvailability[] = [
-      { date: '2025-11-01', status: 'AVAILABLE', availableCount: 10, totalCount: 10, availableSuites: [] },
-      { date: '2025-11-02', status: 'PARTIALLY_AVAILABLE', availableCount: 3, totalCount: 10, availableSuites: [] },
-      { date: '2025-11-03', status: 'UNAVAILABLE', availableCount: 0, totalCount: 10, availableSuites: [] },
+      { date: '2026-11-01', status: 'AVAILABLE', availableCount: 10, totalCount: 10, availableSuites: [] },
+      { date: '2026-11-02', status: 'PARTIALLY_AVAILABLE', availableCount: 3, totalCount: 10, availableSuites: [] },
+      { date: '2026-11-03', status: 'UNAVAILABLE', availableCount: 0, totalCount: 10, availableSuites: [] },
       { date: '2020-01-01', status: 'AVAILABLE', availableCount: 10, totalCount: 10, availableSuites: [] } // Past date
     ];
 
     it('should filter dates with at least 1 available', () => {
       const filtered = availabilityService.filterAvailableDates(dates, 1);
       expect(filtered).toHaveLength(2);
-      expect(filtered[0].date).toBe('2025-11-01');
-      expect(filtered[1].date).toBe('2025-11-02');
+      expect(filtered[0].date).toBe('2026-11-01');
+      expect(filtered[1].date).toBe('2026-11-02');
     });
 
     it('should filter dates with minimum availability', () => {
       const filtered = availabilityService.filterAvailableDates(dates, 5);
       expect(filtered).toHaveLength(1);
-      expect(filtered[0].date).toBe('2025-11-01');
+      expect(filtered[0].date).toBe('2026-11-01');
     });
 
     it('should exclude past dates', () => {
