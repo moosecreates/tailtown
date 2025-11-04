@@ -140,17 +140,19 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
               </IconButton>
             </Tooltip>
             
-            <Tooltip title="Today">
-              <Button
-                variant="outlined"
-                size={getResponsiveButtonSize(isMobile)}
-                startIcon={!isMobile ? <TodayIcon /> : undefined}
-                onClick={onTodayClick}
-                sx={{ ml: { xs: 0.5, sm: 2 }, minWidth: { xs: 'auto', sm: 'unset' } }}
-              >
-                {isMobile ? <TodayIcon /> : 'Today'}
-              </Button>
-            </Tooltip>
+            {!isMobile && (
+              <Tooltip title="Today">
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<TodayIcon />}
+                  onClick={onTodayClick}
+                  sx={{ ml: 2 }}
+                >
+                  Today
+                </Button>
+              </Tooltip>
+            )}
           </Box>
         </Grid>
 
