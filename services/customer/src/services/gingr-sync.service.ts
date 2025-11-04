@@ -209,7 +209,7 @@ export class GingrSyncService {
           }
         });
 
-        const petData = {
+        const petData: any = {
           name: animal.first_name,
           type: animal.species_id === '1' ? 'DOG' : 'CAT', // Assuming 1=Dog, 2=Cat
           breed: animal.breed_id,
@@ -228,13 +228,11 @@ export class GingrSyncService {
         };
 
         if (existing) {
-          // @ts-ignore - Prisma types will be regenerated
           await prisma.pet.update({
             where: { id: existing.id},
             data: petData
           });
         } else {
-          // @ts-ignore - Prisma types will be regenerated
           await prisma.pet.create({
             data: {
               ...petData,
@@ -289,7 +287,7 @@ export class GingrSyncService {
           }
         });
 
-        const reservationData = {
+        const reservationData: any = {
           customerId: customer.id,
           petId: pet.id,
           startDate: new Date(reservation.start_date),
@@ -303,13 +301,11 @@ export class GingrSyncService {
         };
 
         if (existing) {
-          // @ts-ignore - Prisma types will be regenerated
           await prisma.reservation.update({
             where: { id: existing.id },
             data: reservationData
           });
         } else {
-          // @ts-ignore - Prisma types will be regenerated
           await prisma.reservation.create({
             data: {
               ...reservationData,
@@ -362,7 +358,7 @@ export class GingrSyncService {
           }
         });
 
-        const invoiceData = {
+        const invoiceData: any = {
           customerId: customer.id,
           invoiceNumber: invoice.invoice_number || `GINGR-${invoice.id}`,
           invoiceDate: new Date(invoice.invoice_date * 1000),
@@ -375,13 +371,11 @@ export class GingrSyncService {
         };
 
         if (existing) {
-          // @ts-ignore - Prisma types will be regenerated
           await prisma.invoice.update({
             where: { id: existing.id },
             data: invoiceData
           });
         } else {
-          // @ts-ignore - Prisma types will be regenerated
           await prisma.invoice.create({
             data: {
               ...invoiceData,
