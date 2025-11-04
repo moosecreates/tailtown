@@ -261,17 +261,27 @@ const AnalyticsDashboard = () => {
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={serviceData.services}
-                          margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                          margin={{ top: 20, right: 20, left: 10, bottom: 100 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis 
                             dataKey="name" 
                             angle={-45} 
                             textAnchor="end"
-                            height={70}
+                            height={90}
+                            interval={0}
+                            tick={{ fontSize: 10 }}
+                            tickFormatter={(value) => {
+                              // Truncate long service names
+                              if (value.length > 20) {
+                                return value.substring(0, 18) + '...';
+                              }
+                              return value;
+                            }}
                           />
                           <YAxis 
                             tickFormatter={(value) => formatCurrency(value)}
+                            tick={{ fontSize: 11 }}
                           />
                           <Tooltip 
                             formatter={(value) => formatCurrency(Number(value))}
