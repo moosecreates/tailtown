@@ -189,6 +189,21 @@ run_quick_tests() {
     
     local failed=0
     
+    # Ensure database environment variables are set
+    export DATABASE_URL="${DATABASE_URL:-postgresql://postgres:postgres@localhost:5433/customer}"
+    export TEST_DATABASE_URL="${TEST_DATABASE_URL:-postgresql://postgres:postgres@localhost:5433/customer}"
+    export PGUSER="${PGUSER:-postgres}"
+    export PGPASSWORD="${PGPASSWORD:-postgres}"
+    export PGDATABASE="${PGDATABASE:-customer}"
+    export PGHOST="${PGHOST:-localhost}"
+    export PGPORT="${PGPORT:-5433}"
+    
+    echo "Database configuration:"
+    echo "  DATABASE_URL: $DATABASE_URL"
+    echo "  PGUSER: $PGUSER"
+    echo "  PGHOST: $PGHOST:$PGPORT"
+    echo ""
+    
     # Run unit tests only (faster)
     print_section "Frontend Unit Tests"
     cd "$FRONTEND_DIR"
