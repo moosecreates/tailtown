@@ -149,8 +149,16 @@ export class GingrSyncService {
   private async syncCustomers(tenantId: string, gingrClient: GingrApiClient): Promise<number> {
     const owners = await gingrClient.fetchAllOwners();
     let syncCount = 0;
+    const BATCH_SIZE = 100;
 
-    for (const owner of owners) {
+    console.log(`      Found ${owners.length} customers to sync`);
+
+    for (let i = 0; i < owners.length; i++) {
+      const owner = owners[i];
+      
+      if (i > 0 && i % BATCH_SIZE === 0) {
+        console.log(`      Progress: ${i}/${owners.length} customers (${syncCount} synced)`);
+      }
       try {
         // Check if customer already exists
         const existing = await prisma.customer.findFirst({
@@ -192,7 +200,10 @@ export class GingrSyncService {
         }
         syncCount++;
       } catch (error: any) {
-        console.error(`      Warning: Failed to sync customer ${owner.id}:`, error.message);
+        // Only log non-duplicate errors
+        if (!error.message.includes('Unique constraint')) {
+          console.error(`      Warning: Failed to sync customer ${owner.id}:`, error.message);
+        }
       }
     }
 
@@ -205,8 +216,17 @@ export class GingrSyncService {
   private async syncPets(tenantId: string, gingrClient: GingrApiClient): Promise<number> {
     const animals = await gingrClient.fetchAllAnimals();
     let syncCount = 0;
+    const BATCH_SIZE = 100; // Process 100 pets at a time
 
-    for (const animal of animals) {
+    console.log(`      Found ${animals.length} pets to sync`);
+
+    for (let i = 0; i < animals.length; i++) {
+      const animal = animals[i];
+      
+      // Log progress every 100 pets
+      if (i > 0 && i % BATCH_SIZE === 0) {
+        console.log(`      Progress: ${i}/${animals.length} pets (${syncCount} synced)`);
+      }
       try {
         // Find customer by externalId
         const customer = await prisma.customer.findFirst({
@@ -263,7 +283,9 @@ export class GingrSyncService {
         }
         syncCount++;
       } catch (error: any) {
-        console.error(`      Warning: Failed to sync pet ${animal.id}:`, error.message);
+        if (!error.message.includes('Unique constraint')) {
+          console.error(`      Warning: Failed to sync pet ${animal.id}:`, error.message);
+        }
       }
     }
 
@@ -282,8 +304,16 @@ export class GingrSyncService {
 
     const reservations = await gingrClient.fetchAllReservations(startDate, endDate);
     let syncCount = 0;
+    const BATCH_SIZE = 50;
 
-    for (const reservation of reservations) {
+    console.log(`      Found ${reservations.length} reservations to sync`);
+
+    for (let i = 0; i < reservations.length; i++) {
+      const reservation = reservations[i];
+      
+      if (i > 0 && i % BATCH_SIZE === 0) {
+        console.log(`      Progress: ${i}/${reservations.length} reservations (${syncCount} synced)`);
+      }
       try {
         // Find customer and pet by externalId
         const customer = await prisma.customer.findFirst({
@@ -335,7 +365,9 @@ export class GingrSyncService {
         }
         syncCount++;
       } catch (error: any) {
-        console.error(`      Warning: Failed to sync reservation ${reservation.reservation_id}:`, error.message);
+        if (!error.message.includes('Unique constraint')) {
+          console.error(`      Warning: Failed to sync reservation ${reservation.reservation_id}:`, error.message);
+        }
       }
     }
 
@@ -353,8 +385,16 @@ export class GingrSyncService {
 
     const invoices = await gingrClient.fetchAllInvoices(startDate, endDate);
     let syncCount = 0;
+    const BATCH_SIZE = 100;
 
-    for (const invoice of invoices) {
+    console.log(`      Found ${invoices.length} invoices to sync`);
+
+    for (let i = 0; i < invoices.length; i++) {
+      const invoice = invoices[i];
+      
+      if (i > 0 && i % BATCH_SIZE === 0) {
+        console.log(`      Progress: ${i}/${invoices.length} invoices (${syncCount} synced)`);
+      }
       try {
         // Find customer by externalId
         const customer = await prisma.customer.findFirst({
@@ -405,7 +445,9 @@ export class GingrSyncService {
         }
         syncCount++;
       } catch (error: any) {
-        console.error(`      Warning: Failed to sync invoice ${invoice.id}:`, error.message);
+        if (!error.message.includes('Unique constraint') && !error.message.includes('toUpperCase')) {
+          console.error(`      Warning: Failed to sync invoice ${invoice.id}:`, error.message);
+        }
       }
     }
 
