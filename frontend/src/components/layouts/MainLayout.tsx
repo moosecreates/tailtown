@@ -72,6 +72,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [customLogo, setCustomLogo] = useState<string | null>(null);
   const { user, logout, isLoading } = useAuth();
   const { openHelp } = useHelp();
   const location = useLocation();
@@ -80,11 +81,32 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   // Load announcements on mount
   useEffect(() => {
     loadAnnouncements();
+    loadBusinessSettings();
   }, []);
 
   const loadAnnouncements = async () => {
     const data = await announcementService.getActiveAnnouncements();
     setAnnouncements(data);
+  };
+
+  const loadBusinessSettings = async () => {
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4004';
+      const response = await fetch(`${API_URL}/api/business-settings`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.logoUrl) {
+          setCustomLogo(`${API_URL}${data.logoUrl}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading business settings:', error);
+    }
   };
 
   const handleDismissAnnouncement = async (id: string) => {
@@ -178,9 +200,9 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
       }}>
         <Box sx={{ width: '140px', height: '140px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <img 
-            src={logoImage} 
-            alt="Tailtown Pet Resort" 
-            style={{ width: '100%', height: '100%', objectFit: 'contain', transform: 'scale(1.2)' }} 
+            src={customLogo || logoImage} 
+            alt="Business Logo" 
+            style={{ width: '100%', height: '100%', objectFit: 'contain', transform: customLogo ? 'scale(1)' : 'scale(1.2)' }} 
           />
         </Box>
       </Toolbar>

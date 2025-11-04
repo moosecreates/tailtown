@@ -1005,6 +1005,7 @@ model Tenant {
   currency              String       @default("USD")
   dateFormat            String       @default("MM/DD/YYYY")
   timeFormat            String       @default("12h")
+  logoUrl               String?      @map("logo_url")  // Custom business logo
   
   // Usage Tracking
   employeeCount         Int          @default(0)
