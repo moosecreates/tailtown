@@ -76,7 +76,7 @@ jobs:
       continue-on-error: true
   
   quick-tests:
-    name: Quick Test Suite
+    name: Quick Test Suite (with root user)
     runs-on: ubuntu-latest
     
     services:
