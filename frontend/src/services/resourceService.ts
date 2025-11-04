@@ -230,11 +230,11 @@ export const resourceService = {
       // Now fetch reservations for each suite to determine occupancy
       const formattedDate = date || formatDateToYYYYMMDD(new Date());
       
-      // Get all reservations for the specified date
+      // Get all reservations that overlap with the specified date
+      // A reservation overlaps if: reservation.startDate <= date AND reservation.endDate >= date
       const reservationsResponse = await api.get('/api/reservations', {
         params: {
-          startDate: formattedDate,
-          endDate: formattedDate,
+          date: formattedDate, // Use single date param to find overlapping reservations
           status: 'PENDING,CONFIRMED,CHECKED_IN',
           page: 1,
           limit: 1000
