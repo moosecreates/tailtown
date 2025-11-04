@@ -100,23 +100,9 @@ jobs:
     - name: Install dependencies
       run: |
         npm ci
-        cd services/customer && npm ci
+        cd frontend && npm ci
+        cd ../services/customer && npm ci
         cd ../reservation-service && npm ci
-    
-    - name: Install frontend dependencies
-      run: |
-        cd frontend
-        npm install
-        # Verify both craco and lodash are accessible
-        if ! npx craco --version &> /dev/null; then
-          echo "ERROR: craco not working"
-          exit 1
-        fi
-        if ! node -e "require('lodash')" 2>/dev/null; then
-          echo "ERROR: lodash not accessible"
-          exit 1
-        fi
-        echo "✓ Frontend dependencies installed (craco and lodash available)"
     
     - name: Setup database
       env:
@@ -152,23 +138,9 @@ jobs:
     - name: Install dependencies
       run: |
         npm ci
-        cd services/customer && npm ci
+        cd frontend && npm ci
+        cd ../services/customer && npm ci
         cd ../reservation-service && npm ci
-    
-    - name: Install frontend dependencies
-      run: |
-        cd frontend
-        npm install
-        # Verify both craco and lodash are accessible
-        if ! npx craco --version &> /dev/null; then
-          echo "ERROR: craco not working"
-          exit 1
-        fi
-        if ! node -e "require('lodash')" 2>/dev/null; then
-          echo "ERROR: lodash not accessible"
-          exit 1
-        fi
-        echo "✓ Frontend dependencies installed successfully (craco and lodash available)"
     
     - name: Build frontend
       env:
