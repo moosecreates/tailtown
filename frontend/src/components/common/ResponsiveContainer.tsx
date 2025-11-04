@@ -70,7 +70,7 @@ const ResponsiveContainer: React.FC<ResponsiveContainerProps> = ({
   
   return (
     <Container
-      maxWidth={maxWidth as any}
+      maxWidth={fullWidth ? false : 'lg'}
       sx={{
         ...(padding && {
           p: getResponsiveSpacing(
