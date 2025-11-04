@@ -19,24 +19,11 @@ describe('TrainingClasses - Validation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
-    // Mock successful list call
-    mockSchedulingService.trainingClasses.list.mockResolvedValue({
-      status: 'success',
-      data: []
-    });
+    // Mock successful getAll call
+    mockSchedulingService.trainingClasses.getAll = jest.fn().mockResolvedValue([]);
     
-    // Mock staff list for instructor dropdown
-    mockSchedulingService.staff.list.mockResolvedValue({
-      status: 'success',
-      data: [
-        {
-          id: 'instructor-1',
-          firstName: 'John',
-          lastName: 'Trainer',
-          specialties: ['TRAINING']
-        }
-      ]
-    });
+    // Mock create call
+    mockSchedulingService.trainingClasses.create = jest.fn();
   });
 
   describe('Required Field Validation', () => {
@@ -231,10 +218,7 @@ describe('TrainingClasses - Validation', () => {
 
   describe('Date Formatting', () => {
     it('should convert Date objects to ISO strings before API call', async () => {
-      mockSchedulingService.trainingClasses.create.mockResolvedValue({
-        status: 'success',
-        data: { id: 'class-1' }
-      });
+      mockSchedulingService.trainingClasses.create.mockResolvedValue({ id: 'class-1' });
 
       render(<TrainingClasses />);
 
@@ -263,10 +247,7 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should handle endDate formatting if provided', async () => {
-      mockSchedulingService.trainingClasses.create.mockResolvedValue({
-        status: 'success',
-        data: { id: 'class-1' }
-      });
+      mockSchedulingService.trainingClasses.create.mockResolvedValue({ id: 'class-1' });
 
       render(<TrainingClasses />);
 
@@ -382,10 +363,7 @@ describe('TrainingClasses - Validation', () => {
 
   describe('Successful Creation', () => {
     it('should call API with all form data when validation passes', async () => {
-      mockSchedulingService.trainingClasses.create.mockResolvedValue({
-        status: 'success',
-        data: { id: 'class-1', name: 'Puppy Training' }
-      });
+      mockSchedulingService.trainingClasses.create.mockResolvedValue({ id: 'class-1', name: 'Puppy Training' });
 
       render(<TrainingClasses />);
 
@@ -421,10 +399,7 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should close dialog after successful creation', async () => {
-      mockSchedulingService.trainingClasses.create.mockResolvedValue({
-        status: 'success',
-        data: { id: 'class-1' }
-      });
+      mockSchedulingService.trainingClasses.create.mockResolvedValue({ id: 'class-1' });
 
       render(<TrainingClasses />);
 
@@ -446,14 +421,11 @@ describe('TrainingClasses - Validation', () => {
     });
 
     it('should reload class list after successful creation', async () => {
-      mockSchedulingService.trainingClasses.create.mockResolvedValue({
-        status: 'success',
-        data: { id: 'class-1' }
-      });
+      mockSchedulingService.trainingClasses.create.mockResolvedValue({ id: 'class-1' });
 
       render(<TrainingClasses />);
 
-      const initialCallCount = mockSchedulingService.trainingClasses.list.mock.calls.length;
+      const initialCallCount = mockSchedulingService.trainingClasses.getAll.mock.calls.length;
 
       const createButton = await screen.findByText(/create class/i);
       fireEvent.click(createButton);
@@ -468,7 +440,7 @@ describe('TrainingClasses - Validation', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(mockSchedulingService.trainingClasses.list.mock.calls.length).toBeGreaterThan(initialCallCount);
+        expect(mockSchedulingService.trainingClasses.getAll.mock.calls.length).toBeGreaterThan(initialCallCount);
       });
     });
   });
