@@ -7,6 +7,8 @@
  * for testing and demonstrations.
  */
 
+require('dotenv').config({ path: './services/customer/.env' });
+
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 
