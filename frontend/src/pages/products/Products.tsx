@@ -124,7 +124,8 @@ const Products: React.FC = () => {
 
   const loadProducts = async () => {
     try {
-      const response = await fetch('http://localhost:4004/api/products', {
+      const apiUrl = process.env.REACT_APP_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/products`, {
         headers: {
           'x-tenant-id': 'dev'
         }
@@ -140,7 +141,8 @@ const Products: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      const response = await fetch('http://localhost:4004/api/products/categories', {
+      const apiUrl = process.env.REACT_APP_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/products/categories`, {
         headers: {
           'x-tenant-id': 'dev'
         }
@@ -239,9 +241,10 @@ const Products: React.FC = () => {
     }
 
     try {
+      const apiUrl = process.env.REACT_APP_API_URL || '';
       const url = editingProduct
-        ? `http://localhost:4004/api/products/${editingProduct.id}`
-        : 'http://localhost:4004/api/products';
+        ? `${apiUrl}/api/products/${editingProduct.id}`
+        : `${apiUrl}/api/products`;
 
       const response = await fetch(url, {
         method: editingProduct ? 'PUT' : 'POST',
@@ -284,7 +287,8 @@ const Products: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      const response = await fetch(`http://localhost:4004/api/products/${id}`, {
+      const apiUrl = process.env.REACT_APP_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/products/${id}`, {
         method: 'DELETE',
         headers: { 'x-tenant-id': 'dev' }
       });
@@ -342,7 +346,8 @@ const Products: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:4004/api/products/${selectedProduct.id}/inventory/adjust`, {
+      const apiUrl = process.env.REACT_APP_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/products/${selectedProduct.id}/inventory/adjust`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -6,6 +6,31 @@
 
 ---
 
+## 🐳 Production Deployment Method
+
+**We use Docker for production servers!**
+
+- **Server:** Digital Ocean Droplet (129.212.178.244)
+- **Method:** Docker Compose with `docker-compose.prod.yml`
+- **Setup Date:** November 2, 2025
+- **Documentation:** See `DOCKER-DEPLOY.md` for complete guide
+- **Benefits:** 
+  - Health checks with auto-restart
+  - Nginx reverse proxy ready
+  - PostgreSQL in containers
+  - Resource limits and security hardening
+  - One-command deployment
+
+**Quick Deploy Command:**
+```bash
+ssh -i ~/ttkey root@129.212.178.244
+cd /opt/tailtown
+git pull origin main
+docker-compose -f docker-compose.prod.yml up -d --build
+```
+
+---
+
 ## Pre-Deployment Verification ✅
 
 ### 1. Local Environment Health Check

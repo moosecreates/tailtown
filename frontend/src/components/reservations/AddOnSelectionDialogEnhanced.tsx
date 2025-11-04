@@ -122,7 +122,8 @@ const AddOnSelectionDialogEnhanced: React.FC<AddOnSelectionDialogEnhancedProps> 
     
     try {
       setLoadingProducts(true);
-      const response = await fetch('http://localhost:4004/api/products?isActive=true&isService=false', {
+      const apiUrl = process.env.REACT_APP_API_URL || '';
+      const response = await fetch(`${apiUrl}/api/products?isActive=true&isService=false`, {
         headers: { 'x-tenant-id': 'dev' }
       });
       

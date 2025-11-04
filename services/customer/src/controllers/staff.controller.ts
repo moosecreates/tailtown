@@ -406,7 +406,7 @@ export const requestPasswordReset = async (
     }
     
     // Find staff by email
-    const staff = await prisma.staff.findUnique({
+    const staff = await prisma.staff.findFirst({
       where: { email }
     });
     
