@@ -4,8 +4,10 @@ import { Today as TodayIcon, ChevronLeft, ChevronRight } from '@mui/icons-materi
 import DashboardMetrics from '../components/dashboard/DashboardMetrics';
 import ReservationList from '../components/dashboard/ReservationList';
 import AnnouncementModal from '../components/announcements/AnnouncementModal';
+import ResponsiveContainer from '../components/common/ResponsiveContainer';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { usePageHelp } from '../hooks/usePageHelp';
+import { useResponsive, getResponsiveButtonSize } from '../utils/responsive';
 import announcementService from '../services/announcementService';
 import type { Announcement } from '../components/announcements/AnnouncementModal';
 import { dashboardHelp } from '../content/help/dashboardHelp';
@@ -22,6 +24,9 @@ import { dashboardHelp } from '../content/help/dashboardHelp';
 const Dashboard = () => {
   // Set up page help
   usePageHelp(dashboardHelp);
+  
+  // Responsive hooks
+  const { isMobile, isTablet } = useResponsive();
 
   const {
     inCount,
@@ -102,7 +107,7 @@ const Dashboard = () => {
   };
 
   return (
-    <Box>
+    <ResponsiveContainer>
       {/* Announcement Modal */}
       <AnnouncementModal
         open={showAnnouncementModal}
@@ -112,15 +117,28 @@ const Dashboard = () => {
       />
 
       {/* Header with Date Selector */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h5" component="h1">
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: { xs: 'column', sm: 'row' },
+        justifyContent: 'space-between', 
+        alignItems: { xs: 'stretch', sm: 'center' },
+        mb: 2,
+        gap: { xs: 2, sm: 0 }
+      }}>
+        <Typography variant={isMobile ? 'h6' : 'h5'} component="h1">
           Dashboard
         </Typography>
         
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 1, 
+          alignItems: 'center',
+          justifyContent: { xs: 'space-between', sm: 'flex-end' },
+          flexWrap: { xs: 'wrap', sm: 'nowrap' }
+        }}>
           {/* Previous Day Button */}
           <IconButton
-            size="small"
+            size={getResponsiveButtonSize(isMobile)}
             onClick={handlePreviousDay}
             sx={{ 
               border: '1px solid',
@@ -135,18 +153,18 @@ const Dashboard = () => {
           {/* Date Picker */}
           <TextField
             type="date"
-            size="small"
+            size={isMobile ? 'small' : 'medium'}
             value={formatDateForInput(selectedDate)}
             onChange={handleDateChange}
             InputLabelProps={{
               shrink: true,
             }}
-            sx={{ width: 180 }}
+            sx={{ width: { xs: 'auto', sm: 180 }, flex: { xs: 1, sm: 'none' } }}
           />
           
           {/* Next Day Button */}
           <IconButton
-            size="small"
+            size={getResponsiveButtonSize(isMobile)}
             onClick={handleNextDay}
             sx={{ 
               border: '1px solid',
@@ -161,17 +179,17 @@ const Dashboard = () => {
           {/* Today Button */}
           <Button
             variant="outlined"
-            size="small"
-            startIcon={<TodayIcon />}
+            size={getResponsiveButtonSize(isMobile)}
+            startIcon={!isMobile ? <TodayIcon /> : undefined}
             onClick={handleTodayClick}
             sx={{ whiteSpace: 'nowrap' }}
           >
-            Today
+            {isMobile ? <TodayIcon /> : 'Today'}
           </Button>
         </Box>
       </Box>
       
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, md: 3 } }}>
         {/* Metrics Cards */}
         <DashboardMetrics
           inCount={inCount}
@@ -190,7 +208,7 @@ const Dashboard = () => {
           onFilterChange={filterReservations}
         />
       </Box>
-    </Box>
+    </ResponsiveContainer>
   );
 };
 
