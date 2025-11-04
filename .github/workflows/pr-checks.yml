@@ -27,7 +27,15 @@ jobs:
     
     - name: Install frontend dependencies
       working-directory: ./frontend
-      run: npm install
+      run: |
+        npm install
+        # Verify craco was installed
+        if [ ! -f "node_modules/.bin/craco" ]; then
+          echo "ERROR: craco not installed!"
+          echo "Installing craco explicitly:"
+          npm install @craco/craco --save-dev
+        fi
+        echo "✓ Frontend dependencies installed"
     
     - name: Install service dependencies
       run: |
@@ -109,7 +117,15 @@ jobs:
     
     - name: Install frontend dependencies
       working-directory: ./frontend
-      run: npm install
+      run: |
+        npm install
+        # Verify craco was installed
+        if [ ! -f "node_modules/.bin/craco" ]; then
+          echo "ERROR: craco not installed!"
+          echo "Installing craco explicitly:"
+          npm install @craco/craco --save-dev
+        fi
+        echo "✓ Frontend dependencies installed"
     
     - name: Install service dependencies
       run: |
@@ -153,7 +169,15 @@ jobs:
     
     - name: Install frontend dependencies
       working-directory: ./frontend
-      run: npm install
+      run: |
+        npm install
+        # Verify craco was installed
+        if [ ! -f "node_modules/.bin/craco" ]; then
+          echo "ERROR: craco not installed!"
+          echo "Installing craco explicitly:"
+          npm install @craco/craco --save-dev
+        fi
+        echo "✓ Frontend dependencies installed"
     
     - name: Install service dependencies
       run: |
