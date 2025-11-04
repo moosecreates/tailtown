@@ -1,6 +1,6 @@
 # Tailtown Unified Roadmap
 
-**Last Updated**: November 4, 2025 - 2:15 AM PST
+**Last Updated**: November 4, 2025 - 10:45 AM PST
 
 This document provides a prioritized roadmap for the Tailtown Pet Resort Management System, organized by business value and urgency.
 
@@ -58,6 +58,16 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
   - Service hang detection and recovery procedures
   - MCP RAG server management and testing suite
   - Comprehensive service health integration tests
+- ✅ PM2 process management for production (Nov 4, 2025)
+  - Auto-restart on crashes
+  - Load balancing with 2 instances per service
+  - Auto-start on server reboot
+  - Centralized logging
+- ✅ Responsive layout improvements (Nov 4, 2025)
+  - Flexible layouts that wrap naturally without fixed breakpoints
+  - Calendar header controls adapt to available space
+  - Dashboard date controls wrap gracefully on narrow screens
+  - No overlap at any screen size
 
 ---
 
