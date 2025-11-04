@@ -1,6 +1,7 @@
 import React from 'react';
 import { Container, Typography, Box } from '@mui/material';
 import SpecializedCalendar from '../../components/calendar/SpecializedCalendar';
+import UpcomingClasses from '../../components/dashboard/UpcomingClasses';
 import { ServiceCategory } from '../../types/service';
 
 /**
@@ -8,6 +9,9 @@ import { ServiceCategory } from '../../types/service';
  * 
  * Displays a calendar view filtered to show only training service reservations.
  * Uses the SpecializedCalendar component with fixed time formatting.
+ * 
+ * Note: Class management has been moved to Admin section to prevent accidental
+ * schedule modifications by staff. Access via Admin > Training Classes.
  */
 const TrainingCalendarPage: React.FC = () => {
   return (
@@ -17,6 +21,12 @@ const TrainingCalendarPage: React.FC = () => {
           Training Calendar
         </Typography>
       </Box>
+
+      {/* Upcoming Classes Widget */}
+      <Box sx={{ mb: 3 }}>
+        <UpcomingClasses />
+      </Box>
+
       <SpecializedCalendar 
         serviceCategories={[ServiceCategory.TRAINING]} 
         calendarTitle="Training Calendar"

@@ -9,14 +9,15 @@ import {
   getServiceAddOns,
   getServiceReservations
 } from '../controllers/service.controller';
+import { CacheStrategies } from '../middleware/cache.middleware';
 
 const router = Router();
 
-// GET all services
-router.get('/', getAllServices);
+// GET all services (cache for 1 hour - services rarely change)
+router.get('/', CacheStrategies.medium(), getAllServices);
 
-// GET a single service by ID
-router.get('/:id', getServiceById);
+// GET a single service by ID (cache for 1 hour)
+router.get('/:id', CacheStrategies.medium(), getServiceById);
 
 // GET all add-ons for a service
 router.get('/:id/add-ons', getServiceAddOns);

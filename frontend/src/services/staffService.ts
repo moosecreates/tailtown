@@ -119,7 +119,8 @@ export interface StaffScheduleResponse {
 const staffService = {
   getAllStaff: async (): Promise<Staff[]> => {
     try {
-      const response = await api.get('/api/staff');
+      // Fetch all staff with a large limit to get everyone
+      const response = await api.get('/api/staff?limit=100');
       if (response.data && response.data.status === 'success') {
         // Transform the backend data to match the frontend interface
         const staffList = Array.isArray(response.data.data) ? response.data.data : [];
@@ -156,7 +157,7 @@ const staffService = {
         firstName: staffData.firstName,
         lastName: staffData.lastName,
         email: staffData.email,
-        password: staffData.password || 'defaultPassword123', // Provide a default if not set
+        password: staffData.password || 'TempPass@2024!', // Strong default password meeting all requirements
         role: staffData.role,
         department: staffData.department,
         position: staffData.position,
@@ -169,7 +170,6 @@ const staffService = {
         specialties: staffData.specialties || []
       };
 
-      console.log('Sending staff data to backend:', formattedData);
       const response = await api.post('/api/staff', formattedData);
       if (response.data && response.data.status === 'success') {
         return response.data.data;
@@ -205,7 +205,6 @@ const staffService = {
         formattedData.isActive = staffData.status === 'Active';
       }
 
-      console.log('Updating staff data:', formattedData);
       const response = await api.put(`/api/staff/${id}`, formattedData);
       if (response.data && response.data.status === 'success') {
         return response.data.data;

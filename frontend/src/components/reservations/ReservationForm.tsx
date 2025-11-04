@@ -13,8 +13,14 @@ import {
   Autocomplete,
   CircularProgress,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -26,8 +32,12 @@ import { Service } from '../../types/service';
 import { customerService } from '../../services/customerService';
 import { petService } from '../../services/petService';
 import { serviceManagement } from '../../services/serviceManagement';
-import { resourceService, Resource } from '../../services/resourceService';
-import AddOnSelectionDialog from './AddOnSelectionDialog';
+import { resourceService, type Resource } from '../../services/resourceService';
+import { useResponsive, getResponsiveButtonSize } from '../../utils/responsive';
+import AddOnSelectionDialogEnhanced from './AddOnSelectionDialogEnhanced';
+import GroomerSelector from './GroomerSelector';
+import { useShoppingCart } from '../../contexts/ShoppingCartContext';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Props for the ReservationForm component
@@ -59,6 +69,17 @@ interface ReservationFormProps {
    * Whether to show add-on services in the form
    */
   showAddOns?: boolean;
+
+  /**
+   * Optional array of service categories to filter services by
+   * If provided, only services matching these categories will be shown
+   */
+  serviceCategories?: string[];
+  
+  /**
+   * Optional callback to close the parent form/dialog
+   */
+  onClose?: () => void;
 }
 
 /**
@@ -82,16 +103,25 @@ interface ReservationFormProps {
  * />
  * ```
  */
-const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData, defaultDates, showAddOns = false }) => {
+const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData, defaultDates, showAddOns = false, serviceCategories, onClose }) => {
+  // Responsive hooks
+  const { isMobile, isTablet } = useResponsive();
+  
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [selectedCustomerObj, setSelectedCustomerObj] = useState<Customer | null>(null);
   const [customerSearchInput, setCustomerSearchInput] = useState<string>('');
   const [customerSearchResults, setCustomerSearchResults] = useState<Customer[]>([]);
+  const [petSearchResults, setPetSearchResults] = useState<Pet[]>([]);
   const [customerSearchLoading, setCustomerSearchLoading] = useState<boolean>(false);
   const [selectedPet, setSelectedPet] = useState<string>('');
+  const [selectedPets, setSelectedPets] = useState<string[]>([]);
+  const [petSuiteAssignments, setPetSuiteAssignments] = useState<{[petId: string]: string}>({});
+  const [occupiedSuiteIds, setOccupiedSuiteIds] = useState<Set<string>>(new Set());
   const [selectedService, setSelectedService] = useState<string>('');
+  const [selectedGroomerId, setSelectedGroomerId] = useState<string>('');
   const [selectedSuiteType, setSelectedSuiteType] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<string>('CONFIRMED');
   const [startDate, setStartDate] = useState<Date | null>(defaultDates?.start || null);
@@ -99,6 +129,10 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   const [currentServiceDuration, setCurrentServiceDuration] = useState<number | null>(null);
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  
+  // Shopping cart and navigation hooks
+  const { addItem } = useShoppingCart();
+  const navigate = useNavigate();
 
   // Kennel/suite override state
   const [availableSuites, setAvailableSuites] = useState<Resource[]>([]);
@@ -119,24 +153,45 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     suiteType: false,
     suiteId: false
   });
+  
+  // Delete confirmation dialog state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const loadInitialData = async () => {
       // Only load initial data once to prevent duplicate initializations
       if (initialDataLoaded.current) return;
       
+      console.log('ReservationForm initialData:', initialData);
+      
       try {
         setLoading(true);
+        
+        // Build service query params - use category filter if only one category specified
+        const serviceParams: { limit: number; category?: string } = { limit: 100 };
+        if (serviceCategories && serviceCategories.length === 1) {
+          serviceParams.category = serviceCategories[0];
+        }
+        
         const [customersResponse, servicesResponse] = await Promise.all([
           customerService.getAllCustomers(1, 100), // Load more customers initially
-          serviceManagement.getAllServices()
+          serviceManagement.getAllServices(serviceParams)
         ]);
         
         setCustomers(customersResponse.data || []);
         selectsWithOptions.current.customer = (customersResponse.data || []).length > 0;
         
-        setServices(servicesResponse.data || []);
-        selectsWithOptions.current.service = (servicesResponse.data || []).length > 0;
+        // Filter services by categories if multiple categories provided
+        let filteredServices = servicesResponse.data || [];
+        if (serviceCategories && serviceCategories.length > 1) {
+          filteredServices = filteredServices.filter((service: any) => 
+            serviceCategories.includes(service.serviceCategory)
+          );
+        }
+        
+        setServices(filteredServices);
+        selectsWithOptions.current.service = filteredServices.length > 0;
         
         // Mark that suite type options are always available since they're hardcoded
         selectsWithOptions.current.suiteType = true;
@@ -154,32 +209,92 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             setSelectedStatus(initialData.status);
           }
           
-          // Set customer ID if it exists in the customers list
+          // Set customer ID - fetch the specific customer if not in initial list
           const customersList = customersResponse.data || [];
-          if (initialData.customerId && customersList.some((c: Customer) => c.id === initialData.customerId)) {
-            setSelectedCustomer(initialData.customerId);
+          if (initialData.customerId) {
+            // Check if customer is in the list
+            let customerExists = customersList.some((c: Customer) => c.id === initialData.customerId);
             
-            // Load pets for the selected customer
-            try {
-              const petsResponse = await petService.getPetsByCustomer(initialData.customerId);
-              const petsData = petsResponse.data || [];
-              setPets(petsData);
-              selectsWithOptions.current.pet = petsData.length > 0;
-              
-              // Only set pet ID if it exists in the pets list
-              if (initialData.petId && petsData.some(p => p.id === initialData.petId)) {
-                setSelectedPet(initialData.petId);
+            // If not in list, fetch the specific customer
+            if (!customerExists && initialData.customer) {
+              // Add the customer from initialData to the list
+              const customer = initialData.customer;
+              customersList.push(customer);
+              setCustomers(customersList);
+              customerExists = true;
+            }
+            
+            if (customerExists) {
+              setSelectedCustomer(initialData.customerId);
+              // Also set the customer object for the Autocomplete
+              const customerObj = customersList.find((c: Customer) => c.id === initialData.customerId);
+              if (customerObj) {
+                setSelectedCustomerObj(customerObj);
               }
-            } catch (err) {
-              console.error('Error loading pets:', err);
-              setPets([]);
+              selectsWithOptions.current.customer = true;
+              
+              // Load pets for the selected customer
+              try {
+                const petsResponse = await petService.getPetsByCustomer(initialData.customerId);
+                let petsData = petsResponse.data || [];
+                console.log('Loaded pets:', petsData.length, 'Looking for petId:', initialData.petId);
+                
+                // Check if pet exists in the list
+                let petExists = initialData.petId && petsData.some(p => p.id === initialData.petId);
+                
+                // If not in list, add the pet from initialData
+                if (!petExists && initialData.pet) {
+                  console.log('Adding pet from initialData:', initialData.pet);
+                  petsData.push(initialData.pet);
+                  petExists = true;
+                }
+                
+                setPets(petsData);
+                selectsWithOptions.current.pet = petsData.length > 0;
+                
+                // Set pet ID if it exists
+                if (petExists && initialData.petId) {
+                  console.log('Setting selected pet:', initialData.petId);
+                  setSelectedPet(initialData.petId);
+                  // Also set selectedPets array for the multi-select dropdown
+                  setSelectedPets([initialData.petId]);
+                } else if (!petExists) {
+                  console.warn('Pet not found in list and no pet object in initialData:', initialData.petId);
+                }
+              } catch (err) {
+                console.error('Error loading pets:', err);
+                setPets([]);
+              }
+            } else {
+              console.warn('Customer not found:', initialData.customerId);
             }
           }
           
-          // Only set service ID if it exists in the services list
+          // Only set service ID - add service from initialData if not in list
           const servicesList = servicesResponse.data || [];
-          if (initialData.serviceId && servicesList.some((s: Service) => s.id === initialData.serviceId)) {
-            setSelectedService(initialData.serviceId);
+          console.log('Services loaded:', servicesList.length, 'Looking for serviceId:', initialData.serviceId);
+          if (initialData.serviceId) {
+            let serviceExists = servicesList.some((s: Service) => s.id === initialData.serviceId);
+            
+            // If not in list, add the service from initialData
+            if (!serviceExists && initialData.service) {
+              console.log('Adding service from initialData:', initialData.service);
+              servicesList.push(initialData.service);
+              setServices(servicesList);
+              serviceExists = true;
+            }
+            
+            if (serviceExists) {
+              console.log('Setting selected service:', initialData.serviceId);
+              setSelectedService(initialData.serviceId);
+            } else {
+              console.warn('Service not found in list and no service object in initialData:', initialData.serviceId);
+            }
+          }
+          
+          // Set groomer if assigned
+          if (initialData.staffAssignedId) {
+            setSelectedGroomerId(initialData.staffAssignedId);
           }
           
           // Mark that initial data has been loaded
@@ -190,10 +305,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             // Use resourceId or kennelId (from calendar)
             const effectiveResourceId = initialData.resourceId || initialData.kennelId;
             
+            // IMMEDIATELY set the selected suite ID so it's available
+            setSelectedSuiteId(effectiveResourceId);
+            
             // Fetch resource details to get the suite type
             try {
               const resourceResponse = await resourceService.getResource(effectiveResourceId);
-              console.log('Resource details fetched:', resourceResponse);
               
               if (resourceResponse.data) {
                 const resourceType = resourceResponse.data.type;
@@ -203,9 +320,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 } else if (initialData.suiteType) {
                   setSelectedSuiteType(initialData.suiteType);
                 }
-                
-                // Store the resource ID for later use in form submission
-                setSelectedSuiteId(effectiveResourceId);
               }
             } catch (err) {
               console.error('Error fetching resource details:', err);
@@ -229,16 +343,19 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     };
 
     loadInitialData();
-  }, [initialData]);
+  }, [initialData, serviceCategories]);
 
   /**
    * Handle customer selection change
    * Loads the selected customer's pets and updates the form state
    * @param customerId - The selected customer ID
    */
-  const handleCustomerChange = async (customerId: string) => {
+  const handleCustomerChange = async (customerId: string, customerObj?: Customer | null) => {
     setSelectedCustomer(customerId);
+    setSelectedCustomerObj(customerObj || null);
     setSelectedPet(''); // Reset pet selection when customer changes
+    setSelectedPets([]); // Reset multiple pet selection when customer changes
+    setPetSuiteAssignments({}); // Reset suite assignments when customer changes
     
     // Immediately load pets for the selected customer
     if (customerId) {
@@ -281,8 +398,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   };
   
   /**
-   * Handle customer search input change
-   * Searches for customers matching the input text using the customerService API
+   * Handle customer/pet search input change
+   * Searches for BOTH customers and pets matching the input text
    * Only triggers search when at least 2 characters are entered
    * @param searchText - The search text entered by the user
    */
@@ -291,20 +408,36 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     
     if (!searchText || searchText.length < 2) {
       setCustomerSearchResults([]);
+      setPetSearchResults([]);
       return;
     }
     
     try {
       setCustomerSearchLoading(true);
-      const response = await customerService.searchCustomers(searchText);
-      if (response && response.data) {
-        setCustomerSearchResults(response.data || []);
+      
+      // Search both customers and pets in parallel
+      const [customerResponse, petResponse] = await Promise.all([
+        customerService.searchCustomers(searchText),
+        petService.searchPets(searchText)
+      ]);
+      
+      // Set customer results
+      if (customerResponse && customerResponse.data) {
+        setCustomerSearchResults(customerResponse.data || []);
       } else {
         setCustomerSearchResults([]);
       }
+      
+      // Set pet results
+      if (petResponse && petResponse.data) {
+        setPetSearchResults(petResponse.data || []);
+      } else {
+        setPetSearchResults([]);
+      }
     } catch (error) {
-      console.error('Error searching for customers:', error);
+      console.error('Error searching for customers/pets:', error);
       setCustomerSearchResults([]);
+      setPetSearchResults([]);
     } finally {
       setCustomerSearchLoading(false);
     }
@@ -319,15 +452,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       }
       
       try {
-        // Define the pet response type just like we did in handleCustomerChange
-        interface PetResponse {
-          status: string;
-          results: number;
-          totalPages: number;
-          currentPage: number;
-          data: Pet[];
-        }
-        
         const response = await petService.getPetsByCustomer(selectedCustomer);
         
         // Extract pets from the response, handling different response structures
@@ -369,7 +493,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     if (initialDataLoaded.current && initialData) {
       loadInitialPets();
     }
-  }, [initialDataLoaded.current, initialData, selectedCustomer, pets]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialData, selectedCustomer, pets]); // initialDataLoaded.current is a ref and doesn't need to be in deps
 
   // Reset suiteType and suite override if service changes to a category that doesn't require it
   useEffect(() => {
@@ -396,8 +521,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   // Monitor add-ons dialog state changes
   useEffect(() => {
     if (addOnsDialogOpen && newReservationId) {
-      console.log('AddOns dialog is now open for reservation:', newReservationId);
-      console.log('AddOns dialog service ID:', selectedServiceId);
       // No longer forcing refresh - this was causing an infinite loop
     }
   }, [addOnsDialogOpen, newReservationId, selectedServiceId]);
@@ -410,91 +533,102 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       setDropdownReady(false); // Reset dropdown ready state
       try {
         setSuiteLoading(true);
-        // Get all resources of the selected type
-        const response = await resourceService.getAllResources(
-          undefined, // page
-          undefined, // limit
-          undefined, // sortBy
-          undefined, // sortOrder
-          selectedSuiteType // type filter
-        );
-        
         let suites: Resource[] = [];
         
-        if (response?.status === 'success' && response?.data) {
-          suites = response.data;
+        // Get all suite types when multiple pets are selected, otherwise just the selected type
+        if (selectedPets.length > 1) {
+          // Fetch all suite types separately and combine
+          const suiteTypes = ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'];
+          const responses = await Promise.all(
+            suiteTypes.map(type => 
+              resourceService.getAllResources(
+                1, // page
+                500, // limit - get all suites (we have ~165 total)
+                'name', // sortBy
+                'asc', // sortOrder
+                type // type filter
+              )
+            )
+          );
           
-          // If we're editing an existing reservation, make sure to include the current resource
-          // even if it's not available (e.g., it's currently booked)
-          const effectiveResourceId = initialData?.resourceId || initialData?.kennelId;
+          // Combine all suites from all responses
+          responses.forEach(response => {
+            if (response?.status === 'success' && response?.data) {
+              suites = [...suites, ...response.data];
+            }
+          });
           
-          if (effectiveResourceId) {
-            const resourceExists = suites.some(suite => suite.id === effectiveResourceId);
-            console.log('Does resource exist in suites?', resourceExists, 'Resource ID:', effectiveResourceId);
-            
-            if (!resourceExists) {
-              try {
-                console.log('Fetching specific resource with ID:', effectiveResourceId);
-                const resourceResponse = await resourceService.getResource(effectiveResourceId);
-                console.log('Resource response:', resourceResponse);
+        } else {
+          // Single pet - just fetch the selected type
+          const response = await resourceService.getAllResources(
+            1, // page
+            500, // limit - get all suites
+            'name', // sortBy
+            'asc', // sortOrder
+            selectedSuiteType // type filter
+          );
+          
+          if (response?.status === 'success' && response?.data) {
+            suites = response.data;
+          }
+        }
+        
+        // If we're editing an existing reservation, make sure to include the current resource
+        // even if it's not available (e.g., it's currently booked)
+        const effectiveResourceId = initialData?.resourceId || initialData?.kennelId;
+        
+        if (effectiveResourceId) {
+          const resourceExists = suites.some(suite => suite.id === effectiveResourceId);
+          
+          if (!resourceExists) {
+            try {
+              const resourceResponse = await resourceService.getResource(effectiveResourceId);
+              
+              if (resourceResponse?.status === 'success' && resourceResponse?.data) {
+                const resourceData = resourceResponse.data;
                 
-                if (resourceResponse?.status === 'success' && resourceResponse?.data) {
-                  const resourceData = resourceResponse.data;
-                  
-                  // Only add it if it matches the selected suite type
-                  const resourceType = resourceData.type || resourceData.attributes?.suiteType;
-                  console.log('Resource type from API:', resourceType, 'Selected type:', selectedSuiteType);
-                  
-                  if (resourceType === selectedSuiteType) {
-                    console.log('Adding resource to suites list:', resourceData);
-                    suites.push(resourceData);
-                  }
+                // Only add it if it matches the selected suite type
+                const resourceType = resourceData.type || resourceData.attributes?.suiteType;
+                
+                if (resourceType === selectedSuiteType) {
+                  suites.push(resourceData);
                 }
-              } catch (err) {
-                console.error('Error fetching specific resource:', err);
               }
+            } catch (err) {
+              console.error('Error fetching specific resource:', err);
             }
           }
+        }
+        
+        // First update available suites
+        setAvailableSuites(suites);
+        
+        // Mark that suite options are available if we have suites
+        selectsWithOptions.current.suiteId = suites.length > 0;
+        
+        // If we have initialData with a resourceId or kennelId, check if it's valid
+        const resourceToCheck = initialData?.resourceId || initialData?.kennelId;
+        
+        if (resourceToCheck) {
+          // Check if the resource ID exists in the available suites
+          const suiteExists = suites.some(suite => suite.id === resourceToCheck);
           
-          // First update available suites
-          setAvailableSuites(suites);
-          
-          // Mark that suite options are available if we have suites
-          selectsWithOptions.current.suiteId = suites.length > 0;
-          
-          // If we have initialData with a resourceId or kennelId, check if it's valid
-          const resourceToCheck = initialData?.resourceId || initialData?.kennelId;
-          
-          if (resourceToCheck) {
-            console.log('Checking if resource/kennel exists in suites:', resourceToCheck);
-            // Check if the resource ID exists in the available suites
-            const suiteExists = suites.some(suite => suite.id === resourceToCheck);
+          if (suiteExists) {
+            // Only set the suite ID if it exists in the available suites
+            setSelectedSuiteId(resourceToCheck);
             
-            if (suiteExists) {
-              console.log('Resource/kennel found in suites, setting selected suite ID:', resourceToCheck);
-              // Only set the suite ID if it exists in the available suites
-              setSelectedSuiteId(resourceToCheck);
-              
-              // Only set dropdown ready after both suites and selection are set
-              setTimeout(() => {
-                setDropdownReady(true);
-                console.log('Dropdown ready flag set');
-              }, 100);
-            } else {
-              console.log('Resource/kennel not found in available suites, clearing selection');
-              // If the resource doesn't exist, clear the selection
-              setSelectedSuiteId('');
+            // Only set dropdown ready after both suites and selection are set
+            setTimeout(() => {
               setDropdownReady(true);
-            }
+            }, 100);
           } else {
-            // Clear the selection if no resource ID was provided
+            // If the resource doesn't exist, clear the selection
             setSelectedSuiteId('');
             setDropdownReady(true);
           }
         } else {
-          setAvailableSuites([]);
-          setSuiteError('Failed to load available suites');
-          selectsWithOptions.current.suiteId = false;
+          // Clear the selection if no resource ID was provided
+          setSelectedSuiteId('');
           setDropdownReady(true);
         }
       } catch (error) {
@@ -509,7 +643,203 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     };
     
     loadAvailableSuites();
-  }, [selectedSuiteType, initialData]);
+  }, [selectedSuiteType, initialData, selectedPets.length]);
+
+  // Check availability for all suites when dates change
+  useEffect(() => {
+    const checkAvailability = async () => {
+      if (!startDate || !endDate || availableSuites.length === 0) {
+        setOccupiedSuiteIds(new Set());
+        return;
+      }
+
+      try {
+        // Check availability for all suites
+        const suiteIds = availableSuites.map(s => s.id);
+        
+        // Format dates as YYYY-MM-DD for the API
+        const formatDate = (date: Date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        
+        const response = await resourceService.batchCheckResourceAvailability(
+          suiteIds,
+          formatDate(startDate),
+          formatDate(endDate)
+        );
+
+        if (response?.status === 'success' && response?.data?.resources) {
+          // Find which suites are occupied (not available)
+          const occupied = new Set<string>();
+          response.data.resources.forEach((result: any) => {
+            if (!result.isAvailable) {
+              // Check if this conflict is with the current reservation being edited
+              const isCurrentReservation = initialData?.id && 
+                result.conflictingReservations?.some((r: any) => r.id === initialData.id);
+              
+              // Only mark as occupied if it's NOT the current reservation
+              if (!isCurrentReservation) {
+                occupied.add(result.resourceId);
+              } else {
+              }
+            }
+          });
+          setOccupiedSuiteIds(occupied);
+        }
+      } catch (error) {
+        console.error('Error checking suite availability:', error);
+        setOccupiedSuiteIds(new Set());
+      }
+    };
+
+    checkAvailability();
+  }, [startDate, endDate, availableSuites, initialData?.id]);
+
+  /**
+   * Handle proceeding to checkout
+   * For grooming/training services: Creates the reservation first, then adds to cart with real ID
+   * For boarding/daycare services: Adds reservation details to cart (reservation created during checkout)
+   */
+  const handleProceedToCheckout = async () => {
+    setError('');
+    setLoading(true);
+    
+    try {
+      // Validate required fields
+      if (!selectedCustomer || !selectedPet || !selectedService || !startDate || !endDate) {
+        setError('Please fill in all required fields');
+        setLoading(false);
+        return;
+      }
+      
+      // Get the selected objects for detailed information
+      const selectedCustomerObj = customers.find(c => c.id === selectedCustomer);
+      const selectedPetObj = pets.find(p => p.id === selectedPet);
+      const selectedServiceObj = services.find(s => s.id === selectedService);
+      const selectedSuiteObj = availableSuites.find(s => s.id === selectedSuiteId);
+      
+      if (!selectedCustomerObj || !selectedPetObj || !selectedServiceObj) {
+        setError('Invalid selection. Please try again.');
+        setLoading(false);
+        return;
+      }
+      
+      // Check if this is a grooming or training service
+      const isGroomingOrTraining = selectedServiceObj.serviceCategory === 'GROOMING' || 
+                                    selectedServiceObj.serviceCategory === 'TRAINING';
+      
+      let reservationId: string | undefined;
+      
+      // For grooming/training, create the reservation first
+      if (isGroomingOrTraining && onSubmit) {
+        
+        const formData: any = {
+          customerId: selectedCustomer,
+          petId: selectedPet,
+          serviceId: selectedService,
+          startDate: startDate ? startDate.toISOString() : null,
+          endDate: endDate ? endDate.toISOString() : null,
+          status: 'PENDING', // Set as PENDING until payment is complete
+          notes: '',
+        };
+        
+        try {
+          // Call onSubmit to create the reservation
+          const result = await onSubmit(formData);
+          
+          if (result?.reservationId) {
+            reservationId = result.reservationId;
+          } else {
+            throw new Error('Failed to create reservation');
+          }
+        } catch (error) {
+          console.error('Error creating reservation:', error);
+          throw error;
+        }
+      }
+      
+      // Create cart item with reservation details
+      const cartItem = {
+        id: reservationId ? `reservation-${reservationId}` : `reservation-${Date.now()}`,
+        price: selectedServiceObj.price || 0,
+        quantity: 1,
+        serviceName: selectedServiceObj.name,
+        serviceId: selectedServiceObj.id,
+        serviceCategory: selectedServiceObj.serviceCategory, // Add service category for checkout navigation
+        customerId: selectedCustomerObj.id,
+        customerName: `${selectedCustomerObj.firstName} ${selectedCustomerObj.lastName}`,
+        petId: selectedPetObj.id,
+        petName: selectedPetObj.name,
+        startDate: startDate,
+        endDate: endDate,
+        suiteType: selectedSuiteType || 'STANDARD_SUITE',
+        resourceId: selectedSuiteId || undefined,
+        resourceName: selectedSuiteObj?.name || undefined,
+        notes: '',
+        addOns: [] // Will be handled in checkout if needed
+      };
+      
+      
+      // Add to shopping cart
+      addItem(cartItem);
+      
+      // Navigate to checkout
+      navigate('/checkout');
+      
+    } catch (error: any) {
+      console.error('Error preparing checkout:', error);
+      setError(error.message || 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Handle reservation deletion
+   */
+  const handleDelete = async () => {
+    if (!initialData?.id) {
+      setError('No reservation ID found');
+      return;
+    }
+    
+    console.log('Deleting reservation:', initialData.id);
+    setDeleting(true);
+    try {
+      const response = await fetch(`http://localhost:4003/api/reservations/${initialData.id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-tenant-id': 'dev',
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('Delete failed:', response.status, errorData);
+        throw new Error(`Failed to delete: ${response.status} - ${errorData}`);
+      }
+      
+      console.log('Delete successful');
+      setDeleteConfirmOpen(false);
+      
+      // Close the form and refresh
+      if (onClose) {
+        onClose();
+      }
+      
+      // Reload the page to refresh the calendar
+      window.location.reload();
+    } catch (err: any) {
+      console.error('Delete error:', err);
+      setError(err.message || 'Failed to delete reservation');
+      setDeleteConfirmOpen(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   /**
    * Handle form submission
@@ -522,8 +852,47 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     setLoading(true); // Set loading state while we process the form
 
     // Validate all required fields
-    if (!selectedCustomer || !selectedPet || !selectedService || !startDate || !endDate) {
+    if (!selectedCustomer || (selectedPets.length === 0 && !selectedPet) || !selectedService || !startDate || !endDate) {
       setError('Please fill in all required fields');
+      setLoading(false);
+      return;
+    }
+    
+    // Validate kennel assignment for boarding/daycare services
+    const selectedServiceObj = services.find(s => s.id === selectedService);
+    const requiresSuiteType = selectedServiceObj && 
+      (selectedServiceObj.serviceCategory === 'DAYCARE' || 
+       selectedServiceObj.serviceCategory === 'BOARDING');
+    
+    if (requiresSuiteType) {
+      const petsToBook = selectedPets.length > 0 ? selectedPets : [selectedPet];
+      const hasMultiplePets = petsToBook.length > 1;
+      
+      if (hasMultiplePets) {
+        // For multiple pets, check that each pet has a kennel assigned (or auto-assign is selected)
+        const unassignedPets = petsToBook.filter(petId => {
+          const assignment = petSuiteAssignments[petId];
+          return assignment === undefined; // Empty string means auto-assign, which is OK
+        });
+        
+        if (unassignedPets.length > 0) {
+          const petNames = unassignedPets.map(petId => {
+            const pet = pets.find(p => p.id === petId);
+            return pet?.name || 'Unknown';
+          }).join(', ');
+          setError(`Please assign kennels for all pets or select "Auto-assign": ${petNames}`);
+          setLoading(false);
+          return;
+        }
+      }
+      // For single pet, selectedSuiteId can be empty (auto-assign) or have a value
+      // No validation needed as auto-assign is acceptable
+    }
+    
+    // Validate groomer assignment for grooming services
+    const requiresGroomer = selectedServiceObj && selectedServiceObj.serviceCategory === 'GROOMING';
+    if (requiresGroomer && !selectedGroomerId) {
+      setError('Please select a groomer for this grooming service');
       setLoading(false);
       return;
     }
@@ -531,20 +900,13 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     // Store service ID for later use with add-ons
     if (selectedService) {
       setSelectedServiceId(selectedService);
-      console.log('ReservationForm: Stored service ID for add-ons:', selectedService);
     }
     
     try {
-      // Create the form data object
-      const formData: any = {
-        customerId: selectedCustomer,
-        petId: selectedPet,
-        serviceId: selectedService,
-        startDate: startDate ? startDate.toISOString() : null,
-        endDate: endDate ? endDate.toISOString() : null,
-        status: selectedStatus,
-        notes: '', // Add empty notes as it's expected by the backend
-      };
+      // Determine which pets to create reservations for
+      const petsToBook = selectedPets.length > 0 ? selectedPets : [selectedPet];
+      const hasMultiplePets = petsToBook.length > 1;
+      
       
       // Handle resource selection based on suite type
       const selectedServiceObj = services.find(s => s.id === selectedService);
@@ -558,57 +920,76 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
         effectiveSuiteType = 'STANDARD_SUITE';
       }
       
-      if (requiresSuiteType) {
-        // Always include the suiteType field for DAYCARE or BOARDING services
-        formData.suiteType = effectiveSuiteType;
+      // Create reservations for each pet
+      const results = [];
+      for (let i = 0; i < petsToBook.length; i++) {
+        const petId = petsToBook[i];
         
-        // Only set resourceId if a specific suite is selected and it's not empty
-        if (selectedSuiteId && selectedSuiteId.trim() !== '') {
-          formData.resourceId = selectedSuiteId;
-          // Log for debugging
-          console.log('Sending reservation with resourceId:', selectedSuiteId);
-        } else {
-          // Explicitly set resourceId to null for auto-assign
-          formData.resourceId = null;
+        // Get the suite assignment for this pet
+        const assignedSuiteId = hasMultiplePets ? petSuiteAssignments[petId] : selectedSuiteId;
+        
+        // Create the form data object for this pet
+        const formData: any = {
+          customerId: selectedCustomer,
+          petId: petId,
+          serviceId: selectedService,
+          startDate: startDate ? startDate.toISOString() : null,
+          endDate: endDate ? endDate.toISOString() : null,
+          status: selectedStatus,
+          notes: hasMultiplePets ? `Multi-pet reservation (${i + 1} of ${petsToBook.length})` : '',
+        };
+        
+        // Add groomer assignment for grooming services
+        if (selectedGroomerId && selectedServiceObj?.serviceCategory === 'GROOMING') {
+          formData.staffAssignedId = selectedGroomerId;
         }
         
-        // If we have initialData with a kennelId but are not using it as resourceId,
-        // include it as a separate field for backward compatibility
-        if (initialData?.kennelId && initialData.kennelId !== selectedSuiteId) {
-          console.log('Including kennelId for backward compatibility:', initialData.kennelId);
+        if (requiresSuiteType) {
+          // Send suite type to backend for auto-assignment
+          formData.suiteType = effectiveSuiteType;
+          
+          // Assign the specific resource for this pet
+          if (assignedSuiteId && assignedSuiteId.trim() !== '') {
+            formData.resourceId = assignedSuiteId;
+          } else {
+          }
+          
+          // If we have initialData with a kennelId but are not using it as resourceId,
+          // include it as a separate field for backward compatibility
+          if (initialData?.kennelId && initialData.kennelId !== assignedSuiteId) {
+          }
+        }
+
+        // Call the parent component's onSubmit function with our form data
+        
+        const result = await onSubmit(formData);
+        
+        if (result) {
+          results.push(result);
         }
       }
-
-      // Call the parent component's onSubmit function with our form data
-      console.log('ReservationForm: Submitting form data to parent', formData);
-      console.log('ReservationForm: showAddOns =', showAddOns);
       
-      const result = await onSubmit(formData);
-      console.log('ReservationForm: Result from onSubmit:', result);
+      // Use the first result for add-ons dialog
+      const result = results[0];
       
       // If the result is undefined, it means there was an error in the parent component
       // The parent component will display the error, so we don't need to reset the form
       if (result === undefined) {
-        console.log('ReservationForm: Form submission failed - error handled by parent');
         setLoading(false);
         return;
       }
       
-      // Show add-ons dialog for any service that might have add-ons
-      if (result?.reservationId) {
-        console.log('Reservation created successfully, showing add-ons dialog');
-        console.log('ReservationForm: Reservation ID for add-ons:', result.reservationId);
+      // Show add-ons dialog only if showAddOns prop is true
+      if (showAddOns && result?.reservationId) {
         
         // Set reservation ID for add-ons dialog
         setNewReservationId(result.reservationId);
         
         // Make sure we set the selectedServiceId for the add-ons dialog
         if (selectedService) {
-          console.log('Setting selected service ID for add-ons dialog:', selectedService);
           setSelectedServiceId(selectedService);
           
           // Open the add-ons dialog immediately
-          console.log('Opening add-ons dialog');
           setAddOnsDialogOpen(true);
           
           // Don't reset the form yet - we'll do it after add-ons are handled
@@ -618,7 +999,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           handleReset();
         }
       } else {
-        console.log('Not showing add-ons dialog - no reservation ID returned');
         handleReset();
       }
     } catch (error: any) {
@@ -639,6 +1019,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     if (!initialData) {
       // Keep the customer selected but reset other fields
       setSelectedPet('');
+      setSelectedPets([]);
       setSelectedService('');
       setSelectedSuiteType('');
       setSelectedSuiteId('');
@@ -647,7 +1028,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
     }
     // Reset form state
     setError('');
-    console.log('Form reset after successful submission');
   };
 
   /**
@@ -691,45 +1071,69 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               </Typography>
             </Box>
           )}
-          {/* Customer search autocomplete - shows search results when user types 2+ characters */}
+          {/* Customer/Pet search autocomplete - shows both customers and pets when user types 2+ characters */}
           <Autocomplete
             id="customer-search"
-            options={customerSearchInput.length >= 2 ? customerSearchResults : customers}
-            getOptionLabel={(option: Customer) => {
-              // Ensure we handle null/undefined values gracefully
-              if (!option) return '';
-              return `${option.firstName} ${option.lastName}`;
-            }}
-            isOptionEqualToValue={(option: Customer, value: Customer) => {
-              // Handle null values safely
-              if (!option || !value) return false;
-              
-              // If value has an empty ID but has other properties, try matching by email as a fallback
-              if (!value.id && value.email && option.email) {
-                return option.email === value.email;
+            options={customerSearchInput.length >= 2 ? [
+              ...customerSearchResults.map(c => ({ type: 'customer' as const, data: c })),
+              ...petSearchResults.map(p => ({ type: 'pet' as const, data: p }))
+            ] : customers.map(c => ({ type: 'customer' as const, data: c }))}
+            getOptionLabel={(option: { type: 'customer' | 'pet', data: Customer | Pet }) => {
+              if (!option || !option.data) return '';
+              if (option.type === 'customer') {
+                const customer = option.data as Customer;
+                return `${customer.firstName} ${customer.lastName}`;
+              } else {
+                const pet = option.data as Pet;
+                const owner = pet.owner;
+                return `${pet.name} (${owner ? `${owner.firstName} ${owner.lastName}` : 'Unknown Owner'}) - ${pet.breed || pet.type}`;
               }
-              
-              return option.id === value.id;
             }}
+            isOptionEqualToValue={(option, value) => {
+              if (!option || !value) return false;
+              if (option.type !== value.type) return false;
+              return option.data.id === value.data.id;
+            }}
+            groupBy={(option) => option.type === 'customer' ? '👤 Customers' : '🐕 Pets'}
             loading={customerSearchLoading}
             onInputChange={(event, newInputValue) => {
               handleCustomerSearch(newInputValue);
             }}
-            onChange={(event, newValue: Customer | null) => {
+            onChange={(event, newValue: { type: 'customer' | 'pet', data: Customer | Pet } | null) => {
               if (newValue) {
-                handleCustomerChange(newValue.id);
+                if (newValue.type === 'customer') {
+                  const customer = newValue.data as Customer;
+                  handleCustomerChange(customer.id, customer);
+                } else {
+                  // Pet selected - auto-select the customer
+                  const pet = newValue.data as Pet;
+                  if (pet.owner) {
+                    // Create a customer object from pet.owner
+                    const customerObj: Customer = {
+                      id: pet.customerId,
+                      firstName: pet.owner.firstName,
+                      lastName: pet.owner.lastName,
+                      email: '',
+                      isActive: true
+                    };
+                    handleCustomerChange(pet.customerId, customerObj);
+                    // Also pre-select this pet
+                    setSelectedPet(pet.id);
+                    setSelectedPets([pet.id]);
+                  }
+                }
               } else {
-                handleCustomerChange('');
+                handleCustomerChange('', null);
               }
             }}
-            value={selectedCustomer ? customers.find(c => c.id === selectedCustomer) || null : null}
+            value={selectedCustomerObj ? { type: 'customer' as const, data: selectedCustomerObj } : null}
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Customer"
+                label="Customer or Pet"
                 size="small"
                 required
-                placeholder="Search by name, email or phone"
+                placeholder="Search by customer name, pet name, email, or phone"
                 InputLabelProps={{
                   shrink: true,
                 }}
@@ -751,45 +1155,80 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 }}
               />
             )}
-            noOptionsText="No customers found. Try a different search term."
-            loadingText="Searching for customers..."
+            noOptionsText="No customers or pets found. Try a different search term."
+            loadingText="Searching for customers and pets..."
             size="small"
             sx={{ mb: 1 }}
           />
 
-          <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-            <InputLabel id="pet-label" shrink={true}>Pet</InputLabel>
-            <Select
-              labelId="pet-label"
-              id="pet-select"
-              value={selectsWithOptions.current.pet && pets.some(p => p.id === selectedPet) ? selectedPet : ""}
-              label="Pet"
-              onChange={(e) => {
-                const value = e.target.value || '';
-                setSelectedPet(value);
-              }}
-              required
-              disabled={!selectedCustomer}
-              displayEmpty
-              notched
-              // Add proper ARIA attributes to fix accessibility warning
-              inputProps={{
-                'aria-label': 'Select a pet',
-                'aria-hidden': 'false'
-              }}
-            >
-              <MenuItem value="" disabled>Select a pet</MenuItem>
-              {pets.length > 0 ? (
-                pets.map((pet) => (
-                  <MenuItem key={pet.id} value={pet.id}>
-                    {pet.name} ({pet.type})
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem disabled>No pets available</MenuItem>
-              )}
-            </Select>
-          </FormControl>
+          <Autocomplete
+            multiple
+            id="pet-select"
+            options={pets}
+            getOptionLabel={(option: Pet) => `${option.name} (${option.type})`}
+            value={pets.filter(p => selectedPets.includes(p.id))}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            onChange={(event, newValue: Pet[]) => {
+              const petIds = newValue.map(p => p.id);
+              setSelectedPets(petIds);
+              // Also update single pet for backward compatibility
+              if (petIds.length > 0) {
+                setSelectedPet(petIds[0]);
+              } else {
+                setSelectedPet('');
+              }
+              
+              // When pets are selected, pre-assign kennels intelligently
+              if (petIds.length > 1) {
+                const newAssignments: {[key: string]: string} = {};
+                
+                if (selectedSuiteId) {
+                  // First pet gets the initially selected kennel
+                  newAssignments[petIds[0]] = selectedSuiteId;
+                  
+                  // Find the index of the selected suite
+                  const selectedSuiteIndex = availableSuites.findIndex(s => s.id === selectedSuiteId);
+                  
+                  // Assign subsequent pets to next available suites
+                  for (let i = 1; i < petIds.length; i++) {
+                    const nextSuiteIndex = selectedSuiteIndex + i;
+                    if (nextSuiteIndex < availableSuites.length) {
+                      newAssignments[petIds[i]] = availableSuites[nextSuiteIndex].id;
+                    } else {
+                      // If we run out of adjacent kennels, set to empty string for auto-assign
+                      newAssignments[petIds[i]] = '';
+                    }
+                  }
+                } else {
+                  // No kennel selected initially, set all to auto-assign
+                  petIds.forEach(petId => {
+                    newAssignments[petId] = '';
+                  });
+                }
+                
+                setPetSuiteAssignments(newAssignments);
+              } else if (petIds.length === 0) {
+                // Clear assignments when no pets are selected
+                setPetSuiteAssignments({});
+              }
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Pet(s)"
+                size="small"
+                placeholder={pets.length > 0 ? "Select one or more pets" : "No pets available"}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                helperText="You can select multiple pets for the same reservation"
+                error={selectedPets.length === 0 && selectedPet === ''}
+              />
+            )}
+            size="small"
+            sx={{ mb: 1 }}
+            noOptionsText="No pets available for this customer"
+          />
 
           <FormControl fullWidth size="small" sx={{ mb: 1 }}>
             <InputLabel id="service-label" shrink={true}>Service</InputLabel>
@@ -813,11 +1252,19 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                   if (service && service.duration) {
                     setCurrentServiceDuration(service.duration);
                     
-                    // Update end date based on service duration if we have a start date
+                    // Update end date based on service type
                     if (startDate) {
                       const newEndDate = new Date(startDate.getTime());
-                      // Add the service duration in minutes to the start date
-                      newEndDate.setMinutes(newEndDate.getMinutes() + service.duration);
+                      
+                      // For BOARDING services (overnight), set to 5pm next day instead of adding duration
+                      if (service.serviceCategory === 'BOARDING') {
+                        newEndDate.setDate(newEndDate.getDate() + 1); // Next day
+                        newEndDate.setHours(17, 0, 0, 0); // 5:00 PM
+                      } else {
+                        // For other services (DAYCARE, GROOMING), add the service duration
+                        newEndDate.setMinutes(newEndDate.getMinutes() + service.duration);
+                      }
+                      
                       setEndDate(newEndDate);
                     }
                   }
@@ -835,6 +1282,25 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
               ))}
             </Select>
           </FormControl>
+
+          {/* Conditionally show Groomer Selector for Grooming services */}
+          {(() => {
+            const selectedServiceObj = services.find(s => s.id === selectedService);
+            const isGroomingService = selectedServiceObj?.serviceCategory === 'GROOMING';
+            
+            if (!isGroomingService) return null;
+            
+            return (
+              <GroomerSelector
+                selectedGroomerId={selectedGroomerId}
+                onGroomerChange={setSelectedGroomerId}
+                appointmentDate={startDate}
+                appointmentStartTime={startDate}
+                appointmentEndTime={endDate}
+                disabled={loading}
+              />
+            );
+          })()}
 
           {/* Conditionally show suiteType dropdown for Daycare or Boarding */}
           {(() => {
@@ -881,8 +1347,96 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                   </Select>
                 </FormControl>
                 
-                {/* Kennel/Suite Number Selection */}
-                {requiresSuiteType && selectedSuiteType && (
+                {/* Kennel/Suite Number Selection - Per Pet when multiple pets selected */}
+                {requiresSuiteType && selectedSuiteType && selectedPets.length > 1 && (
+                  <Box sx={{ mt: 2, mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
+                      Assign Kennels for Each Pet:
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                      The first pet is pre-assigned to the initially selected kennel. Subsequent pets are suggested to adjacent kennels.
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+                      🟢 Available • 🟡 Selected for another pet • 🔴 Occupied by existing reservation
+                    </Typography>                    {selectedPets.map((petId, index) => {
+                      const pet = pets.find(p => p.id === petId);
+                      const isFirstPet = index === 0;
+                      
+                      return (
+                        <Autocomplete
+                          key={petId}
+                          size="small"
+                          options={[{ id: '', name: 'Auto-assign' }, ...availableSuites]}
+                          value={availableSuites.find(s => s.id === petSuiteAssignments[petId]) || { id: '', name: 'Auto-assign' }}
+                          isOptionEqualToValue={(option, value) => option.id === value.id}
+                          onChange={(event, newValue) => {
+                            const suiteId = newValue?.id || '';
+                            setPetSuiteAssignments(prev => ({
+                              ...prev,
+                              [petId]: suiteId
+                            }));
+                          }}
+                          getOptionLabel={(option) => {
+                            if (!option.id) return 'Auto-assign';
+                            return option.name || `Suite #${(option as any).attributes?.suiteNumber || option.id.substring(0, 8)}`;
+                          }}
+                          getOptionDisabled={(option) => {
+                            if (!option.id) return false; // Auto-assign is always enabled
+                            // Check if assigned to another pet in this booking
+                            const isAssignedToOtherPet = Object.entries(petSuiteAssignments).some(
+                              ([assignedPetId, assignedSuiteId]) => 
+                                assignedPetId !== petId && assignedSuiteId === option.id
+                            );
+                            // Check if occupied by existing reservation
+                            const isOccupied = occupiedSuiteIds.has(option.id);
+                            return isAssignedToOtherPet || isOccupied;
+                          }}
+                          renderOption={(props, option) => {
+                            if (!option.id) {
+                              return <li {...props}><em>Auto-assign</em></li>;
+                            }
+                            const isAssignedToOtherPet = Object.entries(petSuiteAssignments).some(
+                              ([assignedPetId, assignedSuiteId]) => 
+                                assignedPetId !== petId && assignedSuiteId === option.id
+                            );
+                            const isOccupied = occupiedSuiteIds.has(option.id);
+                            const displayName = option.name || `Suite #${(option as any).attributes?.suiteNumber || option.id.substring(0, 8)}`;
+                            
+                            return (
+                              <li {...props} style={{
+                                color: isOccupied ? '#d32f2f' : isAssignedToOtherPet ? '#ff9800' : '#2e7d32',
+                                opacity: (isAssignedToOtherPet || isOccupied) ? 0.6 : 1
+                              }}>
+                                {isOccupied && '🔴 '}
+                                {isAssignedToOtherPet && !isOccupied && '🟡 '}
+                                {!isOccupied && !isAssignedToOtherPet && '🟢 '}
+                                {displayName}
+                                {isOccupied && ' (Occupied)'}
+                                {isAssignedToOtherPet && !isOccupied && ' (Selected for another pet)'}
+                              </li>
+                            );
+                          }}
+                          disabled={suiteLoading}
+                          loading={suiteLoading}
+                          renderInput={(params) => (
+                            <TextField
+                              {...params}
+                              label={`Kennel for ${pet?.name || `Pet ${index + 1}`}${isFirstPet ? ' (Initially selected)' : ''}`}
+                              placeholder="Type to search..."
+                              InputLabelProps={{
+                                shrink: true,
+                              }}
+                            />
+                          )}
+                          sx={{ mt: 1, mb: 1 }}
+                        />
+                      );
+                    })}
+                  </Box>
+                )}
+                
+                {/* Kennel/Suite Number Selection - Single Pet */}
+                {requiresSuiteType && selectedSuiteType && selectedPets.length <= 1 && (
                   <FormControl fullWidth required margin="normal">
                     <InputLabel id="kennel-number-label">Kennel/Suite Number</InputLabel>
                     {suiteLoading ? (
@@ -911,7 +1465,10 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                         id="kennel-number-select"
                         value={selectedSuiteId || ""}
                         label="Kennel/Suite Number"
-                        onChange={e => setSelectedSuiteId(e.target.value || '')}
+                        onChange={e => {
+                          const newSuiteId = e.target.value || '';
+                          setSelectedSuiteId(newSuiteId);
+                        }}
                         inputProps={{
                           'aria-label': 'Select kennel number',
                           'aria-hidden': 'false'
@@ -931,11 +1488,26 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                         {suiteError ? (
                           <MenuItem disabled>{suiteError}</MenuItem>
                         ) : availableSuites.length > 0 ? (
-                          availableSuites.map(suite => (
-                            <MenuItem key={suite.id} id={`suite-option-${suite.id}`} value={suite.id}>
-                              {suite.name || `Suite #${suite.attributes?.suiteNumber || suite.id.substring(0, 8)}`}
-                            </MenuItem>
-                          ))
+                          availableSuites.map(suite => {
+                            const isOccupied = occupiedSuiteIds.has(suite.id);
+                            const displayName = suite.name || `Suite #${suite.attributes?.suiteNumber || suite.id.substring(0, 8)}`;
+                            return (
+                              <MenuItem 
+                                key={suite.id} 
+                                id={`suite-option-${suite.id}`} 
+                                value={suite.id}
+                                disabled={isOccupied}
+                                sx={{
+                                  color: isOccupied ? '#d32f2f' : '#2e7d32',
+                                  opacity: isOccupied ? 0.6 : 1
+                                }}
+                              >
+                                {isOccupied ? '🔴 ' : '🟢 '}
+                                {displayName}
+                                {isOccupied && ' (Occupied)'}
+                              </MenuItem>
+                            );
+                          })
                         ) : (
                           <MenuItem disabled>No suites available</MenuItem>
                         )}
@@ -973,11 +1545,20 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                   
                   setStartDate(newValue);
                   
-                  // Update end date based on service duration when start date changes
+                  // Update end date based on service type when start date changes
                   if (currentServiceDuration) {
                     const newEndDate = new Date(newValue.getTime());
-                    // Add the service duration in minutes to the start date
-                    newEndDate.setMinutes(newEndDate.getMinutes() + currentServiceDuration);
+                    const service = services.find(s => s.id === selectedService);
+                    
+                    // For BOARDING services (overnight), set to 5pm next day
+                    if (service?.serviceCategory === 'BOARDING') {
+                      newEndDate.setDate(newEndDate.getDate() + 1); // Next day
+                      newEndDate.setHours(17, 0, 0, 0); // 5:00 PM
+                    } else {
+                      // For other services, add the service duration in minutes
+                      newEndDate.setMinutes(newEndDate.getMinutes() + currentServiceDuration);
+                    }
+                    
                     setEndDate(newEndDate);
                   }
                 }}
@@ -997,11 +1578,20 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                   
                   setStartDate(updatedDate);
                   
-                  // Update end date based on service duration when time changes
+                  // Update end date based on service type when time changes
                   if (currentServiceDuration) {
                     const newEndDate = new Date(updatedDate.getTime());
-                    // Add the service duration in minutes
-                    newEndDate.setMinutes(newEndDate.getMinutes() + currentServiceDuration);
+                    const service = services.find(s => s.id === selectedService);
+                    
+                    // For BOARDING services (overnight), set to 5pm next day
+                    if (service?.serviceCategory === 'BOARDING') {
+                      newEndDate.setDate(newEndDate.getDate() + 1); // Next day
+                      newEndDate.setHours(17, 0, 0, 0); // 5:00 PM
+                    } else {
+                      // For other services, add the service duration in minutes
+                      newEndDate.setMinutes(newEndDate.getMinutes() + currentServiceDuration);
+                    }
+                    
                     setEndDate(newEndDate);
                   }
                 }}
@@ -1063,7 +1653,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 id="status-select"
                 value={selectedStatus || "CONFIRMED"}
                 label="Reservation Status"
-                onChange={(e) => setSelectedStatus(e.target.value || 'CONFIRMED')}
+                onChange={e => setSelectedStatus(e.target.value)}
                 displayEmpty
                 // Add proper ARIA attributes to fix accessibility warning
                 inputProps={{
@@ -1083,27 +1673,119 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             </>
           )}
 
-          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
-            <Button type="submit" variant="contained" color="primary" size="small">
-              {initialData ? 'Update Reservation' : 'Create Reservation'}
-            </Button>
+          {!initialData && (
+            <Box sx={{ mb: 2, p: 2, bgcolor: 'warning.light', borderRadius: 1, border: '2px solid', borderColor: 'warning.main' }}>
+              <Typography variant="body2" color="warning.contrastText" sx={{ fontWeight: 'bold' }}>
+                ⚠️ <strong>IMPORTANT:</strong> Use "Proceed to Checkout" below to create reservations with proper invoicing and payment processing. This ensures accurate financial records and analytics.
+              </Typography>
+            </Box>
+          )}
+
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 1, 
+            justifyContent: 'flex-end', 
+            mt: 1,
+            flexDirection: { xs: 'column', sm: 'row' }
+          }}>
+            {!initialData && (
+              <>
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  size={isMobile ? 'medium' : 'large'}
+                  onClick={handleProceedToCheckout}
+                  disabled={loading}
+                  fullWidth={isMobile}
+                  sx={{ 
+                    mr: { xs: 0, sm: 1 }, 
+                    px: { xs: 2, sm: 3 }, 
+                    py: { xs: 1, sm: 1.5 }, 
+                    fontSize: { xs: '1rem', sm: '1.1rem' }, 
+                    fontWeight: 'bold' 
+                  }}
+                >
+                  🛒 {isMobile ? 'Checkout' : 'Proceed to Checkout (Recommended)'}
+                </Button>
+                <Button 
+                  type="submit" 
+                  variant="outlined" 
+                  color="secondary" 
+                  size={getResponsiveButtonSize(isMobile)} 
+                  disabled={loading}
+                  fullWidth={isMobile}
+                >
+                  {loading ? 'Processing...' : (isMobile ? 'Quick Create' : 'Quick Create (Staff Only)')}
+                </Button>
+              </>
+            )}
+            {initialData && (
+              <>
+                <Button 
+                  variant="outlined" 
+                  color="error" 
+                  size={getResponsiveButtonSize(isMobile)} 
+                  startIcon={!isMobile ? <DeleteIcon /> : undefined}
+                  onClick={() => setDeleteConfirmOpen(true)}
+                  disabled={loading || deleting}
+                  fullWidth={isMobile}
+                  sx={{ mr: { xs: 0, sm: 1 }, mb: { xs: 1, sm: 0 } }}
+                >
+                  {isMobile ? <DeleteIcon /> : 'Delete'}
+                </Button>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary" 
+                  size={getResponsiveButtonSize(isMobile)} 
+                  disabled={loading}
+                  fullWidth={isMobile}
+                >
+                  {loading ? 'Processing...' : (isMobile ? 'Update' : 'Update Reservation')}
+                </Button>
+              </>
+            )}
           </Box>
         </Box>
       </Paper>
       
       {/* Add-Ons Dialog - only shown after successful reservation creation when showAddOns is true */}
-      <AddOnSelectionDialog
-        open={addOnsDialogOpen && !!newReservationId && !!selectedService}
+      <AddOnSelectionDialogEnhanced
+        open={addOnsDialogOpen && !!newReservationId && !!selectedServiceId}
         onClose={() => {
-          console.log('Closing add-ons dialog');
           setAddOnsDialogOpen(false);
-          // Don't reset the form here - the AddOnSelectionDialog will handle navigation
-          // This prevents the calendar from briefly showing before checkout
+          // Reset the form after closing the dialog
+          handleReset();
+          // Close the parent form/dialog if callback provided
+          if (onClose) {
+            onClose();
+          }
         }}
         reservationId={newReservationId}
-        serviceId={selectedService}
+        serviceId={selectedServiceId}
         onAddOnsAdded={handleAddOnsAdded}
       />
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={() => !deleting && setDeleteConfirmOpen(false)}
+      >
+        <DialogTitle>Delete Reservation?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this reservation? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirmOpen(false)} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="error" variant="contained" disabled={deleting}>
+            {deleting ? 'Deleting...' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </LocalizationProvider>
   );
 };

@@ -1,0 +1,166 @@
+{
+  "staff": [
+    {
+      "firstName": "John",
+      "lastName": "Smith",
+      "email": "john.smith@tailtown.com",
+      "phone": "(555) 123-4567",
+      "role": "Manager",
+      "title": "General Manager",
+      "department": "Management",
+      "position": "General Manager",
+      "isActive": true,
+      "address": "123 Main St",
+      "city": "Anytown",
+      "state": "ST",
+      "zipCode": "12345",
+      "specialties": ["Leadership", "Operations"]
+    },
+    {
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "email": "jane.doe@tailtown.com",
+      "phone": "(555) 234-5678",
+      "role": "Groomer",
+      "title": "Lead Groomer",
+      "department": "Grooming",
+      "position": "Lead Groomer",
+      "isActive": true,
+      "address": "456 Oak Ave",
+      "city": "Anytown",
+      "state": "ST",
+      "zipCode": "12345",
+      "specialties": ["Grooming", "Pet Handling"]
+    },
+    {
+      "firstName": "Mike",
+      "lastName": "Johnson",
+      "email": "mike.johnson@tailtown.com",
+      "phone": "(555) 345-6789",
+      "role": "Trainer",
+      "title": "Dog Trainer",
+      "department": "Training",
+      "position": "Dog Trainer",
+      "isActive": true,
+      "address": "789 Pine St",
+      "city": "Anytown",
+      "state": "ST",
+      "zipCode": "12345",
+      "specialties": ["Training", "Behavior"]
+    },
+    {
+      "firstName": "Sarah",
+      "lastName": "Wilson",
+      "email": "sarah.wilson@tailtown.com",
+      "phone": "(555) 456-7890",
+      "role": "Kennel Tech",
+      "title": "Kennel Technician",
+      "department": "Kennel",
+      "position": "Kennel Technician",
+      "isActive": true,
+      "address": "321 Elm Dr",
+      "city": "Anytown",
+      "state": "ST",
+      "zipCode": "12345",
+      "specialties": ["Animal Care", "Kennel Management"]
+    },
+    {
+      "firstName": "Emily",
+      "lastName": "Brown",
+      "email": "emily.brown@tailtown.com",
+      "phone": "(555) 567-8901",
+      "role": "Receptionist",
+      "title": "Front Desk Associate",
+      "department": "Front Desk",
+      "position": "Front Desk Associate",
+      "isActive": true,
+      "address": "654 Maple Ln",
+      "city": "Anytown",
+      "state": "ST",
+      "zipCode": "12345",
+      "specialties": ["Customer Service", "Scheduling"]
+    }
+  ],
+  "availability": [
+    {
+      "email": "john.smith@tailtown.com",
+      "dayOfWeek": 1,
+      "startTime": "09:00",
+      "endTime": "17:00",
+      "isAvailable": true,
+      "isRecurring": true
+    },
+    {
+      "email": "john.smith@tailtown.com",
+      "dayOfWeek": 2,
+      "startTime": "09:00",
+      "endTime": "17:00",
+      "isAvailable": true,
+      "isRecurring": true
+    },
+    {
+      "email": "john.smith@tailtown.com",
+      "dayOfWeek": 3,
+      "startTime": "09:00",
+      "endTime": "17:00",
+      "isAvailable": true,
+      "isRecurring": true
+    },
+    {
+      "email": "john.smith@tailtown.com",
+      "dayOfWeek": 4,
+      "startTime": "09:00",
+      "endTime": "17:00",
+      "isAvailable": true,
+      "isRecurring": true
+    },
+    {
+      "email": "john.smith@tailtown.com",
+      "dayOfWeek": 5,
+      "startTime": "09:00",
+      "endTime": "17:00",
+      "isAvailable": true,
+      "isRecurring": true
+    },
+    {
+      "email": "jane.doe@tailtown.com",
+      "dayOfWeek": 1,
+      "startTime": "08:00",
+      "endTime": "16:00",
+      "isAvailable": true,
+      "isRecurring": true
+    },
+    {
+      "email": "jane.doe@tailtown.com",
+      "dayOfWeek": 2,
+      "startTime": "08:00",
+      "endTime": "16:00",
+      "isAvailable": true,
+      "isRecurring": true
+    },
+    {
+      "email": "jane.doe@tailtown.com",
+      "dayOfWeek": 3,
+      "startTime": "08:00",
+      "endTime": "16:00",
+      "isAvailable": true,
+      "isRecurring": true
+    },
+    {
+      "email": "jane.doe@tailtown.com",
+      "dayOfWeek": 4,
+      "startTime": "08:00",
+      "endTime": "16:00",
+      "isAvailable": true,
+      "isRecurring": true
+    },
+    {
+      "email": "jane.doe@tailtown.com",
+      "dayOfWeek": 5,
+      "startTime": "08:00",
+      "endTime": "16:00",
+      "isAvailable": true,
+      "isRecurring": true
+    }
+  ]
+}

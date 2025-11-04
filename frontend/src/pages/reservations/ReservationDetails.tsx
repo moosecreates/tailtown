@@ -1,9 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { Typography, Container, Box, Paper, Button, Chip, Divider, CircularProgress, Alert, Menu, MenuItem, Link } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Typography,
+  Container,
+  Box,
+  Paper,
+  Button,
+  Chip,
+  Divider,
+  CircularProgress,
+  Alert,
+  Menu,
+  MenuItem,
+  Link,
+  Grid,
+  Card,
+  CardContent,
+  Collapse,
+  IconButton
+} from '@mui/material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { reservationService, Reservation } from '../../services/reservationService';
+import {
+  CalendarToday as CalendarIcon,
+  Pets as PetsIcon,
+  AttachMoney as MoneyIcon,
+  Person as PersonIcon,
+  Home as HomeIcon,
+  Notes as NotesIcon,
+  ExpandMore as ExpandMoreIcon,
+  Edit as EditIcon,
+  Cancel as CancelIcon,
+  CheckCircle as CheckInIcon,
+  ExitToApp as CheckOutIcon
+} from '@mui/icons-material';
 
-const ReservationDetails = () => {
+const ReservationDetailsRedesigned = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [reservation, setReservation] = useState<Reservation | null>(null);
@@ -11,24 +42,24 @@ const ReservationDetails = () => {
   const [error, setError] = useState<string | null>(null);
   const [statusMenuAnchorEl, setStatusMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
+  const [notesExpanded, setNotesExpanded] = useState(false);
 
-  const fetchReservation = async () => {
+  const fetchReservation = useCallback(async () => {
     try {
       if (!id) return;
       const data = await reservationService.getReservationById(id);
       setReservation(data);
       setError(null);
-    } catch (error) {
-      console.error('Error fetching reservation:', error);
-      setError('Failed to load reservation details');
-    } finally {
+      setLoading(false);
+    } catch (err) {
+      setError('Failed to load reservation');
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchReservation();
-  }, [id]);
+  }, [fetchReservation]);
 
   if (loading) {
     return (
@@ -69,26 +100,15 @@ const ReservationDetails = () => {
     }
   };
 
-  const handleCheckIn = async () => {
-    try {
-      if (!id) return;
-      await reservationService.updateReservation(id, { status: 'CHECKED_IN' });
-      await fetchReservation();
-    } catch (error) {
-      console.error('Error checking in reservation:', error);
-      setError('Failed to check in reservation');
-    }
+  const handleCheckIn = () => {
+    if (!id) return;
+    navigate(`/check-in/${id}`);
   };
 
-  const handleCheckOut = async () => {
-    try {
-      if (!id) return;
-      await reservationService.updateReservation(id, { status: 'CHECKED_OUT' });
-      await fetchReservation();
-    } catch (error) {
-      console.error('Error checking out reservation:', error);
-      setError('Failed to check out reservation');
-    }
+  const handleCheckOut = () => {
+    // Navigate to the new checkout workflow
+    if (!id) return;
+    navigate(`/checkout/${id}`);
   };
 
   const {
@@ -107,16 +127,29 @@ const ReservationDetails = () => {
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
-      month: 'long', 
-      day: 'numeric', 
+      month: 'long',
+      day: 'numeric',
       year: 'numeric',
       hour: 'numeric',
       minute: '2-digit'
     });
   };
-  
+
+  // Helper function to format short date
+  const formatShortDate = (dateString: string | undefined) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  };
+
   // Helper function to format currency
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -125,23 +158,25 @@ const ReservationDetails = () => {
     }).format(amount);
   };
 
+  // Calculate duration
+  const calculateDuration = () => {
+    if (!startDate || !endDate) return 'N/A';
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return `${diffDays} ${diffDays === 1 ? 'night' : 'nights'}`;
+  };
+
   // Calculate total price
   const calculateTotal = () => {
     const basePrice = service?.price || 0;
-    
-    // Calculate add-ons total
     const addOnsTotal = reservation.addOnServices?.reduce((total: number, addOn: { price?: number; quantity?: number }) => {
       return total + (addOn.price || 0) * (addOn.quantity || 1);
     }, 0) || 0;
-    
-    // Apply any discounts if present
     const discount = reservation.discount || 0;
-    
-    // Calculate the total
     const subtotal = basePrice + addOnsTotal;
-    const total = subtotal - discount;
-    
-    return total;
+    return subtotal - discount;
   };
 
   // Helper function to get chip color based on status
@@ -165,7 +200,7 @@ const ReservationDetails = () => {
         return 'default';
     }
   };
-  
+
   // Available statuses for the dropdown
   const availableStatuses: Array<'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'> = [
     'PENDING',
@@ -176,7 +211,7 @@ const ReservationDetails = () => {
     'CANCELLED',
     'NO_SHOW'
   ];
-  
+
   const handleStatusClick = (event: React.MouseEvent<HTMLDivElement>) => {
     setStatusMenuAnchorEl(event.currentTarget);
   };
@@ -187,11 +222,11 @@ const ReservationDetails = () => {
 
   const handleStatusChange = async (newStatus: 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW') => {
     if (!id) return;
-    
+
     try {
       setStatusUpdateLoading(true);
       await reservationService.updateReservation(id, { status: newStatus });
-      await fetchReservation(); // Reload the reservation data
+      await fetchReservation();
       handleStatusMenuClose();
     } catch (err) {
       console.error('Error updating reservation status:', err);
@@ -205,248 +240,333 @@ const ReservationDetails = () => {
     <Container maxWidth="lg">
       <Box sx={{ mt: 4, mb: 4 }}>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+        {/* Header with Status and Actions */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" gutterBottom>
-            Reservation Details
-          </Typography>
-          <Chip 
-            label={reservation.status} 
-            color={getStatusChipColor(reservation.status as any)}
-            size="small"
-            sx={{ ml: 2, cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
-            onClick={handleStatusClick}
-          />
+          <Box>
+            <Typography variant="h4" gutterBottom>
+              Reservation Details
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Order #{reservation.orderNumber || 'Not assigned'}
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Chip
+              label={reservation.status}
+              color={getStatusChipColor(reservation.status as any)}
+              sx={{ cursor: 'pointer', '&:hover': { opacity: 0.8 } }}
+              onClick={handleStatusClick}
+            />
+            <Button
+              variant="contained"
+              startIcon={<EditIcon />}
+              onClick={handleEdit}
+            >
+              Edit
+            </Button>
+          </Box>
         </Box>
-        
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
-            <Box>
-              <Typography variant="h6" gutterBottom>Reservation Information</Typography>
-              
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Order Number</Typography>
-                <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                  {reservation.orderNumber || 'Not assigned'}
+
+        {/* Quick Summary Card */}
+        <Card sx={{ mb: 3, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+          <CardContent>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={3}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CalendarIcon />
+                  <Box>
+                    <Typography variant="caption" sx={{ opacity: 0.8 }}>Check-In</Typography>
+                    <Typography variant="body2" fontWeight="bold">
+                      {formatShortDate(startDate)}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CalendarIcon />
+                  <Box>
+                    <Typography variant="caption" sx={{ opacity: 0.8 }}>Check-Out</Typography>
+                    <Typography variant="body2" fontWeight="bold">
+                      {formatShortDate(endDate)}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <HomeIcon />
+                  <Box>
+                    <Typography variant="caption" sx={{ opacity: 0.8 }}>Duration</Typography>
+                    <Typography variant="body2" fontWeight="bold">
+                      {calculateDuration()}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <HomeIcon />
+                  <Box>
+                    <Typography variant="caption" sx={{ opacity: 0.8 }}>Suite</Typography>
+                    <Typography variant="body2" fontWeight="bold">
+                      {(() => {
+                        const resource: any = reservation.resource;
+                        if (!resource) return 'Not assigned';
+                        const suiteNum = resource.suiteNumber || (resource.attributes && resource.attributes.suiteNumber);
+                        return suiteNum ? `#${suiteNum}` : resource.name;
+                      })()}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+
+        {/* Main Content Grid */}
+        <Grid container spacing={3}>
+          {/* Left Column - Pet & Customer */}
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3, height: '100%' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <PetsIcon color="primary" />
+                <Typography variant="h6">Pet & Customer</Typography>
+              </Box>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="overline" color="text.secondary">Pet</Typography>
+                <Typography variant="h6">{pet?.name || 'N/A'}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {pet?.type || 'N/A'} • {pet?.breed || 'N/A'}
                 </Typography>
               </Box>
-              
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Check-In</Typography>
-                <Typography variant="body2">{formatDate(startDate)}</Typography>
-              </Box>
-              
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Check-Out</Typography>
-                <Typography variant="body1">{formatDate(endDate)}</Typography>
-              </Box>
-              
+
+              <Divider sx={{ my: 2 }} />
+
               <Box>
-                <Typography variant="h6" gutterBottom>Service & Pricing</Typography>
-                
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2">Service</Typography>
-                  <Typography variant="body1">{service?.name || 'N/A'}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {formatCurrency(service?.price || 0)}
+                <Typography variant="overline" color="text.secondary">Owner</Typography>
+                <Typography variant="h6">
+                  {customer?.firstName || 'N/A'} {customer?.lastName || ''}
+                </Typography>
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    📧 {customer?.email || 'N/A'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    📱 {customer?.phone || 'N/A'}
                   </Typography>
                 </Box>
-                
-                {/* Add-on Services Section */}
-                {reservation.addOnServices && reservation.addOnServices.length > 0 && (
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="subtitle2">Add-on Services</Typography>
-                    <Box sx={{ pl: 2, mt: 1, border: '1px solid #eee', borderRadius: 1, p: 1 }}>
-                      {reservation.addOnServices.map((addOn, index) => (
-                        <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                          <Typography variant="body2">
-                            {addOn.name || addOn.addOn?.name || 'Unnamed Add-on'}
-                            {addOn.quantity && addOn.quantity > 1 ? ` (x${addOn.quantity})` : ''}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {formatCurrency((addOn.price || 0) * (addOn.quantity || 1))}
-                          </Typography>
-                        </Box>
-                      ))}
-                    </Box>
-                  </Box>
-                )}
-                
-                {/* Pricing Summary */}
-                <Box sx={{ mt: 2, pt: 2, borderTop: '1px dashed #ccc' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                    <Typography variant="body2">Base Service:</Typography>
-                    <Typography variant="body2">{formatCurrency(service?.price || 0)}</Typography>
-                  </Box>
-                  
-                  {reservation.addOnServices && reservation.addOnServices.length > 0 && (
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                      <Typography variant="body2">Add-ons:</Typography>
-                      <Typography variant="body2">
-                        {formatCurrency(reservation.addOnServices.reduce((total, addOn) => {
-                          return total + (addOn.price || 0) * (addOn.quantity || 1);
-                        }, 0))}
-                      </Typography>
-                    </Box>
-                  )}
-                  
-                  {reservation.discount && reservation.discount > 0 && (
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                      <Typography variant="body2">Discount:</Typography>
-                      <Typography variant="body2" color="error.main">-{formatCurrency(reservation.discount)}</Typography>
-                    </Box>
-                  )}
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, pt: 1, borderTop: '1px solid #eee' }}>
-                    <Typography variant="subtitle2">Total:</Typography>
-                    <Typography variant="subtitle2" fontWeight="bold">{formatCurrency(calculateTotal())}</Typography>
-                  </Box>
-                </Box>
-                
-                <Box sx={{ mb: 2, mt: 3 }}>
-                  <Typography variant="subtitle2">Invoice Number</Typography>
-                  {reservation.invoice ? (
-                    <Typography variant="body1">
-                      <Link href={`/invoices/${reservation.invoice.id}`} sx={{ textDecoration: 'none' }}>
-                        #{reservation.invoice.invoiceNumber}
-                      </Link>
-                    </Typography>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">No invoice generated</Typography>
-                  )}
-                </Box>
               </Box>
-              
+            </Paper>
+          </Grid>
+
+          {/* Right Column - Service Details */}
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3, height: '100%' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <HomeIcon color="primary" />
+                <Typography variant="h6">Service Details</Typography>
+              </Box>
+
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="overline" color="text.secondary">Service</Typography>
+                <Typography variant="h6">{service?.name || 'N/A'}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {service?.description || ''}
+                </Typography>
+              </Box>
+
               {reservation.resource && (
                 <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2">Assigned Resource</Typography>
+                  <Typography variant="overline" color="text.secondary">Assigned Suite</Typography>
                   <Typography variant="body1">
                     {(() => {
                       const resource: any = reservation.resource;
                       const suiteNum = resource.suiteNumber || (resource.attributes && resource.attributes.suiteNumber);
                       if (suiteNum) {
-                        return <>Suite #{suiteNum} ({resource.type})</>;
+                        return `Suite #${suiteNum} (${resource.type})`;
                       }
-                      return <>{resource.name} ({resource.type})</>;
+                      return `${resource.name} (${resource.type})`;
                     })()}
                   </Typography>
                 </Box>
               )}
-              
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Pricing Details</Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography variant="body2">Base Service:</Typography>
-                    <Typography variant="body2">${service?.price?.toFixed(2) || '0.00'}</Typography>
-                  </Box>
-                  
-                  {/* Display add-ons if any */}
-                  {reservation.addOnServices && reservation.addOnServices.length > 0 && (
-                    <>
-                      {reservation.addOnServices.map((addOn, index: number) => (
-                        <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant="body2">
-                            {addOn.addOn?.name || addOn.name || 'Add-on'}
-                            {addOn.quantity && addOn.quantity > 1 ? ` (x${addOn.quantity})` : ''}:
-                          </Typography>
-                          <Typography variant="body2">${addOn.price?.toFixed(2) || '0.00'}</Typography>
-                        </Box>
-                      ))}
-                    </>
-                  )}
-                  
-                  {/* Display discount if any */}
-                  {reservation.discount && reservation.discount > 0 && (
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2">Discount:</Typography>
-                      <Typography variant="body2" color="error">-${reservation.discount.toFixed(2)}</Typography>
-                    </Box>
-                  )}
-                  
-                  {/* Display total */}
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, pt: 1, borderTop: '1px solid #eee' }}>
-                    <Typography variant="body1" fontWeight="bold">Total:</Typography>
-                    <Typography variant="body1" fontWeight="bold">${calculateTotal().toFixed(2)}</Typography>
-                  </Box>
-                </Box>
-                
-                <Box sx={{ mb: 2, mt: 3 }}>
-                  <Typography variant="subtitle2">Invoice Number</Typography>
-                  {reservation.invoice ? (
-                    <Typography variant="body1">
-                      <Link href={`/invoices/${reservation.invoice.id}`} sx={{ textDecoration: 'none' }}>
-                        #{reservation.invoice.invoiceNumber}
-                      </Link>
-                    </Typography>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">No invoice generated</Typography>
-                  )}
-                </Box>
-              </Box>
-            </Box>
-            
-            <Box>
-              <Typography variant="h6" gutterBottom>Pet & Customer Information</Typography>
-              
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Pet</Typography>
-                <Typography variant="body1">{pet?.name || 'N/A'}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {pet?.type || 'N/A'} • {pet?.breed || 'N/A'}
-                </Typography>
-              </Box>
-              
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Owner</Typography>
-                <Typography variant="body1">{customer?.firstName || 'N/A'} {customer?.lastName || ''}</Typography>
-                <Typography variant="body2">
-                  {customer?.email || 'N/A'} • {customer?.phone || 'N/A'}
-                </Typography>
-              </Box>
-              
-              <Divider sx={{ my: 2 }} />
-              
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Customer Notes</Typography>
-                <Typography variant="body2">
-                  {notes || 'No notes provided'}
-                </Typography>
-              </Box>
-              
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Staff Notes</Typography>
-                <Typography variant="body2">
-                  {staffNotes || 'No staff notes'}
-                </Typography>
-              </Box>
-              
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="subtitle2">Reservation Created</Typography>
-                <Typography variant="body2">{formatDate(createdAt)}</Typography>
-              </Box>
-              
-              {/* Confirmed by feature to be implemented */}
-            </Box>
-          </Box>
-        </Paper>
 
-        <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-          <Button variant="contained" color="primary" onClick={handleEdit}>
-            Edit Reservation
-          </Button>
+              <Box>
+                <Typography variant="overline" color="text.secondary">Duration</Typography>
+                <Typography variant="body1">{calculateDuration()}</Typography>
+              </Box>
+            </Paper>
+          </Grid>
+
+          {/* Financial Summary - Full Width */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <MoneyIcon color="primary" />
+                <Typography variant="h6">Financial Summary</Typography>
+              </Box>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={8}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
+                      <Typography variant="body1">{service?.name || 'Service'}</Typography>
+                      <Typography variant="body1">{formatCurrency(service?.price || 0)}</Typography>
+                    </Box>
+
+                    {reservation.addOnServices && reservation.addOnServices.length > 0 && (
+                      <>
+                        <Divider />
+                        <Typography variant="overline" color="text.secondary">Add-On Services</Typography>
+                        {reservation.addOnServices.map((addOn, index) => (
+                          <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.5, pl: 2 }}>
+                            <Typography variant="body2">
+                              {addOn.name || addOn.addOn?.name || 'Unnamed Add-on'}
+                              {addOn.quantity && addOn.quantity > 1 ? ` (×${addOn.quantity})` : ''}
+                            </Typography>
+                            <Typography variant="body2">
+                              {formatCurrency((addOn.price || 0) * (addOn.quantity || 1))}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </>
+                    )}
+
+                    {reservation.discount && reservation.discount > 0 && (
+                      <>
+                        <Divider />
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
+                          <Typography variant="body1" color="error.main">Discount</Typography>
+                          <Typography variant="body1" color="error.main">
+                            -{formatCurrency(reservation.discount)}
+                          </Typography>
+                        </Box>
+                      </>
+                    )}
+
+                    <Divider sx={{ borderStyle: 'dashed', borderWidth: 2 }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', py: 1 }}>
+                      <Typography variant="h6">Total</Typography>
+                      <Typography variant="h6" color="primary.main">
+                        {formatCurrency(calculateTotal())}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+
+                <Grid item xs={12} md={4}>
+                  <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 1, height: '100%' }}>
+                    <Typography variant="overline" color="text.secondary">Invoice</Typography>
+                    {reservation.invoice ? (
+                      <Box>
+                        <Link href={`/invoices/${reservation.invoice.id}`} sx={{ textDecoration: 'none' }}>
+                          <Typography variant="h6" color="primary">
+                            #{reservation.invoice.invoiceNumber}
+                          </Typography>
+                        </Link>
+                        <Chip
+                          label={reservation.invoice.status || 'Pending'}
+                          size="small"
+                          color={reservation.invoice.status === 'PAID' ? 'success' : 'warning'}
+                          sx={{ mt: 1 }}
+                        />
+                      </Box>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        No invoice generated
+                      </Typography>
+                    )}
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+
+          {/* Notes Section - Collapsible */}
+          <Grid item xs={12}>
+            <Paper sx={{ overflow: 'hidden' }}>
+              <Box
+                sx={{
+                  p: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  '&:hover': { bgcolor: 'action.hover' }
+                }}
+                onClick={() => setNotesExpanded(!notesExpanded)}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <NotesIcon color="primary" />
+                  <Typography variant="h6">Notes</Typography>
+                  {(notes || staffNotes) && (
+                    <Chip label="Has notes" size="small" color="info" />
+                  )}
+                </Box>
+                <IconButton
+                  size="small"
+                  sx={{
+                    transform: notesExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.3s'
+                  }}
+                >
+                  <ExpandMoreIcon />
+                </IconButton>
+              </Box>
+              <Collapse in={notesExpanded}>
+                <Divider />
+                <Box sx={{ p: 3 }}>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="overline" color="text.secondary">Customer Notes</Typography>
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        {notes || 'No notes provided'}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="overline" color="text.secondary">Staff Notes</Typography>
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        {staffNotes || 'No staff notes'}
+                      </Typography>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Collapse>
+            </Paper>
+          </Grid>
+        </Grid>
+
+        {/* Action Buttons */}
+        <Box sx={{ mt: 3, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           {reservation.status === 'CONFIRMED' && (
-            <Button variant="contained" color="info" onClick={handleCheckIn}>
+            <Button
+              variant="contained"
+              color="info"
+              startIcon={<CheckInIcon />}
+              onClick={handleCheckIn}
+              size="large"
+            >
               Check In
             </Button>
           )}
           {reservation.status === 'CHECKED_IN' && (
-            <Button variant="contained" color="secondary" onClick={handleCheckOut}>
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<CheckOutIcon />}
+              onClick={handleCheckOut}
+              size="large"
+            >
               Check Out
             </Button>
           )}
-          <Button 
-            variant="outlined" 
-            color="error" 
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<CancelIcon />}
             onClick={handleCancel}
             disabled={reservation.status === 'CANCELLED'}
           >
@@ -456,8 +576,15 @@ const ReservationDetails = () => {
             Back to Reservations
           </Button>
         </Box>
+
+        {/* Metadata Footer */}
+        <Box sx={{ mt: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+          <Typography variant="caption" color="text.secondary">
+            Reservation created on {formatDate(createdAt)}
+          </Typography>
+        </Box>
       </Box>
-      
+
       {/* Status Change Menu */}
       <Menu
         anchorEl={statusMenuAnchorEl}
@@ -473,8 +600,8 @@ const ReservationDetails = () => {
         }}
       >
         {availableStatuses.map((status) => (
-          <MenuItem 
-            key={status} 
+          <MenuItem
+            key={status}
             onClick={() => handleStatusChange(status)}
             disabled={statusUpdateLoading || (reservation && reservation.status === status)}
             sx={{
@@ -488,8 +615,8 @@ const ReservationDetails = () => {
               size="small"
               label={status}
               color={getStatusChipColor(status as any)}
-              sx={{ 
-                height: 20, 
+              sx={{
+                height: 20,
                 '& .MuiChip-label': { px: 1, fontSize: '0.7rem' },
                 minWidth: '80px'
               }}
@@ -501,4 +628,4 @@ const ReservationDetails = () => {
   );
 };
 
-export default ReservationDetails;
+export default ReservationDetailsRedesigned;

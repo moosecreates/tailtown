@@ -37,15 +37,13 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   
   // Set initial payment method to cash if not set or invalid
   useEffect(() => {
-    console.log('PaymentStep: Current payment method:', paymentMethod);
     const validMethods = ['cash', 'credit_card', 'check', 'account'];
     
     if (!paymentMethod || paymentMethod === 'undefined' || !validMethods.includes(paymentMethod)) {
-      console.log('PaymentStep: Setting initial payment method to cash');
       // Using setTimeout to ensure this happens after the current render cycle
       setTimeout(() => onPaymentMethodChange('cash'), 0);
     }
-  }, []); // Run only once on component mount
+  }, [paymentMethod, onPaymentMethodChange]); // Include dependencies to avoid exhaustive deps warning
   
   return (
     <Box>
@@ -60,10 +58,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               value={paymentMethod || 'cash'}
               defaultValue="cash"
               label="Payment Method"
-              onChange={(e) => {
-                console.log('PaymentStep: Payment method changed to:', e.target.value);
-                onPaymentMethodChange(e.target.value);
-              }}
+              onChange={(e) => onPaymentMethodChange(e.target.value)}
             >
               <MenuItem value="cash">Cash</MenuItem>
               <MenuItem value="credit_card">Credit Card</MenuItem>

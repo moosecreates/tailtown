@@ -1,74 +1,90 @@
 import React from 'react';
-import { Box, Typography, Paper, Divider } from '@mui/material';
-import { formatCurrency } from '../../utils/formatters';
-import { CartItem } from '../../contexts/ShoppingCartContext';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import { useShoppingCart, CartItem } from '../../contexts/ShoppingCartContext';
 
-interface ExtendedCartItem extends CartItem {
-  price?: number;
-  quantity?: number;
-  addOns?: Array<{
-    id: string;
-    name: string;
-    price: number;
-    quantity: number;
-  }>;
-}
-
+// Define the props interface
 interface OrderSummaryProps {
-  cartItems: ExtendedCartItem[];
-  tax?: number;
+  taxRate: number;
 }
 
-const OrderSummary: React.FC<OrderSummaryProps> = ({ cartItems, tax = 0 }) => {
-  // Calculate subtotal from all cart items and their add-ons
-  const subtotal = cartItems.reduce((total: number, item: ExtendedCartItem) => {
-    return total + (item.price || 0) + 
-      ((item.addOns?.reduce((addOnTotal, addOn) => addOnTotal + (addOn.price * addOn.quantity), 0)) || 0);
+// Define a minimal implementation of OrderSummary that doesn't change functionality
+const OrderSummary: React.FC<OrderSummaryProps> = ({ taxRate }) => {
+  // Access the cart state
+  const { state } = useShoppingCart();
+  
+  // Calculate subtotal including add-ons
+  const subtotal = state.items.reduce((total, item) => {
+    let itemTotal = item.price || 0;
+    
+    // Add add-ons to the item total
+    if (item.addOns && item.addOns.length > 0) {
+      itemTotal += item.addOns.reduce((addOnTotal, addOn) => 
+        addOnTotal + (addOn.price * addOn.quantity), 0);
+    }
+    
+    return total + itemTotal;
   }, 0);
   
-  // Calculate final total
-  const totalAmount = subtotal + tax;
+  // Calculate tax
+  const tax = subtotal * taxRate;
+  
+  // Calculate total
+  const total = subtotal + tax;
   
   return (
-    <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        Order Summary
-      </Typography>
-      <Box sx={{ mb: 2 }}>
-        {cartItems.map((item, index) => (
-          <Box key={index} sx={{ mb: 1 }}>
-            <Typography variant="body2">
-              {item.name || `Item #${index + 1}`}: {formatCurrency(item.price || 0)}
-            </Typography>
-            
-            {/* Display add-ons if any */}
-            {item.addOns && item.addOns.length > 0 && (
-              <Box sx={{ pl: 2 }}>
-                {item.addOns.map((addOn, addOnIndex) => (
-                  <Typography key={addOnIndex} variant="body2" color="text.secondary">
-                    {addOn.name} ({addOn.quantity}): {formatCurrency(addOn.price * addOn.quantity)}
-                  </Typography>
-                ))}
-              </Box>
-            )}
-          </Box>
-        ))}
-      </Box>
-      <Divider sx={{ my: 1 }} />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-        <Typography variant="body1">Subtotal:</Typography>
-        <Typography variant="body1">{formatCurrency(subtotal)}</Typography>
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-        <Typography variant="body1">Tax:</Typography>
-        <Typography variant="body1">{formatCurrency(tax)}</Typography>
-      </Box>
-      <Divider sx={{ my: 1 }} />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Typography variant="h6">Total:</Typography>
-        <Typography variant="h6">{formatCurrency(totalAmount)}</Typography>
-      </Box>
-    </Paper>
+    <TableContainer>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Item</TableCell>
+            <TableCell>Type</TableCell>
+            <TableCell>Details</TableCell>
+            <TableCell align="right">Price</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {state.items.map((item) => (
+            <React.Fragment key={item.id}>
+              {/* Main service row */}
+              <TableRow>
+                <TableCell>{item.serviceName || 'Service'}</TableCell>
+                <TableCell>Service</TableCell>
+                <TableCell>{item.petName ? `for ${item.petName}` : '-'}</TableCell>
+                <TableCell align="right">${(item.price || 0).toFixed(2)}</TableCell>
+              </TableRow>
+              
+              {/* Add-on rows */}
+              {item.addOns && item.addOns.map((addOn, index) => (
+                <TableRow key={`${item.id}-addon-${index}`}>
+                  <TableCell sx={{ pl: 4 }}>+ {addOn.name}</TableCell>
+                  <TableCell>Add-on</TableCell>
+                  <TableCell>Qty: {addOn.quantity}</TableCell>
+                  <TableCell align="right">${(addOn.price * addOn.quantity).toFixed(2)}</TableCell>
+                </TableRow>
+              ))}
+            </React.Fragment>
+          ))}
+          
+          {/* Summary rows */}
+          <TableRow>
+            <TableCell colSpan={3}>Subtotal</TableCell>
+            <TableCell align="right">${subtotal.toFixed(2)}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell colSpan={3}>Tax ({(taxRate * 100).toFixed(2)}%)</TableCell>
+            <TableCell align="right">${tax.toFixed(2)}</TableCell>
+          </TableRow>
+          <TableRow>
+            <TableCell colSpan={3}>
+              <Typography variant="subtitle1" fontWeight="bold">Total</Typography>
+            </TableCell>
+            <TableCell align="right">
+              <Typography variant="subtitle1" fontWeight="bold">${total.toFixed(2)}</Typography>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 };
 

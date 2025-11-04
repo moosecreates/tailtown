@@ -1,6 +1,3 @@
-// API constants
-export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002';
-
 // API endpoints
 export const ENDPOINTS = {
   CUSTOMERS: '/api/customers',

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient, PriceRuleType, DiscountType, ServiceCategory } from '@prisma/client';
+import { PrismaClient, PriceRuleType, DiscountType, PriceAdjustmentType, ServiceCategory } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 
 const prisma = new PrismaClient();
@@ -100,6 +100,7 @@ export const createPriceRule = async (
       name,
       description,
       ruleType,
+      adjustmentType,
       discountType,
       discountValue,
       minQuantity,
@@ -136,6 +137,7 @@ export const createPriceRule = async (
           name,
           description,
           ruleType,
+          adjustmentType: adjustmentType || 'DISCOUNT',
           discountType,
           discountValue,
           minQuantity,
@@ -211,6 +213,7 @@ export const updatePriceRule = async (
       name,
       description,
       ruleType,
+      adjustmentType,
       discountType,
       discountValue,
       minQuantity,
@@ -248,6 +251,7 @@ export const updatePriceRule = async (
           name,
           description,
           ruleType,
+          adjustmentType,
           discountType,
           discountValue,
           minQuantity,
@@ -477,21 +481,28 @@ export const calculatePrice = async (
         continue;
       }
       
-      let discountAmount = 0;
+      let adjustmentAmount = 0;
       
       if (rule.discountType === 'PERCENTAGE') {
-        discountAmount = basePrice * (rule.discountValue / 100);
+        adjustmentAmount = basePrice * (rule.discountValue / 100);
       } else { // FIXED_AMOUNT
-        discountAmount = rule.discountValue;
+        adjustmentAmount = rule.discountValue;
       }
       
-      finalPrice -= discountAmount;
+      // Apply adjustment based on type (DISCOUNT reduces, SURCHARGE increases)
+      if (rule.adjustmentType === 'SURCHARGE') {
+        finalPrice += adjustmentAmount;
+      } else {
+        finalPrice -= adjustmentAmount;
+      }
+      
       appliedRuleTypes.add(rule.ruleType);
       
       appliedRules.push({
         ruleId: rule.id,
         ruleName: rule.name,
-        discountAmount,
+        adjustmentType: rule.adjustmentType,
+        adjustmentAmount,
         discountType: rule.discountType,
         discountValue: rule.discountValue
       });

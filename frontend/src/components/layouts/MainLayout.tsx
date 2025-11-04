@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SvgIconComponent } from '@mui/icons-material';
 import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import logoImage from '../../assets/images/tail town logo.jpg';
@@ -44,9 +44,17 @@ import {
   Print as PrintIcon,
   InsertChart as AnalyticsIcon,
   CreditCard as PaymentIcon,
-  AssessmentOutlined as ReportIcon
+  AssessmentOutlined as ReportIcon,
+  ShoppingCart as ShoppingCartIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import ImpersonationBanner from '../super-admin/ImpersonationBanner';
+import AnnouncementBell from '../announcements/AnnouncementBell';
+import AnnouncementModal from '../announcements/AnnouncementModal';
+import announcementService from '../../services/announcementService';
+import type { Announcement } from '../announcements/AnnouncementModal';
+import { useHelp } from '../../contexts/HelpContext';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 const drawerWidth = 240;
 
@@ -62,9 +70,35 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const { user, logout, isLoading } = useAuth();
+  const { openHelp } = useHelp();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Load announcements on mount
+  useEffect(() => {
+    loadAnnouncements();
+  }, []);
+
+  const loadAnnouncements = async () => {
+    const data = await announcementService.getActiveAnnouncements();
+    setAnnouncements(data);
+  };
+
+  const handleDismissAnnouncement = async (id: string) => {
+    try {
+      await announcementService.dismissAnnouncement(id);
+      // Only remove if dismiss was successful
+      setAnnouncements(prev => prev.filter(a => a.id !== id));
+      console.log('Announcement dismissed successfully');
+    } catch (error) {
+      console.error('Failed to dismiss announcement:', error);
+      // Don't remove from state if dismiss failed
+      alert('Unable to dismiss announcement. Please try again later.');
+    }
+  };
 
   // 2. Event handlers
   const handleDrawerToggle = () => {
@@ -103,8 +137,12 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
 
   const navItems: NavItem[] = [
     { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
+    { path: '/calendar', label: 'Boarding & Daycare', icon: DaycareIcon },
+    { path: '/calendar/grooming', label: 'Grooming', icon: GroomingIcon },
+    { path: '/calendar/training', label: 'Training', icon: TrainingIcon },
     { path: '/customers', label: 'Customers', icon: PeopleIcon },
     { path: '/pets', label: 'Pets', icon: PetsIcon },
+    { path: '/products', label: 'Products & POS', icon: ShoppingCartIcon },
     { 
       path: '/suites', 
       label: 'Kennels', 
@@ -114,25 +152,15 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
         { path: '/kennels/print-cards', label: 'Print Kennel Cards', icon: PrintIcon },
       ] 
     },
-    { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
-    { path: '/orders/new', label: 'New Order', icon: OrdersIcon },
-    { path: '/staff/scheduling', label: 'Staff Scheduling', icon: ScheduleIcon },
-    // Price Rules moved to Settings
+    // Hidden while building calendar-integrated ordering functionality
+    // { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
+    // { path: '/orders/new', label: 'New Order', icon: OrdersIcon },
     { 
-      path: '/calendar', 
-      label: 'Calendar', 
-      icon: CalendarIcon,
-      children: [
-        { path: '/calendar', label: 'Boarding & Daycare', icon: DaycareIcon },
-        { path: '/calendar/grooming', label: 'Grooming', icon: GroomingIcon },
-        { path: '/calendar/training', label: 'Training', icon: TrainingIcon },
-      ] 
-    },
-    { 
-      path: '/analytics', 
-      label: 'Analytics', 
+      path: '/reports', 
+      label: 'Reports', 
       icon: AnalyticsIcon,
       children: [
+        { path: '/reports', label: 'All Reports', icon: ReportIcon },
         { path: '/analytics', label: 'Sales Dashboard', icon: ReportIcon },
         { path: '/analytics/customers', label: 'Customer Value', icon: PaymentIcon },
       ] 
@@ -158,74 +186,13 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
       </Toolbar>
       <Divider />
       <List>
-        {navItems.map((item) => (
-          <React.Fragment key={item.path}>
-            {item.children ? (
-              <>
-                <ListItem disablePadding>
-                  <ListItemButton
-                    onClick={() => handleSubMenuToggle(item.label)}
-                    selected={location.pathname.startsWith(item.path)}
-                    sx={{
-                      '&.Mui-selected': {
-                        backgroundColor: 'primary.light',
-                        color: 'primary.contrastText',
-                        '&:hover': {
-                          backgroundColor: 'primary.main',
-                        },
-                        '& .MuiListItemIcon-root': {
-                          color: 'primary.contrastText',
-                        },
-                      },
-                    }}
-                  >
-                    <ListItemIcon>
-                      <item.icon />
-                    </ListItemIcon>
-                    <ListItemText primary={item.label} />
-                    {openSubMenu === item.label ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                  </ListItemButton>
-                </ListItem>
-                {openSubMenu === item.label && (
-                  <List component="div" disablePadding>
-                    {item.children.map((child) => (
-                      <ListItem key={child.path} disablePadding>
-                        <ListItemButton
-                          component={Link}
-                          to={child.path}
-                          selected={location.pathname === child.path}
-                          onClick={handleDrawerToggle}
-                          sx={{
-                            pl: 4,
-                            '&.Mui-selected': {
-                              backgroundColor: 'primary.light',
-                              color: 'primary.contrastText',
-                              '&:hover': {
-                                backgroundColor: 'primary.main',
-                              },
-                              '& .MuiListItemIcon-root': {
-                                color: 'primary.contrastText',
-                              },
-                            },
-                          }}
-                        >
-                          <ListItemIcon>
-                            <child.icon />
-                          </ListItemIcon>
-                          <ListItemText primary={child.label} />
-                        </ListItemButton>
-                      </ListItem>
-                    ))}
-                  </List>
-                )}
-              </>
-            ) : (
+        {navItems.map((item) => 
+          item.children ? (
+            <React.Fragment key={item.path}>
               <ListItem disablePadding>
                 <ListItemButton
-                  component={Link}
-                  to={item.path}
-                  selected={location.pathname === item.path}
-                  onClick={handleDrawerToggle}
+                  onClick={() => handleSubMenuToggle(item.label)}
+                  selected={location.pathname.startsWith(item.path)}
                   sx={{
                     '&.Mui-selected': {
                       backgroundColor: 'primary.light',
@@ -243,11 +210,70 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
                     <item.icon />
                   </ListItemIcon>
                   <ListItemText primary={item.label} />
+                  {openSubMenu === item.label ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </ListItemButton>
               </ListItem>
-            )}
-          </React.Fragment>
-        ))}
+              {openSubMenu === item.label && (
+                <List component="div" disablePadding>
+                  {item.children.map((child) => (
+                    <ListItem key={child.path} disablePadding>
+                      <ListItemButton
+                        component={Link}
+                        to={child.path}
+                        selected={location.pathname === child.path}
+                        onClick={handleDrawerToggle}
+                        sx={{
+                          pl: 4,
+                          '&.Mui-selected': {
+                            backgroundColor: 'primary.light',
+                            color: 'primary.contrastText',
+                            '&:hover': {
+                              backgroundColor: 'primary.main',
+                            },
+                            '& .MuiListItemIcon-root': {
+                              color: 'primary.contrastText',
+                            },
+                          },
+                        }}
+                      >
+                        <ListItemIcon>
+                          <child.icon />
+                        </ListItemIcon>
+                        <ListItemText primary={child.label} />
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </React.Fragment>
+          ) : (
+            <ListItem key={item.path} disablePadding>
+              <ListItemButton
+                component={Link}
+                to={item.path}
+                selected={location.pathname === item.path}
+                onClick={handleDrawerToggle}
+                sx={{
+                  '&.Mui-selected': {
+                    backgroundColor: 'primary.light',
+                    color: 'primary.contrastText',
+                    '&:hover': {
+                      backgroundColor: 'primary.main',
+                    },
+                    '& .MuiListItemIcon-root': {
+                      color: 'primary.contrastText',
+                    },
+                  },
+                }}
+              >
+                <ListItemIcon>
+                  <item.icon />
+                </ListItemIcon>
+                <ListItemText primary={item.label} />
+              </ListItemButton>
+            </ListItem>
+          )
+        )}
       </List>
       <Divider />
       <List>
@@ -256,7 +282,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
             <ListItemIcon>
               <SettingsIcon />
             </ListItemIcon>
-            <ListItemText primary="Settings" />
+            <ListItemText primary="Admin" />
           </ListItemButton>
         </ListItem>
       </List>
@@ -266,6 +292,15 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
+      
+      {/* Announcement Modal */}
+      <AnnouncementModal
+        open={showAnnouncementModal}
+        announcements={announcements}
+        onClose={() => setShowAnnouncementModal(false)}
+        onDismiss={handleDismissAnnouncement}
+      />
+      
       <AppBar
         position="fixed"
         sx={{
@@ -286,19 +321,48 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             {navItems.find((item) => item.path === location.pathname)?.label || 'Dashboard'}
           </Typography>
-          <IconButton
-            size="large"
-            edge="end"
-            color="inherit"
-            aria-label="account of current user"
-            aria-controls="menu-appbar"
-            aria-haspopup="true"
-            onClick={handleProfileMenuOpen}
-          >
-            <Avatar sx={{ bgcolor: 'secondary.main' }}>
-              {user?.firstName?.[0] || 'U'}
-            </Avatar>
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+              <Typography variant="body2" sx={{ textAlign: 'right', lineHeight: 1.2 }}>
+                {user?.firstName} {user?.lastName}
+              </Typography>
+              <Typography variant="caption" color="inherit" sx={{ opacity: 0.8 }}>
+                {user?.role || 'Staff'}
+              </Typography>
+            </Box>
+            <AnnouncementBell
+              announcements={announcements}
+              onAnnouncementClick={() => setShowAnnouncementModal(true)}
+              onCreateClick={() => navigate('/admin/announcements')}
+            />
+            <IconButton
+              color="inherit"
+              onClick={() => openHelp()}
+              aria-label="help"
+              sx={{ ml: 1 }}
+            >
+              <HelpOutlineIcon />
+            </IconButton>
+            <IconButton
+              size="large"
+              edge="end"
+              color="inherit"
+              aria-label="account of current user"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleProfileMenuOpen}
+            >
+              <Avatar 
+                src={(user as any)?.profilePhoto || undefined}
+                sx={{ 
+                  bgcolor: 'secondary.main',
+                  border: '2px solid white',
+                }}
+              >
+                {!(user as any)?.profilePhoto && (user?.firstName?.[0] || 'U')}
+              </Avatar>
+            </IconButton>
+          </Box>
           <Menu
             id="menu-appbar"
             anchorEl={anchorEl}
@@ -373,6 +437,10 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
         }}
       >
         <Toolbar />
+        {/* Show impersonation banner if active */}
+        {localStorage.getItem('impersonationSession') && (
+          <ImpersonationBanner onExit={() => {}} />
+        )}
         {children || <Outlet />}
       </Box>
     </Box>

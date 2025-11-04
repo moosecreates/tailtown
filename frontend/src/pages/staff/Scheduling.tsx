@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Container,
   Paper,
@@ -12,14 +12,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  TextField,
   Alert
 } from '@mui/material';
 import { DatePicker, TimePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { parse } from 'date-fns';
-import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { SelectChangeEvent } from '@mui/material';
 
@@ -75,25 +74,25 @@ const Scheduling: React.FC = () => {
     selectedStaff: [] as string[]
   });
 
-  useEffect(() => {
-    const fetchStaff = async () => {
-      try {
-        setLoading(true);
-        const staffData = await staffService.getAllStaff();
-        setStaff(staffData);
-        if (staffData.length > 0) {
-          setSelectedStaffId(staffData[0].id || '');
-        }
-      } catch (err) {
-        setError('Failed to load staff data. Please try again.');
-        console.error('Error fetching staff:', err);
-      } finally {
-        setLoading(false);
+  const fetchStaff = useCallback(async () => {
+    try {
+      setLoading(true);
+      const staffData = await staffService.getAllStaff();
+      setStaff(staffData);
+      if (staffData.length > 0) {
+        setSelectedStaffId(staffData[0].id || '');
       }
-    };
-
-    fetchStaff();
+    } catch (err) {
+      setError('Failed to load staff data. Please try again.');
+      console.error('Error fetching staff:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchStaff();
+  }, [fetchStaff]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);

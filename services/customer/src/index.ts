@@ -4,6 +4,8 @@ import fs from 'fs';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { customerRoutes } from './routes/customer.routes';
 import { petRoutes } from './routes/pet.routes';
@@ -14,18 +16,43 @@ import { suiteRoutes } from './routes/suite.routes';
 import { staffRoutes } from './routes/staff.routes';
 import { scheduleRoutes } from './routes/schedule.routes';
 import priceRuleRoutes from './routes/priceRule.routes';
+import couponRoutes from './routes/coupon.routes';
+import availabilityRoutes from './routes/availability.routes';
+import loyaltyRoutes from './routes/loyalty.routes';
+import depositRoutes from './routes/deposit.routes';
+import multiPetRoutes from './routes/multiPet.routes';
+import checklistRoutes from './routes/checklist.routes';
 import invoiceRoutes from './routes/invoice.routes';
 import paymentRoutes from './routes/payment.routes';
 import addonRoutes from './routes/addon.routes';
-import analyticsRoutes from './routes/analytics.routes';
+// Using fixed analytics routes to avoid schema issues
+import analyticsRoutes from './routes/analytics-fixed.routes';
+import tenantRoutes from './routes/tenant.routes';
+import emailRoutes from './routes/email.routes';
+import smsRoutes from './routes/sms.routes';
+import vaccineUploadRoutes from './routes/vaccine-upload.routes';
+import groomerAppointmentRoutes from './routes/groomerAppointment.routes';
+import trainingClassRoutes from './routes/trainingClass.routes';
+import enrollmentRoutes from './routes/enrollment.routes';
+import vaccineRequirementRoutes from './routes/vaccineRequirement.routes';
+import customIconRoutes from './routes/custom-icons.routes';
+import productsRoutes from './routes/products.routes';
+import reportRoutes from './routes/reports.routes';
+import gingrRoutes from './routes/gingr.routes';
+import referenceDataRoutes from './routes/referenceData.routes';
+import messageTemplatesRoutes from './routes/messageTemplates.routes';
+import announcementRoutes from './routes/announcement.routes';
+import superAdminRoutes from './routes/super-admin.routes';
 import { errorHandler } from './middleware/error.middleware';
+import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
+import { enforceHTTPS, securityHeaders, sanitizeInput } from './middleware/security.middleware';
 
 // Load environment variables
 dotenv.config();
 
 // Initialize the Express application
 const app = express();
-const PORT = process.env.PORT || 3002; // Using port 3002 as standard for backend
+const PORT = 4004; // Explicitly setting port 4004 for customer service
 
 // Increase HTTP header limits to prevent 431 errors
 app.set('etag', false); // Disable ETag generation to reduce header size
@@ -38,6 +65,15 @@ app.use((req, res, next) => {
 });
 
 // Middleware
+// Security: Enforce HTTPS in production
+app.use(enforceHTTPS);
+
+// Security: Add security headers
+app.use(securityHeaders);
+
+// Enable gzip compression for all responses
+app.use(compression());
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -51,10 +87,58 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   crossOriginEmbedderPolicy: false
 }));
-// Minimal middleware configuration to reduce header overhead
-app.use(cors());
+// Enhanced CORS configuration to ensure frontend can connect
+// In production, restrict to specific domains
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : ['http://localhost:3000', 'http://localhost:3001']; // Default for development
+
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? allowedOrigins 
+    : '*', // Allow all origins in development only
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'x-api-key', 'X-API-Key', 'X-Tenant-Subdomain'],
+  credentials: true
+}));
+
+// Add OPTIONS handling for preflight requests
+app.options('*', cors());
+
+// Serve static files (uploaded photos)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Rate limiting to prevent abuse
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each IP to 1000 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // Skip rate limiting for health checks
+  skip: (req) => req.path === '/health',
+});
+
+// Apply rate limiting to all API routes
+app.use('/api/', limiter);
+
+// Stricter rate limiting for authentication endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 login attempts per windowMs
+  message: 'Too many login attempts, please try again later.',
+  skipSuccessfulRequests: true, // Don't count successful requests
+});
+
+// Apply to auth routes (if they exist)
+app.use('/api/auth/login', authLimiter);
+
+// Request body parsing middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Security: Sanitize user input
+app.use(sanitizeInput);
 
 // Use minimal logging in production to reduce overhead
 app.use(morgan('tiny'));
@@ -190,23 +274,78 @@ app.get('/test-file/:filename', (req, res) => {
 });
 
 // Routes
-app.use('/api/customers', customerRoutes);
-app.use('/api/pets', petRoutes);
-app.use('/api/reservations', reservationRoutes);
-app.use('/api/services', serviceRoutes);
-app.use('/api/resources', resourceRoutes);
-app.use('/api/suites', suiteRoutes);
-app.use('/api/staff', staffRoutes);
-app.use('/api/price-rules', priceRuleRoutes);
-app.use('/api/schedules', scheduleRoutes);
-app.use('/api/invoices', invoiceRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/addons', addonRoutes);
-app.use('/api/analytics', analyticsRoutes);
+// Super Admin routes (no tenant context required - platform management)
+app.use('/api/super-admin', superAdminRoutes);
+
+// Tenant management routes (no tenant context required - for super admins)
+app.use('/api/tenants', tenantRoutes);
+
+// Apply tenant context middleware to all other routes
+// This extracts the subdomain and attaches tenant info to the request
+app.use('/api', extractTenantContext);
+
+// Tenant-specific routes (require tenant context)
+app.use('/api/customers', requireTenant, customerRoutes);
+app.use('/api/pets', requireTenant, petRoutes);
+app.use('/api/reservations', requireTenant, reservationRoutes);
+app.use('/api/services', requireTenant, serviceRoutes);
+app.use('/api/resources', requireTenant, resourceRoutes);
+app.use('/api/suites', requireTenant, suiteRoutes);
+app.use('/api/staff', requireTenant, staffRoutes);
+app.use('/api/price-rules', requireTenant, priceRuleRoutes);
+app.use('/api/coupons', requireTenant, couponRoutes);
+app.use('/api/availability', requireTenant, availabilityRoutes);
+app.use('/api/loyalty', requireTenant, loyaltyRoutes);
+app.use('/api/deposits', requireTenant, depositRoutes);
+app.use('/api/multi-pet', requireTenant, multiPetRoutes);
+app.use('/api/checklists', requireTenant, checklistRoutes);
+app.use('/api/schedules', requireTenant, scheduleRoutes);
+app.use('/api/invoices', requireTenant, invoiceRoutes);
+app.use('/api/payments', requireTenant, paymentRoutes);
+app.use('/api/addons', requireTenant, addonRoutes);
+app.use('/api/analytics', requireTenant, analyticsRoutes);
+app.use('/api/emails', requireTenant, emailRoutes);
+app.use('/api/sms', requireTenant, smsRoutes);
+app.use('/api/pets', requireTenant, vaccineUploadRoutes);
+
+// Advanced Scheduling Routes
+app.use('/api', requireTenant, groomerAppointmentRoutes);
+app.use('/api', requireTenant, trainingClassRoutes);
+app.use('/api', requireTenant, enrollmentRoutes);
+
+// Vaccine Requirement Routes
+app.use('/api', requireTenant, vaccineRequirementRoutes);
+
+// Custom Icon Routes
+app.use('/api/custom-icons', requireTenant, customIconRoutes);
+
+// Products & POS Routes
+app.use('/api/products', requireTenant, productsRoutes);
+
+// Reports Routes
+app.use('/api/reports', requireTenant, reportRoutes);
+
+// Gingr Migration Routes (no tenant required - for super admin)
+app.use('/api/gingr', gingrRoutes);
+
+// Reference Data Routes (breeds, vets, temperaments)
+app.use('/api', requireTenant, referenceDataRoutes);
+
+// Message Templates Routes
+app.use('/api/message-templates', requireTenant, messageTemplatesRoutes);
+
+// Announcement Routes
+app.use('/api', requireTenant, announcementRoutes);
+
+// Serve uploaded icons statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Additional routes without /api prefix for staff (to match frontend API calls)
 app.use('/staff', staffRoutes);
 app.use('/schedules', scheduleRoutes);
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {

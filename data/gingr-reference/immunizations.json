@@ -1,0 +1,29 @@
+{
+  "Species undefined": [
+    {
+      "id": "2",
+      "type": "Bordetella",
+      "required": "1"
+    },
+    {
+      "id": "5",
+      "type": "DHPP",
+      "required": "1"
+    },
+    {
+      "id": "4",
+      "type": "FVRCP",
+      "required": "1"
+    },
+    {
+      "id": "1",
+      "type": "Rabies",
+      "required": "1"
+    },
+    {
+      "id": "1",
+      "type": "Rabies",
+      "required": "1"
+    }
+  ]
+}

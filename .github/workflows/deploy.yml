@@ -1,0 +1,110 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd frontend && npm ci
+        cd ../services/customer && npm ci
+        cd ../reservation-service && npm ci
+    
+    - name: Build frontend
+      env:
+        REACT_APP_TENANT_ID: dev
+        REACT_APP_API_URL: http://129.212.178.244:4004
+        REACT_APP_RESERVATION_API_URL: http://129.212.178.244:4003
+      run: |
+        cd frontend
+        npm run build
+    
+    - name: Build backend services
+      run: |
+        cd services/customer
+        npm run build
+        cd ../reservation-service
+        npm run build
+    
+    - name: Create deployment package
+      run: |
+        mkdir -p deploy
+        cp -r frontend/build deploy/frontend
+        cp -r services/customer/dist deploy/customer
+        cp -r services/customer/prisma deploy/customer/
+        cp -r services/reservation-service/dist deploy/reservation
+        cp -r services/reservation-service/prisma deploy/reservation/
+        tar -czf deploy.tar.gz deploy/
+    
+    - name: Deploy to Digital Ocean
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        SERVER_HOST: 129.212.178.244
+        SERVER_USER: root
+      run: |
+        # Setup SSH
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+        chmod 600 ~/.ssh/deploy_key
+        ssh-keyscan -H $SERVER_HOST >> ~/.ssh/known_hosts
+        
+        # Upload deployment package
+        scp -i ~/.ssh/deploy_key deploy.tar.gz $SERVER_USER@$SERVER_HOST:/tmp/
+        
+        # Deploy on server
+        ssh -i ~/.ssh/deploy_key $SERVER_USER@$SERVER_HOST << 'EOF'
+          cd /opt/tailtown
+          
+          # Backup current deployment
+          tar -czf backup-$(date +%Y%m%d_%H%M%S).tar.gz frontend/build services/customer/dist services/reservation-service/dist
+          
+          # Extract new deployment
+          tar -xzf /tmp/deploy.tar.gz -C /tmp/
+          
+          # Update files
+          cp -r /tmp/deploy/frontend/* frontend/build/
+          cp -r /tmp/deploy/customer/* services/customer/dist/
+          cp -r /tmp/deploy/reservation/* services/reservation-service/dist/
+          
+          # Restart services
+          pm2 restart customer-service || true
+          pm2 restart reservation-service || true
+          pm2 restart frontend || true
+          
+          # Cleanup
+          rm -rf /tmp/deploy /tmp/deploy.tar.gz
+        EOF
+    
+    - name: Verify deployment
+      env:
+        SERVER_HOST: 129.212.178.244
+      run: |
+        sleep 10
+        curl -f http://$SERVER_HOST:4004/health || exit 1
+        curl -f http://$SERVER_HOST:4003/health || exit 1
+        curl -f http://$SERVER_HOST:3000 || exit 1
+    
+    - name: Notify on success
+      if: success()
+      run: echo "✅ Deployment successful!"
+    
+    - name: Notify on failure
+      if: failure()
+      run: echo "❌ Deployment failed!"

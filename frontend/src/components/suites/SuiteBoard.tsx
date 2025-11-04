@@ -22,15 +22,42 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import SearchIcon from '@mui/icons-material/Search';
 import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
 import PetsIcon from '@mui/icons-material/Pets';
-import { resourceService, Resource } from '../../services';
+import { resourceService, type Resource } from '../../services/resourceService';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
 import { determineSuiteStatus } from '../../utils/suiteUtils';
 
+/**
+ * Extended Resource type that includes reservations
+ */
+interface ResourceWithReservations extends Resource {
+  reservations?: Array<{
+    id: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+    pet?: {
+      id: string;
+      name: string;
+      breed?: string;
+      customer?: {
+        id: string;
+        firstName: string;
+        lastName: string;
+      };
+    };
+    customer?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+    };
+  }>;
+}
+
 // Suite types we store in the attributes
 enum SuiteType {
-  STANDARD = 'STANDARD',
-  STANDARD_PLUS = 'STANDARD_PLUS',
-  VIP = 'VIP'
+  STANDARD = 'STANDARD_SUITE',
+  STANDARD_PLUS = 'STANDARD_PLUS_SUITE',
+  VIP = 'VIP_SUITE'
 }
 
 // Suite colors for different types
@@ -51,23 +78,24 @@ const statusColors = {
 interface SuiteBoardProps {
   onSelectSuite?: (suiteId: string, suiteData?: any) => void;
   reloadTrigger?: number;
-  selectedDate?: Date;
-  onDateChange?: (date: Date) => void;
+  filterDate?: Date;
+  onFilterDateChange?: (date: Date) => void;
+  suites?: ResourceWithReservations[];
 }
 
-const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, selectedDate, onDateChange }) => {
+const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, filterDate, onFilterDateChange, suites: propSuites }) => {
   // Use ref to track previous filter state to prevent unnecessary API calls
   const prevFilter = React.useRef<any>(null);
   const [suites, setSuites] = useState<Array<{
     id: string;
     name: string;
-    suiteNumber: number;
+    suiteNumber: string | number;
     suiteType: string;
     status: string;
     pet: any;
     owner: any;
-    notes?: string;
-    lastCleaned?: string | Date | null;
+    notes: string;
+    lastCleaned?: string;
   }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,23 +103,24 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
     suiteType: 'all',
     status: 'all',
     search: '',
-    date: selectedDate || new Date()
+    date: filterDate || new Date()
   });
 
   useEffect(() => {
     loadSuites();
     // Reload suites when reloadTrigger changes (or on mount)
     // No timer-based auto-refresh
-  }, [reloadTrigger]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reloadTrigger]); // loadSuites defined below, stable function
   
-  // Update filter date when selectedDate prop changes
+  // Update filter date when filterDate prop changes
   useEffect(() => {
-    if (selectedDate) {
-      setFilter(prev => ({ ...prev, date: selectedDate }));
+    if (filterDate) {
+      setFilter(prev => ({ ...prev, date: filterDate }));
       // Don't call loadSuites() here as it will use the previous filter state
       // The filter state update will trigger the next useEffect
     }
-  }, [selectedDate]);
+  }, [filterDate]);
   
   // Load suites whenever filter changes
   useEffect(() => {
@@ -101,7 +130,8 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
       loadSuites();
       prevFilter.current = { ...filter };
     }
-  }, [filter.suiteType, filter.status, filter.search, filter.date]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter.suiteType, filter.status, filter.search, filter.date]); // loadSuites defined below, stable function
 
   const loadSuites = async () => {
     // Prevent function from being called during render
@@ -124,7 +154,7 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
       );
       if (response?.status === 'success' && Array.isArray(response?.data)) {
         
-        const suites = response.data.map((suite: Resource) => {
+        const suites = response.data.map((suite: ResourceWithReservations) => {
           // Safely extract pet and owner info
           let pet = null;
           let owner = null;
@@ -133,13 +163,13 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
             const reservation = suite.reservations[0];
             if (reservation.pet) {
               pet = reservation.pet;
-              // Try to get owner from pet.owner if available
-              if (reservation.pet.owner) {
-                owner = reservation.pet.owner;
+              // Try to get owner from pet.customer if available
+              if (reservation.pet.customer) {
+                owner = reservation.pet.customer;
               }
             }
             
-            // If no owner from pet.owner, try reservation.customer
+            // If no owner from pet.customer, try reservation.customer
             if (!owner && reservation.customer) {
               owner = reservation.customer;
             }
@@ -148,18 +178,26 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
           // Use the utility function to determine the suite status
           const status = determineSuiteStatus(suite);
           
+          // Use the suite.type directly from the database, or fall back to attributes.suiteType, or default to STANDARD_SUITE
+          const suiteType = suite.type || suite.attributes?.suiteType || 'STANDARD_SUITE';
+          
           return {
             id: suite.id,
             name: suite.name,
-            suiteNumber: suite.attributes?.suiteNumber || 0,
-            suiteType: suite.attributes?.suiteType || 'STANDARD',
+            suiteNumber: suite.attributes?.suiteNumber || suite.name || 'N/A',
+            suiteType: suiteType, // Use the properly extracted suite type
             status: status,
             pet: pet,
             owner: owner,
-            notes: suite.notes,
+            notes: suite.notes || '',
             lastCleaned: suite.attributes?.lastCleaned
           };
-        }).sort((a: {suiteNumber: number}, b: {suiteNumber: number}) => a.suiteNumber - b.suiteNumber);
+        }).sort((a: {suiteNumber: string | number}, b: {suiteNumber: string | number}) => {
+          // Handle string comparison for suite numbers like "A01", "A02"
+          const aNum = String(a.suiteNumber);
+          const bNum = String(b.suiteNumber);
+          return aNum.localeCompare(bNum, undefined, { numeric: true, sensitivity: 'base' });
+        });
         
         // Apply client-side status filtering if needed
         let filteredResults = suites;
@@ -195,38 +233,31 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
     if (!filter.search) return true;
     
     const searchTerm = filter.search.toLowerCase();
-    console.log(`Filtering suite ${suite.name} with search term: ${searchTerm}`);
     
     // Search in suite name and number
     if (suite.name.toLowerCase().includes(searchTerm)) {
-      console.log(`Suite ${suite.name} matched by name`);
       return true;
     }
     
     if (String(suite.suiteNumber).includes(searchTerm)) {
-      console.log(`Suite ${suite.name} matched by suite number`);
       return true;
     }
     
     // Search in pet info if available
     if (suite.pet?.name?.toLowerCase().includes(searchTerm)) {
-      console.log(`Suite ${suite.name} matched by pet name: ${suite.pet.name}`);
       return true;
     }
     
     if (suite.pet?.type?.toLowerCase().includes(searchTerm)) {
-      console.log(`Suite ${suite.name} matched by pet type: ${suite.pet.type}`);
       return true;
     }
     
     // Search in owner info if available
     if (suite.owner?.firstName?.toLowerCase().includes(searchTerm)) {
-      console.log(`Suite ${suite.name} matched by owner first name: ${suite.owner.firstName}`);
       return true;
     }
     
     if (suite.owner?.lastName?.toLowerCase().includes(searchTerm)) {
-      console.log(`Suite ${suite.name} matched by owner last name: ${suite.owner.lastName}`);
       return true;
     }
     
@@ -236,13 +267,12 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
 
   const handleCleanSuite = (suiteId: string) => {
     // Implementation would call API to mark suite as cleaned
-    console.log('Mark suite as cleaned:', suiteId);
   };
 
   const renderSuiteCard = (suite: {
     id: string;
     name: string;
-    suiteNumber: number;
+    suiteNumber: string | number;
     suiteType: string;
     status: string;
     pet: any;
@@ -348,7 +378,6 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
           size="small"
           value={filter.search}
           onChange={(e) => {
-            console.log('Search term changed to:', e.target.value);
             setFilter({ ...filter, search: e.target.value });
           }}
           InputProps={{
@@ -368,7 +397,6 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
             value={filter.suiteType}
             label="Suite Type"
             onChange={(e) => {
-              console.log('Suite type filter changed to:', e.target.value);
               setFilter({ ...filter, suiteType: e.target.value });
             }}
           >
@@ -385,7 +413,6 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
             value={filter.status}
             label="Status"
             onChange={(e) => {
-              console.log('Status filter changed to:', e.target.value);
               setFilter({ ...filter, status: e.target.value });
             }}
           >
@@ -406,8 +433,8 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, s
                 // Update the filter with the new date
                 setFilter({ ...filter, date: newDate });
                 // Notify parent component about date change
-                if (onDateChange) {
-                  onDateChange(newDate);
+                if (onFilterDateChange) {
+                  onFilterDateChange(newDate);
                 }
                 // loadSuites will be called by the filter useEffect
               }

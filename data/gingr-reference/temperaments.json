@@ -1,0 +1,22 @@
+[
+  {
+    "value": "3",
+    "label": "Aggressive"
+  },
+  {
+    "value": "4",
+    "label": "Calm"
+  },
+  {
+    "value": "5",
+    "label": "Mean"
+  },
+  {
+    "value": "1",
+    "label": "Playful"
+  },
+  {
+    "value": "2",
+    "label": "Rowdy"
+  }
+]

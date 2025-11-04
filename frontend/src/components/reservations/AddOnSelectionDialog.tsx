@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -20,13 +19,12 @@ import {
   Paper,
   Divider
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Add as AddIcon, Remove as RemoveIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useShoppingCart } from '../../contexts/ShoppingCartContext';
 import { serviceManagement } from '../../services/serviceManagement';
 import { reservationService, Reservation } from '../../services/reservationService';
 import addonService, { AddOnService } from '../../services/addonService';
-import { useShoppingCart } from '../../contexts/ShoppingCartContext';
 
 interface AddOnSelectionDialogProps {
   open: boolean;
@@ -34,6 +32,7 @@ interface AddOnSelectionDialogProps {
   reservationId: string;
   serviceId: string;
   onAddOnsAdded: (success: boolean) => void;
+  redirectToCheckout?: boolean; // New prop to indicate checkout flow
 }
 
 interface AddOn {
@@ -50,9 +49,9 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
   onClose,
   reservationId,
   serviceId,
-  onAddOnsAdded
+  onAddOnsAdded,
+  redirectToCheckout = false
 }) => {
-  const navigate = useNavigate();
   // State for available add-ons
   const [availableAddOns, setAvailableAddOns] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -63,6 +62,10 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
   // State for selected add-ons
   const [selectedAddOns, setSelectedAddOns] = useState<AddOn[]>([]);
   
+  // Navigation and shopping cart hooks
+  const navigate = useNavigate();
+  const { addItem } = useShoppingCart();
+  
   // Calculate subtotal
   const [subtotal, setSubtotal] = useState<number>(0);
   
@@ -72,15 +75,7 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
     setSubtotal(total);
   }, [selectedAddOns]);
   
-  // Load available add-on services when the dialog opens
-  useEffect(() => {
-    if (open && serviceId) {
-      console.log('AddOnSelectionDialog: Dialog opened, loading add-ons for service ID:', serviceId);
-      loadAddOns();
-    }
-  }, [open, serviceId]);
-  
-  const loadAddOns = async () => {
+  const loadAddOns = useCallback(async () => {
     if (!serviceId || !open) {
       return;
     }
@@ -90,15 +85,12 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
       setError(null);
       setSelectedAddOns([]); // Reset selected add-ons when loading new ones
       
-      console.log('AddOnSelectionDialog: Loading add-ons for service ID:', serviceId);
       
       // First try to find add-ons specifically for this service
       const addOns = await addonService.getAllAddOns(serviceId);
       
-      console.log('AddOnSelectionDialog: Loaded add-ons:', addOns);
       
       if (addOns.length === 0) {
-        console.log('AddOnSelectionDialog: No add-ons found for this service, showing all available add-ons');
         // If no add-ons found for this specific service, get all add-ons
         const allAddOns = await addonService.getAllAddOns();
         setAvailableAddOns(allAddOns);
@@ -111,7 +103,14 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [serviceId, open]);
+
+  // Load available add-on services when the dialog opens
+  useEffect(() => {
+    if (open && serviceId) {
+      loadAddOns();
+    }
+  }, [open, serviceId, loadAddOns]);
   
   // Handle adding an add-on service
   const handleAddService = (addon: AddOnService) => {
@@ -153,111 +152,53 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
   
   /**
    * Handle saving add-ons to the reservation
-   * If there are no add-ons selected, add the reservation to cart and proceed to checkout
+   * If there are no add-ons selected, simply close the dialog
    * Otherwise, save the add-ons and show a success message
    */
-  // Get access to shopping cart context
-  const { addToCart } = useShoppingCart();
-
-  /**
-   * Handles saving add-ons to a reservation and navigating to checkout
-   * 
-   * This function manages several critical processes:
-   * 1. Fetches reservation details to create a cart item
-   * 2. Adds the reservation to the cart (with or without add-ons)
-   * 3. Updates localStorage directly as a backup mechanism
-   * 4. Uses direct form submission to navigate to checkout without intermediate steps
-   */
   const handleSaveAddOns = async () => {
-    try {
-      setSaving(true);
-      setError(null);
-      
-      // Fetch reservation details to add to cart
-      console.log('AddOnSelectionDialog: Fetching reservation details for cart, ID:', reservationId);
-      const reservationDetails = await reservationService.getReservationById(reservationId);
-      
-      if (!reservationDetails) {
-        throw new Error('Could not retrieve reservation details');
-      }
-      
-      console.log('AddOnSelectionDialog: Got reservation details:', reservationDetails);
-      
-      // If no add-ons are selected, add reservation to cart and proceed to checkout
-      if (selectedAddOns.length === 0) {
+    if (selectedAddOns.length === 0) {
+      // Always redirect to checkout when no add-ons are selected
+      // This ensures proper invoice and payment processing
+      try {
+        const reservation = await reservationService.getReservationById(reservationId);
+        
         // Create cart item from reservation
         const cartItem = {
-          id: reservationId,
-          name: `${reservationDetails.service?.name || 'Reservation'} - ${reservationDetails.pet?.name || 'Pet'}`,
-          price: reservationDetails.service?.price || 0,
+          id: `reservation-${reservationId}`,
+          price: reservation.service?.price || 0,
           quantity: 1,
-          serviceName: reservationDetails.service?.name,
-          petName: reservationDetails.pet?.name,
-          startDate: new Date(reservationDetails.startDate),
-          endDate: new Date(reservationDetails.endDate)
+          serviceName: reservation.service?.name || 'Unknown Service',
+          serviceId: reservation.serviceId,
+          customerId: reservation.customerId,
+          customerName: `${reservation.customer?.firstName || ''} ${reservation.customer?.lastName || ''}`.trim(),
+          petId: reservation.petId,
+          petName: reservation.pet?.name || 'Unknown Pet',
+          startDate: new Date(reservation.startDate),
+          endDate: new Date(reservation.endDate),
+          suiteType: 'STANDARD_SUITE', // Default suite type
+          resourceId: reservation.resource?.id || undefined,
+          notes: reservation.notes || '',
+          addOns: [] // No add-ons selected
         };
         
-        // Add to cart through context
-        console.log('AddOnSelectionDialog: Adding reservation to cart:', cartItem);
-        addToCart(cartItem);
         
-        // Also directly update localStorage as backup
-        try {
-          const existingCart = localStorage.getItem('tailtownCart');
-          let cartArray = [];
-          
-          if (existingCart) {
-            cartArray = JSON.parse(existingCart);
-          }
-          
-          cartArray.push(cartItem);
-          localStorage.setItem('tailtownCart', JSON.stringify(cartArray));
-          console.log('AddOnSelectionDialog: Successfully added to localStorage:', cartArray);
-        } catch (error) {
-          console.error('AddOnSelectionDialog: Error updating localStorage:', error);
-        }
-        
-        /**
-         * Direct Navigation Approach
-         * 
-         * We use a hidden form submission instead of React Router navigation to:
-         * 1. Bypass any React state update race conditions
-         * 2. Prevent the calendar from briefly appearing during navigation
-         * 3. Force a complete page reload to ensure fresh state at checkout
-         */
-        // Create a hidden form to submit directly to checkout page
-        // This bypasses React Router completely and prevents any intermediate navigation
-        console.log('AddOnSelectionDialog: No add-ons selected, creating direct navigation form to checkout');
-        
-        // Create a hidden form element
-        const form = document.createElement('form');
-        form.style.display = 'none';
-        form.method = 'get';
-        form.action = '/checkout';
-        
-        // Add a timestamp to prevent caching
-        const timestamp = document.createElement('input');
-        timestamp.type = 'hidden';
-        timestamp.name = 'timestamp';
-        timestamp.value = Date.now().toString();
-        form.appendChild(timestamp);
-        
-        // Add the form to the document body
-        document.body.appendChild(form);
-        
-        // Close the dialog
+        // Add to cart and navigate to checkout
+        addItem(cartItem);
+        navigate('/checkout');
         onClose();
-        
-        // Submit the form immediately
-        console.log('AddOnSelectionDialog: Submitting direct navigation form to checkout');
-        form.submit();
-        
-        // Remove the form after submission
-        setTimeout(() => {
-          document.body.removeChild(form);
-        }, 100);
+        return;
+      } catch (error) {
+        console.error('Error preparing checkout:', error);
+        // Fall back to normal close behavior
+        onClose();
         return;
       }
+    }
+    
+    try {
+      // Start saving process and clear any previous errors
+      setSaving(true);
+      setError(null);
       
       // Prepare add-on data for API submission
       // The backend expects an array of objects with serviceId and quantity
@@ -267,51 +208,9 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
         quantity: addon.quantity
       }));
       
-      console.log('AddOnSelectionDialog: Sending add-on data to backend:', addOnData);
       
       // Save add-ons to the reservation using the reservation service
       await reservationService.addAddOnsToReservation(reservationId, addOnData);
-      
-      // Create cart item with add-ons
-      // Transform AddOn objects to match CartItem.addOns interface
-      const formattedAddOns = selectedAddOns.map(addon => ({
-        id: addon.addOnId,
-        name: addon.name,
-        price: addon.price,
-        quantity: addon.quantity
-      }));
-      
-      const cartItem = {
-        id: reservationId,
-        name: `${reservationDetails.service?.name || 'Reservation'} - ${reservationDetails.pet?.name || 'Pet'}`,
-        price: reservationDetails.service?.price || 0,
-        quantity: 1,
-        serviceName: reservationDetails.service?.name,
-        petName: reservationDetails.pet?.name,
-        startDate: new Date(reservationDetails.startDate),
-        endDate: new Date(reservationDetails.endDate),
-        addOns: formattedAddOns
-      };
-      
-      // Add to cart through context
-      console.log('AddOnSelectionDialog: Adding reservation with add-ons to cart:', cartItem);
-      addToCart(cartItem);
-      
-      // Also directly update localStorage as backup
-      try {
-        const existingCart = localStorage.getItem('tailtownCart');
-        let cartArray = [];
-        
-        if (existingCart) {
-          cartArray = JSON.parse(existingCart);
-        }
-        
-        cartArray.push(cartItem);
-        localStorage.setItem('tailtownCart', JSON.stringify(cartArray));
-        console.log('AddOnSelectionDialog: Successfully added to localStorage with add-ons:', cartArray);
-      } catch (error) {
-        console.error('AddOnSelectionDialog: Error updating localStorage:', error);
-      }
       
       // Show success message to the user
       setSuccess('Add-on services have been added to the reservation.');
@@ -319,37 +218,50 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
       // Notify parent component that add-ons were added successfully
       onAddOnsAdded(true);
       
-      // Create a hidden form to submit directly to checkout page
-      // This bypasses React Router completely and prevents any intermediate navigation
-      console.log('AddOnSelectionDialog: Creating direct navigation form to checkout');
+      // Always redirect to checkout after adding add-ons
+      // This ensures proper invoice and payment processing
+      try {
+        const reservation = await reservationService.getReservationById(reservationId);
+        
+        // Create cart item from reservation with add-ons
+        const cartItem = {
+          id: `reservation-${reservationId}`,
+          price: reservation.service?.price || 0,
+          quantity: 1,
+          serviceName: reservation.service?.name || 'Unknown Service',
+          serviceId: reservation.serviceId,
+          customerId: reservation.customerId,
+          customerName: `${reservation.customer?.firstName || ''} ${reservation.customer?.lastName || ''}`.trim(),
+          petId: reservation.petId,
+          petName: reservation.pet?.name || 'Unknown Pet',
+          startDate: new Date(reservation.startDate),
+          endDate: new Date(reservation.endDate),
+          suiteType: 'STANDARD_SUITE', // Default suite type
+          resourceId: reservation.resource?.id || undefined,
+          notes: reservation.notes || '',
+          addOns: selectedAddOns.map(addon => ({
+            id: addon.addOnId,
+            name: addon.name,
+            price: addon.price,
+            quantity: addon.quantity
+          }))
+        };
+        
+        
+        // Add to cart and navigate to checkout
+        addItem(cartItem);
+        navigate('/checkout');
+        onClose();
+        return;
+      } catch (error) {
+        console.error('Error preparing checkout with add-ons:', error);
+        // Fall back to normal close behavior
+      }
       
-      // Create a hidden form element
-      const form = document.createElement('form');
-      form.style.display = 'none';
-      form.method = 'get';
-      form.action = '/checkout';
-      
-      // Add a timestamp to prevent caching
-      const timestamp = document.createElement('input');
-      timestamp.type = 'hidden';
-      timestamp.name = 'timestamp';
-      timestamp.value = Date.now().toString();
-      form.appendChild(timestamp);
-      
-      // Add the form to the document body
-      document.body.appendChild(form);
-      
-      // Close the dialog
-      onClose();
-      
-      // Submit the form immediately
-      console.log('AddOnSelectionDialog: Submitting direct navigation form to checkout');
-      form.submit();
-      
-      // Remove the form after submission
+      // Close the dialog after a short delay to show the success message
       setTimeout(() => {
-        document.body.removeChild(form);
-      }, 100);
+        onClose();
+      }, 1500);
     } catch (err: any) {
       console.error('AddOnSelectionDialog: Error saving add-ons:', err);
       setError(err.response?.data?.message || 'Failed to add services to the reservation. Please try again.');
@@ -403,7 +315,6 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
       keepMounted={false}
       TransitionProps={{
         onEnter: () => {
-          console.log('AddOnSelectionDialog: Dialog entering');
         }
       }}
     >
@@ -540,14 +451,25 @@ const AddOnSelectionDialog: React.FC<AddOnSelectionDialogProps> = ({
         <Button onClick={handleClose} disabled={saving}>
           Cancel
         </Button>
-        <Button 
-          variant="contained" 
-          color="primary"
-          onClick={handleSaveAddOns}
-          disabled={saving}
-        >
-          {saving ? <CircularProgress size={24} /> : selectedAddOns.length === 0 ? 'Continue Without Add-ons' : 'Add to Reservation'}
-        </Button>
+        {selectedAddOns.length === 0 ? (
+          <Button 
+            variant="outlined" 
+            color="secondary"
+            onClick={handleSaveAddOns}
+            disabled={saving}
+          >
+            Continue to Checkout
+          </Button>
+        ) : (
+          <Button 
+            variant="contained" 
+            color="primary"
+            onClick={handleSaveAddOns}
+            disabled={saving}
+          >
+            {saving ? <CircularProgress size={24} /> : 'Add Services & Checkout'}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

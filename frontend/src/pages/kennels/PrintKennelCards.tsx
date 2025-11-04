@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import './PrintKennelCards.css';
 import { 
   Container, 
@@ -36,13 +36,14 @@ const PrintKennelCards: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
     // Use the current date for initialization
     const today = new Date();
-    console.log('Initializing with today\'s date:', today);
     return today;
   });
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [loading, setLoading] = useState<boolean>(true); // Start with loading state
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState<boolean>(false); // Track initialization
+  const [isInitializing, setIsInitializing] = useState<boolean>(false); // Prevent duplicate initialization
+  const initializationRef = useRef<boolean>(false); // Ref to prevent multiple initializations
   
   // State for reservation data
   const [reservations, setReservations] = useState<any[]>([]);
@@ -52,28 +53,77 @@ const PrintKennelCards: React.FC = () => {
   const [petData, setPetData] = useState<{[key: string]: any}>({});
   const [customerData, setCustomerData] = useState<{[key: string]: any}>({});
 
-  // Load reservations on component mount and when filters change
+  // Load reservations when filters change (but not on initial mount)
   useEffect(() => {
-    loadReservations();
-  }, [selectedDate, selectedStatus]);
-  
-  // Force an initial load when component mounts
-  useEffect(() => {
-    console.log('Component mounted, forcing initial load with today\'s date');
-    // Small delay to ensure component is fully mounted
-    const timer = setTimeout(() => {
-      // Ensure we're using today's date
-      setSelectedDate(new Date());
+    if (initialized && selectedDate) {
       loadReservations();
-      setInitialized(true);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, []);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, selectedStatus, initialized]); // loadReservations is stable (useCallback below)
+  
+  // Initialize component on mount
+  useEffect(() => {
+    if (isInitializing || initialized || initializationRef.current) {
+      return;
+    }
+    
+    initializationRef.current = true;
+    
+    setIsInitializing(true);
+    const today = new Date();
+    setSelectedDate(today);
+    
+    // Load reservations after initialization
+    const initLoad = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const formattedDate = format(today, 'yyyy-MM-dd');
+        
+        const response = await reservationService.getAllReservations(
+          1, 500, 'startDate', 'asc', '', formattedDate
+        );
+        
+        let reservationsData: any[] = [];
+        if (response && response.data) {
+          if (Array.isArray(response.data)) {
+            reservationsData = response.data;
+          } else if (typeof response.data === 'object' && 'items' in response.data && Array.isArray((response.data as any).items)) {
+            reservationsData = (response.data as any).items;
+          } else if (typeof response.data === 'object' && 'reservations' in response.data && Array.isArray((response.data as any).reservations)) {
+            reservationsData = (response.data as any).reservations;
+          }
+        }
+        
+        setReservations(reservationsData);
+        
+        if (reservationsData.length > 0) {
+          await fetchAdditionalData(reservationsData);
+          setTimeout(() => {
+            filterReservations(reservationsData);
+          }, 100);
+        } else {
+          setFilteredReservations([]);
+        }
+      } catch (err: any) {
+        console.error('Error in initial load:', err);
+        setError('Failed to load reservations. ' + (err.message || ''));
+      } finally {
+        setLoading(false);
+        setIsInitializing(false);
+        setInitialized(true);
+      }
+    };
+    
+    initLoad();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount - initializationRef prevents duplicates
 
   // Load reservations based on current filters
-  const loadReservations = async () => {
+  // Wrapped in useCallback to maintain stable reference
+  const loadReservations = useCallback(async () => {
     if (!selectedDate) {
-      console.log('No date selected, using today\'s date');
       // If no date is selected, use today's date
       setSelectedDate(new Date());
       return; // The useEffect will trigger this function again with the new date
@@ -86,8 +136,6 @@ const PrintKennelCards: React.FC = () => {
       // Format date for API
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       
-      console.log(`Loading reservations for date ${formattedDate} with status ${selectedStatus}`);
-      console.log('Current date object:', selectedDate);
       
       // Fetch reservations for the selected date, regardless of status
       // Use a larger limit to ensure we get all reservations
@@ -100,12 +148,24 @@ const PrintKennelCards: React.FC = () => {
         formattedDate
       );
       
-      const reservationsData = response.data || [];
-      console.log(`Loaded ${reservationsData.length} reservations from API`);
+      // Ensure we have an array
+      let reservationsData: any[] = [];
+      if (response && response.data) {
+        if (Array.isArray(response.data)) {
+          reservationsData = response.data;
+        } else if (typeof response.data === 'object' && 'items' in response.data && Array.isArray((response.data as any).items)) {
+          reservationsData = (response.data as any).items;
+        } else if (typeof response.data === 'object' && 'reservations' in response.data && Array.isArray((response.data as any).reservations)) {
+          reservationsData = (response.data as any).reservations;
+        } else {
+          console.warn('Unexpected response structure:', response.data);
+          reservationsData = [];
+        }
+      }
+      
       
       // Log the first few reservations for debugging
       if (reservationsData.length > 0) {
-        console.log('Sample reservation data:', reservationsData[0]);
       }
       
       setReservations(reservationsData);
@@ -113,8 +173,10 @@ const PrintKennelCards: React.FC = () => {
       // Fetch additional data for each reservation
       await fetchAdditionalData(reservationsData);
       
-      // Apply filters
-      filterReservations();
+      // Apply filters after setting reservations
+      setTimeout(() => {
+        filterReservations(reservationsData);
+      }, 100);
       
     } catch (err: any) {
       console.error('Error loading reservations:', err);
@@ -122,10 +184,11 @@ const PrintKennelCards: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, selectedStatus]); // fetchAdditionalData and filterReservations are stable (useCallback below)
   
-  // Fetch pet and customer data for all reservations
-  const fetchAdditionalData = async (reservationsData: any[]) => {
+  // Memoize the fetch function to prevent unnecessary re-calls
+  const fetchAdditionalData = useCallback(async (reservationsData: any[]) => {
     try {
       // Create arrays of unique IDs to fetch
       const petIds = Array.from(new Set(reservationsData.map(res => res.petId)));
@@ -158,30 +221,35 @@ const PrintKennelCards: React.FC = () => {
     } catch (err) {
       console.error('Error fetching additional data:', err);
     }
-  };
+  }, []);
   
-  // Filter reservations based on current filters
-  const filterReservations = () => {
+  // Memoize the filter function to prevent excessive re-filtering
+  const filterReservations = useCallback((reservationsToFilter?: any[]) => {
+    const reservationsData = reservationsToFilter || reservations;
+    
+    // Ensure we have an array
+    if (!Array.isArray(reservationsData)) {
+      console.error('reservationsData is not an array:', reservationsData);
+      setFilteredReservations([]);
+      return;
+    }
+    
     // Log all reservations for debugging
-    console.log('All reservations before filtering:', reservations);
     
     // For kennel cards, we want to show all reservations that have pet and customer data
     // We'll be more lenient with resource requirements
-    const filtered = reservations.filter(res => {
+    const filtered = reservationsData.filter(res => {
       // Check if reservation has pet and customer IDs
       if (!res.petId || !res.customerId) {
-        console.log('Filtering out reservation missing required pet or customer ID:', res.id);
         return false;
       }
       
       // Check if we have the pet and customer data
       if (!petData[res.petId]) {
-        console.log('Filtering out reservation with missing pet data:', res.id);
         return false;
       }
       
       if (!customerData[res.customerId]) {
-        console.log('Filtering out reservation with missing customer data:', res.id);
         return false;
       }
       
@@ -190,21 +258,17 @@ const PrintKennelCards: React.FC = () => {
       
       // Log the reservation service type to help with debugging
       const serviceType = res.serviceType || 'Unknown';
-      console.log(`Reservation ${res.id} has service type: ${serviceType}`);
       
       return true;
     });
     
-    console.log(`Filtered ${reservations.length} reservations down to ${filtered.length} valid kennel reservations`);
     if (filtered.length > 0) {
-      console.log('First filtered reservation:', filtered[0]);
     }
     setFilteredReservations(filtered);
-  };
+  }, [reservations, petData, customerData]); // All data used in filtering
   
   // Handle date change
   const handleDateChange = (date: Date | null) => {
-    console.log('Date changed to:', date);
     setSelectedDate(date);
   };
   
@@ -221,8 +285,8 @@ const PrintKennelCards: React.FC = () => {
     }, 300);
   };
   
-  // Extract alerts from pet notes
-  const extractAlerts = (pet: any): string[] => {
+  // Memoize alert extraction to prevent recalculation
+  const extractAlerts = useCallback((pet: any): string[] => {
     const alerts: string[] = [];
     
     // Check for medical alerts
@@ -248,7 +312,7 @@ const PrintKennelCards: React.FC = () => {
     }
     
     return alerts;
-  };
+  }, []);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -403,33 +467,28 @@ const PrintKennelCards: React.FC = () => {
               const customer = customerData[reservation.customerId];
               const resource = reservation.resource;
               
-              // Only check for pet and customer data, we'll handle missing resource
-              if (!pet || !customer) return null;
-              
               // Extract kennel number from resource attributes
               // Default to a placeholder if not found
-              let kennelNumber = 0;
+              let kennelNumber: string | number = 0;
               let resourceName = 'Unknown';
               let suiteType = 'STANDARD_SUITE';
               
-              // Handle different resource structures
               if (resource) {
                 resourceName = resource.name || 'Unknown';
                 
-                // Try to get suite type
+                // Use the suite.type directly from the database, or fall back to attributes.suiteType, or default to STANDARD_SUITE
                 if (resource.attributes && resource.attributes.suiteType) {
                   suiteType = resource.attributes.suiteType;
                 } else if (resource.type) {
                   suiteType = resource.type;
                 }
                 
-                // Try to get kennel number
+                // Try to get kennel number - prefer full suite number (e.g., "A03") over just the number
                 if (resource.attributes && resource.attributes.suiteNumber) {
                   kennelNumber = resource.attributes.suiteNumber;
                 } else if (resource.name) {
-                  // Try to extract from name as fallback
-                  const match = resource.name.match(/\d+/);
-                  kennelNumber = match ? parseInt(match[0]) : 0;
+                  // Use the full resource name (e.g., "A03") instead of extracting just the number
+                  kennelNumber = resource.name;
                 }
               } else if (reservation.resourceId) {
                 // If we have resourceId but no resource object
@@ -465,31 +524,22 @@ const PrintKennelCards: React.FC = () => {
                 }
               }
               
-              console.log(`Kennel info for ${reservation.id}: number=${kennelNumber}, type=${suiteType}, service=${reservation.serviceType}`);
-              
-              // No need for this warning anymore since we always assign a number
-              // Just log the assigned number for debugging
+              // Reduced logging to prevent console spam
               if (resource === null || resource === undefined) {
-                console.log(`Assigned kennel number ${kennelNumber} to reservation without resource: ${reservation.id}`);
               }
               
               // Get pet icons
               // Generate unique icons for each pet based on their characteristics
               let petIconIds: string[] = [];
               
-              console.log('Pet data for kennel card:', pet);
-              
               // First check if pet has petIcons array
               if (pet.petIcons && Array.isArray(pet.petIcons) && pet.petIcons.length > 0) {
-                console.log('Found petIcons array:', pet.petIcons);
                 petIconIds = [...pet.petIcons];
               } else if (pet.name.toLowerCase() === 'vader') {
                 // Special case for Vader based on user requirements
-                console.log('Setting specific icons for Vader');
                 petIconIds = ['small-size', 'medium-group', 'resource-guarder', 'medication-required', 'advanced-handling'];
               } else {
                 // Generate unique icons based on pet characteristics
-                console.log('Generating unique icons for pet:', pet.name);
                 
                 // Add size icon based on weight
                 if (pet.weight) {
@@ -574,7 +624,10 @@ const PrintKennelCards: React.FC = () => {
                 }
               }
               
-              console.log('Final pet icon IDs for ' + pet.name + ':', petIconIds);
+              // Reduced logging: only log if there are issues
+              if (petIconIds.length === 0) {
+                console.warn('No pet icons generated for:', pet.name);
+              }
               
               // Extract alerts
               const alerts = extractAlerts(pet);

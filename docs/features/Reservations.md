@@ -53,6 +53,8 @@ The dashboard shows reservations filtered by specific statuses:
 - Customer and pet selection with search functionality
 - Service selection with dynamic pricing
 - Date and time selection with availability checking
+- Resource filtering by type (e.g., `STANDARD_SUITE`, `LUXURY_SUITE`)
+- Support for multiple resource type filtering in a single query
 - Add-on service selection after reservation creation
 
 ### Add-On System
@@ -67,3 +69,51 @@ The dashboard shows reservations filtered by specific statuses:
 - Dynamic suite/kennel selection based on availability
 - Proper form labels and field outlines for improved usability
 - Error handling for invalid selections
+
+## Backend Architecture
+
+### Shared Database Approach
+- Customer and Reservation services share the same PostgreSQL database (port 5433)
+- Prisma schemas are synchronized between services to avoid runtime errors
+- Field names and types are consistent across services (e.g., using `birthdate` instead of `age` for Pet model)
+
+### Resource Filtering
+- API supports filtering resources by one or more types
+- Multiple type parameters are handled as an array (e.g., `?type=STANDARD_SUITE&type=LUXURY_SUITE`)
+- Type values are validated against the Prisma `ResourceType` enum
+- Invalid type values are logged but don't cause API failures
+- Proper error handling for all database queries
+
+## API Responses and Frontend Parsing
+
+### GET /api/reservations
+
+The reservation service returns a paginated response with reservations nested under `data.reservations`:
+
+```json
+{
+  "status": "success",
+  "results": 3,
+  "pagination": {
+    "totalCount": 316,
+    "totalPages": 32,
+    "currentPage": 1,
+    "limit": 10,
+    "hasNextPage": true,
+    "hasPrevPage": false
+  },
+  "data": {
+    "reservations": [
+      { "id": "...", "status": "CONFIRMED", "startDate": "...", "endDate": "...", "customer": { ... }, "pet": { ... }, "resource": { ... } }
+    ]
+  }
+}
+```
+
+Supported query parameters include `page`, `limit`, `status`, `customerId`, `petId`, `resourceId`, `suiteType`, and either `date` (YYYY-MM-DD) or `startDate` + `endDate`.
+
+### Frontend normalization
+
+- The frontend `Reservations.tsx` normalizes multiple historical shapes, extracting the array from `data`, `data.data`, or `data.reservations`.
+- Pagination is read from either top-level `totalPages` or `pagination.totalPages`.
+- Rendering uses optional chaining for nested fields (e.g., `reservation.pet?.name`, `reservation.customer?.firstName`) to prevent runtime errors when related objects are omitted.

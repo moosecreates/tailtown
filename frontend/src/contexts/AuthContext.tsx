@@ -7,6 +7,11 @@ type User = {
   firstName: string;
   lastName: string;
   role: string;
+  phone?: string;
+  profilePhoto?: string | null;
+  isActive?: boolean;
+  createdAt?: string;
+  lastLogin?: string;
 };
 
 type AuthContextType = {
@@ -15,6 +20,7 @@ type AuthContextType = {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (userData: Partial<User>) => void;
   error: string | null;
 };
 
@@ -44,15 +50,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const token = localStorage.getItem('token');
         const tokenTimestamp = localStorage.getItem('tokenTimestamp');
-        const mockUser = localStorage.getItem('user');
+        const userJson = localStorage.getItem('user');
 
-        if (token && tokenTimestamp && mockUser) {
+        if (token && tokenTimestamp && userJson) {
           // Check if token is expired (24 hour expiration)
           const tokenAge = Date.now() - parseInt(tokenTimestamp);
           const tokenExpiration = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
           if (tokenAge < tokenExpiration) {
-            setUser(JSON.parse(mockUser));
+            setUser(JSON.parse(userJson));
           } else {
             // Token expired, clear everything
             localStorage.removeItem('token');
@@ -84,27 +90,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setError(null);
 
     try {
-      // TODO: Implement actual API call to login
-      // For now, we'll simulate a successful login with a mock user
-      if (email && password) {
-        // Mock successful login
-        const mockUser: User = {
-          id: '1',
-          email,
-          firstName: 'Admin',
-          lastName: 'User',
-          role: 'admin',
-        };
-
-        // Store in localStorage with timestamp
-        localStorage.setItem('token', 'mock-jwt-token');
-        localStorage.setItem('tokenTimestamp', Date.now().toString());
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        
-        setUser(mockUser);
-      } else {
-        throw new Error('Invalid credentials');
+      // Validate inputs
+      if (!email || !password) {
+        throw new Error('Email and password are required');
       }
+
+      // Real API call to login endpoint
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4004'}/api/staff/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
+      
+      const data = await response.json();
+      
+      // The backend returns { status: 'success', data: { staff data } } instead of { user, token }
+      // Extract the staff data from the response
+      const userData: User = {
+        id: data.data.id,
+        email: data.data.email,
+        firstName: data.data.firstName,
+        lastName: data.data.lastName,
+        role: data.data.role
+      };
+      
+      // For now, use the user ID as a simple token since the backend doesn't provide one
+      const token = data.data.id;
+      
+      // Store in localStorage with timestamp
+      localStorage.setItem('token', token);
+      localStorage.setItem('tokenTimestamp', Date.now().toString());
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      setUser(userData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
       setError(errorMessage);
@@ -122,12 +147,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(null);
   };
 
+  // Update user function
+  const updateUser = (userData: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...userData };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    }
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
     isLoading,
     login,
     logout,
+    updateUser,
     error,
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Container, 
   Typography, 
@@ -26,7 +26,9 @@ import {
   Divider,
   SelectChangeEvent,
   Tabs,
-  Tab
+  Tab,
+  FormHelperText,
+  LinearProgress
 } from '@mui/material';
 import { 
   Add as AddIcon,
@@ -40,9 +42,10 @@ import { Link } from 'react-router-dom';
 import staffService, { Staff } from '../../services/staffService';
 import { CircularProgress, Alert, Snackbar } from '@mui/material';
 import StaffSchedulingTabs from '../../components/staff/StaffSchedulingTabs';
+import { validatePassword, getPasswordStrength } from '../../utils/passwordValidator';
 
 // Available roles, departments, and positions
-const roles = ['Administrator', 'Manager', 'Staff'];
+const roles = ['Administrator', 'Manager', 'Staff', 'Instructor'];
 const departments = ['Management', 'Front Desk', 'Grooming', 'Training', 'Kennel', 'Veterinary'];
 const positions = [
   'General Manager',
@@ -51,6 +54,7 @@ const positions = [
   'Lead Groomer',
   'Groomer',
   'Dog Trainer',
+  'Instructor',
   'Kennel Manager',
   'Kennel Technician',
   'Veterinarian',
@@ -69,6 +73,7 @@ const Users: React.FC = () => {
   const [editingUser, setEditingUser] = useState<Staff | null>(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
   const [dialogTabValue, setDialogTabValue] = useState(0);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [formData, setFormData] = useState<FormDataType>({
     firstName: '',
     lastName: '',
@@ -91,16 +96,16 @@ const Users: React.FC = () => {
     if (user) {
       setEditingUser(user);
       setFormData({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        password: user.password,
-        confirmPassword: user.password,
-        role: user.role,
-        department: user.department,
-        position: user.position,
-        status: user.status,
-        hireDate: user.hireDate,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        password: user.password || '',
+        confirmPassword: user.password || '',
+        role: user.role || '',
+        department: user.department || '',
+        position: user.position || '',
+        status: user.status || 'Active',
+        hireDate: user.hireDate || '',
         phone: user.phone || '',
         address: user.address || '',
         city: user.city || '',
@@ -145,6 +150,14 @@ const Users: React.FC = () => {
       ...formData,
       [name]: value
     });
+    
+    // Validate password in real-time
+    if (name === 'password' && value) {
+      const validation = validatePassword(value);
+      setPasswordErrors(validation.errors);
+    } else if (name === 'password' && !value) {
+      setPasswordErrors([]);
+    }
   };
 
   const handleSelectChange = (e: SelectChangeEvent) => {
@@ -156,11 +169,7 @@ const Users: React.FC = () => {
   };
 
   // Load all staff members when component mounts
-  useEffect(() => {
-    loadStaffMembers();
-  }, []);
-
-  const loadStaffMembers = async () => {
+  const loadStaffMembers = useCallback(async () => {
     try {
       setLoading(true);
       const staffData = await staffService.getAllStaff();
@@ -172,7 +181,11 @@ const Users: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadStaffMembers();
+  }, [loadStaffMembers]);
 
   const showSnackbar = (message: string, severity: 'success' | 'error') => {
     setSnackbar({ open: true, message, severity });
@@ -183,6 +196,15 @@ const Users: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    // Validate password for new users
+    if (!editingUser && formData.password) {
+      const validation = validatePassword(formData.password);
+      if (!validation.isValid) {
+        showSnackbar(`Password validation failed: ${validation.errors.join(', ')}`, 'error');
+        return;
+      }
+    }
+    
     // Validate passwords match for new users or when changing password
     if (!editingUser && formData.password !== formData.confirmPassword) {
       showSnackbar('Passwords do not match', 'error');
@@ -504,8 +526,41 @@ const Users: React.FC = () => {
                       size="small"
                       margin="dense"
                       required={!editingUser}
+                      error={passwordErrors.length > 0}
                       helperText={editingUser ? 'Leave blank to keep current' : ''}
                     />
+                    {formData.password && (
+                      <Box sx={{ mt: 0.5 }}>
+                        {passwordErrors.length > 0 ? (
+                          <Box>
+                            {passwordErrors.map((error, index) => (
+                              <Typography key={index} variant="caption" color="error" display="block">
+                                • {error}
+                              </Typography>
+                            ))}
+                          </Box>
+                        ) : (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <LinearProgress
+                              variant="determinate"
+                              value={100}
+                              sx={{
+                                flexGrow: 1,
+                                height: 4,
+                                borderRadius: 2,
+                                backgroundColor: '#e0e0e0',
+                                '& .MuiLinearProgress-bar': {
+                                  backgroundColor: getPasswordStrength(formData.password).color
+                                }
+                              }}
+                            />
+                            <Typography variant="caption" sx={{ color: getPasswordStrength(formData.password).color, fontWeight: 'bold' }}>
+                              {getPasswordStrength(formData.password).label}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    )}
                   </Grid>
                   <Grid item xs={6}>
                     <TextField
@@ -518,6 +573,8 @@ const Users: React.FC = () => {
                       size="small"
                       margin="dense"
                       required={!editingUser}
+                      error={formData.confirmPassword !== '' && formData.password !== formData.confirmPassword}
+                      helperText={formData.confirmPassword !== '' && formData.password !== formData.confirmPassword ? 'Passwords do not match' : ''}
                     />
                   </Grid>
                 </Grid>

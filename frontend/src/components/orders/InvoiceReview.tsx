@@ -233,6 +233,25 @@ const InvoiceReview: React.FC<InvoiceReviewProps> = ({
                   {formatCurrency(total)}
                 </Typography>
               </Box>
+              
+              {/* Deposit Information */}
+              {orderData.invoice.depositRequired && (
+                <>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', maxWidth: 300, mt: 2, pt: 2, borderTop: '2px dashed #ccc' }}>
+                    <Typography variant="subtitle2" color="primary">Deposit Required:</Typography>
+                    <Typography variant="subtitle2" color="primary" sx={{ ml: 'auto' }}>
+                      {formatCurrency(orderData.invoice.depositAmount)}
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', maxWidth: 300 }}>
+                    <Typography variant="body2" color="text.secondary">Balance Due at Checkout:</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ ml: 'auto' }}>
+                      {formatCurrency(orderData.invoice.balanceDue)}
+                    </Typography>
+                  </Box>
+                </>
+              )}
             </Box>
           </Grid>
           

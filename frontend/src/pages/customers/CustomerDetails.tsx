@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { 
   Typography, 
   Container, 
@@ -18,7 +18,11 @@ import {
   InputAdornment,
   Tabs,
   Tab,
-  Divider
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
@@ -30,6 +34,8 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Customer, customerService } from '../../services/customerService';
 import AccountHistory from '../../components/customers/AccountHistory';
+import CustomerIconSelectorNew from '../../components/customers/CustomerIconSelectorNew';
+import CustomerIconBadges from '../../components/customers/CustomerIconBadges';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -87,33 +93,46 @@ const CustomerDetails: React.FC = () => {
   });
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [tabValue, setTabValue] = useState<number>(0);
+  const [iconSelectorOpen, setIconSelectorOpen] = useState(false);
+  const [selectedIcons, setSelectedIcons] = useState<string[]>(customer.customerIcons || []);
+  const [iconNotes, setIconNotes] = useState<Record<string, string>>(customer.iconNotes || {});
   
   // Fetch customer data
-  useEffect(() => {
-    const fetchCustomer = async () => {
-      if (isNewCustomer) {
-        setCustomer(emptyCustomer);
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        const data = await customerService.getCustomerById(id || '');
-        setCustomer(data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching customer:', error);
-        setSnackbar({
-          open: true,
-          message: 'Failed to load customer data',
-          severity: 'error'
-        });
-        setLoading(false);
-      }
-    };
+  const fetchCustomer = useCallback(async () => {
+    if (isNewCustomer) {
+      setCustomer(emptyCustomer);
+      setLoading(false);
+      return;
+    }
     
-    fetchCustomer();
+    try {
+      const data = await customerService.getCustomerById(id || '');
+      setCustomer(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching customer:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to load customer data',
+        severity: 'error'
+      });
+      setLoading(false);
+    }
   }, [id, isNewCustomer]);
+
+  useEffect(() => {
+    fetchCustomer();
+  }, [fetchCustomer]);
+
+  // Update icon state when customer data changes
+  useEffect(() => {
+    if (customer.customerIcons) {
+      setSelectedIcons(customer.customerIcons);
+    }
+    if (customer.iconNotes) {
+      setIconNotes(customer.iconNotes);
+    }
+  }, [customer.customerIcons, customer.iconNotes]);
   
   // Handle tab changes
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -149,9 +168,16 @@ const CustomerDetails: React.FC = () => {
     try {
       setLoading(true);
       
+      // Include icon fields in customer data
+      const customerData = {
+        ...customer,
+        customerIcons: selectedIcons,
+        iconNotes: iconNotes
+      };
+
       if (isNewCustomer) {
         // Create the customer
-        const newCustomer = await customerService.createCustomer(customer);
+        const newCustomer = await customerService.createCustomer(customerData);
         setSnackbar({
           open: true,
           message: 'Customer created successfully',
@@ -170,7 +196,7 @@ const CustomerDetails: React.FC = () => {
           navigate('/customers');
         }
       } else {
-        await customerService.updateCustomer(id || '', customer);
+        await customerService.updateCustomer(id || '', customerData);
         setSnackbar({
           open: true,
           message: 'Customer updated successfully',
@@ -389,9 +415,27 @@ const CustomerDetails: React.FC = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ py: 4 }}>
-        <Typography variant="h5" component="h1" gutterBottom>
-          {isNewCustomer ? 'New Customer' : `${customer.firstName} ${customer.lastName}`}
-        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h5" component="h1">
+                {isNewCustomer ? 'New Customer' : `${customer.firstName} ${customer.lastName}`}
+              </Typography>
+            </Box>
+          </Box>
+          {selectedIcons.length > 0 && (
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Customer Icons
+              </Typography>
+              <CustomerIconBadges 
+                iconIds={selectedIcons} 
+                iconNotes={iconNotes}
+                size="medium"
+              />
+            </Box>
+          )}
+        </Box>
 
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
@@ -403,6 +447,13 @@ const CustomerDetails: React.FC = () => {
                 onClick={handleSave}
               >
                 Save
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => setIconSelectorOpen(true)}
+                startIcon={<PersonIcon />}
+              >
+                Manage Icons
               </Button>
               <Button
                 variant="outlined"
@@ -478,6 +529,29 @@ const CustomerDetails: React.FC = () => {
             </TabPanel>
           </>
         )}
+
+        {/* Icon Selector Dialog */}
+        <Dialog
+          open={iconSelectorOpen}
+          onClose={() => setIconSelectorOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Manage Customer Icons</DialogTitle>
+          <DialogContent>
+            <CustomerIconSelectorNew
+              selectedIcons={selectedIcons}
+              iconNotes={iconNotes}
+              onChange={(icons, notes) => {
+                setSelectedIcons(icons);
+                setIconNotes(notes);
+              }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setIconSelectorOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Snackbar for notifications */}
         <Snackbar

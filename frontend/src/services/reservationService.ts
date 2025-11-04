@@ -1,5 +1,5 @@
 import { AxiosResponse } from 'axios';
-import api from './api';
+import { reservationApi as api } from './api';
 import { PaginatedResponse } from '../types/common';
 
 export interface Reservation {
@@ -33,6 +33,8 @@ export interface Reservation {
     name: string;
     type: string;
     breed: string;
+    petIcons?: string[];
+    iconNotes?: { [iconId: string]: string };
   };
   service?: {
     id: string;
@@ -72,7 +74,6 @@ export const reservationService = {
     date?: string
   ): Promise<{ status: string; data: Reservation[]; totalPages: number; currentPage: number; results: number }> => {
     try {
-      console.log('reservationService: Getting all reservations with date filter:', date);
       const response: AxiosResponse = await api.get('/api/reservations', {
         params: { 
           page, 
@@ -93,7 +94,9 @@ export const reservationService = {
   getReservationById: async (id: string): Promise<Reservation> => {
     try {
       const response: AxiosResponse = await api.get(`/api/reservations/${id}`);
-      return response.data.data;
+      const payload = response?.data;
+      const normalized = (payload?.data?.reservation ?? payload?.data ?? payload?.reservation ?? payload) as Reservation;
+      return normalized;
     } catch (error: any) {
       console.error('Error in getReservationById:', error);
       throw error;
@@ -103,19 +106,48 @@ export const reservationService = {
   createReservation: async (reservation: Omit<Reservation, 'id'>): Promise<Reservation> => {
     try {
       const response: AxiosResponse = await api.post('/api/reservations', reservation);
-      return response.data.data;
+      
+      // Handle different response formats
+      let reservationData;
+      
+      if (response.data?.success === true && response.data?.data?.reservation) {
+        // Standard success response format
+        reservationData = response.data.data.reservation;
+      } else if (response.data?.data?.reservation) {
+        // Alternative format
+        reservationData = response.data.data.reservation;
+      } else if (response.data?.data && response.data.data.id) {
+        // Data directly in data field
+        reservationData = response.data.data;
+      } else if (response.data?.id) {
+        // Data directly in response
+        reservationData = response.data;
+      } else {
+        console.error('Unexpected response format:', response.data);
+        throw new Error(`Unexpected response format: ${JSON.stringify(response.data)}`);
+      }
+      
+      if (!reservationData || !reservationData.id) {
+        console.error('No reservation data or ID found:', reservationData);
+        throw new Error('No reservation ID returned from server');
+      }
+      
+      return reservationData;
     } catch (error: any) {
       console.error('Error in createReservation:', error);
+      if (error.response?.data) {
+        console.error('Server error details:', error.response.data);
+      }
       throw error;
     }
   },
 
   updateReservation: async (id: string, reservation: Partial<Reservation>): Promise<Reservation> => {
     try {
-      console.log('Sending update request:', { id, data: reservation });
-      const response: AxiosResponse = await api.put(`/api/reservations/${id}`, reservation);
-      console.log('Update response:', response.data);
-      return response.data.data;
+      const response: AxiosResponse = await api.patch(`/api/reservations/${id}`, reservation);
+      const payload = response?.data;
+      const normalized = (payload?.data?.reservation ?? payload?.data ?? payload?.reservation ?? payload) as Reservation;
+      return normalized;
     } catch (error: any) {
       console.error('Error in updateReservation:', error);
       throw error;
@@ -157,7 +189,6 @@ export const reservationService = {
 
   getTodayRevenue: async (): Promise<{ revenue: number }> => {
     try {
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
       const response: AxiosResponse = await api.get('/api/reservations/revenue/today');
       return response.data;
     } catch (error: any) {
@@ -169,9 +200,7 @@ export const reservationService = {
   // Add add-on services to a reservation
   addAddOnsToReservation: async (reservationId: string, addOns: Array<{ serviceId: string; quantity: number }>): Promise<any> => {
     try {
-      console.log('Adding add-ons to reservation:', { reservationId, addOns });
       const response: AxiosResponse = await api.post(`/api/reservations/${reservationId}/add-ons`, { addOns });
-      console.log('Add-ons response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Error in addAddOnsToReservation:', error);

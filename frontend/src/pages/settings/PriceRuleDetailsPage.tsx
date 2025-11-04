@@ -5,7 +5,7 @@
  * It provides a form interface for managing all price rule properties
  * including rule type, discount settings, and conditional parameters.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -32,7 +32,7 @@ import {
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import priceRuleService from '../../services/priceRuleService';
-import { PriceRule, PriceRuleType, DiscountType } from '../../types/priceRule';
+import { PriceRule, PriceRuleType, DiscountType, PriceAdjustmentType } from '../../types/priceRule';
 
 const PriceRuleDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -49,6 +49,7 @@ const PriceRuleDetailsPage: React.FC = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [ruleType, setRuleType] = useState<PriceRuleType | ''>('');
+  const [adjustmentType, setAdjustmentType] = useState<PriceAdjustmentType>('DISCOUNT'); // Default to discount
   const [discountType, setDiscountType] = useState<DiscountType>('PERCENTAGE'); // Default to percentage discount
   const [discountValue, setDiscountValue] = useState<number>(0);
   const [minQuantity, setMinQuantity] = useState<number | ''>('');
@@ -59,14 +60,7 @@ const PriceRuleDetailsPage: React.FC = () => {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   
-  useEffect(() => {
-    // Only load price rule data if this is an edit (not a new rule)
-    if (id && id !== 'new') {
-      loadPriceRule();
-    }
-  }, [id]);
-  
-  const loadPriceRule = async () => {
+  const loadPriceRule = useCallback(async () => {
     try {
       setLoading(true);
       const response = await priceRuleService.getPriceRuleById(id!);
@@ -76,6 +70,7 @@ const PriceRuleDetailsPage: React.FC = () => {
       setName(priceRule.name);
       setDescription(priceRule.description || '');
       setRuleType(priceRule.ruleType);
+      setAdjustmentType(priceRule.adjustmentType || 'DISCOUNT');
       setDiscountType(priceRule.discountType);
       setDiscountValue(priceRule.discountValue);
       setMinQuantity(priceRule.minQuantity || '');
@@ -106,7 +101,14 @@ const PriceRuleDetailsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    // Only load price rule data if this is an edit (not a new rule)
+    if (id && id !== 'new') {
+      loadPriceRule();
+    }
+  }, [id, loadPriceRule]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,6 +135,7 @@ const PriceRuleDetailsPage: React.FC = () => {
         name,
         description: description || undefined,
         ruleType,
+        adjustmentType,
         discountType,
         discountValue,
         minQuantity: minQuantity === '' ? undefined : Number(minQuantity),
@@ -268,11 +271,28 @@ const PriceRuleDetailsPage: React.FC = () => {
                 
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth required size="small">
-                    <InputLabel>Discount Type</InputLabel>
+                    <InputLabel>Adjustment Type</InputLabel>
+                    <Select
+                      value={adjustmentType}
+                      onChange={(e) => setAdjustmentType(e.target.value as any)}
+                      label="Adjustment Type"
+                    >
+                      <MenuItem value="DISCOUNT">Discount (Reduce Price)</MenuItem>
+                      <MenuItem value="SURCHARGE">Surcharge (Increase Price)</MenuItem>
+                    </Select>
+                    <FormHelperText>
+                      {adjustmentType === 'DISCOUNT' ? 'Reduces the price' : 'Increases the price'}
+                    </FormHelperText>
+                  </FormControl>
+                </Grid>
+                
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth required size="small">
+                    <InputLabel>Value Type</InputLabel>
                     <Select
                       value={discountType}
                       onChange={(e) => setDiscountType(e.target.value as any)}
-                      label="Discount Type"
+                      label="Value Type"
                     >
                       <MenuItem value="PERCENTAGE">Percentage</MenuItem>
                       <MenuItem value="FIXED_AMOUNT">Fixed Amount</MenuItem>
@@ -282,7 +302,7 @@ const PriceRuleDetailsPage: React.FC = () => {
                 
                 <Grid item xs={12} sm={6}>
                   <TextField
-                    label={`Discount Value (${getDiscountTypeLabel()})`}
+                    label={`${adjustmentType === 'DISCOUNT' ? 'Discount' : 'Surcharge'} Value (${getDiscountTypeLabel()})`}
                     fullWidth
                     required
                     type="number"

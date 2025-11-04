@@ -38,7 +38,7 @@ const steps = [
 // Define the order data structure
 interface OrderData {
   customer: Customer | null;
-  pet: Pet | null;
+  pets: Pet[];
   reservation: {
     startDate: Date | null;
     endDate: Date | null;
@@ -61,6 +61,9 @@ interface OrderData {
     taxAmount: number;
     discount: number;
     total: number;
+    depositAmount: number;
+    depositRequired: boolean;
+    balanceDue: number;
     notes: string;
   };
   payment: {
@@ -95,7 +98,7 @@ const OrderEntry: React.FC = () => {
   // Initialize order data with empty values
   const [orderData, setOrderData] = useState<OrderData>({
     customer: null,
-    pet: null,
+    pets: [],
     reservation: {
       startDate: null,
       endDate: null,
@@ -112,6 +115,9 @@ const OrderEntry: React.FC = () => {
       taxAmount: 0,
       discount: 0,
       total: 0,
+      depositAmount: 0,
+      depositRequired: false,
+      balanceDue: 0,
       notes: '',
     },
     payment: {
@@ -136,7 +142,7 @@ const OrderEntry: React.FC = () => {
     setCreatedInvoiceId(null);
     setOrderData({
       customer: null,
-      pet: null,
+      pets: [],
       reservation: {
         startDate: null,
         endDate: null,
@@ -153,6 +159,9 @@ const OrderEntry: React.FC = () => {
         taxAmount: 0,
         discount: 0,
         total: 0,
+        depositAmount: 0,
+        depositRequired: false,
+        balanceDue: 0,
         notes: '',
       },
       payment: {
@@ -171,11 +180,11 @@ const OrderEntry: React.FC = () => {
   };
 
   // Handle customer and pet selection
-  const handleCustomerUpdate = (customer: Customer, pet: Pet) => {
+  const handleCustomerUpdate = (customer: Customer, pets: Pet[]) => {
     setOrderData({
       ...orderData,
       customer: customer,
-      pet: pet,
+      pets: pets,
     });
     handleNext();
   };
@@ -202,11 +211,9 @@ const OrderEntry: React.FC = () => {
             petCount: 1 // Default to 1 pet
           };
           
-          console.log('Checking for price rules with:', priceRequest);
           const priceResponse = await priceRuleService.calculatePrice(priceRequest);
           
           if (priceResponse && priceResponse.data) {
-            console.log('Price rule calculation response:', priceResponse.data);
             
             // If there are applied rules, calculate the discount
             if (priceResponse.data.appliedRules && priceResponse.data.appliedRules.length > 0) {
@@ -215,7 +222,6 @@ const OrderEntry: React.FC = () => {
               const discountedPrice = priceResponse.data.finalPrice;
               discount = originalPrice - discountedPrice;
               
-              console.log(`Applied price rules resulted in a discount of ${discount}`);
             }
           }
         } catch (err) {
@@ -227,6 +233,27 @@ const OrderEntry: React.FC = () => {
       const taxAmount = (subtotal - discount) * taxRate;
       const total = subtotal - discount + taxAmount;
       
+      // Calculate deposit if required
+      let depositAmount = 0;
+      let depositRequired = false;
+      
+      if (reservationData.service) {
+        depositRequired = reservationData.service.depositRequired || false;
+        
+        if (depositRequired) {
+          const depositType = reservationData.service.depositType;
+          const depositValue = reservationData.service.depositAmount || 0;
+          
+          if (depositType === 'PERCENTAGE') {
+            depositAmount = (total * depositValue) / 100;
+          } else if (depositType === 'FIXED_AMOUNT') {
+            depositAmount = depositValue;
+          }
+        }
+      }
+      
+      const balanceDue = total - depositAmount;
+      
       setOrderData({
         ...orderData,
         reservation: reservationData,
@@ -237,10 +264,13 @@ const OrderEntry: React.FC = () => {
           taxAmount: taxAmount,
           discount: discount,
           total: total,
+          depositAmount: depositAmount,
+          depositRequired: depositRequired,
+          balanceDue: balanceDue,
         },
         payment: {
           ...orderData.payment,
-          amount: total,
+          amount: depositRequired ? depositAmount : total,
         },
       });
       
@@ -259,16 +289,11 @@ const OrderEntry: React.FC = () => {
     const servicePrice = orderData.reservation.price || 0;
     
     // Log the prices to help with debugging
-    console.log('Service price:', servicePrice);
-    console.log('Add-on total:', addOnTotal);
     
     const subtotal = servicePrice + addOnTotal;
     const taxAmount = subtotal * orderData.invoice.taxRate;
     const total = subtotal + taxAmount - (orderData.invoice.discount || 0);
     
-    console.log('Calculated subtotal:', subtotal);
-    console.log('Add-ons included:', addOns);
-    console.log('Calculated total:', total);
     
     setOrderData({
       ...orderData,
@@ -323,28 +348,51 @@ const OrderEntry: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      if (!orderData.customer || !orderData.pet) {
-        throw new Error('Customer and pet information is required');
+      if (!orderData.customer || orderData.pets.length === 0) {
+        throw new Error('Customer and at least one pet are required');
       }
       
-      // Step 1: Create the reservation
-      const reservationData: any = {
-        customerId: orderData.customer.id,
-        petId: orderData.pet.id,
-        serviceId: orderData.reservation.serviceId,
-        startDate: orderData.reservation.startDate ? new Date(orderData.reservation.startDate).toISOString() : new Date().toISOString(),
-        endDate: orderData.reservation.endDate ? new Date(orderData.reservation.endDate).toISOString() : new Date().toISOString(),
-        status: orderData.reservation.status as 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW',
-        notes: orderData.reservation.notes || ''
-      };
+      // Step 1: Create reservations (one per pet)
+      const createdReservations = [];
       
-      // Only include resourceId if it's not empty
-      if (orderData.reservation.resourceId && orderData.reservation.resourceId !== '') {
-        reservationData.resourceId = orderData.reservation.resourceId;
+      // For multiple pets, we need to handle resource assignment differently
+      // If a specific resource was selected and there are multiple pets, 
+      // only assign it to the first pet and let backend auto-assign for others
+      const hasMultiplePets = orderData.pets.length > 1;
+      const hasSpecificResource = orderData.reservation.resourceId && orderData.reservation.resourceId !== '';
+      
+      for (let i = 0; i < orderData.pets.length; i++) {
+        const pet = orderData.pets[i];
+        const isFirstPet = i === 0;
+        
+        const reservationData: any = {
+          customerId: orderData.customer.id,
+          petId: pet.id,
+          serviceId: orderData.reservation.serviceId,
+          startDate: orderData.reservation.startDate ? new Date(orderData.reservation.startDate).toISOString() : new Date().toISOString(),
+          endDate: orderData.reservation.endDate ? new Date(orderData.reservation.endDate).toISOString() : new Date().toISOString(),
+          status: orderData.reservation.status as 'PENDING' | 'CONFIRMED' | 'CHECKED_IN' | 'CHECKED_OUT' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW',
+          notes: orderData.reservation.notes || ''
+        };
+        
+        // Resource assignment logic for multiple pets:
+        // - If only one pet: assign the selected resource (if any)
+        // - If multiple pets: don't assign specific resource, let backend auto-assign separate suites
+        // This prevents conflicts where multiple pets try to use the same suite
+        if (hasSpecificResource && !hasMultiplePets) {
+          // Single pet - assign the selected resource
+          reservationData.resourceId = orderData.reservation.resourceId;
+        } else if (hasMultiplePets) {
+          // Multiple pets - let backend auto-assign to avoid conflicts
+        }
+        
+        
+        const reservation = await reservationService.createReservation(reservationData);
+        createdReservations.push(reservation);
       }
       
-      const reservation = await reservationService.createReservation(reservationData);
-      setCreatedReservationId(reservation.id);
+      // Store the first reservation ID for reference
+      setCreatedReservationId(createdReservations[0].id);
       
       // Step 2: Create the invoice
       // Calculate the base service price (total subtotal minus add-ons)
@@ -352,16 +400,10 @@ const OrderEntry: React.FC = () => {
       const baseServicePrice = orderData.invoice.subtotal - addOnTotal;
       
       // Log values for debugging
-      console.log('Creating invoice with data:');
-      console.log('Base service price:', baseServicePrice);
-      console.log('Add-on total:', addOnTotal);
-      console.log('Subtotal:', orderData.invoice.subtotal);
-      console.log('Tax amount:', orderData.invoice.taxAmount);
-      console.log('Total:', orderData.invoice.total);
       
       const invoiceData = {
         customerId: orderData.customer.id,
-        reservationId: reservation.id,
+        reservationId: createdReservations[0].id, // Link to first reservation
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Due in 7 days
         status: 'DRAFT' as 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED' | 'REFUNDED',
         subtotal: orderData.invoice.subtotal,
@@ -369,16 +411,16 @@ const OrderEntry: React.FC = () => {
         taxAmount: orderData.invoice.taxAmount,
         discount: orderData.invoice.discount,
         total: orderData.invoice.total,
-        notes: orderData.invoice.notes,
+        notes: `${orderData.invoice.notes}${orderData.pets.length > 1 ? ` (${orderData.pets.length} pets: ${orderData.pets.map(p => p.name).join(', ')})` : ''}`,
         lineItems: [
-          // Add main service as a line item
-          {
-            description: "Reservation Service",
+          // Add main service as a line item for each pet
+          ...orderData.pets.map(pet => ({
+            description: `Reservation Service - ${pet.name}`,
             quantity: 1,
-            unitPrice: baseServicePrice,
-            amount: baseServicePrice,
+            unitPrice: baseServicePrice / orderData.pets.length,
+            amount: baseServicePrice / orderData.pets.length,
             taxable: true
-          },
+          })),
           // Add each add-on as a line item
           ...orderData.addOns.map(addon => ({
             description: addon.name,
@@ -422,10 +464,28 @@ const OrderEntry: React.FC = () => {
       });
       
     } catch (err: any) {
-      setError(err.message || 'An error occurred while processing the order');
+      console.error('Error in completeOrder:', err);
+      
+      let errorMessage = 'An error occurred while processing the order';
+      
+      // Extract more specific error messages
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      // Log the full error for debugging
+      if (err.response?.data) {
+        console.error('Server error response:', err.response.data);
+      }
+      
+      setError(errorMessage);
       setSnackbar({
         open: true,
-        message: err.message || 'An error occurred while processing the order',
+        message: errorMessage,
         severity: 'error',
       });
     } finally {
@@ -460,7 +520,7 @@ const OrderEntry: React.FC = () => {
           <CustomerSelection 
             onContinue={handleCustomerUpdate} 
             initialCustomer={orderData.customer}
-            initialPet={orderData.pet}
+            initialPets={orderData.pets}
           />
         );
       case 1:
@@ -468,7 +528,7 @@ const OrderEntry: React.FC = () => {
           <ReservationCreation 
             onContinue={handleReservationUpdate} 
             customer={orderData.customer}
-            pet={orderData.pet}
+            pet={orderData.pets[0] || null}
             initialReservation={orderData.reservation}
           />
         );
@@ -496,6 +556,9 @@ const OrderEntry: React.FC = () => {
           <PaymentProcessing 
             onContinue={handlePaymentUpdate} 
             amount={orderData.invoice.total}
+            depositRequired={orderData.invoice.depositRequired}
+            depositAmount={orderData.invoice.depositAmount}
+            totalAmount={orderData.invoice.total}
             initialPayment={orderData.payment}
             invoiceId={createdInvoiceId || undefined} // Pass the invoice ID to the PaymentProcessing component
           />
@@ -578,7 +641,7 @@ const OrderEntry: React.FC = () => {
                     variant="contained"
                     onClick={handleNext}
                     disabled={
-                      (activeStep === 0 && (!orderData.customer || !orderData.pet)) ||
+                      (activeStep === 0 && (!orderData.customer || orderData.pets.length === 0)) ||
                       (activeStep === 1 && !orderData.reservation.serviceId) ||
                       loading
                     }

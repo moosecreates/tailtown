@@ -1,21 +1,44 @@
 import { Resource, ResourceAvailability } from '../types/resource';
-import api from './api';
+import { reservationApi as api } from './api';
 
-// Get all resources
+// Get all resources with pagination support
 export const getAllResources = async () => {
   try {
-    console.log('Getting all resources...');
-    const response = await api.get('/api/resources');
-    console.log('Response status:', response.status);
-    console.log('Response data:', response.data);
+    let allResources: any[] = [];
+    let currentPage = 1;
+    let totalPages = 1;
     
-    if (response.data && response.data.status === 'success') {
-      const resources = response.data.data || [];
-      console.log(`Found ${resources.length} resources`);
-      return resources;
+    // Fetch first page
+    const firstResponse = await api.get('/api/resources', {
+      params: {
+        page: currentPage,
+        limit: 100
+      }
+    });
+    
+    if (firstResponse.data && firstResponse.data.status === 'success') {
+      allResources = firstResponse.data.data || [];
+      totalPages = firstResponse.data.totalPages || 1;
+      
+      // Fetch remaining pages if there are any
+      while (currentPage < totalPages) {
+        currentPage++;
+        const pageResponse = await api.get('/api/resources', {
+          params: {
+            page: currentPage,
+            limit: 100
+          }
+        });
+        
+        if (pageResponse.data && pageResponse.data.status === 'success' && pageResponse.data.data) {
+          allResources = [...allResources, ...pageResponse.data.data];
+        }
+      }
+      
+      return allResources;
     }
     
-    console.error('Unexpected response format:', response.data);
+    console.error('Unexpected response format:', firstResponse.data);
     throw new Error('Failed to get resources: Invalid response format');
   } catch (error: any) {
     console.error('Error getting resources:', error.response?.data || error.message);
@@ -26,9 +49,7 @@ export const getAllResources = async () => {
 // Get a single resource by ID
 export const getResourceById = async (id: string) => {
   try {
-    console.log('Getting resource:', id);
     const response = await api.get(`/api/resources/${id}`);
-    console.log('Response:', response);
     return response.data.data;
   } catch (error: any) {
     console.error('Error getting resource:', error.response?.data || error.message);
@@ -39,13 +60,11 @@ export const getResourceById = async (id: string) => {
 // Create a new resource
 export const createResource = async (resourceData: Omit<Resource, 'id' | 'createdAt' | 'updatedAt'>) => {
   try {
-    console.log('Creating resource:', resourceData);
     const response = await api.post('/api/resources', {
       ...resourceData,
       isActive: true,
       attributes: resourceData.attributes || {}
     });
-    console.log('Response:', response);
     if (response.data.status === 'success') {
       return response.data.data;
     }
@@ -59,9 +78,7 @@ export const createResource = async (resourceData: Omit<Resource, 'id' | 'create
 // Update a resource
 export const updateResource = async (id: string, resourceData: Partial<Resource>) => {
   try {
-    console.log('Updating resource:', id, resourceData);
     const response = await api.put(`/api/resources/${id}`, resourceData);
-    console.log('Response:', response);
     return response.data.data;
   } catch (error: any) {
     console.error('Error updating resource:', error.response?.data || error.message);
@@ -72,9 +89,7 @@ export const updateResource = async (id: string, resourceData: Partial<Resource>
 // Delete a resource
 export const deleteResource = async (id: string) => {
   try {
-    console.log('Deleting resource:', id);
     const response = await api.delete(`/api/resources/${id}`);
-    console.log('Response:', response);
     return response.data.data;
   } catch (error: any) {
     console.error('Error deleting resource:', error.response?.data || error.message);

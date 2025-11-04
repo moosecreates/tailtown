@@ -5,7 +5,8 @@ import {
   createCustomer,
   updateCustomer,
   deleteCustomer,
-  getCustomerPets
+  getCustomerPets,
+  getCustomerInvoices
 } from '../controllers/customer.controller';
 
 const router = Router();
@@ -18,6 +19,9 @@ router.get('/:id', getCustomerById);
 
 // GET all pets for a customer
 router.get('/:id/pets', getCustomerPets);
+
+// GET all invoices for a customer
+router.get('/:id/invoices', getCustomerInvoices);
 
 // POST create a new customer
 router.post('/', createCustomer);

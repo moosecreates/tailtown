@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Tailtown Health Check every 5 minutes
+Requires=tailtown-health-check.service
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+Unit=tailtown-health-check.service
+
+[Install]
+WantedBy=timers.target

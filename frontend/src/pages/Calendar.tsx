@@ -1,6 +1,6 @@
 import React from 'react';
 import { Typography, Container, Box } from '@mui/material';
-import Calendar from '../components/calendar/Calendar';
+import KennelCalendar from '../components/calendar/KennelCalendar';
 
 const CalendarPage = () => {
   return (
@@ -9,7 +9,7 @@ const CalendarPage = () => {
         <Typography variant="h4" gutterBottom>
           Calendar
         </Typography>
-        <Calendar />
+        <KennelCalendar />
       </Box>
     </Container>
   );

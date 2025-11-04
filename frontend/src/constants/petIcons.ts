@@ -153,6 +153,13 @@ export const MEDICAL_ICONS: PetIcon[] = [
     description: 'Has dietary restrictions or requirements',
   },
   {
+    id: 'allergies',
+    category: 'medical',
+    icon: '⚠️',
+    label: 'Allergies',
+    description: 'Has known allergies',
+  },
+  {
     id: 'skin-condition',
     category: 'medical',
     icon: '🧴',

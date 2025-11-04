@@ -35,9 +35,7 @@ const addonService = {
         url += `?serviceId=${serviceId}`;
       }
       
-      console.log('Fetching add-on services from:', url);
       const response: AxiosResponse<AddOnServiceResponse> = await api.get(url);
-      console.log('Add-on services response:', response.data);
       
       if (Array.isArray(response.data.data)) {
         return response.data.data;

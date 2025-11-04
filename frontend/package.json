@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@emotion/react": "11.11.1",
-    "@emotion/styled": "11.11.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@fullcalendar/core": "^6.1.17",
     "@fullcalendar/daygrid": "^6.1.17",
     "@fullcalendar/interaction": "^6.1.17",
@@ -20,15 +20,20 @@
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.28",
     "@types/react": "18.2.64",
+    "@types/react-datepicker": "^7.0.0",
     "@types/react-dom": "18.2.21",
     "@types/yup": "^0.32.0",
+    "ajv": "^8.12.0",
     "axios": "^1.8.4",
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.13",
     "formik": "^2.4.6",
     "http-proxy-middleware": "^3.0.5",
+    "lodash": "^4.17.21",
     "react": "^18.3.1",
+    "react-datepicker": "^8.8.0",
     "react-dom": "^18.3.1",
+    "react-helmet-async": "^2.0.5",
     "react-router-dom": "6.22.3",
     "react-scripts": "5.0.1",
     "recharts": "^2.15.3",
@@ -37,17 +42,27 @@
     "yup": "^1.6.1"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "craco start",
+    "build": "GENERATE_SOURCEMAP=false craco build",
+    "build:analyze": "GENERATE_SOURCEMAP=false craco build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "test": "craco test",
+    "test:coverage": "craco test --coverage --watchAll=false",
+    "test:coverage:watch": "craco test --coverage",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://localhost:3002",
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
     ]
+  },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!(axios)/)"
+    ],
+    "moduleNameMapper": {
+      "\\.(css|less|scss|sass)$": "<rootDir>/src/__mocks__/styleMock.js"
+    }
   },
   "browserslist": {
     "production": [
@@ -62,13 +77,17 @@
     ]
   },
   "overrides": {
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "@types/react": "18.2.64",
     "@types/react-dom": "18.2.21"
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
+    "@testing-library/dom": "^10.4.1",
     "@types/lodash": "^4.17.16",
-    "@types/recharts": "^2.0.1"
+    "@types/recharts": "^2.0.1",
+    "compression-webpack-plugin": "^11.1.0",
+    "webpack-bundle-analyzer": "^4.10.2"
   }
 }

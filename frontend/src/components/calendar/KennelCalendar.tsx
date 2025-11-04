@@ -1,49 +1,22 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Box,
-  Paper,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Chip,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Button,
-  CircularProgress,
-  Tooltip,
-  Grid,
-  Divider,
   Alert
 } from '@mui/material';
-import { 
-  ChevronLeft as ChevronLeftIcon, 
-  ChevronRight as ChevronRightIcon,
-  CalendarViewMonth as CalendarViewMonthIcon,
-  CalendarViewWeek as CalendarViewWeekIcon,
-  CalendarViewDay as CalendarViewDayIcon,
-  Today as TodayIcon
-} from '@mui/icons-material';
-import { resourceService, Resource } from '../../services/resourceService';
-import { reservationService, Reservation } from '../../services/reservationService';
-import ReservationForm from '../reservations/ReservationForm';
+import { reservationService } from '../../services/reservationService';
+import { reservationApi } from '../../services/api';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
-import api from '../../services/api';
+import { useKennelData, ExtendedResource, Reservation, KennelType } from '../../hooks/useKennelData';
+import { useResponsive, getResponsiveDialogWidth } from '../../utils/responsive';
+import KennelCalendarHeader from './components/KennelCalendarHeader';
+import KennelGrid from './components/KennelGrid';
+import ReservationFormWrapper from './components/ReservationFormWrapper';
 
 // Define the view types
 type ViewType = 'month' | 'week' | 'day';
-
-// Define the kennel types
-type KennelType = 'STANDARD_SUITE' | 'STANDARD_PLUS_SUITE' | 'VIP_SUITE';
 
 // Define the props for the KennelCalendar component
 interface KennelCalendarProps {
@@ -51,7 +24,7 @@ interface KennelCalendarProps {
 }
 
 /**
- * KennelCalendar component provides a grid-based calendar view for kennel reservations
+ * Optimized KennelCalendar component with improved performance and maintainability
  * 
  * Features:
  * - Displays kennels in rows grouped by type
@@ -60,839 +33,320 @@ interface KennelCalendarProps {
  * - Allows creating new reservations by clicking on empty cells
  * - Supports month, week, and day views
  * - Enables editing existing reservations by clicking on occupied cells
+ * 
+ * Performance optimizations:
+ * - Split into smaller, memoized components
+ * - Custom hook for data management
+ * - Reduced console logging
+ * - Optimized re-render patterns
  */
 const KennelCalendar: React.FC<KennelCalendarProps> = ({ onEventUpdate }) => {
+  // Responsive hooks
+  const { isMobile, isTablet } = useResponsive();
+  
   // State for the current date and view
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewType, setViewType] = useState<ViewType>('week');
   
-  // State for kennels and reservations
-  const [kennels, setKennels] = useState<Resource[]>([]);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  // State for filtering
+  const [kennelTypeFilter, setKennelTypeFilter] = useState<KennelType | 'ALL'>('ALL');
   
   // State for the reservation form dialog
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
-  const [selectedKennel, setSelectedKennel] = useState<Resource | null>(null);
+  const [selectedKennel, setSelectedKennel] = useState<ExtendedResource | null>(null);
   const [selectedDate, setSelectedDate] = useState<{ start: Date; end: Date } | null>(null);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  
-  // State for filtering
-  const [kennelTypeFilter, setKennelTypeFilter] = useState<KennelType | 'ALL'>('ALL');
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Function to get the days to display based on the view type
-  const getDaysToDisplay = useCallback(() => {
+  const getDaysToDisplay = useCallback((): Date[] => {
     const days: Date[] = [];
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const date = new Date(year, month, currentDate.getDate());
+    const today = new Date(currentDate);
     
-    if (viewType === 'day') {
-      // Just show the current day
-      days.push(new Date(date));
-    } else if (viewType === 'week') {
-      // Show 7 days starting from the current day
-      for (let i = 0; i < 7; i++) {
-        const newDate = new Date(date);
-        newDate.setDate(date.getDate() + i);
-        days.push(new Date(newDate));
-      }
-    } else {
-      // Show the whole month
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      
-      for (let i = 1; i <= lastDay.getDate(); i++) {
-        days.push(new Date(year, month, i));
-      }
+    switch (viewType) {
+      case 'day':
+        days.push(new Date(today));
+        break;
+        
+      case 'week':
+        // Get the start of the week (Sunday)
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        
+        // Add 7 days
+        for (let i = 0; i < 7; i++) {
+          const day = new Date(startOfWeek);
+          day.setDate(startOfWeek.getDate() + i);
+          days.push(day);
+        }
+        break;
+        
+      case 'month':
+        // Get the first day of the month
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        // Get the last day of the month
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        
+        // Add all days in the month
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+          days.push(new Date(today.getFullYear(), today.getMonth(), day));
+        }
+        break;
     }
     
     return days;
   }, [currentDate, viewType]);
 
-  // Function to load kennels
-  const loadKennels = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Get all kennels (suites)
-      const response = await resourceService.getSuites(
-        kennelTypeFilter !== 'ALL' ? kennelTypeFilter : undefined
-      );
-      
-      if (response?.status === 'success' && Array.isArray(response?.data)) {
-        // Sort kennels by type and number
-        const sortedKennels = [...response.data].sort((a, b) => {
-          // First sort by type
-          const typeOrder: Record<string, number> = {
-            'VIP_SUITE': 1,
-            'STANDARD_PLUS_SUITE': 2,
-            'STANDARD_SUITE': 3
-          };
-          
-          const typeA = a.attributes?.suiteType || '';
-          const typeB = b.attributes?.suiteType || '';
-          
-          const typeComparison = (typeOrder[typeA] || 999) - (typeOrder[typeB] || 999);
-          
-          if (typeComparison !== 0) {
-            return typeComparison;
-          }
-          
-          // Then sort by suite number
-          return (a.suiteNumber || 0) - (b.suiteNumber || 0);
-        });
-        
-        setKennels(sortedKennels);
-      } else {
-        setError('Failed to load kennels');
-      }
-    } catch (error) {
-      console.error('Error loading kennels:', error);
-      setError('Failed to load kennels');
-    } finally {
-      setLoading(false);
-    }
-  }, [kennelTypeFilter]);
-
-  // Function to load reservations
-  const loadReservations = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Calculate the date range to fetch reservations
-      const days = getDaysToDisplay();
-      const startDate = formatDateToYYYYMMDD(days[0]);
-      const endDate = formatDateToYYYYMMDD(days[days.length - 1]);
-      
-      // Get reservations for the date range
-      // Note: The API actually supports more parameters than the TypeScript interface shows
-      // We're using the actual API capabilities here
-      const response = await api.get('/api/reservations', {
-        params: {
-          page: 1,
-          limit: 1000,
-          sortBy: 'startDate',
-          sortOrder: 'asc',
-          status: 'PENDING,CONFIRMED,CHECKED_IN',
-          startDate,
-          endDate,
-          serviceCategory: 'BOARDING,DAYCARE'
-        }
-      });
-      
-      // The API returns data in a standard format { status: string, data: any[] }
-      if (response?.data?.status === 'success' && Array.isArray(response?.data?.data)) {
-        setReservations(response.data.data);
-      } else {
-        setError('Failed to load reservations');
-      }
-    } catch (error) {
-      console.error('Error loading reservations:', error);
-      setError('Failed to load reservations');
-    } finally {
-      setLoading(false);
-    }
-  }, [getDaysToDisplay]);
-
-  // Load kennels and reservations when the component mounts or when dependencies change
-  useEffect(() => {
-    loadKennels();
-  }, [loadKennels]);
-
-  useEffect(() => {
-    loadReservations();
-  }, [loadReservations]);
-  
-  /**
-   * Event listener to handle reservation completion
-   * This is triggered when add-ons are added to a reservation
-   * It closes the form dialog and refreshes the calendar
-   */
-  useEffect(() => {
-    const handleReservationComplete = (event: Event) => {
-      // Close the form dialog and reset all selection state
-      setIsFormOpen(false);
-      setSelectedReservation(null);
-      setSelectedKennel(null);
-      setSelectedDate(null);
-      
-      // Reload reservations to refresh the calendar with the updated data
-      loadReservations();
-    };
-    
-    // Add the event listener for the custom event
-    document.addEventListener('reservationComplete', handleReservationComplete);
-    
-    // Clean up the event listener when the component unmounts to prevent memory leaks
-    return () => {
-      document.removeEventListener('reservationComplete', handleReservationComplete);
-    };
-  }, [loadReservations]);
-
-  // Function to handle clicking on a cell
-  const handleCellClick = (kennel: Resource, date: Date, existingReservation?: Reservation) => {
-    if (existingReservation) {
-      // If there's an existing reservation, open the form to edit it
-      setSelectedReservation(existingReservation);
-      setSelectedKennel(kennel);
-      setSelectedDate({
-        start: new Date(existingReservation.startDate),
-        end: new Date(existingReservation.endDate)
-      });
-    } else {
-      // Otherwise, open the form to create a new reservation
-      setSelectedReservation(null);
-      setSelectedKennel(kennel);
-      
-      // Set the start and end dates for the new reservation
-      const start = new Date(date);
-      start.setHours(9, 0, 0, 0); // Default start time: 9:00 AM
-      
-      const end = new Date(date);
-      end.setHours(17, 0, 0, 0); // Default end time: 5:00 PM
-      
-      setSelectedDate({ start, end });
-    }
-    
-    setIsFormOpen(true);
-  };
-
-  // State for error messages
-  const [formError, setFormError] = useState<string | null>(null);
-
-  // Function to handle form submission
-  const handleFormSubmit = async (formData: any) => {
-    console.log('KennelCalendar: handleFormSubmit called with data:', formData);
-    setFormError(null); // Clear any previous errors
-    
-    try {
-      // Set loading state to true at the beginning of the operation
-      setLoading(true);
-      
-      // Don't close the form immediately - the ReservationForm will handle showing the add-ons dialog
-      // and we'll let the user close the dialog when they're done
-      
-      let updatedReservation;
-      
-      if (selectedReservation) {
-        console.log('KennelCalendar: Updating existing reservation', selectedReservation.id);
-        updatedReservation = await reservationService.updateReservation(
-          selectedReservation.id,
-          formData
-        );
-        
-        // For updates, we can close the form immediately since we don't need to show add-ons
-        // Reload reservations to refresh the calendar
-        await loadReservations();
-        
-        if (onEventUpdate && typeof updatedReservation === 'object' && updatedReservation !== null) {
-          // Cast to Reservation type before passing to onEventUpdate
-          onEventUpdate(updatedReservation as Reservation);
-        }
-        
-        // Close the form dialog for updates
-        setIsFormOpen(false);
-        setSelectedReservation(null);
-        setSelectedKennel(null);
-        setSelectedDate(null);
-      } else {
-        console.log('KennelCalendar: Creating new reservation');
-        try {
-          const response = await reservationService.createReservation(formData);
-          console.log('KennelCalendar: Raw API response:', response);
-          
-          // Store the response in the updatedReservation variable
-          updatedReservation = response;
-          
-          // Check if we need to navigate the response object to get to the actual reservation data
-          // This is done to handle different API response formats
-          if (typeof response === 'object' && response !== null) {
-            // If the response has a data property and a success status, use the data property
-            if ('data' in response && 'status' in response && response.status as string === 'success') {
-              console.log('KennelCalendar: Found nested data structure in response');
-              updatedReservation = response.data as any; // Use 'any' to avoid TypeScript errors
-            }
-          }
-        } catch (createError: any) {
-          // Handle specific error for duplicate reservation
-          if (createError.response && createError.response.status === 400) {
-            console.error('KennelCalendar: Error creating reservation - 400 Bad Request');
-            // Set a more specific error message for double booking
-            setFormError('This kennel is already booked for the selected time period. Please choose a different kennel or time.');
-            // Ensure loading state is reset
-            setLoading(false);
-            return undefined;
-          }
-          // Re-throw the error to be caught by the outer catch block
-          throw createError;
-        }
-        
-        // Reload reservations to refresh the calendar
-        await loadReservations();
-        
-        if (onEventUpdate && typeof updatedReservation === 'object' && updatedReservation !== null) {
-          // Cast to Reservation type before passing to onEventUpdate
-          onEventUpdate(updatedReservation as Reservation);
-        }
-        
-        // For new reservations, we DON'T close the form dialog immediately
-        // because we want to show the add-ons dialog first
-        // The ReservationForm component will handle closing the dialog after add-ons are processed
-        // This is key to ensuring the add-ons dialog appears after reservation creation
-        console.log('KennelCalendar: Keeping form open for add-ons dialog');
-      }
-
-      console.log('KennelCalendar: Processed API response:', updatedReservation);
-
-      if (updatedReservation) {
-        // Extract the reservation ID (handling different response formats)
-        let reservationId = '';
-        if (typeof updatedReservation === 'object' && updatedReservation !== null) {
-          if ('id' in updatedReservation) {
-            reservationId = updatedReservation.id as string;
-          } else if ('_id' in updatedReservation) {
-            reservationId = updatedReservation._id as string;
-          }
-        }
-        
-        // Return the reservation ID so it can be used for add-ons
-        console.log('KennelCalendar: Returning reservation ID for add-ons:', reservationId);
-        return { reservationId };
-      } else {
-        console.warn('KennelCalendar: No reservation returned from server');
-        
-        // If no reservation was created, don't close the form but show an error
-        // Use a more specific error message for double-booking scenarios
-        setFormError('This kennel is already booked for the selected time period.');
-        return undefined;
-      }
-    } catch (error: any) {
-      console.error('KennelCalendar: Error creating/updating reservation:', error);
-      
-      // Extract error message from the response if available
-      let errorMessage = 'An error occurred while saving the reservation.';
-      
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error('KennelCalendar: Error response data:', error.response.data);
-        console.error('KennelCalendar: Error response status:', error.response.status);
-        
-        if (error.response.status === 400) {
-          // Handle specific error cases
-          if (error.response.data && error.response.data.message) {
-            errorMessage = error.response.data.message;
-          } else {
-            // Common 400 error for kennel reservations
-            errorMessage = 'This kennel is already booked for the selected time period.';
-          }
-        } else if (error.response.status === 404) {
-          errorMessage = 'Resource not found. Please refresh and try again.';
-        } else if (error.response.status === 500) {
-          errorMessage = 'Server error. Please try again later.';
-        }
-      } else if (error.request) {
-        // The request was made but no response was received
-        errorMessage = 'No response from server. Please check your connection.';
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        errorMessage = error.message || 'Unknown error occurred.';
-      }
-      
-      // Set the error message to display in the form
-      setFormError(errorMessage);
-      console.log('KennelCalendar: Setting form error:', errorMessage);
-      
-      // Force a re-render to ensure the error message is displayed
-      setTimeout(() => {
-        // This will trigger a re-render
-        setLoading(false);
-      }, 0);
-      
-      // Don't close the form so the user can see the error
-      return undefined;
-    } finally {
-      // Ensure loading state is reset even if there's an error
-      setLoading(false);
-    }
-  };
-
-  // Function to navigate to the previous period
-  const navigateToPrevious = () => {
-    const newDate = new Date(currentDate);
-    
-    if (viewType === 'day') {
-      newDate.setDate(newDate.getDate() - 1);
-    } else if (viewType === 'week') {
-      newDate.setDate(newDate.getDate() - 7);
-    } else {
-      newDate.setMonth(newDate.getMonth() - 1);
-    }
-    
-    setCurrentDate(newDate);
-  };
-
-  // Function to navigate to the next period
-  const navigateToNext = () => {
-    const newDate = new Date(currentDate);
-    
-    if (viewType === 'day') {
-      newDate.setDate(newDate.getDate() + 1);
-    } else if (viewType === 'week') {
-      newDate.setDate(newDate.getDate() + 7);
-    } else {
-      newDate.setMonth(newDate.getMonth() + 1);
-    }
-    
-    setCurrentDate(newDate);
-  };
-
-  // Function to navigate to today
-  const navigateToToday = () => {
-    setCurrentDate(new Date());
-  };
-
-  // Function to get the status color
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case 'CONFIRMED':
-        return '#4caf50'; // Green
-      case 'CHECKED_IN':
-        return '#2196f3'; // Blue
-      case 'PENDING':
-        return '#ff9800'; // Orange
-      default:
-        return '#9e9e9e'; // Grey
-    }
-  };
+  // Use the custom hook for data management
+  const {
+    kennels,
+    reservations,
+    loading,
+    error,
+    availabilityData,
+    fetchingAvailability,
+    availabilityError,
+    refreshData
+  } = useKennelData({
+    currentDate,
+    getDaysToDisplay,
+    kennelTypeFilter
+  });
 
   // Function to check if a kennel is occupied on a specific date
-  const isKennelOccupied = (kennel: Resource, date: Date): Reservation | undefined => {
-    const dateStr = formatDateToYYYYMMDD(date);
-    
-    return reservations.find(reservation => {
-      // Check if the reservation is for this kennel
-      // The resource property contains the kennel information
-      if (reservation.resource?.id !== kennel.id) {
-        return false;
-      }
+  const isKennelOccupied = useCallback((kennelId: string, date: Date): { occupied: boolean; reservation?: Reservation } => {
+    // Check reservations for this kennel on this date
+    const reservation = reservations.find((res: Reservation) => {
+      const resStartDate = new Date(res.startDate);
+      const resEndDate = new Date(res.endDate);
+      const checkDate = new Date(date);
       
-      // Check if the date falls within the reservation period
-      const startDate = new Date(reservation.startDate);
-      const endDate = new Date(reservation.endDate);
+      // Normalize dates to compare just the date part
+      resStartDate.setHours(0, 0, 0, 0);
+      resEndDate.setHours(23, 59, 59, 999);
+      checkDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
       
-      // Reset time components for date comparison
-      const compareDate = new Date(date);
-      compareDate.setHours(0, 0, 0, 0);
-      
-      const compareStartDate = new Date(startDate);
-      compareStartDate.setHours(0, 0, 0, 0);
-      
-      const compareEndDate = new Date(endDate);
-      compareEndDate.setHours(0, 0, 0, 0);
-      
-      return compareDate >= compareStartDate && compareDate <= compareEndDate;
-    });
-  };
-
-  // Function to group kennels by type
-  const groupedKennels = useMemo(() => {
-    const grouped: Record<string, Resource[]> = {
-      'VIP_SUITE': [],
-      'STANDARD_PLUS_SUITE': [],
-      'STANDARD_SUITE': []
-    };
-    
-    kennels.forEach(kennel => {
-      // First try to use the type field directly, then fall back to attributes.suiteType
-      const type = kennel.type || kennel.attributes?.suiteType || 'STANDARD_SUITE';
-      if (grouped[type]) {
-        grouped[type].push(kennel);
-      }
+      return (res.resourceId === kennelId || res.kennelId === kennelId || res.suiteId === kennelId) &&
+             checkDate >= resStartDate && checkDate <= resEndDate;
     });
     
-    return grouped;
-  }, [kennels]);
-
-  // Get the days to display
-  const days = getDaysToDisplay();
-  
-  // Get the title for the current view
-  const getViewTitle = () => {
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long'
+    return {
+      occupied: !!reservation,
+      reservation
     };
-    
-    if (viewType === 'day') {
-      options.day = 'numeric';
-      return new Intl.DateTimeFormat('en-US', options).format(currentDate);
-    } else if (viewType === 'week') {
-      const firstDay = days[0];
-      const lastDay = days[days.length - 1];
-      
-      const firstMonth = firstDay.getMonth();
-      const lastMonth = lastDay.getMonth();
-      
-      if (firstMonth === lastMonth) {
-        // Same month
-        return `${new Intl.DateTimeFormat('en-US', { month: 'long' }).format(firstDay)} ${firstDay.getDate()} - ${lastDay.getDate()}, ${firstDay.getFullYear()}`;
+  }, [reservations]);
+
+  // Function to fetch complete reservation data
+  const fetchCompleteReservation = async (reservationId: string) => {
+    try {
+      const response = await reservationApi.get(`/api/reservations/${reservationId}`);
+      if (response.data.status === 'success') {
+        // Handle nested response structure
+        const reservationData = response.data.data?.reservation || response.data.data || response.data;
+        return reservationData;
       } else {
-        // Different months
-        return `${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(firstDay)} ${firstDay.getDate()} - ${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(lastDay)} ${lastDay.getDate()}, ${firstDay.getFullYear()}`;
+        console.error('Failed to fetch complete reservation data:', response.data);
+        return null;
       }
-    } else {
-      // Month view
-      return new Intl.DateTimeFormat('en-US', options).format(currentDate);
+    } catch (error) {
+      console.error('Error fetching complete reservation data:', error);
+      return null;
     }
   };
 
-  return (
-    <Box sx={{ height: 'calc(100vh - 170px)', p: 0 }}>
-      <Paper elevation={3} sx={{ height: '100%', p: 2, display: 'flex', flexDirection: 'column' }}>
-        {/* Calendar Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton onClick={navigateToPrevious}>
-              <ChevronLeftIcon />
-            </IconButton>
-            <Typography variant="h6" sx={{ mx: 1 }}>
-              {getViewTitle()}
-            </Typography>
-            <IconButton onClick={navigateToNext}>
-              <ChevronRightIcon />
-            </IconButton>
-            <IconButton onClick={navigateToToday} sx={{ ml: 1 }}>
-              <TodayIcon />
-            </IconButton>
-          </Box>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {/* View Type Selector */}
-            <Box sx={{ display: 'flex', bgcolor: 'background.paper', borderRadius: 1, mr: 2 }}>
-              <Tooltip title="Month View">
-                <IconButton 
-                  color={viewType === 'month' ? 'primary' : 'default'} 
-                  onClick={() => setViewType('month')}
-                >
-                  <CalendarViewMonthIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Week View">
-                <IconButton 
-                  color={viewType === 'week' ? 'primary' : 'default'} 
-                  onClick={() => setViewType('week')}
-                >
-                  <CalendarViewWeekIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Day View">
-                <IconButton 
-                  color={viewType === 'day' ? 'primary' : 'default'} 
-                  onClick={() => setViewType('day')}
-                >
-                  <CalendarViewDayIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-            
-            {/* Kennel Type Filter */}
-            <FormControl variant="outlined" size="small" sx={{ minWidth: 150 }}>
-              <InputLabel>Kennel Type</InputLabel>
-              <Select
-                value={kennelTypeFilter}
-                onChange={(e) => setKennelTypeFilter(e.target.value as KennelType | 'ALL')}
-                label="Kennel Type"
-              >
-                <MenuItem value="ALL">All Types</MenuItem>
-                <MenuItem value="VIP_SUITE">VIP Suite</MenuItem>
-                <MenuItem value="STANDARD_PLUS_SUITE">Standard Plus</MenuItem>
-                <MenuItem value="STANDARD_SUITE">Standard</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        </Box>
+  // Handle cell click (create new reservation or edit existing)
+  const handleCellClick = useCallback(async (kennel: ExtendedResource, date: Date, reservation?: Reservation) => {
+    setSelectedKennel(kennel);
+    
+    if (reservation) {
+      // If there's an existing reservation, fetch the complete data
+      const completeReservation = await fetchCompleteReservation(reservation.id);
+      
+      if (completeReservation) {
+        setSelectedReservation(completeReservation);
+      } else {
+        console.warn('KennelCalendar: Could not fetch complete reservation data, using incomplete data');
+        setSelectedReservation(reservation);
+      }
+    } else {
+      setSelectedReservation(null);
+    }
+    
+    // Set the selected date range (default to same day for start and end)
+    const endDate = new Date(date);
+    endDate.setDate(date.getDate() + 1); // Default to next day for checkout
+    
+    setSelectedDate({
+      start: date,
+      end: endDate
+    });
+    
+    setFormError(null);
+    setIsFormOpen(true);
+  }, []);
+
+  // Handle form submission
+  const handleFormSubmit = useCallback(async (formData: any): Promise<{reservationId?: string} | void> => {
+    try {
+      setFormError(null);
+      
+      let result;
+      if (selectedReservation) {
+        // Update existing reservation
+        result = await reservationService.updateReservation(selectedReservation.id, formData);
         
-        {/* Calendar Content */}
-        <Box sx={{ flexGrow: 1 }}>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-              <CircularProgress />
-            </Box>
-          ) : error ? (
-            <Box sx={{ p: 2 }}>
-              <Typography color="error">{error}</Typography>
-              <Button variant="contained" onClick={() => { loadKennels(); loadReservations(); }} sx={{ mt: 2 }}>
-                Retry
-              </Button>
-            </Box>
-          ) : (
-            <TableContainer component={Paper} sx={{ height: 'calc(100vh - 250px)', overflow: 'auto' }}>
-              <Table stickyHeader size="small" sx={{ '& .MuiTableCell-root': { py: 0.5 } }}>
-                <TableHead sx={{ bgcolor: 'background.paper' }}>
-                  <TableRow>
-                    <TableCell 
-                      sx={{ 
-                        minWidth: 120, 
-                        position: 'sticky', 
-                        left: 0, 
-                        zIndex: 3,
-                        bgcolor: 'background.paper',
-                        borderBottom: '2px solid rgba(224, 224, 224, 1)'
-                      }}
-                    >
-                      Kennel
-                    </TableCell>
-                    {days.map((day, index) => (
-                      <TableCell 
-                        key={index} 
-                        align="center"
-                        sx={{ 
-                          minWidth: 100,
-                          bgcolor: day.getDay() === 0 || day.getDay() === 6 ? '#f0f0f0' : 'background.paper',
-                          fontWeight: formatDateToYYYYMMDD(day) === formatDateToYYYYMMDD(new Date()) ? 'bold' : 'normal',
-                          color: formatDateToYYYYMMDD(day) === formatDateToYYYYMMDD(new Date()) ? 'primary.main' : 'inherit',
-                          borderBottom: '2px solid rgba(224, 224, 224, 1)'
-                        }}
-                      >
-                        <Typography variant="body2">
-                          {day.toLocaleDateString('en-US', { weekday: 'short' })}
-                        </Typography>
-                        <Typography variant="body1">
-                          {day.getDate()}
-                        </Typography>
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {Object.entries(groupedKennels).map(([type, kennelsOfType]) => (
-                    kennelsOfType.length > 0 && (
-                      <React.Fragment key={type}>
-                        {/* Kennel Type Header */}
-                        <TableRow>
-                          <TableCell 
-                            colSpan={days.length + 1} 
-                            sx={{ 
-                              bgcolor: 'primary.main', 
-                              color: 'white',
-                              position: 'sticky',
-                              left: 0,
-                              zIndex: 2,
-                              py: 0.5
-                            }}
-                          >
-                            <Typography variant="subtitle2">
-                              {type === 'VIP_SUITE' ? 'VIP Suites' : 
-                               type === 'STANDARD_PLUS_SUITE' ? 'Standard Plus Suites' : 
-                               'Standard Suites'}
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                        
-                        {/* Kennels of this type */}
-                        {kennelsOfType.map((kennel) => (
-                          <TableRow key={kennel.id}>
-                            <TableCell 
-                              sx={{ 
-                                position: 'sticky', 
-                                left: 0, 
-                                zIndex: 1,
-                                bgcolor: 'background.paper',
-                                borderRight: '1px solid rgba(224, 224, 224, 1)'
-                              }}
-                            >
-                              <Typography variant="body2" fontWeight="medium" sx={{ fontSize: '0.75rem' }}>
-                                {kennel.suiteNumber ? `${kennel.suiteNumber}` : kennel.name}
-                              </Typography>
-                            </TableCell>
-                            
-                            {days.map((day, index) => {
-                              const reservation = isKennelOccupied(kennel, day);
-                              const isOccupied = !!reservation;
-                              const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-                              
-                              return (
-                                <TableCell 
-                                  key={index}
-                                  onClick={() => handleCellClick(kennel, day, reservation)}
-                                  sx={{ 
-                                    cursor: 'pointer',
-                                    bgcolor: isOccupied 
-                                      ? `${getStatusColor(reservation.status)}22` // Light version of status color
-                                      : isWeekend 
-                                        ? 'rgba(0, 0, 0, 0.04)' 
-                                        : 'inherit',
-                                    '&:hover': {
-                                      bgcolor: isOccupied 
-                                        ? `${getStatusColor(reservation.status)}44` // Slightly darker on hover
-                                        : 'rgba(0, 0, 0, 0.08)',
-                                    },
-                                    p: 0.5,
-                                    height: 45,
-                                    borderLeft: index > 0 && isOccupied && isKennelOccupied(kennel, days[index - 1])?.id === reservation?.id
-                                      ? `2px solid ${getStatusColor(reservation.status)}`
-                                      : undefined,
-                                    borderRight: index < days.length - 1 && isOccupied && isKennelOccupied(kennel, days[index + 1])?.id === reservation?.id
-                                      ? `2px solid ${getStatusColor(reservation.status)}`
-                                      : undefined,
-                                    borderBottom: '1px solid rgba(224, 224, 224, 1)'
-                                  }}
-                                >
-                                  {isOccupied ? (
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
-                                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.25 }}>
-                                        <Chip 
-                                          label={reservation.status} 
-                                          size="small" 
-                                          sx={{ 
-                                            bgcolor: getStatusColor(reservation.status),
-                                            color: 'white',
-                                            fontSize: '0.6rem',
-                                            height: 16,
-                                            '& .MuiChip-label': { px: 0.5 }
-                                          }} 
-                                        />
-                                      </Box>
-                                      <Typography variant="caption" display="block" noWrap sx={{ fontSize: '0.7rem' }}>
-                                        {reservation.pet?.name || 'Unknown Pet'}
-                                      </Typography>
-                                    </Box>
-                                  ) : (
-                                    <Box sx={{ 
-                                      height: '100%', 
-                                      display: 'flex', 
-                                      alignItems: 'center', 
-                                      justifyContent: 'center',
-                                      color: 'text.secondary'
-                                    }}>
-                                      <Typography variant="caption" sx={{ fontSize: '0.65rem' }}>•</Typography>
-                                    </Box>
-                                  )}
-                                </TableCell>
-                              );
-                            })}
-                          </TableRow>
-                        ))}
-                      </React.Fragment>
-                    )
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </Box>
-      </Paper>
+        // For updates, close the form immediately
+        setIsFormOpen(false);
+        setSelectedKennel(null);
+        setSelectedDate(null);
+        setSelectedReservation(null);
+      } else {
+        // Create new reservation
+        result = await reservationService.createReservation(formData);
+        
+        // For new reservations, DON'T close the form yet
+        // The ReservationForm will handle closing after add-ons dialog is complete
+        // We only refresh the calendar data here
+      }
+      
+      // Refresh the calendar data
+      refreshData();
+      
+      // Notify parent component if callback provided
+      if (onEventUpdate && result) {
+        onEventUpdate(result as Reservation);
+      }
+      
+      // Return the expected format
+      return { reservationId: (result as any)?.id };
+    } catch (error: any) {
+      console.error('Error submitting reservation form:', error);
+      setFormError(error.message || 'Failed to save reservation');
+      throw error;
+    }
+  }, [selectedReservation, refreshData, onEventUpdate]);
+
+  // Handle form close
+  const handleFormClose = useCallback(() => {
+    setIsFormOpen(false);
+    setSelectedKennel(null);
+    setSelectedDate(null);
+    setSelectedReservation(null);
+    setFormError(null);
+  }, []);
+
+  // Handle today button click
+  const handleTodayClick = useCallback(() => {
+    setCurrentDate(new Date());
+  }, []);
+
+  // Listen for checkout completion and refresh calendar
+  useEffect(() => {
+    // Check if we need to refresh on mount (after checkout redirect)
+    const shouldRefresh = sessionStorage.getItem('refreshCalendar');
+    if (shouldRefresh === 'true') {
+      sessionStorage.removeItem('refreshCalendar');
+      // Small delay to ensure component is fully mounted
+      setTimeout(() => {
+        refreshData();
+      }, 500);
+    }
+
+    const handleCheckoutComplete = () => {
+      refreshData();
+    };
+
+    const handleReservationComplete = () => {
+      refreshData();
+    };
+
+    // Listen for both events
+    window.addEventListener('reservation-created', handleCheckoutComplete);
+    document.addEventListener('reservationComplete', handleReservationComplete);
+
+    return () => {
+      window.removeEventListener('reservation-created', handleCheckoutComplete);
+      document.removeEventListener('reservationComplete', handleReservationComplete);
+    };
+  }, [refreshData]);
+
+  // Memoize the dialog title
+  const dialogTitle = useMemo(() => {
+    if (selectedReservation) {
+      return 'Edit Reservation';
+    }
+    return `New Reservation - ${selectedKennel?.name || 'Kennel'}`;
+  }, [selectedReservation, selectedKennel]);
+
+  return (
+    <Box sx={{ p: { xs: 1, sm: 2 } }}>
+      {/* Header with navigation and filters */}
+      <KennelCalendarHeader
+        currentDate={currentDate}
+        viewType={viewType}
+        kennelTypeFilter={kennelTypeFilter}
+        onDateChange={setCurrentDate}
+        onViewTypeChange={setViewType}
+        onKennelTypeFilterChange={setKennelTypeFilter}
+        onTodayClick={handleTodayClick}
+      />
+
+      {/* Availability Error Alert */}
+      {availabilityError && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          {availabilityError}
+        </Alert>
+      )}
+
+      {/* Main Calendar Grid */}
+      <KennelGrid
+        kennels={kennels}
+        reservations={reservations}
+        loading={loading}
+        error={error}
+        currentDate={currentDate}
+        viewType={viewType}
+        availabilityData={availabilityData}
+        getDaysToDisplay={getDaysToDisplay}
+        onCellClick={handleCellClick}
+        isKennelOccupied={isKennelOccupied}
+      />
 
       {/* Reservation Form Dialog */}
       <Dialog 
         open={isFormOpen} 
-        onClose={() => {
-          // First clear focus from any element inside the dialog
-          // This prevents the accessibility warning when the dialog closes
-          if (document.activeElement instanceof HTMLElement) {
-            document.activeElement.blur();
-          }
-          
-          // Then close the dialog and reset state
-          setIsFormOpen(false);
-          setSelectedReservation(null);
-          setSelectedKennel(null);
-          setSelectedDate(null);
-        }}
-        maxWidth="sm"
-        fullWidth
+        onClose={handleFormClose}
+        maxWidth={isMobile ? false : "md"}
+        fullWidth={!isMobile}
+        fullScreen={isMobile}
         PaperProps={{
-          sx: { maxHeight: '80vh' }
+          sx: { 
+            maxHeight: isMobile ? '100vh' : '90vh',
+            width: isMobile ? '100%' : getResponsiveDialogWidth(isMobile, isTablet)
+          }
         }}
-        // Prevent dialog from re-rendering its children unnecessarily
-        keepMounted
-        // Add proper focus handling for accessibility
-        disableRestoreFocus
       >
-        <DialogTitle sx={{ py: 1, px: 2, fontSize: '1rem' }}>
-          {selectedReservation ? 'Edit Reservation' : 'Create New Reservation'}
+        <DialogTitle>
+          {dialogTitle}
         </DialogTitle>
-        <DialogContent sx={{ py: 1, px: 2 }}>
+        <DialogContent>
           {formError && (
-            <Alert 
-              severity="error" 
-              sx={{ 
-                mb: 2, 
-                fontWeight: 'medium',
-                '& .MuiAlert-icon': {
-                  color: 'error.main'
-                }
-              }}
-              variant="filled"
-            >
+            <Alert severity="error" sx={{ mb: 2 }}>
               {formError}
             </Alert>
           )}
-          {!selectedKennel || !selectedDate ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-              <CircularProgress />
-            </Box>
-          ) : (
-            <ReservationFormWrapper 
-              selectedKennel={selectedKennel}
-              selectedDate={selectedDate}
-              selectedReservation={selectedReservation}
-              onSubmit={handleFormSubmit}
-              error={formError}
-            />
-          )}
+          
+          <ReservationFormWrapper
+            selectedKennel={selectedKennel}
+            selectedDate={selectedDate}
+            selectedReservation={selectedReservation}
+            onSubmit={handleFormSubmit}
+            onClose={handleFormClose}
+            error={formError}
+          />
         </DialogContent>
       </Dialog>
     </Box>
-  );
-};
-
-// Wrapper component to prevent unnecessary re-renders of the reservation form
-// This is a separate component to avoid React hooks rules violations
-interface ReservationFormWrapperProps {
-  selectedKennel: Resource;
-  selectedDate: { start: Date; end: Date };
-  selectedReservation: Reservation | null;
-  onSubmit: (formData: any) => Promise<{reservationId?: string} | void>;
-  error?: string | null;
-}
-
-const ReservationFormWrapper: React.FC<ReservationFormWrapperProps> = ({ 
-  selectedKennel, 
-  selectedDate, 
-  selectedReservation, 
-  onSubmit,
-  error
-}) => {
-  // Create the initial data object for the form directly
-  const formInitialData = selectedReservation ? {
-    ...selectedReservation,
-    // For existing reservations, don't override the resourceId
-    // This prevents issues with invalid resourceIds
-  } : {
-    // For new reservations, pre-populate with the selected kennel
-    // Don't include resourceId directly to avoid out-of-range value errors
-    // Instead, pass the suite information separately
-    suiteNumber: selectedKennel.suiteNumber || '',
-    suiteName: selectedKennel.name || '',
-    suiteType: selectedKennel.type || selectedKennel.attributes?.suiteType || 'STANDARD_SUITE',
-    // Include the start and end dates in the initialData
-    startDate: selectedDate.start,
-    endDate: selectedDate.end,
-    // Add the kennel ID as a separate property that won't be used directly by the Select component
-    kennelId: selectedKennel.id
-  };
-  
-  return (
-    <ReservationForm
-      onSubmit={onSubmit}
-      initialData={formInitialData}
-      defaultDates={selectedDate}
-      showAddOns={true}
-    />
   );
 };
 

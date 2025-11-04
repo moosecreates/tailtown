@@ -1,148 +1,131 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
+// Define add-on interface
+export interface AddOn {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+// Define product interface
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+// Define enhanced CartItem interface for reservations
 export interface CartItem {
   id: string;
-  name?: string;
-  price?: number;
+  price: number;
   quantity?: number;
-  addOns?: Array<{
-    id: string;
-    name: string;
-    price: number;
-    quantity: number;
-  }>;
+  // Reservation-specific fields
+  serviceName?: string;
+  serviceId?: string;
+  serviceCategory?: string; // Service category (GROOMING, TRAINING, DAYCARE, BOARDING)
+  customerId?: string;
+  customerName?: string;
+  petId?: string;
+  petName?: string;
+  startDate?: Date;
+  endDate?: Date;
+  suiteType?: string;
+  resourceId?: string;
+  resourceName?: string;
+  addOns?: AddOn[];
+  products?: Product[]; // NEW: Retail products
+  notes?: string;
 }
 
+// Define cart state
+interface CartState {
+  items: CartItem[];
+}
+
+// Define context type with enhanced functions
 interface ShoppingCartContextType {
-  cartItems: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (id: string) => void;
+  state: CartState;
+  addItem: (item: CartItem) => void;
+  removeItem: (itemId: string) => void;
+  updateItem: (itemId: string, updates: Partial<CartItem>) => void;
   clearCart: () => void;
-  getCartTotal: () => number;
+  getTotalPrice: () => number;
 }
 
-// Default context value
+// Create a default context value
 const defaultContextValue: ShoppingCartContextType = {
-  cartItems: [],
-  addToCart: () => {},
-  removeFromCart: () => {},
+  state: { items: [] },
+  addItem: () => {},
+  removeItem: () => {},
+  updateItem: () => {},
   clearCart: () => {},
-  getCartTotal: () => 0,
+  getTotalPrice: () => 0
 };
 
 // Create context
 const ShoppingCartContext = createContext<ShoppingCartContextType>(defaultContextValue);
 
-// Custom hook to use shopping cart context
-export const useShoppingCart = () => useContext(ShoppingCartContext);
+// Provider component
+export function ShoppingCartProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<CartState>({ items: [] });
 
-/**
- * ShoppingCartProvider Component
- * 
- * This component provides cart state management with localStorage persistence.
- * It handles:
- * - Loading cart items from localStorage on initialization
- * - Saving cart items to localStorage when they change
- * - Adding, removing, and clearing cart items
- * - Calculating cart totals
- * 
- * The dual storage approach (React state + localStorage) ensures cart data
- * persists between page navigations and browser refreshes.
- */
-export const ShoppingCartProvider: React.FC<{children: ReactNode}> = ({ children }) => {
-  // Initialize cart items from localStorage
-  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    // Check if cart exists in localStorage
-    const savedCart = localStorage.getItem('tailtownCart');
-    if (savedCart) {
-      try {
-        const parsedCart = JSON.parse(savedCart);
-        console.log('ShoppingCartContext: Loaded cart from localStorage:', parsedCart);
-        return parsedCart;
-      } catch (error) {
-        console.error('ShoppingCartContext: Error parsing cart from localStorage', error);
-        return [];
-      }
-    }
-    return [];
-  });
-
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    console.log('ShoppingCartContext: Saving cart to localStorage:', cartItems);
-    localStorage.setItem('tailtownCart', JSON.stringify(cartItems));
-  }, [cartItems]);
-
-  const addToCart = (item: CartItem) => {
-    console.log('ShoppingCartContext: Adding item to cart:', item);
-    setCartItems(prevItems => {
-      const newItems = [...prevItems, item];
-      return newItems;
-    });
+  const addItem = (item: CartItem) => {
+    setState(prevState => ({
+      items: [...prevState.items, item]
+    }));
   };
 
-  const removeFromCart = (id: string) => {
-    console.log('ShoppingCartContext: Removing item from cart:', id);
-    setCartItems(prevItems => prevItems.filter(item => item.id !== id));
+  const removeItem = (itemId: string) => {
+    setState(prevState => ({
+      items: prevState.items.filter(item => item.id !== itemId)
+    }));
   };
 
-  /**
-   * Clears the shopping cart completely
-   * 
-   * This function implements a thorough cart clearing mechanism with multiple safeguards:
-   * 1. Clears the React state by setting cartItems to an empty array
-   * 2. Removes the tailtownCart item from localStorage
-   * 3. Performs a double-clear operation to handle potential caching issues:
-   *    - First sets localStorage to an empty array
-   *    - Then removes the item completely
-   * 
-   * This redundant approach ensures the cart is properly cleared between orders
-   * and prevents items from accumulating across multiple checkout sessions.
-   */
+  const updateItem = (itemId: string, updates: Partial<CartItem>) => {
+    setState(prevState => ({
+      items: prevState.items.map(item => 
+        item.id === itemId ? { ...item, ...updates } : item
+      )
+    }));
+  };
+
   const clearCart = () => {
-    console.log('ShoppingCartContext: Clearing cart');
-    // Clear the React state
-    setCartItems([]);
-    
-    // Ensure localStorage is also cleared
-    localStorage.removeItem('tailtownCart');
-    
-    // Double-check that localStorage is cleared by logging
-    console.log('ShoppingCartContext: Cart cleared, localStorage item removed');
-    
-    // Force a refresh of localStorage in case of any caching issues
-    try {
-      localStorage.setItem('tailtownCart', JSON.stringify([]));
-      localStorage.removeItem('tailtownCart');
-    } catch (error) {
-      console.error('ShoppingCartContext: Error clearing localStorage:', error);
-    }
+    setState({ items: [] });
   };
 
-  const getCartTotal = () => {
-    return cartItems.reduce((total, item) => {
-      const itemPrice = item.price || 0;
-      const addOnsTotal = item.addOns?.reduce(
-        (addOnTotal, addOn) => addOnTotal + (addOn.price * addOn.quantity), 
-        0
-      ) || 0;
-      return total + itemPrice + addOnsTotal;
+  const getTotalPrice = () => {
+    return state.items.reduce((total, item) => {
+      let itemTotal = item.price || 0;
+      
+      // Add add-ons price
+      if (item.addOns && item.addOns.length > 0) {
+        itemTotal += item.addOns.reduce((addOnTotal, addOn) => 
+          addOnTotal + (addOn.price * addOn.quantity), 0);
+      }
+      
+      return total + itemTotal;
     }, 0);
   };
 
   return (
-    <ShoppingCartContext.Provider 
-      value={{ 
-        cartItems, 
-        addToCart, 
-        removeFromCart, 
+    <ShoppingCartContext.Provider
+      value={{
+        state,
+        addItem,
+        removeItem,
+        updateItem,
         clearCart,
-        getCartTotal 
+        getTotalPrice
       }}
     >
       {children}
     </ShoppingCartContext.Provider>
   );
-};
+}
 
-export default ShoppingCartContext;
+// Custom hook to use the shopping cart context
+export function useShoppingCart() {
+  return useContext(ShoppingCartContext);
+}

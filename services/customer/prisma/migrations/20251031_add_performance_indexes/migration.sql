@@ -1,0 +1,3 @@
+-- Performance indexes migration
+-- Most indexes are already defined in Prisma schema
+-- This migration is intentionally empty to avoid conflicts

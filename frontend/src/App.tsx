@@ -1,46 +1,127 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, BrowserRouter, useLocation } from 'react-router-dom';
 import { Box, CircularProgress, CssBaseline, ThemeProvider } from '@mui/material';
+import { HelmetProvider } from 'react-helmet-async';
 import theme from './theme';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SuperAdminProvider } from './contexts/SuperAdminContext';
+import { ShoppingCartProvider } from './contexts/ShoppingCartContext';
+import { HelpProvider } from './contexts/HelpContext';
 import AccessibilityFix from './components/AccessibilityFix';
 import ScrollFix from './components/ScrollFix';
+import ApiTester from './components/debug/ApiTester';
+import PageLoader from './components/common/PageLoader';
 
-// Layouts
-import MainLayout from './components/layouts/MainLayout';
-import AuthLayout from './components/layouts/AuthLayout';
+// Layouts - Lazy loaded for code splitting
+const MainLayout = lazy(() => import('./components/layouts/MainLayout'));
+const AuthLayout = lazy(() => import('./components/layouts/AuthLayout'));
 
-// Pages
-import Login from './pages/auth/Login';
-import Dashboard from './pages/Dashboard';
-import Customers from './pages/customers/Customers';
-import CustomerDetails from './pages/customers/CustomerDetails';
-import AnalyticsDashboard from './pages/analytics/AnalyticsDashboard';
-import CustomerValueReport from './pages/analytics/CustomerValueReport';
-import Pets from './pages/pets/Pets';
-import PetDetails from './pages/pets/PetDetails';
-import Reservations from './pages/reservations/Reservations';
-import ReservationDetails from './pages/reservations/ReservationDetails';
-import ReservationEdit from './pages/reservations/ReservationEdit';
-import CalendarPage from './pages/calendar/CalendarPage';
-import GroomingCalendarPage from './pages/calendar/GroomingCalendarPage';
-import TrainingCalendarPage from './pages/calendar/TrainingCalendarPage';
-import Services from './pages/services/Services';
-import ServiceDetails from './pages/services/ServiceDetails';
-import Resources from './pages/resources/Resources';
-// Import price rules components from settings directory
-import PriceRulesPage from './pages/settings/PriceRules';
-import PriceRuleDetailsPage from './pages/settings/PriceRuleDetailsPage';
-import ResourceDetails from './pages/resources/ResourceDetails';
-import SuitesPage from './pages/suites/SuitesPage';
-import Settings from './pages/settings/Settings';
-import Users from './pages/settings/Users';
-import NotFound from './pages/NotFound';
-import PriceRuleRedirect from './components/redirects/PriceRuleRedirect';
-import Scheduling from './pages/staff/Scheduling';
-import OrderEntry from './pages/orders/OrderEntry';
-import CheckoutPage from './pages/checkout/CheckoutPage';
-import PrintKennelCards from './pages/kennels/PrintKennelCards';
+// Pages - Lazy loaded for code splitting
+// All pages lazy loaded for optimal code splitting
+const Login = lazy(() => import('./pages/auth/Login'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
+const Profile = lazy(() => import('./pages/profile/Profile'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+
+// Lazy loaded pages - Customer Management
+const Customers = lazy(() => import('./pages/customers/Customers'));
+const CustomerDetails = lazy(() => import('./pages/customers/CustomerDetails'));
+
+// Lazy loaded pages - Analytics & Reports
+const AnalyticsDashboard = lazy(() => import('./pages/analytics/AnalyticsDashboard'));
+const CustomerValueReport = lazy(() => import('./pages/analytics/CustomerValueReport'));
+const ReportsPage = lazy(() => import('./pages/reports/ReportsPage'));
+
+// Lazy loaded pages - Pet Management
+const Pets = lazy(() => import('./pages/pets/Pets'));
+const PetDetails = lazy(() => import('./pages/pets/PetDetails'));
+
+// Lazy loaded pages - Reservations
+const Reservations = lazy(() => import('./pages/reservations/Reservations'));
+const ReservationDetails = lazy(() => import('./pages/reservations/ReservationDetails'));
+const ReservationEdit = lazy(() => import('./pages/reservations/ReservationEdit'));
+
+// Lazy loaded pages - Calendar
+const CalendarPage = lazy(() => import('./pages/calendar/CalendarPage'));
+const GroomingCalendarPage = lazy(() => import('./pages/calendar/GroomingCalendarPage'));
+const TrainingCalendarPage = lazy(() => import('./pages/calendar/TrainingCalendarPage'));
+
+// Lazy loaded pages - Services & Resources
+const Services = lazy(() => import('./pages/services/Services'));
+const ServiceDetails = lazy(() => import('./pages/services/ServiceDetails'));
+const Resources = lazy(() => import('./pages/resources/Resources'));
+const ResourceDetails = lazy(() => import('./pages/resources/ResourceDetails'));
+const SuitesPage = lazy(() => import('./pages/suites/SuitesPage'));
+
+// Lazy loaded pages - Settings & Admin
+const PriceRulesPage = lazy(() => import('./pages/settings/PriceRules'));
+const PriceRuleDetailsPage = lazy(() => import('./pages/settings/PriceRuleDetailsPage'));
+const PaymentMethods = lazy(() => import('./pages/settings/PaymentMethods'));
+const Settings = lazy(() => import('./pages/settings/Settings'));
+const Users = lazy(() => import('./pages/settings/Users'));
+const PriceRuleRedirect = lazy(() => import('./components/redirects/PriceRuleRedirect'));
+
+// Lazy loaded pages - Staff & Operations
+const Scheduling = lazy(() => import('./pages/staff/Scheduling'));
+
+// Tenant Management moved to separate admin-portal app (port 3001)
+const OrderEntry = lazy(() => import('./pages/orders/OrderEntry'));
+const CheckoutPage = lazy(() => import('./pages/checkout/CheckoutPage'));
+const PrintKennelCards = lazy(() => import('./pages/kennels/PrintKennelCards'));
+
+// Lazy loaded pages - Marketing
+const MarketingHub = lazy(() => import('./pages/admin/marketing/MarketingHub'));
+const SmsMarketing = lazy(() => import('./pages/admin/marketing/SmsMarketing'));
+const EmailMarketing = lazy(() => import('./pages/admin/marketing/EmailMarketing'));
+const MessageTemplates = lazy(() => import('./pages/admin/marketing/MessageTemplates'));
+
+// Lazy loaded pages - Check-In
+const CheckInWorkflow = lazy(() => import('./pages/check-in/CheckInWorkflow'));
+
+// Lazy loaded pages - Super Admin
+const SuperAdminLogin = lazy(() => import('./pages/super-admin/Login'));
+const SuperAdminDashboard = lazy(() => import('./pages/super-admin/Dashboard'));
+const SuperAdminRoute = lazy(() => import('./components/auth/SuperAdminRoute'));
+const SuperAdminOnlyRoute = lazy(() => import('./components/auth/SuperAdminOnlyRoute'));
+
+// Lazy loaded pages - Tenant Management
+const TenantList = lazy(() => import('./pages/admin/TenantList'));
+const TenantDetail = lazy(() => import('./pages/admin/TenantDetail'));
+const TenantEdit = lazy(() => import('./pages/admin/TenantEdit'));
+const CreateTenant = lazy(() => import('./pages/admin/CreateTenant'));
+const CheckInComplete = lazy(() => import('./pages/check-in/CheckInComplete'));
+const CheckInTemplateManager = lazy(() => import('./pages/admin/CheckInTemplateManager'));
+
+// Lazy loaded pages - Checkout
+const CheckoutWorkflow = lazy(() => import('./pages/checkout/CheckoutWorkflow'));
+
+// Lazy loaded pages - Checklists
+const ChecklistTemplates = lazy(() => import('./pages/admin/ChecklistTemplates'));
+const ChecklistView = lazy(() => import('./pages/staff/ChecklistView'));
+
+// Lazy loaded pages - Vaccine Management
+const VaccineRequirements = lazy(() => import('./pages/admin/VaccineRequirements'));
+
+// Lazy loaded pages - Custom Icons
+const CustomIcons = lazy(() => import('./pages/admin/CustomIcons'));
+
+// Lazy loaded pages - Announcements
+const AnnouncementManager = lazy(() => import('./pages/admin/AnnouncementManager'));
+
+// Lazy loaded pages - Products/POS
+const Products = lazy(() => import('./pages/products/Products'));
+
+// Lazy loaded pages - Grooming
+const GroomerAppointments = lazy(() => import('./pages/grooming/GroomerAppointments'));
+
+// Lazy loaded pages - Training
+const TrainingClasses = lazy(() => import('./pages/training/TrainingClasses'));
+const ClassEnrollments = lazy(() => import('./pages/training/ClassEnrollments'));
+
+// Public Booking Portal
+const BookingPortal = lazy(() => import('./pages/booking/BookingPortal'));
 
 // Custom event and utility components
 
@@ -70,16 +151,31 @@ const AppRoutes = () => {
   }
 
   return (
-    <Routes>
-      {/* Auth Routes */}
-      <Route element={<AuthLayout />}>
-        <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
-      </Route>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        {/* Super Admin Routes - Separate authentication */}
+        <Route path="/super-admin/login" element={<SuperAdminLogin />} />
+        <Route path="/super-admin/dashboard" element={
+          <SuperAdminRoute>
+            <SuperAdminDashboard />
+          </SuperAdminRoute>
+        } />
+        
+        {/* Public Booking Portal - No authentication required */}
+        <Route path="/book" element={<BookingPortal />} />
+        
+        {/* Auth Routes */}
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
+          <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPassword /> : <Navigate to="/dashboard" />} />
+          <Route path="/reset-password" element={!isAuthenticated ? <ResetPassword /> : <Navigate to="/dashboard" />} />
+        </Route>
 
-      {/* Protected Routes */}
-      <Route element={<MainLayout />}>
+        {/* Protected Routes */}
+        <Route element={<MainLayout />}>
         <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
         <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} />
         <Route path="/customers" element={isAuthenticated ? <Customers /> : <Navigate to="/login" />} />
         <Route path="/customers/:id" element={isAuthenticated ? <CustomerDetails /> : <Navigate to="/login" />} />
         <Route path="/pets" element={isAuthenticated ? <Pets /> : <Navigate to="/login" />} />
@@ -102,44 +198,99 @@ const AppRoutes = () => {
         <Route path="/price-rules/:id" element={<PriceRuleRedirect />} />
         <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
         <Route path="/settings/users" element={isAuthenticated ? <Users /> : <Navigate to="/login" />} />
+        <Route path="/settings/payment-methods" element={isAuthenticated ? <PaymentMethods /> : <Navigate to="/login" />} />
         <Route path="/settings/price-rules" element={isAuthenticated ? <PriceRulesPage /> : <Navigate to="/login" />} />
         <Route path="/settings/price-rules/new" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />
         <Route path="/settings/price-rules/:id" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />
         <Route path="/staff/scheduling" element={isAuthenticated ? <Scheduling /> : <Navigate to="/login" />} />
         <Route path="/orders/new" element={isAuthenticated ? <OrderEntry /> : <Navigate to="/login" />} />
         <Route path="/checkout" element={isAuthenticated ? <CheckoutPage /> : <Navigate to="/login" />} />
+        <Route path="/reports" element={isAuthenticated ? <ReportsPage /> : <Navigate to="/login" />} />
         <Route path="/analytics" element={isAuthenticated ? <AnalyticsDashboard /> : <Navigate to="/login" />} />
         <Route path="/analytics/customers" element={isAuthenticated ? <CustomerValueReport /> : <Navigate to="/login" />} />
         
-        {/* Add any test routes here if needed */}
+        {/* Tenant Management Routes - Super Admin Only */}
+        <Route path="/admin/tenants" element={<SuperAdminOnlyRoute><TenantList /></SuperAdminOnlyRoute>} />
+        <Route path="/admin/tenants/new" element={<SuperAdminOnlyRoute><CreateTenant /></SuperAdminOnlyRoute>} />
+        <Route path="/admin/tenants/:id" element={<SuperAdminOnlyRoute><TenantDetail /></SuperAdminOnlyRoute>} />
+        <Route path="/admin/tenants/:id/edit" element={<SuperAdminOnlyRoute><TenantEdit /></SuperAdminOnlyRoute>} />
+        
+        {/* Marketing Routes */}
+        <Route path="/admin/marketing" element={isAuthenticated ? <MarketingHub /> : <Navigate to="/login" />} />
+        <Route path="/admin/marketing/sms" element={isAuthenticated ? <SmsMarketing /> : <Navigate to="/login" />} />
+        <Route path="/admin/marketing/email" element={isAuthenticated ? <EmailMarketing /> : <Navigate to="/login" />} />
+        <Route path="/admin/marketing/templates" element={isAuthenticated ? <MessageTemplates /> : <Navigate to="/login" />} />
+        
+        {/* Check-In Routes */}
+        <Route path="/check-in/:reservationId" element={isAuthenticated ? <CheckInWorkflow /> : <Navigate to="/login" />} />
+        <Route path="/check-in/:checkInId/complete" element={isAuthenticated ? <CheckInComplete /> : <Navigate to="/login" />} />
+        <Route path="/admin/check-in-templates" element={isAuthenticated ? <CheckInTemplateManager /> : <Navigate to="/login" />} />
+        
+        {/* Checkout Routes */}
+        <Route path="/checkout/:reservationId" element={isAuthenticated ? <CheckoutWorkflow /> : <Navigate to="/login" />} />
+        
+        {/* Checklist Routes */}
+        <Route path="/admin/checklist-templates" element={isAuthenticated ? <ChecklistTemplates /> : <Navigate to="/login" />} />
+        <Route path="/staff/checklist/:id" element={isAuthenticated ? <ChecklistView /> : <Navigate to="/login" />} />
+        
+        {/* Vaccine Management Routes */}
+        <Route path="/admin/vaccine-requirements" element={isAuthenticated ? <VaccineRequirements /> : <Navigate to="/login" />} />
+        
+        {/* Custom Icons Route */}
+        <Route path="/admin/custom-icons" element={isAuthenticated ? <CustomIcons /> : <Navigate to="/login" />} />
+        
+        {/* Announcement Routes */}
+        <Route path="/admin/announcements" element={isAuthenticated ? <AnnouncementManager /> : <Navigate to="/login" />} />
+        
+        {/* Products/POS Routes */}
+        <Route path="/products" element={isAuthenticated ? <Products /> : <Navigate to="/login" />} />
+        
+        {/* Grooming Routes */}
+        <Route path="/grooming/appointments" element={isAuthenticated ? <GroomerAppointments /> : <Navigate to="/login" />} />
+        
+        {/* Training Routes */}
+        <Route path="/training/classes" element={isAuthenticated ? <TrainingClasses /> : <Navigate to="/login" />} />
+        <Route path="/training/classes/:classId/enrollments" element={isAuthenticated ? <ClassEnrollments /> : <Navigate to="/login" />} />
+        
+        {/* Debug routes */}
+        <Route path="/debug/api" element={<ApiTester />} />
       </Route>
 
       {/* 404 Route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
   );
 }
 
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <AccessibilityFix />
-        <ScrollFix />
-        <RouteChangeListener />
-        <AuthProvider>
-          <React.Suspense fallback={
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-              <CircularProgress />
-            </Box>
-          }>
-            <AppRoutes />
-          </React.Suspense>
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <AccessibilityFix />
+          <ScrollFix />
+          <RouteChangeListener />
+          <SuperAdminProvider>
+            <AuthProvider>
+              <ShoppingCartProvider>
+                <HelpProvider>
+                  <React.Suspense fallback={
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                      <CircularProgress />
+                    </Box>
+                  }>
+                    <AppRoutes />
+                  </React.Suspense>
+                </HelpProvider>
+              </ShoppingCartProvider>
+            </AuthProvider>
+          </SuperAdminProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </HelmetProvider>
   );
 };
 

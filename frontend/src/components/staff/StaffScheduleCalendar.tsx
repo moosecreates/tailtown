@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Paper,
   Typography,
@@ -44,8 +44,8 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
   
-  const startDate = startOfWeek(currentDate, { weekStartsOn: 0 });
-  const endDate = endOfWeek(currentDate, { weekStartsOn: 0 });
+  const startDate = useMemo(() => startOfWeek(currentDate, { weekStartsOn: 0 }), [currentDate]);
+  const endDate = useMemo(() => endOfWeek(currentDate, { weekStartsOn: 0 }), [currentDate]);
   
   // Generate array of days for the week
   const days = useMemo(() => {
@@ -61,7 +61,7 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
   }, [startDate]);
   
   // Fetch schedules for the current date range
-  const fetchSchedules = async () => {
+  const fetchSchedules = useCallback(async () => {
     setLoading(true);
     try {
       let fetchedSchedules;
@@ -79,8 +79,15 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
       }
       setSchedules(fetchedSchedules);
       
-      if (!staffId) {
-        // Fetch all staff for the dropdown
+      // Fetch staff members
+      if (staffId) {
+        // For individual view, fetch just this staff member
+        const staffMember = await staffService.getStaffById(staffId);
+        if (staffMember) {
+          setStaff([staffMember]);
+        }
+      } else {
+        // For all staff view, fetch all staff
         const allStaff = await staffService.getAllStaff();
         // Sort staff alphabetically by last name, then first name
         const sortedStaff = allStaff.sort((a, b) => {
@@ -96,11 +103,11 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
     } finally {
       setLoading(false);
     }
-  };
+  }, [staffId, startDate, endDate]);
   
   useEffect(() => {
     fetchSchedules();
-  }, [currentDate, staffId]);
+  }, [fetchSchedules]);
   
   const handlePreviousWeek = () => {
     setCurrentDate(subWeeks(currentDate, 1));
@@ -205,9 +212,30 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
   
   // Function to get schedules for a specific staff member and day
   const getSchedulesForStaffAndDay = (staffId: string, day: Date) => {
-    return schedules.filter(schedule => 
-      schedule.staffId === staffId && isSameDay(new Date(schedule.date), day)
-    );
+    return schedules.filter(schedule => {
+      // Parse date in local timezone to avoid timezone shift
+      // schedule.date could be 'YYYY-MM-DD' or ISO string from database
+      let scheduleDate: Date;
+      
+      if (typeof schedule.date === 'string') {
+        if (schedule.date.includes('T')) {
+          // ISO string format from database (e.g., "2025-11-01T00:00:00.000Z")
+          // Extract just the date part and parse in local timezone
+          const dateOnly = schedule.date.split('T')[0];
+          const [year, month, dayOfMonth] = dateOnly.split('-').map(Number);
+          scheduleDate = new Date(year, month - 1, dayOfMonth);
+        } else {
+          // Simple date string format (e.g., "2025-11-01")
+          const [year, month, dayOfMonth] = schedule.date.split('-').map(Number);
+          scheduleDate = new Date(year, month - 1, dayOfMonth);
+        }
+      } else {
+        // Already a Date object
+        scheduleDate = new Date(schedule.date);
+      }
+      
+      return schedule.staffId === staffId && isSameDay(scheduleDate, day);
+    });
   };
 
   /**
@@ -484,6 +512,7 @@ const StaffScheduleCalendar: React.FC<StaffScheduleCalendarProps> = ({ staffId }
         isEditing={isEditing}
         allStaff={!staffId ? staff : undefined}
         initialDate={selectedDay || undefined}
+        existingSchedules={schedules}
       />
     </Paper>
   );

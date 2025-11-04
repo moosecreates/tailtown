@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -105,7 +105,7 @@ const AccountHistory: React.FC<AccountHistoryProps> = ({ customerId, onInvoiceCr
     setTabValue(newValue);
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -126,13 +126,13 @@ const AccountHistory: React.FC<AccountHistoryProps> = ({ customerId, onInvoiceCr
     } finally {
       setLoading(false);
     }
-  };
+  }, [customerId]);
 
   useEffect(() => {
     if (customerId) {
       fetchData();
     }
-  }, [customerId]);
+  }, [customerId, fetchData]);
 
   // Format currency helper
   const formatCurrency = (amount: number) => {

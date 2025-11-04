@@ -10,7 +10,8 @@ datasource db {
 
 model Customer {
   id               String                  @id @default(uuid())
-  email            String                  @unique
+  tenantId         String                  @default("dev")
+  email            String
   firstName        String
   lastName         String
   phone            String?
@@ -21,12 +22,18 @@ model Customer {
   zipCode          String?
   notes            String?
   portalEnabled    Boolean                 @default(true)
-  preferredContact ContactMethod           @default(EMAIL)
+  preferredContact ContactMethod            @default(EMAIL)
   emergencyContact String?
   emergencyPhone   String?
   vatTaxId         String?
   referralSource   String?
   tags             String[]                @default([])
+  icon             String?                 // Customer avatar icon (person, face, smile, etc.)
+  iconColor        String?                 // Customer avatar color (blue, green, purple, etc.)
+  customerIcons    Json?                   // Array of icon IDs for quick visual reference (VIP, payment issues, etc.)
+  iconNotes        Json?                   // Custom notes for generic flag icons
+  externalId       String?                 // ID from external system (Gingr, etc.) for migration tracking
+  veterinarianId   String?                 // Link to preferred veterinarian
   isActive         Boolean                 @default(true)
   createdAt        DateTime                @default(now())
   updatedAt        DateTime                @updatedAt
@@ -36,15 +43,24 @@ model Customer {
   payments         Payment[]
   pets             Pet[]
   reservations     Reservation[]
+  groomerAppointments GroomerAppointment[] @relation("CustomerGroomerAppointments")
+  groomerPreferences  GroomerPreference[]  @relation("CustomerGroomerPreferences")
+  classEnrollments    ClassEnrollment[]    @relation("CustomerClassEnrollments")
+  classWaitlist       ClassWaitlist[]      @relation("CustomerClassWaitlist")
 
   @@index([firstName, lastName], map: "customers_name_search_idx")
   @@index([email], map: "customers_email_search_idx")
   @@index([phone], map: "customers_phone_search_idx")
+  @@unique([tenantId, email], map: "customers_tenant_email_unique")
+  @@index([tenantId, lastName, firstName], map: "customers_tenant_name_idx")
+  @@index([tenantId, email], map: "customers_tenant_email_idx")
+  @@unique([tenantId, id], map: "customers_tenant_id_unique")
   @@map("customers")
 }
 
 model Pet {
   id                 String          @id @default(uuid())
+  tenantId           String          @default("dev")
   name               String
   type               PetType
   breed              String?
@@ -63,9 +79,14 @@ model Pet {
   idealPlayGroup     PlayGroupType?
   vaccinationStatus  Json?
   vaccineExpirations Json?
-  vetName            String?
-  vetPhone           String?
+  vaccineRecordFiles Json?           // Array of uploaded vaccine record files
+  vetName            String?         // Legacy field - kept for backward compatibility
+  vetPhone           String?         // Legacy field - kept for backward compatibility
+  veterinarianId     String?         // Link to veterinarians table
   profilePhoto       String?
+  petIcons           Json?           // Array of icon IDs for quick visual reference
+  iconNotes          Json?           // Custom notes for generic flag icons
+  externalId         String?         // ID from external system (Gingr, etc.) for migration tracking
   isActive           Boolean         @default(true)
   lastCheckIn        DateTime?
   createdAt          DateTime        @default(now())
@@ -75,16 +96,24 @@ model Pet {
   medicalRecords     MedicalRecord[]
   owner              Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
   reservations       Reservation[]
+  groomerAppointments GroomerAppointment[] @relation("PetGroomerAppointments")
+  groomerPreferences  GroomerPreference[]  @relation("PetGroomerPreferences")
+  classEnrollments    ClassEnrollment[]    @relation("PetClassEnrollments")
+  sessionAttendance   SessionAttendance[]  @relation("PetSessionAttendance")
+  classWaitlist       ClassWaitlist[]      @relation("PetClassWaitlist")
 
   @@index([customerId], map: "pets_customer_id_idx")
   @@index([isActive, type], map: "pets_active_type_idx")
   @@index([lastCheckIn], map: "pets_last_checkin_idx")
+  @@index([tenantId, customerId], map: "pets_tenant_customer_idx")
+  @@index([veterinarianId], map: "pets_veterinarian_id_idx")
   @@map("pets")
 }
 
 model Reservation {
   id                 String             @id @default(uuid())
-  orderNumber        String?            @unique
+  tenantId           String             @default("dev")
+  orderNumber        String?
   startDate          DateTime
   endDate            DateTime
   status             ReservationStatus  @default(PENDING)
@@ -102,6 +131,7 @@ model Reservation {
   confirmedBy        String?
   cancelReason       String?
   cancelDate         DateTime?
+  externalId         String?            // ID from external system (Gingr, etc.) for migration tracking
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   customerId         String
@@ -121,35 +151,48 @@ model Reservation {
   @@index([startDate, endDate], map: "reservations_date_range_idx")
   @@index([status, startDate], map: "reservations_status_date_idx")
   @@index([customerId, status], map: "reservations_customer_status_idx")
+  @@unique([tenantId, orderNumber], map: "reservations_tenant_order_unique")
+  @@index([tenantId, startDate, endDate], map: "reservations_tenant_date_range_idx")
+  @@index([tenantId, status, startDate], map: "reservations_tenant_status_date_idx")
+  @@index([tenantId, customerId, status], map: "reservations_tenant_customer_status_idx")
+  @@unique([tenantId, id], map: "reservations_tenant_id_unique")
   @@map("reservations")
 }
 
 model Service {
   id              String             @id @default(uuid())
+  tenantId        String             @default("dev")
   name            String
   description     String?
   duration        Int
   price           Float
+  taxable         Boolean            @default(true)
   color           String?
   serviceCategory ServiceCategory
   isActive        Boolean            @default(true)
   requiresStaff   Boolean            @default(false)
   notes           String?
+  externalId      String?            // ID from external system (Gingr, etc.) for migration tracking
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   capacityLimit   Int                @default(0)
   availableAddOns AddOnService[]
   priceRules      PriceRuleService[]
   reservations    Reservation[]
+  groomerAppointments GroomerAppointment[]
 
+  @@index([tenantId, isActive], map: "services_tenant_active_idx")
+  @@index([tenantId, name], map: "services_tenant_name_idx")
   @@map("services")
 }
 
 model AddOnService {
   id                String             @id @default(uuid())
+  tenantId          String             @default("dev")
   name              String
   description       String?
   price             Float
+  taxable           Boolean            @default(true)
   duration          Int?
   serviceId         String
   isActive          Boolean            @default(true)
@@ -158,11 +201,13 @@ model AddOnService {
   service           Service            @relation(fields: [serviceId], references: [id])
   reservationAddOns ReservationAddOn[]
 
+  @@index([tenantId, serviceId, isActive], map: "addon_services_tenant_service_active_idx")
   @@map("addon_services")
 }
 
 model ReservationAddOn {
   id            String       @id @default(uuid())
+  tenantId      String       @default("dev")
   reservationId String
   addOnId       String
   price         Float
@@ -172,11 +217,13 @@ model ReservationAddOn {
   addOn         AddOnService @relation(fields: [addOnId], references: [id])
   reservation   Reservation  @relation(fields: [reservationId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, reservationId], map: "reservation_addons_tenant_reservation_idx")
   @@map("reservation_addons")
 }
 
 model Resource {
   id                  String                 @id @default(uuid())
+  tenantId            String                 @default("dev")
   name                String
   type                ResourceType
   description         String?
@@ -195,11 +242,14 @@ model Resource {
   reservations        Reservation[]
   availabilitySlots   ResourceAvailability[]
 
+  @@index([tenantId, type, isActive], map: "resources_tenant_type_active_idx")
+  @@index([tenantId, name], map: "resources_tenant_name_idx")
   @@map("resources")
 }
 
 model ResourceAvailability {
   id         String             @id @default(uuid())
+  tenantId   String             @default("dev")
   resourceId String
   startTime  DateTime
   endTime    DateTime
@@ -209,14 +259,16 @@ model ResourceAvailability {
   updatedAt  DateTime           @updatedAt
   resource   Resource           @relation(fields: [resourceId], references: [id])
 
+  @@index([tenantId, resourceId, startTime, endTime], map: "resource_availability_tenant_range_idx")
   @@map("resource_availability")
 }
 
 model Staff {
   id                   String              @id @default(uuid())
+  tenantId             String              @default("dev")
   firstName            String
   lastName             String
-  email                String              @unique
+  email                String
   phone                String?
   role                 String
   workSchedule         Json?
@@ -231,20 +283,31 @@ model Staff {
   position             String?
   resetToken           String?
   resetTokenExpiry     DateTime?
+  profilePhoto         String?
   address              String?
   city                 String?
   state                String?
   zipCode              String?
+  groomingSkills       Json?    @map("grooming_skills")
+  maxAppointmentsPerDay Int?    @map("max_appointments_per_day")
+  averageServiceTime   Int?    @map("average_service_time")
   assignedReservations Reservation[]
   availability         StaffAvailability[]
   schedules            StaffSchedule[]
   timeOff              StaffTimeOff[]
+  groomerAppointments  GroomerAppointment[] @relation("GroomerAppointments")
+  groomerPreferences   GroomerPreference[]  @relation("GroomerPreferences")
+  groomerBreaks        GroomerBreak[]       @relation("GroomerBreaks")
+  instructorClasses    TrainingClass[]      @relation("InstructorClasses")
 
+  @@unique([tenantId, email], map: "staff_tenant_email_unique")
+  @@index([tenantId, isActive], map: "staff_tenant_active_idx")
   @@map("staff")
 }
 
 model StaffAvailability {
   id             String    @id @default(uuid())
+  tenantId       String    @default("dev")
   staffId        String
   dayOfWeek      Int
   startTime      String
@@ -259,11 +322,13 @@ model StaffAvailability {
 
   @@index([staffId, dayOfWeek], map: "staff_availability_staff_day_idx")
   @@index([dayOfWeek, isAvailable], map: "staff_availability_day_status_idx")
+  @@index([tenantId, staffId, dayOfWeek], map: "staff_availability_tenant_staff_day_idx")
   @@map("staff_availability")
 }
 
 model StaffTimeOff {
   id           String        @id @default(uuid())
+  tenantId     String        @default("dev")
   staffId      String
   startDate    DateTime
   endDate      DateTime
@@ -279,11 +344,13 @@ model StaffTimeOff {
 
   @@index([staffId, status], map: "staff_time_off_staff_status_idx")
   @@index([startDate, endDate], map: "staff_time_off_date_range_idx")
+  @@index([tenantId, staffId, status], map: "staff_time_off_tenant_staff_status_idx")
   @@map("staff_time_off")
 }
 
 model StaffSchedule {
   id               String         @id @default(uuid())
+  tenantId         String         @default("dev")
   staffId          String
   date             DateTime
   startTime        String
@@ -301,14 +368,16 @@ model StaffSchedule {
 
   @@index([staffId, date], map: "staff_schedules_staff_date_idx")
   @@index([date, status])
+  @@index([tenantId, staffId, date], map: "staff_schedules_tenant_staff_date_idx")
   @@map("staff_schedules")
 }
 
 model Invoice {
   id            String            @id @default(uuid())
-  invoiceNumber String            @unique
+  tenantId      String            @default("dev")
+  invoiceNumber String
   customerId    String
-  reservationId String?           @unique
+  reservationId String?
   issueDate     DateTime          @default(now())
   dueDate       DateTime
   status        InvoiceStatus     @default(DRAFT)
@@ -322,29 +391,39 @@ model Invoice {
   updatedAt     DateTime          @updatedAt
   lineItems     InvoiceLineItem[]
   customer      Customer          @relation(fields: [customerId], references: [id])
-  reservation   Reservation?      @relation(fields: [reservationId], references: [id])
+  reservation   Reservation?      @relation(fields: [tenantId, reservationId], references: [tenantId, id])
   payments      Payment[]
 
+  @@unique([tenantId, invoiceNumber], map: "invoices_tenant_number_unique")
+  @@unique([tenantId, reservationId], map: "invoices_tenant_reservation_unique")
+  @@index([tenantId, customerId, issueDate], map: "invoices_tenant_customer_issue_idx")
+  @@index([tenantId, status, issueDate], map: "invoices_tenant_status_issue_idx")
   @@map("invoices")
 }
 
 model InvoiceLineItem {
-  id          String   @id @default(uuid())
+  id          String              @id @default(uuid())
+  tenantId    String              @default("dev")
   invoiceId   String
+  type        InvoiceLineItemType @default(SERVICE)
   description String
-  quantity    Int      @default(1)
+  quantity    Int                 @default(1)
   unitPrice   Float
   amount      Float
-  taxable     Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  taxable     Boolean             @default(true)
+  serviceId   String?
+  productId   String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  invoice     Invoice             @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, invoiceId], map: "invoice_line_items_tenant_invoice_idx")
   @@map("invoice_line_items")
 }
 
 model Payment {
   id              String        @id @default(uuid())
+  tenantId        String        @default("dev")
   invoiceId       String
   customerId      String
   amount          Float
@@ -363,11 +442,14 @@ model Payment {
 
   @@index([customerId, paymentDate], map: "payments_customer_date_idx")
   @@index([status, paymentDate], map: "payments_status_date_idx")
+  @@index([tenantId, customerId, paymentDate], map: "payments_tenant_customer_date_idx")
+  @@index([tenantId, status, paymentDate], map: "payments_tenant_status_date_idx")
   @@map("payments")
 }
 
 model Document {
   id          String   @id @default(uuid())
+  tenantId    String   @default("dev")
   customerId  String
   title       String
   description String?
@@ -380,12 +462,14 @@ model Document {
   updatedAt   DateTime @updatedAt
   customer    Customer @relation(fields: [customerId], references: [id])
 
+  @@index([tenantId, customerId], map: "documents_tenant_customer_idx")
   @@map("documents")
 }
 
 model NotificationPreference {
   id                   String   @id @default(uuid())
-  customerId           String   @unique
+  tenantId             String   @default("dev")
+  customerId           String
   emailNotifications   Boolean  @default(true)
   smsNotifications     Boolean  @default(false)
   pushNotifications    Boolean  @default(false)
@@ -394,13 +478,15 @@ model NotificationPreference {
   checkinNotifications Boolean  @default(true)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
-  customer             Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customer             Customer @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: Cascade)
 
+  @@unique([tenantId, customerId], map: "notification_preferences_tenant_customer_unique")
   @@map("notification_preferences")
 }
 
 model CheckIn {
   id                  String       @id @default(uuid())
+  tenantId            String       @default("dev")
   petId               String
   reservationId       String?
   checkInTime         DateTime     @default(now())
@@ -424,11 +510,13 @@ model CheckIn {
 
   @@index([checkInTime], map: "check_ins_time_idx")
   @@index([petId, checkInTime], map: "check_ins_pet_time_idx")
+  @@index([tenantId, petId, checkInTime], map: "check_ins_tenant_pet_time_idx")
   @@map("check_ins")
 }
 
 model Activity {
   id           String   @id @default(uuid())
+  tenantId     String   @default("dev")
   checkInId    String
   activityType String
   notes        String?
@@ -438,11 +526,13 @@ model Activity {
   updatedAt    DateTime @updatedAt
   checkIn      CheckIn  @relation(fields: [checkInId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, checkInId, timestamp], map: "activities_tenant_checkin_time_idx")
   @@map("activities")
 }
 
 model MedicalRecord {
   id             String    @id @default(uuid())
+  tenantId       String    @default("dev")
   petId          String
   recordType     String
   recordDate     DateTime
@@ -457,14 +547,17 @@ model MedicalRecord {
   updatedAt      DateTime  @updatedAt
   pet            Pet       @relation(fields: [petId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId, petId, recordType], map: "medical_records_tenant_pet_type_idx")
   @@map("medical_records")
 }
 
 model PriceRule {
   id                String                     @id @default(uuid())
+  tenantId          String                     @default("dev")
   name              String
   description       String?
   ruleType          PriceRuleType
+  adjustmentType    PriceAdjustmentType        @default(DISCOUNT)
   discountType      DiscountType
   discountValue     Float
   minQuantity       Int?
@@ -480,27 +573,32 @@ model PriceRule {
   services          PriceRuleService[]
 
   @@index([ruleType, isActive], map: "price_rules_type_active_idx")
+  @@index([tenantId, ruleType, isActive], map: "price_rules_tenant_type_active_idx")
   @@map("price_rules")
 }
 
 model PriceRuleServiceCategory {
   id              String          @id @default(uuid())
+  tenantId        String          @default("dev")
   priceRuleId     String
   serviceCategory ServiceCategory
   priceRule       PriceRule       @relation(fields: [priceRuleId], references: [id], onDelete: Cascade)
 
   @@unique([priceRuleId, serviceCategory])
+  @@index([tenantId, priceRuleId, serviceCategory], map: "price_rule_svc_cat_tenant_idx")
   @@map("price_rule_service_categories")
 }
 
 model PriceRuleService {
   id          String    @id @default(uuid())
+  tenantId    String    @default("dev")
   priceRuleId String
   serviceId   String
   priceRule   PriceRule @relation(fields: [priceRuleId], references: [id], onDelete: Cascade)
   service     Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   @@unique([priceRuleId, serviceId])
+  @@index([tenantId, priceRuleId, serviceId], map: "price_rule_services_tenant_idx")
   @@map("price_rule_services")
 }
 
@@ -545,6 +643,12 @@ enum ContactMethod {
   SMS
   BOTH
   NONE
+}
+
+enum InvoiceLineItemType {
+  SERVICE
+  ADD_ON
+  PRODUCT
 }
 
 enum PaymentMethod {
@@ -648,4 +752,848 @@ enum PriceRuleType {
 enum DiscountType {
   PERCENTAGE
   FIXED_AMOUNT
+}
+
+enum PriceAdjustmentType {
+  DISCOUNT    // Reduces price
+  SURCHARGE   // Increases price
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum CouponStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  DEPLETED
+}
+
+enum PointEarningType {
+  DOLLARS_SPENT
+  VISIT
+  REFERRAL
+  BIRTHDAY
+  ANNIVERSARY
+  REVIEW
+  SOCIAL_SHARE
+  SERVICE_SPECIFIC
+}
+
+enum RedemptionType {
+  DISCOUNT_PERCENTAGE
+  DISCOUNT_FIXED
+  FREE_SERVICE
+  FREE_ADDON
+  UPGRADE
+}
+
+enum TierLevel {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+}
+
+// ============================================
+// COUPON SYSTEM MODELS
+// ============================================
+
+model Coupon {
+  id                     String        @id @default(uuid())
+  tenantId               String        @default("dev")
+  code                   String
+  description            String
+  type                   CouponType
+  discountValue          Float
+  minimumPurchase        Float?
+  serviceIds             String?       // JSON array of service IDs
+  firstTimeCustomersOnly Boolean       @default(false)
+  validFrom              DateTime
+  validUntil             DateTime
+  maxTotalUses           Int?
+  maxUsesPerCustomer     Int           @default(1)
+  currentUses            Int           @default(0)
+  status                 CouponStatus  @default(ACTIVE)
+  isReferralCoupon       Boolean       @default(false)
+  referralCustomerId     String?
+  notes                  String?
+  createdBy              String?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  usages                 CouponUsage[]
+
+  @@unique([tenantId, code], map: "coupons_tenant_code_unique")
+  @@index([tenantId, status], map: "coupons_tenant_status_idx")
+  @@index([tenantId, validFrom, validUntil], map: "coupons_tenant_dates_idx")
+  @@map("coupons")
+}
+
+model CouponUsage {
+  id             String   @id @default(uuid())
+  tenantId       String   @default("dev")
+  couponId       String
+  coupon         Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  customerId     String
+  reservationId  String
+  discountAmount Float
+  usedAt         DateTime @default(now())
+
+  @@index([tenantId, couponId], map: "coupon_usage_tenant_coupon_idx")
+  @@index([tenantId, customerId], map: "coupon_usage_tenant_customer_idx")
+  @@map("coupon_usages")
+}
+
+// ============================================
+// LOYALTY REWARDS SYSTEM MODELS
+// ============================================
+
+model LoyaltyMember {
+  id                String              @id @default(uuid())
+  tenantId          String              @default("dev")
+  customerId        String              @unique
+  currentPoints     Int                 @default(0)
+  lifetimePoints    Int                 @default(0)
+  currentTier       TierLevel           @default(BRONZE)
+  joinedAt          DateTime            @default(now())
+  lastActivityAt    DateTime            @default(now())
+  transactions      PointTransaction[]
+  redemptions       PointRedemption[]
+
+  @@index([tenantId, customerId], map: "loyalty_member_tenant_customer_idx")
+  @@map("loyalty_members")
+}
+
+model PointTransaction {
+  id              String            @id @default(uuid())
+  tenantId        String            @default("dev")
+  memberId        String
+  member          LoyaltyMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  points          Int
+  type            PointEarningType
+  description     String
+  referenceId     String?           // Reservation ID, etc.
+  createdAt       DateTime          @default(now())
+
+  @@index([tenantId, memberId], map: "point_transaction_tenant_member_idx")
+  @@map("point_transactions")
+}
+
+model PointRedemption {
+  id              String            @id @default(uuid())
+  tenantId        String            @default("dev")
+  memberId        String
+  member          LoyaltyMember     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  pointsRedeemed  Int
+  redemptionType  RedemptionType
+  value           Float
+  description     String
+  reservationId   String?
+  redeemedAt      DateTime          @default(now())
+
+  @@index([tenantId, memberId], map: "point_redemption_tenant_member_idx")
+  @@map("point_redemptions")
+}
+
+// ============================================
+// CHECKLIST SYSTEM MODELS
+// ============================================
+
+model ChecklistTemplate {
+  id                  String              @id @default(uuid())
+  tenantId            String              @default("dev")
+  name                String
+  description         String
+  area                String              // KENNEL_CHECKIN, GROOMING, etc.
+  isActive            Boolean             @default(true)
+  items               String              // JSON array of template items
+  requiredForCompletion String?           // JSON array of required item IDs
+  estimatedMinutes    Int                 @default(15)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  instances           ChecklistInstance[]
+
+  @@index([tenantId, area], map: "checklist_template_tenant_area_idx")
+  @@map("checklist_templates")
+}
+
+model ChecklistInstance {
+  id                  String              @id @default(uuid())
+  tenantId            String              @default("dev")
+  templateId          String
+  template            ChecklistTemplate   @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  reservationId       String?
+  petId               String?
+  resourceId          String?
+  customerId          String?
+  assignedToStaffId   String?
+  assignedToStaffName String?
+  status              String              @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, SKIPPED
+  startedAt           DateTime?
+  completedAt         DateTime?
+  items               String              // JSON array of instance items with values
+  notes               String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([tenantId, status], map: "checklist_instance_tenant_status_idx")
+  @@index([tenantId, reservationId], map: "checklist_instance_tenant_reservation_idx")
+  @@index([tenantId, assignedToStaffId], map: "checklist_instance_tenant_staff_idx")
+  @@map("checklist_instances")
+}
+
+// ============================================
+// MULTI-TENANCY MANAGEMENT MODELS
+// ============================================
+
+model Tenant {
+  id                    String       @id @default(uuid())
+  
+  // Business Information
+  businessName          String
+  subdomain             String       @unique  // e.g., "pawsinn" for pawsinn.tailtown.com
+  contactName           String
+  contactEmail          String       @unique
+  contactPhone          String?
+  address               String?
+  city                  String?
+  state                 String?
+  zipCode               String?
+  country               String       @default("US")
+  
+  // Account Status
+  status                TenantStatus @default(TRIAL)
+  isActive              Boolean      @default(true)
+  isPaused              Boolean      @default(false)
+  
+  // Subscription & Billing
+  planType              String       @default("STARTER")  // STARTER, PROFESSIONAL, ENTERPRISE
+  billingEmail          String?
+  maxEmployees          Int          @default(50)
+  maxLocations          Int          @default(1)
+  
+  // Dates
+  trialEndsAt           DateTime?
+  subscriptionStartDate DateTime?
+  subscriptionEndDate   DateTime?
+  pausedAt              DateTime?
+  deletedAt             DateTime?    // Soft delete
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  
+  // Super Admin Management (Phase 2)
+  suspendedAt           DateTime?    @map("suspended_at")
+  suspendedReason       String?      @map("suspended_reason")
+  suspendedBy           String?      @map("suspended_by")
+  deletedBy             String?      @map("deleted_by")
+  suspendedByAdmin      SuperAdmin?  @relation("TenantSuspensions", fields: [suspendedBy], references: [id], onDelete: SetNull)
+  deletedByAdmin        SuperAdmin?  @relation("TenantDeletions", fields: [deletedBy], references: [id], onDelete: SetNull)
+  
+  // Settings
+  timezone              String       @default("America/New_York")
+  currency              String       @default("USD")
+  dateFormat            String       @default("MM/DD/YYYY")
+  timeFormat            String       @default("12h")
+  
+  // Usage Tracking
+  employeeCount         Int          @default(0)
+  customerCount         Int          @default(0)
+  reservationCount      Int          @default(0)
+  storageUsedMB         Int          @default(0)
+  
+  // Relations
+  users                 TenantUser[]
+  
+  @@index([subdomain])
+  @@index([status, isActive])
+  @@index([contactEmail])
+  @@map("tenants")
+}
+
+enum TenantStatus {
+  TRIAL           // Free trial period
+  ACTIVE          // Paid and active
+  PAUSED          // Temporarily suspended
+  CANCELLED       // Subscription cancelled
+  DELETED         // Soft deleted
+  PENDING         // Awaiting activation
+}
+
+// Tenant Users (employees/staff who access the system)
+model TenantUser {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  email       String
+  password    String   // Hashed password
+  firstName   String
+  lastName    String
+  role        UserRole @default(STAFF)
+  
+  isActive    Boolean  @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([tenantId, email])
+  @@index([tenantId, role])
+  @@index([email])
+  @@map("tenant_users")
+}
+
+enum UserRole {
+  SUPER_ADMIN    // Platform admin (you)
+  TENANT_ADMIN   // Tenant owner/admin
+  MANAGER        // Location manager
+  STAFF          // Regular employee
+  CUSTOMER       // Customer with login
+}
+
+// ============================================
+// ADVANCED SCHEDULING MODELS
+// ============================================
+
+// Groomer-Specific Scheduling
+model GroomerAppointment {
+  id              String   @id @default(uuid())
+  tenantId        String   @default("dev") @map("tenant_id")
+  reservationId   String   @map("reservation_id")
+  groomerId       String   @map("groomer_id")
+  serviceId       String   @map("service_id")
+  petId           String   @map("pet_id")
+  customerId      String   @map("customer_id")
+  scheduledDate   DateTime @map("scheduled_date")
+  scheduledTime   String   @map("scheduled_time")
+  duration        Int
+  status          String   @default("SCHEDULED")
+  actualStartTime DateTime? @map("actual_start_time")
+  actualEndTime   DateTime? @map("actual_end_time")
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  groomer         Staff    @relation("GroomerAppointments", fields: [groomerId], references: [id], onDelete: Cascade)
+  service         Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  pet             Pet      @relation("PetGroomerAppointments", fields: [petId], references: [id], onDelete: Cascade)
+  customer        Customer @relation("CustomerGroomerAppointments", fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@index([groomerId, scheduledDate], map: "groomer_appointments_groomer_date_idx")
+  @@index([tenantId, groomerId, status], map: "groomer_appointments_tenant_groomer_status_idx")
+  @@index([reservationId], map: "groomer_appointments_reservation_idx")
+  @@map("groomer_appointments")
+}
+
+model GroomerPreference {
+  id         String   @id @default(uuid())
+  tenantId   String   @default("dev") @map("tenant_id")
+  customerId String   @map("customer_id")
+  groomerId  String   @map("groomer_id")
+  petId      String?  @map("pet_id")
+  priority   Int      @default(1)
+  notes      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  
+  customer   Customer @relation("CustomerGroomerPreferences", fields: [customerId], references: [id], onDelete: Cascade)
+  groomer    Staff    @relation("GroomerPreferences", fields: [groomerId], references: [id], onDelete: Cascade)
+  pet        Pet?     @relation("PetGroomerPreferences", fields: [petId], references: [id], onDelete: Cascade)
+  
+  @@unique([tenantId, customerId, groomerId, petId], map: "groomer_preference_unique")
+  @@index([customerId], map: "groomer_preferences_customer_idx")
+  @@index([groomerId], map: "groomer_preferences_groomer_idx")
+  @@map("groomer_preferences")
+}
+
+model GroomerBreak {
+  id        String   @id @default(uuid())
+  tenantId  String   @default("dev") @map("tenant_id")
+  groomerId String   @map("groomer_id")
+  date      DateTime
+  startTime String   @map("start_time")
+  endTime   String   @map("end_time")
+  type      String
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  groomer   Staff    @relation("GroomerBreaks", fields: [groomerId], references: [id], onDelete: Cascade)
+  
+  @@index([groomerId, date], map: "groomer_breaks_groomer_date_idx")
+  @@map("groomer_breaks")
+}
+
+// Multi-Week Training Classes
+model TrainingClass {
+  id              String   @id @default(uuid())
+  tenantId        String   @default("dev") @map("tenant_id")
+  name            String
+  description     String?
+  level           String
+  category        String
+  instructorId    String   @map("instructor_id")
+  maxCapacity     Int      @map("max_capacity")
+  currentEnrolled Int      @default(0) @map("current_enrolled")
+  
+  startDate       DateTime @map("start_date")
+  endDate         DateTime @map("end_date")
+  totalWeeks      Int      @map("total_weeks")
+  daysOfWeek      Int[]    @map("days_of_week")
+  startTime       String   @map("start_time")
+  endTime         String   @map("end_time")
+  duration        Int
+  
+  pricePerSeries  Float    @map("price_per_series")
+  pricePerSession Float?   @map("price_per_session")
+  depositRequired Float?   @map("deposit_required")
+  
+  status          String   @default("SCHEDULED")
+  isActive        Boolean  @default(true) @map("is_active")
+  
+  minAge          Int?     @map("min_age")
+  maxAge          Int?     @map("max_age")
+  prerequisites   String[]
+  
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  instructor      Staff           @relation("InstructorClasses", fields: [instructorId], references: [id], onDelete: Cascade)
+  sessions        ClassSession[]
+  enrollments     ClassEnrollment[]
+  waitlist        ClassWaitlist[]
+  
+  @@index([tenantId, status, isActive], map: "training_classes_tenant_status_idx")
+  @@index([startDate, endDate], map: "training_classes_dates_idx")
+  @@index([instructorId], map: "training_classes_instructor_idx")
+  @@map("training_classes")
+}
+
+model ClassSession {
+  id              String   @id @default(uuid())
+  tenantId        String   @default("dev") @map("tenant_id")
+  classId         String   @map("class_id")
+  sessionNumber   Int      @map("session_number")
+  scheduledDate   DateTime @map("scheduled_date")
+  scheduledTime   String   @map("scheduled_time")
+  duration        Int
+  
+  status          String   @default("SCHEDULED")
+  actualStartTime DateTime? @map("actual_start_time")
+  actualEndTime   DateTime? @map("actual_end_time")
+  
+  topic           String?
+  objectives      String[]
+  materials       String[]
+  homework        String?
+  
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  class           TrainingClass      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  attendance      SessionAttendance[]
+  
+  @@index([classId, sessionNumber], map: "class_sessions_class_number_idx")
+  @@index([scheduledDate, status], map: "class_sessions_date_status_idx")
+  @@map("class_sessions")
+}
+
+model ClassEnrollment {
+  id              String   @id @default(uuid())
+  tenantId        String   @default("dev") @map("tenant_id")
+  classId         String   @map("class_id")
+  petId           String   @map("pet_id")
+  customerId      String   @map("customer_id")
+  
+  enrollmentDate  DateTime @default(now()) @map("enrollment_date")
+  status          String   @default("ENROLLED")
+  
+  amountPaid      Float    @default(0) @map("amount_paid")
+  amountDue       Float    @map("amount_due")
+  paymentStatus   String   @default("PENDING") @map("payment_status")
+  
+  sessionsAttended Int     @default(0) @map("sessions_attended")
+  totalSessions   Int      @map("total_sessions")
+  completionRate  Float    @default(0) @map("completion_rate")
+  
+  certificateIssued Boolean @default(false) @map("certificate_issued")
+  certificateDate   DateTime? @map("certificate_date")
+  
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  class           TrainingClass      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  pet             Pet                @relation("PetClassEnrollments", fields: [petId], references: [id], onDelete: Cascade)
+  customer        Customer           @relation("CustomerClassEnrollments", fields: [customerId], references: [id], onDelete: Cascade)
+  attendance      SessionAttendance[]
+  
+  @@unique([classId, petId], map: "class_enrollment_unique")
+  @@index([tenantId, status], map: "class_enrollments_tenant_status_idx")
+  @@index([classId], map: "class_enrollments_class_idx")
+  @@index([customerId], map: "class_enrollments_customer_idx")
+  @@index([petId], map: "class_enrollments_pet_idx")
+  @@map("class_enrollments")
+}
+
+model SessionAttendance {
+  id              String   @id @default(uuid())
+  tenantId        String   @default("dev") @map("tenant_id")
+  sessionId       String   @map("session_id")
+  enrollmentId    String   @map("enrollment_id")
+  petId           String   @map("pet_id")
+  
+  status          String
+  arrivalTime     DateTime? @map("arrival_time")
+  departureTime   DateTime? @map("departure_time")
+  
+  participationLevel String? @map("participation_level")
+  behaviorRating     Int?    @map("behavior_rating")
+  progressNotes      String? @map("progress_notes")
+  
+  homeworkCompleted  Boolean @default(false) @map("homework_completed")
+  homeworkNotes      String? @map("homework_notes")
+  
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  session         ClassSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  enrollment      ClassEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  pet             Pet             @relation("PetSessionAttendance", fields: [petId], references: [id], onDelete: Cascade)
+  
+  @@unique([sessionId, enrollmentId], map: "session_attendance_unique")
+  @@index([sessionId, status], map: "session_attendance_session_status_idx")
+  @@index([enrollmentId], map: "session_attendance_enrollment_idx")
+  @@map("session_attendance")
+}
+
+model ClassWaitlist {
+  id           String   @id @default(uuid())
+  tenantId     String   @default("dev") @map("tenant_id")
+  classId      String   @map("class_id")
+  petId        String   @map("pet_id")
+  customerId   String   @map("customer_id")
+  position     Int
+  addedDate    DateTime @default(now()) @map("added_date")
+  notified     Boolean  @default(false)
+  notifiedDate DateTime? @map("notified_date")
+  status       String   @default("WAITING")
+  
+  class        TrainingClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  pet          Pet           @relation("PetClassWaitlist", fields: [petId], references: [id], onDelete: Cascade)
+  customer     Customer      @relation("CustomerClassWaitlist", fields: [customerId], references: [id], onDelete: Cascade)
+  
+  @@unique([classId, petId], map: "class_waitlist_unique")
+  @@index([classId, position], map: "class_waitlist_class_position_idx")
+  @@index([customerId], map: "class_waitlist_customer_idx")
+  @@map("class_waitlist")
+}
+
+// ============================================
+// VACCINE REQUIREMENT MANAGEMENT
+// ============================================
+
+model VaccineRequirement {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("dev") @map("tenant_id")
+  name        String   // e.g., "Rabies", "DHPP", "Bordetella"
+  description String?
+  
+  // Applicability
+  petType     String?  @map("pet_type") // null = all types, or "DOG", "CAT"
+  serviceType String?  @map("service_type") // null = all services, or "DAYCARE", "BOARDING", "GROOMING"
+  
+  // Requirements
+  isRequired  Boolean  @default(true) @map("is_required")
+  validityPeriodMonths Int? @map("validity_period_months") // How many months vaccine is valid
+  reminderDaysBefore   Int? @default(30) @map("reminder_days_before") // Days before expiration to send reminder
+  
+  // Status
+  isActive    Boolean  @default(true) @map("is_active")
+  displayOrder Int     @default(0) @map("display_order")
+  
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@unique([tenantId, name, petType, serviceType], map: "vaccine_requirement_unique")
+  @@index([tenantId, isActive], map: "vaccine_requirements_tenant_active_idx")
+  @@index([petType, serviceType], map: "vaccine_requirements_type_idx")
+  @@map("vaccine_requirements")
+}
+
+// ============================================
+// CUSTOM ICON MANAGEMENT
+// ============================================
+
+model CustomIcon {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("dev") @map("tenant_id")
+  
+  // Icon identification
+  name        String   // Unique identifier (e.g., "custom_vip", "custom_special")
+  label       String   // Display name (e.g., "VIP Customer")
+  description String   // Tooltip text
+  
+  // Categorization
+  category    String   @default("custom") // status, payment, communication, service, flag, custom
+  
+  // Image storage
+  imageUrl    String   @map("image_url") // URL or path to uploaded image
+  fileName    String   @map("file_name") // Original filename
+  fileSize    Int      @map("file_size") // File size in bytes
+  mimeType    String   @map("mime_type") // image/png, image/jpeg, image/svg+xml
+  
+  // Metadata
+  isActive    Boolean  @default(true) @map("is_active")
+  displayOrder Int     @default(0) @map("display_order")
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@unique([tenantId, name], map: "custom_icon_unique")
+  @@index([tenantId, isActive], map: "custom_icons_tenant_active_idx")
+  @@index([category], map: "custom_icons_category_idx")
+  @@map("custom_icons")
+}
+
+// ============================================
+// RETAIL POS SYSTEM
+// ============================================
+
+model ProductCategory {
+  id          String    @id @default(uuid())
+  tenantId    String    @default("dev") @map("tenant_id")
+  name        String
+  description String?
+  displayOrder Int      @default(0) @map("display_order")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  
+  products    Product[]
+  
+  @@unique([tenantId, name], map: "product_category_unique")
+  @@index([tenantId, isActive], map: "product_categories_tenant_active_idx")
+  @@map("product_categories")
+}
+
+model Product {
+  id              String    @id @default(uuid())
+  tenantId        String    @default("dev") @map("tenant_id")
+  
+  // Basic Info
+  sku             String?   // Stock Keeping Unit
+  name            String
+  description     String?
+  categoryId      String?   @map("category_id")
+  
+  // Pricing
+  price           Decimal   @db.Decimal(10, 2)
+  cost            Decimal?  @db.Decimal(10, 2) // Cost to business
+  taxable         Boolean   @default(true)
+  
+  // Inventory
+  trackInventory  Boolean   @default(true) @map("track_inventory")
+  currentStock    Int       @default(0) @map("current_stock")
+  lowStockAlert   Int?      @map("low_stock_alert") // Alert when stock below this
+  reorderPoint    Int?      @map("reorder_point")
+  reorderQuantity Int?      @map("reorder_quantity")
+  
+  // Product Type
+  isService       Boolean   @default(false) @map("is_service") // Service vs physical product
+  isPackage       Boolean   @default(false) @map("is_package") // Bundle/package deal
+  
+  // Status
+  isActive        Boolean   @default(true) @map("is_active")
+  isFeatured      Boolean   @default(false) @map("is_featured")
+  
+  // Metadata
+  imageUrl        String?   @map("image_url")
+  barcode         String?
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  category        ProductCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  inventoryLogs   InventoryLog[]
+  packageItems    PackageItem[] @relation("PackageProduct")
+  packageContents PackageItem[] @relation("PackageContents")
+  
+  @@unique([tenantId, sku], map: "product_sku_unique")
+  @@index([tenantId, isActive], map: "products_tenant_active_idx")
+  @@index([categoryId], map: "products_category_idx")
+  @@index([currentStock], map: "products_stock_idx")
+  @@map("products")
+}
+
+model PackageItem {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("dev") @map("tenant_id")
+  
+  packageId   String   @map("package_id")
+  productId   String   @map("product_id")
+  quantity    Int      @default(1)
+  
+  package     Product  @relation("PackageProduct", fields: [packageId], references: [id], onDelete: Cascade)
+  product     Product  @relation("PackageContents", fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([packageId, productId], map: "package_item_unique")
+  @@map("package_items")
+}
+
+model InventoryLog {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("dev") @map("tenant_id")
+  
+  productId   String   @map("product_id")
+  changeType  String   @map("change_type") // PURCHASE, SALE, ADJUSTMENT, RETURN, DAMAGE, RESTOCK
+  quantity    Int      // Positive for additions, negative for subtractions
+  previousStock Int    @map("previous_stock")
+  newStock    Int      @map("new_stock")
+  
+  reason      String?
+  reference   String?  // Order ID, Invoice ID, etc.
+  performedBy String?  @map("performed_by") // Staff ID
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId, productId], map: "inventory_logs_tenant_product_idx")
+  @@index([createdAt], map: "inventory_logs_date_idx")
+  @@map("inventory_logs")
+}
+
+model MessageTemplate {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("dev") @map("tenant_id")
+  
+  name        String
+  type        String   // SMS, EMAIL
+  category    String   // APPOINTMENT_REMINDER, MARKETING, CONFIRMATION, FOLLOW_UP, PROMOTIONAL
+  subject     String?  // For email only
+  body        String   @db.Text
+  variables   String[] @default([])
+  
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@index([tenantId, isActive], map: "message_templates_tenant_active_idx")
+  @@index([type], map: "message_templates_type_idx")
+  @@index([category], map: "message_templates_category_idx")
+  @@map("message_templates")
+}
+
+model Announcement {
+  id          String   @id @default(uuid())
+  tenantId    String   @default("dev") @map("tenant_id")
+  
+  title       String
+  message     String   @db.Text
+  priority    String   @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  type        String   @default("INFO") // INFO, WARNING, SUCCESS, ERROR
+  
+  startDate   DateTime @default(now()) @map("start_date")
+  endDate     DateTime? @map("end_date") // Optional expiration
+  
+  isActive    Boolean  @default(true) @map("is_active")
+  createdBy   String?  @map("created_by") // Staff ID who created it
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  dismissals  AnnouncementDismissal[]
+  
+  @@index([tenantId, isActive, startDate], map: "announcements_tenant_active_date_idx")
+  @@index([priority], map: "announcements_priority_idx")
+  @@map("announcements")
+}
+
+model AnnouncementDismissal {
+  id             String   @id @default(uuid())
+  tenantId       String   @default("dev") @map("tenant_id")
+  
+  announcementId String   @map("announcement_id")
+  userId         String   @map("user_id") // Staff member who dismissed it
+  
+  dismissedAt    DateTime @default(now()) @map("dismissed_at")
+  
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  
+  @@unique([announcementId, userId], map: "announcement_dismissal_unique")
+  @@index([tenantId, userId], map: "announcement_dismissals_tenant_user_idx")
+  @@map("announcement_dismissals")
+}
+
+// Super Admin Models - Phase 1: Authentication
+
+model SuperAdmin {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  passwordHash  String      @map("password_hash")
+  firstName     String?     @map("first_name")
+  lastName      String?     @map("last_name")
+  role          String      @default("SUPER_ADMIN") // SUPER_ADMIN, SUPPORT, DEVELOPER
+  isActive      Boolean     @default(true) @map("is_active")
+  require2fa    Boolean     @default(false) @map("require_2fa")
+  lastLogin     DateTime?   @map("last_login")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  
+  auditLogs              AuditLog[]
+  suspendedTenants       Tenant[]              @relation("TenantSuspensions")
+  deletedTenants         Tenant[]              @relation("TenantDeletions")
+  impersonationSessions  ImpersonationSession[]
+  
+  @@index([email], map: "idx_super_admins_email")
+  @@index([isActive], map: "idx_super_admins_active")
+  @@index([role], map: "idx_super_admins_role")
+  @@map("super_admins")
+}
+
+model AuditLog {
+  id            String      @id @default(uuid())
+  superAdminId  String?     @map("super_admin_id")
+  action        String      // LOGIN, LOGOUT, CREATE_TENANT, DELETE_TENANT, IMPERSONATE, etc.
+  entityType    String?     @map("entity_type") // TENANT, USER, RESERVATION, etc.
+  entityId      String?     @map("entity_id")
+  tenantId      String?     @map("tenant_id")
+  details       Json?       // Additional context
+  ipAddress     String?     @map("ip_address")
+  userAgent     String?     @map("user_agent")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  
+  superAdmin    SuperAdmin? @relation(fields: [superAdminId], references: [id], onDelete: SetNull)
+  
+  @@index([superAdminId], map: "idx_audit_logs_admin")
+  @@index([action], map: "idx_audit_logs_action")
+  @@index([tenantId], map: "idx_audit_logs_tenant")
+  @@index([createdAt], map: "idx_audit_logs_created")
+  @@index([entityType, entityId], map: "idx_audit_logs_entity")
+  @@map("audit_logs")
+}
+
+model ImpersonationSession {
+  id            String      @id @default(uuid())
+  superAdminId  String      @map("super_admin_id")
+  tenantId      String      @map("tenant_id")
+  reason        String      // Why impersonating
+  startedAt     DateTime    @default(now()) @map("started_at")
+  expiresAt     DateTime    @map("expires_at")
+  endedAt       DateTime?   @map("ended_at")
+  ipAddress     String?     @map("ip_address")
+  userAgent     String?     @map("user_agent")
+  isActive      Boolean     @default(true) @map("is_active")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  
+  superAdmin    SuperAdmin  @relation(fields: [superAdminId], references: [id], onDelete: Cascade)
+  
+  @@index([superAdminId], map: "idx_impersonation_super_admin")
+  @@index([tenantId], map: "idx_impersonation_tenant")
+  @@index([isActive, expiresAt], map: "idx_impersonation_active")
+  @@index([startedAt], map: "idx_impersonation_started")
+  @@map("impersonation_sessions")
 }

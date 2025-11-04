@@ -28,34 +28,47 @@ import {
   deleteStaffSchedule,
   bulkCreateSchedules,
   // Test endpoint
-  testSchedulesEndpoint
+  testSchedulesEndpoint,
+  // Profile photo endpoints
+  uploadProfilePhoto,
+  deleteProfilePhoto
 } from '../controllers/staff.controller';
+import { loginRateLimiter, passwordResetRateLimiter } from '../middleware/rateLimiter.middleware';
+import { uploadProfilePhoto as uploadMiddleware } from '../middleware/upload.middleware';
 
 const router = Router();
+
+// IMPORTANT: Specific routes must come BEFORE generic :id routes!
+
+// Authentication routes (no :id parameter)
+// POST login (with rate limiting)
+router.post('/login', loginRateLimiter, loginStaff);
+
+// POST request password reset (with rate limiting)
+router.post('/request-reset', passwordResetRateLimiter, requestPasswordReset);
+
+// POST reset password
+router.post('/reset-password', resetPassword);
+
+// Profile photo routes (must be before /:id routes!)
+router.post('/:id/photo', uploadMiddleware, uploadProfilePhoto);
+router.delete('/:id/photo', deleteProfilePhoto);
 
 // GET all staff members
 router.get('/', getAllStaff);
 
-// GET a single staff member by ID
-router.get('/:id', getStaffById);
-
 // POST create a new staff member
 router.post('/', createStaff);
+
+// Generic :id routes (must be AFTER specific routes)
+// GET a single staff member by ID
+router.get('/:id', getStaffById);
 
 // PUT update a staff member
 router.put('/:id', updateStaff);
 
 // DELETE a staff member
 router.delete('/:id', deleteStaff);
-
-// POST login
-router.post('/login', loginStaff);
-
-// POST request password reset
-router.post('/request-reset', requestPasswordReset);
-
-// POST reset password
-router.post('/reset-password', resetPassword);
 
 // Staff Availability Routes
 router.get('/:staffId/availability', getStaffAvailability);

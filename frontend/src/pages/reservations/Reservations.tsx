@@ -1,26 +1,43 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Typography, 
-  Container, 
-  Box, 
-  Button, 
-  Paper, 
-  Chip, 
-  IconButton, 
+import {
+  Container,
+  Typography,
+  Box,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Button,
+  Chip,
+  IconButton,
+  TextField,
+  InputAdornment,
+  Pagination,
+  CircularProgress,
+  Alert,
+  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
-  Alert,
-  CircularProgress,
   Menu,
-  MenuItem,
-  TextField
+  MenuItem
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Visibility as ViewIcon,
+  Search as SearchIcon,
+  FilterList as FilterIcon
+} from '@mui/icons-material';
+import { Link } from 'react-router-dom';
+import PetNameWithIcons from '../../components/pets/PetNameWithIcons';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import InfoIcon from '@mui/icons-material/Info';
-import AddIcon from '@mui/icons-material/Add';
 import ReservationForm from '../../components/reservations/ReservationForm';
 import { reservationService } from '../../services/reservationService';
 import { debounce } from 'lodash';
@@ -55,7 +72,6 @@ const Reservations = () => {
       setLoading(true);
       setError('');
       const dateString = getFormattedDateString(selectedDate);
-      console.log('Loading reservations for date:', dateString);
       const response = await reservationService.getAllReservations(
         page,
         10, // limit
@@ -64,14 +80,34 @@ const Reservations = () => {
         undefined, // status - get all statuses
         getFormattedDateString(selectedDate) // date filter using formatted string
       );
-      console.log('Reservations response:', response);
-      if (response?.status === 'success' && Array.isArray(response?.data)) {
-        setReservations(response.data);
-        setTotalPages(response.totalPages || 1);
-      } else {
-        console.error('Invalid reservations response format:', response);
-        setReservations([]);
+      // Normalize various possible response shapes
+      let reservationsArray: any[] = [];
+      let pages = 1;
+
+      if (response && typeof response === 'object') {
+        const anyResp: any = response as any;
+        if (anyResp.status === 'success') {
+          if (Array.isArray(anyResp.data)) {
+            reservationsArray = anyResp.data;
+          } else if (anyResp.data && Array.isArray(anyResp.data.data)) {
+            reservationsArray = anyResp.data.data;
+          } else if (anyResp.data && Array.isArray(anyResp.data.reservations)) {
+            reservationsArray = anyResp.data.reservations;
+          }
+          pages = anyResp.totalPages || anyResp.pagination?.totalPages || 1;
+        } else if (Array.isArray(anyResp)) {
+          // Direct array response fallback
+          reservationsArray = anyResp;
+        }
       }
+
+      if (!Array.isArray(reservationsArray)) {
+        console.error('Invalid reservations response format:', response);
+        reservationsArray = [];
+      }
+
+      setReservations(reservationsArray);
+      setTotalPages(pages);
     } catch (err) {
       setError('Failed to load reservations');
       console.error('Error loading reservations:', err);
@@ -206,7 +242,6 @@ const Reservations = () => {
                 value={selectedDate}
                 onChange={(newDate) => {
                   if (newDate) {
-                    console.log('Setting selected date to:', newDate);
                     setSelectedDate(newDate);
                   }
                 }}
@@ -263,18 +298,29 @@ const Reservations = () => {
                       <Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Pet:</Typography>
-                          <Typography variant="body2">{reservation.pet.name}</Typography>
-                          <Typography variant="caption" color="text.secondary">({reservation.pet.type})</Typography>
+                          <PetNameWithIcons
+                            petName={reservation.pet?.name || 'Unknown'}
+                            petIcons={reservation.pet?.petIcons}
+                            iconNotes={reservation.pet?.iconNotes}
+                            petType={reservation.pet?.type}
+                            profilePhoto={reservation.pet?.profilePhoto}
+                            size="small"
+                            nameVariant="body2"
+                            showPhoto={true}
+                          />
+                          {reservation.pet?.type && (
+                            <Typography variant="caption" color="text.secondary">({reservation.pet?.type})</Typography>
+                          )}
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Owner:</Typography>
-                          <Typography variant="body2">{reservation.customer.firstName} {reservation.customer.lastName}</Typography>
+                          <Typography variant="body2">{reservation.customer?.firstName || ''} {reservation.customer?.lastName || ''}</Typography>
                         </Box>
                       </Box>
                       <Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Service:</Typography>
-                          <Typography variant="body2">{reservation.service.name}</Typography>
+                          <Typography variant="body2">{reservation.service?.name || 'Unknown'}</Typography>
                         </Box>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
                           <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>Status:</Typography>

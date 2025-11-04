@@ -23,7 +23,6 @@ const LoginSchema = Yup.object().shape({
     .email('Invalid email address')
     .required('Email is required'),
   password: Yup.string()
-    .min(6, 'Password must be at least 6 characters')
     .required('Password is required'),
 });
 
@@ -59,7 +58,10 @@ const Login = () => {
       )}
       
       <Formik
-        initialValues={{ email: '', password: '' }}
+        initialValues={{ 
+          email: '', 
+          password: '' 
+        }}
         validationSchema={LoginSchema}
         onSubmit={handleSubmit}
       >

@@ -19,10 +19,8 @@ const PetIconDisplay: React.FC<PetIconDisplayProps> = ({
   customNotes = {}
 }) => {
   // Log the icon IDs for debugging
-  console.log('PetIconDisplay received iconIds:', iconIds);
   
   if (!iconIds || iconIds.length === 0) {
-    console.log('No icon IDs provided, returning null');
     return null;
   }
 
@@ -47,21 +45,19 @@ const PetIconDisplay: React.FC<PetIconDisplayProps> = ({
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: spacing }} className="pet-icons-container">
       {iconIds.map(iconId => {
-        console.log('Looking up icon by ID:', iconId);
         const icon = getIconById(iconId);
         
-        if (!icon) {
-          console.log('Icon not found for ID:', iconId);
+        // Skip if icon not found or missing required properties
+        if (!icon || !icon.icon || !icon.label) {
+          console.warn(`Icon not found or invalid: ${iconId}`);
           return null;
         }
         
-        console.log('Found icon:', icon);
-        
-        const customNote = customNotes[iconId];
+        const customNote = customNotes?.[iconId];
         const tooltipTitle = (
           <>
             <Typography variant="subtitle2">{icon.label}</Typography>
-            <Typography variant="body2">{icon.description}</Typography>
+            {icon.description && <Typography variant="body2">{icon.description}</Typography>}
             {customNote && (
               <Typography variant="body2" sx={{ mt: 0.5, fontStyle: 'italic' }}>
                 Note: {customNote}

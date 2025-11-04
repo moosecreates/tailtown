@@ -1,0 +1,38 @@
+[Unit]
+Description=Tailtown Customer Service
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/tailtown/services/customer
+Environment="NODE_ENV=production"
+Environment="PORT=4004"
+Environment="DATA_DIR=/opt/tailtown/data"
+Environment="DISABLE_HTTPS_REDIRECT=true"
+Environment="ALLOWED_ORIGINS=http://129.212.178.244:3000"
+Environment="DATABASE_URL=postgresql://postgres:TailtownSecure2025ProductionDB@localhost:5432/customer"
+ExecStartPre=/bin/sleep 5
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/tailtown/customer-service.log
+StandardError=append:/var/log/tailtown/customer-service-error.log
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/tailtown/services/customer
+ReadWritePaths=/var/log/tailtown
+
+# Resource limits
+LimitNOFILE=65536
+MemoryLimit=512M
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target

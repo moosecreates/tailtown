@@ -60,15 +60,16 @@ Pet icons are visual indicators that appear on pet cards and profiles to quickly
 ### Image Handling
 - Pet profile photos are uploaded via the PetDetails form
 - Images are stored on the backend server in the `uploads/pets` directory
-- Frontend accesses images through the backend server on port 3002
-- Image URLs are constructed as: `http://localhost:3002/uploads/pets/[filename]`
+- Frontend accesses images through the customer service on port 4004
+- Image URLs are constructed as: `http://localhost:4004/uploads/pets/[filename]`
 - A timestamp query parameter is added to prevent browser caching: `?t=[timestamp]`
 
 ### Port Configuration
-- Backend server runs on port 3002 as specified in the environment variables
+- Customer service runs on port 4004
+- Reservation service runs on port 4003
 - Frontend development server runs on port 3000
-- API proxy in `setupProxy.js` forwards requests from frontend to backend
-- All image and API requests must use the same port (3002) for proper functionality
+- API proxy in `setupProxy.js` forwards requests from frontend to backend services
+- All image and API requests use the customer service port (4004) for proper functionality
 
 ### Best Practices
 - Always validate pet data before saving

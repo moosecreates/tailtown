@@ -1,0 +1,358 @@
+import React, { useState, useMemo } from 'react';
+import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress, List, ListItem, IconButton, Tooltip, TextField, InputAdornment } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
+import PetNameWithIcons from '../pets/PetNameWithIcons';
+
+interface Reservation {
+  id: string;
+  customer?: {
+    firstName?: string;
+    lastName?: string;
+  };
+  pet?: {
+    id: string;
+    name: string;
+    type?: string;
+    breed?: string;
+    profilePhoto?: string;
+    petIcons?: any; // JSON array of icon IDs
+  };
+  startDate: string;
+  endDate: string;
+  status: string;
+  service?: {
+    name?: string;
+    serviceCategory?: string;
+  };
+  resource?: {
+    name?: string;
+    type?: string;
+  };
+}
+
+interface ReservationListProps {
+  reservations: Reservation[];
+  loading: boolean;
+  error: string | null;
+  filter: 'in' | 'out' | 'all';
+  onFilterChange: (filter: 'in' | 'out' | 'all') => void;
+}
+
+/**
+ * ReservationList Component
+ * 
+ * Displays upcoming reservations in a compact, scrollable list optimized for high-volume operations.
+ * Designed to handle 200+ daily reservations efficiently.
+ * 
+ * Features:
+ * - Compact list layout (~60px per item)
+ * - Scrollable container (500px max height)
+ * - Pet avatars with profile photos
+ * - Pet icons (medical/behavioral/dietary alerts)
+ * - Filter buttons (All, Check-Ins, Check-Outs)
+ * - Reservation count badge
+ * - Status chips with color coding
+ * - Hover effects for better UX
+ * 
+ * @param reservations - Array of reservation objects to display
+ * @param loading - Loading state indicator
+ * @param error - Error message if data fetch failed
+ * @param filter - Current filter ('in' | 'out' | 'all')
+ * @param onFilterChange - Callback to change filter
+ * 
+ * @example
+ * <ReservationList
+ *   reservations={filteredReservations}
+ *   loading={loading}
+ *   error={error}
+ *   filter="in"
+ *   onFilterChange={(filter) => setFilter(filter)}
+ * />
+ */
+const ReservationList: React.FC<ReservationListProps> = ({
+  reservations,
+  loading,
+  error,
+  filter,
+  onFilterChange
+}) => {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter reservations based on search query
+  const filteredReservations = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return reservations;
+    }
+
+    const query = searchQuery.toLowerCase();
+    return reservations.filter(reservation => {
+      const petName = reservation.pet?.name?.toLowerCase() || '';
+      const customerFirstName = reservation.customer?.firstName?.toLowerCase() || '';
+      const customerLastName = reservation.customer?.lastName?.toLowerCase() || '';
+      const customerFullName = `${customerFirstName} ${customerLastName}`.trim();
+      const kennelName = reservation.resource?.name?.toLowerCase() || '';
+      const serviceName = reservation.service?.name?.toLowerCase() || '';
+
+      return (
+        petName.includes(query) ||
+        customerFirstName.includes(query) ||
+        customerLastName.includes(query) ||
+        customerFullName.includes(query) ||
+        kennelName.includes(query) ||
+        serviceName.includes(query)
+      );
+    });
+  }, [reservations, searchQuery]);
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
+
+  /**
+   * Maps reservation status to Material-UI chip color
+   * @param status - Reservation status string
+   * @returns Chip color variant
+   */
+  const getStatusColor = (status: string): "success" | "warning" | "info" | "error" | "default" => {
+    switch(status) {
+      case 'CONFIRMED': return 'success';
+      case 'PENDING': return 'warning';
+      case 'CHECKED_IN': return 'info';
+      case 'CANCELLED': return 'error';
+      default: return 'default';
+    }
+  };
+
+  /**
+   * Gets background color based on service category
+   * DAYCARE = orange tint, BOARDING = default (blue tint)
+   */
+  const getServiceColor = (serviceCategory?: string) => {
+    if (serviceCategory === 'DAYCARE') {
+      return 'rgba(255, 152, 0, 0.08)'; // Orange tint
+    }
+    return 'rgba(25, 118, 210, 0.08)'; // Blue tint (default)
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric'
+    });
+  };
+
+  const getFilterTitle = () => {
+    switch(filter) {
+      case 'in': return 'Check-Ins Today';
+      case 'out': return 'Check-Outs Today';
+      default: return 'Upcoming Appointments';
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader 
+        title={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {getFilterTitle()}
+            {reservations.length > 0 && (
+              <Chip 
+                label={searchQuery ? `${filteredReservations.length} of ${reservations.length}` : reservations.length} 
+                size="small" 
+                color="primary"
+                variant="outlined"
+              />
+            )}
+          </Box>
+        }
+        action={
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button 
+              size="small" 
+              variant={filter === 'all' ? 'contained' : 'outlined'}
+              onClick={() => onFilterChange('all')}
+            >
+              All
+            </Button>
+            <Button 
+              size="small" 
+              variant={filter === 'in' ? 'contained' : 'outlined'}
+              onClick={() => onFilterChange('in')}
+            >
+              Check-Ins
+            </Button>
+            <Button 
+              size="small" 
+              variant={filter === 'out' ? 'contained' : 'outlined'}
+              onClick={() => onFilterChange('out')}
+            >
+              Check-Outs
+            </Button>
+          </Box>
+        }
+      />
+      <CardContent>
+        {/* Search Bar */}
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Search by pet name, customer name, kennel, or service..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ mb: 2 }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+            endAdornment: searchQuery && (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={handleClearSearch}>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : error ? (
+          <Typography color="error">{error}</Typography>
+        ) : reservations.length === 0 ? (
+          <Typography color="text.secondary">
+            No {filter === 'in' ? 'check-ins' : filter === 'out' ? 'check-outs' : 'appointments'} scheduled
+          </Typography>
+        ) : filteredReservations.length === 0 ? (
+          <Typography color="text.secondary">
+            No reservations match your search "{searchQuery}"
+          </Typography>
+        ) : (
+          <List 
+            sx={{ 
+              maxHeight: 500, 
+              overflow: 'auto',
+              p: 0,
+              '& .MuiListItem-root': {
+                borderBottom: 1,
+                borderColor: 'divider',
+                '&:last-child': {
+                  borderBottom: 0
+                }
+              }
+            }}
+          >
+            {filteredReservations.map((reservation) => (
+              <ListItem
+                key={reservation.id}
+                sx={{
+                  py: 1,
+                  px: 2,
+                  bgcolor: getServiceColor(reservation.service?.serviceCategory),
+                  '&:hover': {
+                    bgcolor: reservation.service?.serviceCategory === 'DAYCARE' 
+                      ? 'rgba(255, 152, 0, 0.15)'
+                      : 'rgba(25, 118, 210, 0.15)',
+                  }
+                }}
+                secondaryAction={
+                  filter === 'in' && reservation.status === 'CONFIRMED' ? (
+                    <Tooltip title="Start Check-In">
+                      <IconButton
+                        edge="end"
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/check-in/${reservation.id}`);
+                        }}
+                      >
+                        <CheckCircleIcon />
+                      </IconButton>
+                    </Tooltip>
+                  ) : (
+                    <Chip 
+                      label={reservation.status} 
+                      color={getStatusColor(reservation.status)}
+                      size="small"
+                    />
+                  )
+                }
+              >
+                <Box 
+                  sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.25, cursor: 'pointer' }}
+                  onClick={() => navigate(`/reservations/${reservation.id}`)}
+                >
+                  {/* Row 1: Pet Name & Customer Name */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <PetNameWithIcons
+                      petName={reservation.pet?.name || 'Unknown Pet'}
+                      petIcons={reservation.pet?.petIcons}
+                    />
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                      • {reservation.customer?.firstName || ''} {reservation.customer?.lastName || 'Unknown'}
+                    </Typography>
+                  </Box>
+                  {/* Row 2: Time, Service, Kennel */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {formatTime(reservation.startDate)}
+                    </Typography>
+                    {reservation.service?.name && (
+                      <>
+                        <Typography variant="caption" color="text.secondary">•</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {reservation.service.name}
+                        </Typography>
+                      </>
+                    )}
+                    {reservation.resource?.name && (
+                      <>
+                        <Typography variant="caption" color="text.secondary">•</Typography>
+                        <Chip 
+                          label={reservation.resource.name} 
+                          size="small" 
+                          variant="outlined"
+                          sx={{ height: 18, fontSize: '0.65rem', fontWeight: 600 }}
+                        />
+                      </>
+                    )}
+                  </Box>
+                </Box>
+              </ListItem>
+            ))}
+          </List>
+        )}
+        {reservations.length > 0 && (
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Button
+              component={Link}
+              to="/calendar"
+              variant="outlined"
+              size="small"
+            >
+              View All Reservations
+            </Button>
+          </Box>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ReservationList;

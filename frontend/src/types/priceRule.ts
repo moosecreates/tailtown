@@ -1,5 +1,6 @@
 export type PriceRuleType = 'DAY_OF_WEEK' | 'MULTI_DAY' | 'MULTI_PET' | 'SEASONAL' | 'PROMOTIONAL' | 'CUSTOM';
 export type DiscountType = 'PERCENTAGE' | 'FIXED_AMOUNT';
+export type PriceAdjustmentType = 'DISCOUNT' | 'SURCHARGE';
 
 export interface PriceRuleServiceCategory {
   id: string;
@@ -22,6 +23,7 @@ export interface PriceRule {
   name: string;
   description: string;
   ruleType: PriceRuleType;
+  adjustmentType: PriceAdjustmentType;
   discountType: DiscountType;
   discountValue: number;
   startDate?: string | null;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Container, 
   Typography, 
@@ -16,20 +16,15 @@ import {
   Stack,
   Chip
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SuiteBoard from '../../components/suites/SuiteBoard';
 import { resourceService } from '../../services';
 import { formatDateToYYYYMMDD } from '../../utils/dateUtils';
-import { determineSuiteStatus, isSuiteOccupied } from '../../utils/suiteUtils';
+import { determineSuiteStatus } from '../../utils/suiteUtils';
 
 const SuitesPage: React.FC = () => {
   const [selectedSuiteId, setSelectedSuiteId] = useState<string | null>(null);
   const [suiteDetails, setSuiteDetails] = useState<any>(null);
-  const [isOccupied, setIsOccupied] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   // We'll get the date from the SuiteBoard component instead
   const [filterDate, setFilterDate] = useState<Date>(new Date());
@@ -37,6 +32,7 @@ const SuitesPage: React.FC = () => {
     total: 0,
     occupied: 0,
     available: 0,
+    reserved: 0,
     maintenance: 0,
     needsCleaning: 0,
     occupancyRate: 0
@@ -99,32 +95,32 @@ const SuitesPage: React.FC = () => {
   };
 
   // Fetch live stats from backend on initial load
-  useEffect(() => {
-    const fetchSuiteStats = async () => {
-      try {
-        setLoading(true);
-        // Format date as YYYY-MM-DD for API using local timezone
-        const formattedDate = formatDateToYYYYMMDD(filterDate);
-        const response = await resourceService.getSuiteStats(formattedDate);
-        if (response?.status === 'success' && response?.data) {
-          setStats(response.data);
-        }
-      } catch (error: any) {
-        let msg = 'Could not load suite stats.';
-        if (error?.response) {
-          msg += ` Server responded with status ${error.response.status}: ${error.response.data?.message || error.response.statusText}`;
-        } else if (error?.message) {
-          msg += ` ${error.message}`;
-        }
-        setStatsError(msg);
-        console.error('Error loading suite stats:', error);
-      } finally {
-        setLoading(false);
+  const fetchSuiteStats = useCallback(async () => {
+    try {
+      setLoading(true);
+      // Format date as YYYY-MM-DD for API using local timezone
+      const formattedDate = formatDateToYYYYMMDD(filterDate);
+      const response = await resourceService.getSuiteStats(formattedDate);
+      if (response?.status === 'success' && response?.data) {
+        setStats(response.data);
       }
-    };
+    } catch (error: any) {
+      let msg = 'Could not load suite stats.';
+      if (error?.response) {
+        msg += ` Server responded with status ${error.response.status}: ${error.response.data?.message || error.response.statusText}`;
+      } else if (error?.message) {
+        msg += ` ${error.message}`;
+      }
+      setStatsError(msg);
+      console.error('Error loading suite stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [filterDate]);
 
+  useEffect(() => {
     fetchSuiteStats();
-  }, []);
+  }, [fetchSuiteStats]);
 
   // We've removed the automatic refresh interval that was here previously
   // Now we only refresh data when the user clicks the refresh button or changes the date
@@ -140,18 +136,9 @@ const SuitesPage: React.FC = () => {
       // Fetch the suite details from the API with the current date
       const response = await resourceService.getResource(suiteId, formattedDate);
       if (response?.status === 'success' && response?.data) {
-        console.log('Suite details received from API:', response.data);
         
         // Use the utility function to determine if the suite is occupied
         const suiteStatus = determineSuiteStatus(response.data);
-        const occupied = suiteStatus === 'OCCUPIED';
-        
-        // Set the occupied status based on the determined status
-        setIsOccupied(occupied);
-        console.log(`Suite ${suiteId} status: ${suiteStatus}`);
-        console.log(`Suite ${suiteId} is occupied: ${occupied}`);
-        console.log('Reservations:', response.data.reservations);
-        
         // Store the suite details as received from the API
         setSuiteDetails(response.data);
       }
@@ -174,7 +161,6 @@ const SuitesPage: React.FC = () => {
     })
       .then(response => {
         if (response?.status === 'success' && response?.data) {
-          console.log('Suite marked as cleaned:', response.data);
           setSuiteDetails({
             ...suiteDetails,
             attributes: {
@@ -215,25 +201,31 @@ const SuitesPage: React.FC = () => {
 
         <Box sx={{ mb: 4 }}>
           <Grid container spacing={2}>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={4} lg={2}>
               <Paper sx={{ p: 2, height: '100%', bgcolor: 'primary.light', color: 'white' }}>
                 <Typography variant="h6">Total Suites</Typography>
                 <Typography variant="h3">{stats.total}</Typography>
               </Paper>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={4} lg={2.5}>
               <Paper sx={{ p: 2, height: '100%', bgcolor: '#81C784' }}>
                 <Typography variant="h6">Available</Typography>
                 <Typography variant="h3">{stats.available}</Typography>
               </Paper>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={4} lg={2.5}>
               <Paper sx={{ p: 2, height: '100%', bgcolor: '#FF8A65', color: 'white' }}>
                 <Typography variant="h6">Occupied</Typography>
                 <Typography variant="h3">{stats.occupied}</Typography>
               </Paper>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} md={6} lg={2.5}>
+              <Paper sx={{ p: 2, height: '100%', bgcolor: '#FFB74D' }}>
+                <Typography variant="h6">Reserved</Typography>
+                <Typography variant="h3">{stats.reserved || 0}</Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={6} lg={2.5}>
               <Paper sx={{ p: 2, height: '100%', bgcolor: '#9E9E9E', color: 'white' }}>
                 <Typography variant="h6">Maintenance</Typography>
                 <Typography variant="h3">{stats.maintenance}</Typography>
@@ -257,8 +249,8 @@ const SuitesPage: React.FC = () => {
           <SuiteBoard 
             onSelectSuite={handleSelectSuite} 
             reloadTrigger={reloadTrigger}
-            selectedDate={filterDate}
-            onDateChange={handleFilterDateChange}
+            filterDate={filterDate}
+            onFilterDateChange={handleFilterDateChange}
           />
         </Paper>
       </Box>
@@ -312,11 +304,6 @@ const SuitesPage: React.FC = () => {
                   const calculatedStatus = determineSuiteStatus(suiteDetails);
                   const finalStatus = isKnownOccupied ? 'OCCUPIED' : calculatedStatus;
                   
-                  console.log('Suite details modal - suite ID:', suiteDetails.id);
-                  console.log('Suite details modal - is known occupied:', isKnownOccupied);
-                  console.log('Suite details modal - calculated status:', calculatedStatus);
-                  console.log('Suite details modal - final status:', finalStatus);
-                  console.log('Suite details modal - reservations:', suiteDetails.reservations);
                   
                   // Return the appropriate chip based on the status
                   if (finalStatus === 'OCCUPIED' || isKnownOccupied) {

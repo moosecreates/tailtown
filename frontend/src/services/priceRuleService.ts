@@ -1,5 +1,5 @@
 import api from './api';
-import { PriceRule, PriceRuleType, DiscountType } from '../types/priceRule';
+import { PriceRule, DiscountType } from '../types/priceRule';
 
 // Re-export the types from priceRule.ts
 export type { PriceRule, PriceRuleType, DiscountType } from '../types/priceRule';

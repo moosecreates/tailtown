@@ -29,6 +29,7 @@ interface StaffScheduleFormProps {
   isEditing: boolean;
   allStaff?: Staff[];
   initialDate?: Date;
+  existingSchedules?: StaffSchedule[];
 }
 
 const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
@@ -39,7 +40,8 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
   onSave,
   isEditing,
   allStaff,
-  initialDate
+  initialDate,
+  existingSchedules = []
 }) => {
   const [formData, setFormData] = useState<Partial<StaffSchedule>>({
     id: schedule?.id || undefined, // Keep the ID for updates to prevent duplicates
@@ -94,7 +96,13 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
   
   const handleDateChange = (date: Date | null) => {
     if (date) {
-      setFormData(prev => ({ ...prev, date: format(date, 'yyyy-MM-dd') }));
+      // Format date in local timezone to avoid timezone shift
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const localDateString = `${year}-${month}-${day}`;
+      
+      setFormData(prev => ({ ...prev, date: localDateString }));
       if (errors.date) {
         setErrors(prev => ({ ...prev, date: '' }));
       }
@@ -110,7 +118,7 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
     }
   };
   
-  const validateForm = (): boolean => {
+  const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
     if (!formData.staffId) {
@@ -129,8 +137,63 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
       newErrors.endTime = 'End time is required';
     }
     
+    if (formData.startTime && formData.endTime) {
+      const start = parseTimeString(formData.startTime);
+      const end = parseTimeString(formData.endTime);
+      if (start >= end) {
+        newErrors.endTime = 'End time must be after start time';
+      }
+    }
+    
+    // Check for overlapping schedules
+    if (formData.staffId && formData.date && formData.startTime && formData.endTime) {
+      const hasOverlap = existingSchedules.some(existingSchedule => {
+        // Skip if it's the same schedule we're editing
+        if (isEditing && existingSchedule.id === formData.id) {
+          return false;
+        }
+        
+        // Check if same staff member
+        if (existingSchedule.staffId !== formData.staffId) {
+          return false;
+        }
+        
+        // Compare dates - handle both ISO format and simple date string
+        let existingDateStr: string;
+        if (typeof existingSchedule.date === 'string' && existingSchedule.date.includes('T')) {
+          // ISO format: extract date part before 'T'
+          existingDateStr = existingSchedule.date.split('T')[0];
+        } else {
+          existingDateStr = String(existingSchedule.date);
+        }
+        
+        // Check if same date
+        if (existingDateStr !== formData.date) {
+          return false;
+        }
+        
+        // Parse times for comparison
+        const newStart = parseTimeString(formData.startTime!);
+        const newEnd = parseTimeString(formData.endTime!);
+        const existingStart = parseTimeString(existingSchedule.startTime);
+        const existingEnd = parseTimeString(existingSchedule.endTime);
+        
+        // Check for time overlap
+        // Overlap occurs if: (newStart < existingEnd) AND (newEnd > existingStart)
+        return newStart < existingEnd && newEnd > existingStart;
+      });
+      
+      if (hasOverlap) {
+        newErrors.startTime = 'This staff member already has a schedule during this time';
+      }
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+  
+  const parseTimeString = (timeString: string): Date => {
+    return parse(timeString, 'HH:mm', new Date());
   };
   
   const handleSubmit = async () => {
@@ -139,10 +202,6 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
     }
     
     onSave(formData as StaffSchedule);
-  };
-  
-  const parseTimeString = (timeString: string): Date => {
-    return parse(timeString, 'HH:mm', new Date());
   };
   
   return (

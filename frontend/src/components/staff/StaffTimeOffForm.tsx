@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -59,14 +59,7 @@ const StaffTimeOffForm: React.FC<StaffTimeOffFormProps> = ({ staffId, onSave }) 
     approvedDate: null
   });
 
-  // Load staff time off when component mounts
-  useEffect(() => {
-    if (staffId) {
-      loadStaffTimeOff();
-    }
-  }, [staffId]);
-
-  const loadStaffTimeOff = async () => {
+  const loadStaffTimeOff = useCallback(async () => {
     try {
       setLoading(true);
       const data = await staffService.getStaffTimeOff(staffId);
@@ -78,7 +71,14 @@ const StaffTimeOffForm: React.FC<StaffTimeOffFormProps> = ({ staffId, onSave }) 
     } finally {
       setLoading(false);
     }
-  };
+  }, [staffId]);
+
+  // Load staff time off when component mounts
+  useEffect(() => {
+    if (staffId) {
+      loadStaffTimeOff();
+    }
+  }, [staffId, loadStaffTimeOff]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

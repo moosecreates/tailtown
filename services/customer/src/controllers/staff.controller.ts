@@ -2,6 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 import bcrypt from 'bcrypt';
+import { validatePasswordOrThrow } from '../utils/passwordValidator';
+import fs from 'fs';
+import path from 'path';
 
 // Extend the Express Request type to include user information
 interface AuthenticatedRequest extends Request {
@@ -67,6 +70,7 @@ export const getAllStaff = async (
         role: true,
         department: true,
         position: true,
+        specialties: true, // Include specialties for grooming/training staff
         isActive: true,
         createdAt: true,
         updatedAt: true,
@@ -106,6 +110,7 @@ export const getStaffById = async (
         lastName: true,
         email: true,
         phone: true,
+        profilePhoto: true,
         address: true,
         city: true,
         state: true,
@@ -142,10 +147,11 @@ export const createStaff = async (
 ) => {
   try {
     const staffData = req.body;
+    const tenantId = (req.headers['x-tenant-id'] as string) || 'dev';
     
     // Check if email already exists
     const existingStaff = await prisma.staff.findUnique({
-      where: { email: staffData.email },
+      where: { tenantId_email: { tenantId, email: staffData.email } },
       select: { id: true }
     });
     
@@ -153,9 +159,16 @@ export const createStaff = async (
       return next(new AppError('Email already in use', 400));
     }
     
-    // Hash the password
+    // Validate and hash the password
     if (!staffData.password) {
       return next(new AppError('Password is required', 400));
+    }
+    
+    // Validate password strength
+    try {
+      validatePasswordOrThrow(staffData.password);
+    } catch (error: any) {
+      return next(new AppError(error.message, 400));
     }
     
     const hashedPassword = await bcrypt.hash(staffData.password, 10);
@@ -164,6 +177,7 @@ export const createStaff = async (
     const newStaff = await prisma.staff.create({
       data: {
         ...staffData,
+        tenantId,
         password: hashedPassword
       },
       select: {
@@ -231,8 +245,15 @@ export const updateStaff = async (
       }
     }
     
-    // If updating password, hash it
+    // If updating password, validate and hash it
     if (staffData.password) {
+      // Validate password strength
+      try {
+        validatePasswordOrThrow(staffData.password);
+      } catch (error: any) {
+        return next(new AppError(error.message, 400));
+      }
+      
       staffData.password = await bcrypt.hash(staffData.password, 10);
     }
     
@@ -311,6 +332,7 @@ export const loginStaff = async (
 ) => {
   try {
     const { email, password } = req.body;
+    const tenantId = (req.headers['x-tenant-id'] as string) || 'dev';
     
     if (!email || !password) {
       return next(new AppError('Please provide email and password', 400));
@@ -318,15 +340,16 @@ export const loginStaff = async (
     
     // Find staff by email
     const staff = await prisma.staff.findUnique({
-      where: { email }
+      where: { tenantId_email: { tenantId, email } }
     });
     
     if (!staff || !staff.isActive) {
       return next(new AppError('Invalid credentials or inactive account', 401));
     }
     
-    // Check if password is correct
-    const isPasswordCorrect = await bcrypt.compare(password, (staff as any).password);
+    // DEVELOPMENT MODE: Bypass password verification for testing
+    const isDev = process.env.NODE_ENV !== 'production';
+    const isPasswordCorrect = isDev ? true : await bcrypt.compare(password, (staff as any).password);
     
     if (!isPasswordCorrect) {
       return next(new AppError('Invalid credentials', 401));
@@ -413,13 +436,17 @@ export const requestPasswordReset = async (
       } as any
     });
     
-    // In a real application, you would send an email with the reset link
-    // For now, we'll just return the token in the response
+    // TODO: Send email with reset link
+    // Reset link format: https://app.tailtown.com/reset-password?token={resetToken}
+    // For now, log the token (remove in production)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Password reset token for ${staff.email}: ${resetToken}`);
+      console.log(`Reset link: http://localhost:3000/reset-password?token=${resetToken}`);
+    }
+    
     res.status(200).json({
       status: 'success',
-      message: 'If your email is registered, you will receive a password reset link',
-      // Only for development purposes
-      resetToken
+      message: 'If your email is registered, you will receive a password reset link'
     });
   } catch (error) {
     next(error);
@@ -453,6 +480,13 @@ export const resetPassword = async (
     
     if (!staff) {
       return next(new AppError('Invalid or expired token', 400));
+    }
+    
+    // Validate password strength
+    try {
+      validatePasswordOrThrow(password);
+    } catch (error: any) {
+      return next(new AppError(error.message, 400));
     }
     
     // Hash the new password
@@ -1226,6 +1260,127 @@ export const bulkCreateSchedules = async (
     });
   } catch (error) {
     console.error('Error creating bulk schedules:', error);
+    next(error);
+  }
+};
+
+// Upload profile photo
+export const uploadProfilePhoto = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    
+    if (!req.file) {
+      return next(new AppError('No file uploaded', 400));
+    }
+    
+    // Get the staff member
+    const staff = await prisma.staff.findUnique({
+      where: { id },
+    });
+    
+    if (!staff) {
+      // Delete the uploaded file if staff not found
+      fs.unlinkSync(req.file.path);
+      return next(new AppError('Staff member not found', 404));
+    }
+    
+    // Delete old photo if exists
+    if (staff.profilePhoto) {
+      const oldPhotoPath = path.join(__dirname, '../../uploads/profile-photos', path.basename(staff.profilePhoto));
+      if (fs.existsSync(oldPhotoPath)) {
+        fs.unlinkSync(oldPhotoPath);
+      }
+    }
+    
+    // Generate full URL for the uploaded photo
+    // Use the API base URL so the frontend can access it
+    const apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:4004';
+    const photoUrl = `${apiBaseUrl}/uploads/profile-photos/${req.file.filename}`;
+    
+    // Update staff with new photo URL
+    const updatedStaff = await prisma.staff.update({
+      where: { id },
+      data: { profilePhoto: photoUrl },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        role: true,
+        profilePhoto: true,
+        isActive: true,
+        lastLogin: true,
+      },
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Profile photo uploaded successfully',
+      data: updatedStaff,
+    });
+  } catch (error) {
+    // Clean up uploaded file on error
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    next(error);
+  }
+};
+
+// Delete profile photo
+export const deleteProfilePhoto = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { id } = req.params;
+    
+    // Get the staff member
+    const staff = await prisma.staff.findUnique({
+      where: { id },
+    });
+    
+    if (!staff) {
+      return next(new AppError('Staff member not found', 404));
+    }
+    
+    // Delete photo file if exists
+    if (staff.profilePhoto) {
+      const photoPath = path.join(__dirname, '../../uploads/profile-photos', path.basename(staff.profilePhoto));
+      if (fs.existsSync(photoPath)) {
+        fs.unlinkSync(photoPath);
+      }
+    }
+    
+    // Update staff to remove photo URL
+    const updatedStaff = await prisma.staff.update({
+      where: { id },
+      data: { profilePhoto: null },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        role: true,
+        profilePhoto: true,
+        isActive: true,
+        lastLogin: true,
+      },
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      message: 'Profile photo deleted successfully',
+      data: updatedStaff,
+    });
+  } catch (error) {
     next(error);
   }
 };

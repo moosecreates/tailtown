@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -23,7 +23,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { serviceManagement } from '../../services/serviceManagement';
-import { Service, ServiceCategory, AddOnService } from '../../types/service';
+import { Service, ServiceCategory, AddOnService, DepositType } from '../../types/service';
 
 interface AddOnFormData {
   name: string;
@@ -50,7 +50,10 @@ const ServiceDetails: React.FC = () => {
     requiresStaff: false,
     isActive: true,
     notes: '',
-    availableAddOns: []
+    availableAddOns: [],
+    depositRequired: false,
+    depositType: undefined,
+    depositAmount: undefined
   });
 
   const [loading, setLoading] = useState(!isNewService);
@@ -68,13 +71,7 @@ const ServiceDetails: React.FC = () => {
     severity: 'success' as 'success' | 'error' | 'warning'
   });
 
-  useEffect(() => {
-    if (!isNewService) {
-      loadService();
-    }
-  }, [id]);
-
-  const loadService = async () => {
+  const loadService = useCallback(async () => {
     try {
       // Try to load the service with includeDeleted=true to handle deleted services
       const response = await serviceManagement.getServiceById(id!, true);
@@ -107,7 +104,13 @@ const ServiceDetails: React.FC = () => {
       
       setLoading(false);
     }
-  };
+  }, [id, isNewService, navigate]);
+
+  useEffect(() => {
+    if (!isNewService) {
+      loadService();
+    }
+  }, [isNewService, loadService]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -272,11 +275,13 @@ const ServiceDetails: React.FC = () => {
                       onChange={handleCategoryChange}
                       label="Category"
                     >
-                      {Object.values(ServiceCategory).map((category: ServiceCategory) => (
-                        <MenuItem key={category} value={category}>
-                          {category}
-                        </MenuItem>
-                      ))}
+                      {Object.values(ServiceCategory)
+                        .filter((category: ServiceCategory) => category !== ServiceCategory.TRAINING)
+                        .map((category: ServiceCategory) => (
+                          <MenuItem key={category} value={category}>
+                            {category}
+                          </MenuItem>
+                        ))}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -293,6 +298,85 @@ const ServiceDetails: React.FC = () => {
                       startAdornment: '$'
                     }}
                   />
+                </Grid>
+
+                {/* Deposit Configuration */}
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2 }}>
+                    <Typography variant="overline" color="text.secondary">
+                      Deposit Configuration
+                    </Typography>
+                  </Divider>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={service.depositRequired || false}
+                        onChange={handleSwitchChange}
+                        name="depositRequired"
+                      />
+                    }
+                    label="Require Deposit"
+                  />
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ ml: 4, mt: -1 }}>
+                    Customers must pay a deposit when booking this service
+                  </Typography>
+                </Grid>
+
+                {service.depositRequired && (
+                  <>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth>
+                        <InputLabel>Deposit Type</InputLabel>
+                        <Select
+                          value={service.depositType || DepositType.PERCENTAGE}
+                          onChange={(e: SelectChangeEvent) => {
+                            const depositType = e.target.value as DepositType;
+                            setService((prev: Partial<Service>) => ({
+                              ...prev,
+                              depositType,
+                              // Reset deposit amount when type changes
+                              depositAmount: depositType === DepositType.PERCENTAGE ? 50 : (prev.price || 0) * 0.5
+                            }));
+                          }}
+                          label="Deposit Type"
+                        >
+                          <MenuItem value={DepositType.PERCENTAGE}>Percentage of Price</MenuItem>
+                          <MenuItem value={DepositType.FIXED_AMOUNT}>Fixed Dollar Amount</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Grid>
+
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        fullWidth
+                        label={service.depositType === DepositType.PERCENTAGE ? 'Deposit Percentage' : 'Deposit Amount'}
+                        name="depositAmount"
+                        type="number"
+                        value={service.depositAmount || 0}
+                        onChange={handleInputChange}
+                        InputProps={{
+                          startAdornment: service.depositType === DepositType.PERCENTAGE ? '' : '$',
+                          endAdornment: service.depositType === DepositType.PERCENTAGE ? '%' : '',
+                          inputProps: {
+                            min: 0,
+                            max: service.depositType === DepositType.PERCENTAGE ? 100 : undefined
+                          }
+                        }}
+                        helperText={
+                          service.depositType === DepositType.PERCENTAGE
+                            ? `Deposit: $${((service.price || 0) * (service.depositAmount || 0) / 100).toFixed(2)}`
+                            : `${((service.depositAmount || 0) / (service.price || 1) * 100).toFixed(0)}% of service price`
+                        }
+                      />
+                    </Grid>
+                  </>
+                )}
+
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 1 }} />
                 </Grid>
 
                 <Grid item xs={12} sm={6}>
@@ -360,6 +444,16 @@ const ServiceDetails: React.FC = () => {
                 </Grid>
 
                 <Grid item xs={12}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={service.taxable !== false}
+                        onChange={handleSwitchChange}
+                        name="taxable"
+                      />
+                    }
+                    label="Taxable"
+                  />
                   <FormControlLabel
                     control={
                       <Switch

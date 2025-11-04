@@ -1,6 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import { PrismaClient, ResourceType, ContactMethod } from '@prisma/client';
+import { Response, NextFunction } from 'express';
+import { PrismaClient } from '@prisma/client';
 import AppError from '../utils/appError';
+import { TenantRequest } from '../middleware/tenant.middleware';
 
 const prisma = new PrismaClient();
 
@@ -67,16 +68,22 @@ const validateResourceType = (type: string): string => {
 
 // Get all resources
 export const getAllResources = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // Extract query parameters
-    const { sortBy, sortOrder } = req.query;
+    // Use tenant ID from middleware
+    const tenantId = req.tenantId!;
     
-    // Build the query
+    // Extract query parameters
+    const { sortBy, sortOrder, type } = req.query;
+    
+    // Build the query with tenant filter
     const query: any = {
+      where: {
+        tenantId,
+      },
       include: {
         availabilitySlots: {
           where: {
@@ -90,6 +97,23 @@ export const getAllResources = async (
         }
       }
     };
+    
+    // Add type filter if specified
+    if (type) {
+      const typeStr = type as string;
+      // Handle comma-separated types or single type
+      if (typeStr.includes(',')) {
+        const types = typeStr.split(',').map(t => t.trim().toUpperCase());
+        query.where.type = { in: types };
+      } else {
+        // Single type - handle 'suite' as a wildcard for all suite types
+        if (typeStr.toLowerCase() === 'suite') {
+          query.where.type = { in: ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'] };
+        } else {
+          query.where.type = typeStr.toUpperCase();
+        }
+      }
+    }
     
     // Add ordering if specified
     if (sortBy && sortOrder) {
@@ -109,7 +133,7 @@ export const getAllResources = async (
 
 // Get a single resource
 export const getResource = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -147,11 +171,12 @@ export const getResource = async (
 
 // Create a new resource
 export const createResource = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
+    const tenantId = req.tenantId!;
     const { maintenanceSchedule, capacity, type, ...resourceData } = req.body;
     
     // Validate and map the resource type
@@ -171,6 +196,7 @@ export const createResource = async (
     const resource = await prisma.resource.create({
       data: {
         ...resourceData,
+        tenantId,
         type: validType as any, // Cast to any to satisfy TypeScript
         capacity: capacity ? parseInt(capacity, 10) : 1,
         maintenanceSchedule: undefined,
@@ -194,7 +220,7 @@ export const createResource = async (
 
 // Update a resource
 export const updateResource = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -241,7 +267,7 @@ export const updateResource = async (
 
 // Delete a resource
 export const deleteResource = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -263,7 +289,7 @@ export const deleteResource = async (
 
 // Create availability slot
 export const createAvailabilitySlot = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -292,7 +318,7 @@ export const createAvailabilitySlot = async (
 
 // Update availability slot
 export const updateAvailabilitySlot = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -321,7 +347,7 @@ export const updateAvailabilitySlot = async (
 
 // Delete availability slot
 export const deleteAvailabilitySlot = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -343,20 +369,39 @@ export const deleteAvailabilitySlot = async (
 
 // Get available resources by date range
 export const getAvailableResourcesByDate = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { startDate, endDate, serviceId } = req.query;
+    const { startDate, endDate, serviceId, date, resourceType } = req.query;
     
-    if (!startDate || !endDate) {
-      return next(new AppError('Start date and end date are required', 400));
+    let parsedStartDate: Date;
+    let parsedEndDate: Date;
+    
+    // Handle case where frontend sends a single date parameter
+    if (date && !startDate && !endDate) {
+      // Create start date as beginning of the provided date
+      parsedStartDate = new Date(date as string);
+      parsedStartDate.setHours(0, 0, 0, 0);
+      
+      // Create end date as end of the provided date
+      parsedEndDate = new Date(date as string);
+      parsedEndDate.setHours(23, 59, 59, 999);
+      
+      console.log(`Using single date parameter: ${date}, converted to range:`, {
+        start: parsedStartDate,
+        end: parsedEndDate
+      });
+    } else if (!startDate || !endDate) {
+      return next(new AppError('Start date and end date are required if date parameter is not provided', 400));
+    } else {
+      // Use provided start and end dates
+      parsedStartDate = new Date(startDate as string);
+      parsedEndDate = new Date(endDate as string);
     }
     
-    // Parse dates
-    const parsedStartDate = new Date(startDate as string);
-    const parsedEndDate = new Date(endDate as string);
+    // Parse dates have already been handled above
     
     // Validate dates
     if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
@@ -366,10 +411,26 @@ export const getAvailableResourcesByDate = async (
     console.log(`Getting available resources for dates: ${parsedStartDate.toISOString()} to ${parsedEndDate.toISOString()}`);
     console.log(`Service ID: ${serviceId || 'Not provided'}`);
     
-    // First, check if we need to filter by service type
-    let requiredResourceTypes: ResourceType[] = [];
+    // First, check if we need to filter by resource type or service type
+    let requiredResourceTypes: string[] = [];
     
-    if (serviceId) {
+    // If resourceType is provided directly, use that
+    if (resourceType) {
+      console.log(`Resource type provided directly: ${resourceType}`);
+      
+      // Handle the case where frontend sends 'suite' as resourceType
+      if (resourceType === 'suite') {
+        // Map 'suite' to all suite types
+        requiredResourceTypes = ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'];
+        console.log(`Mapped 'suite' to suite types: ${requiredResourceTypes.join(', ')}`);
+      } else {
+        // Use the provided resource type directly
+        requiredResourceTypes = [resourceType as string];
+      }
+    }
+    
+    // Only use serviceId to determine resource types if no resourceType was provided directly
+    if (serviceId && requiredResourceTypes.length === 0) {
       // Get the service to determine what resource types are needed
       const service = await prisma.service.findUnique({
         where: { id: serviceId as string }
@@ -479,5 +540,229 @@ export const getAvailableResourcesByDate = async (
   } catch (error) {
     console.error('Error getting available resources:', error);
     next(error);
+  }
+};
+
+/**
+ * Get batch availability for multiple resources
+ * @route POST /api/resources/availability/batch
+ * @access Public
+ */
+export const getResourceAvailability = async (
+  req: TenantRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { resourceType, date } = req.query;
+    
+    // Validate required parameters
+    if (!resourceType) {
+      return next(new AppError('Resource type is required', 400));
+    }
+    
+    if (!date) {
+      return next(new AppError('Date is required', 400));
+    }
+    
+    // Parse date
+    const parsedDate = new Date(date as string);
+    
+    // Validate date
+    if (isNaN(parsedDate.getTime())) {
+      return next(new AppError('Invalid date format. Please use YYYY-MM-DD format', 400));
+    }
+    
+    // Set start and end date to cover the entire day
+    const startDate = new Date(parsedDate);
+    startDate.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(parsedDate);
+    endDate.setHours(23, 59, 59, 999);
+    
+    console.log(`Getting availability for resource type ${resourceType} on ${parsedDate.toISOString()}`);
+    
+    // Get all resources of the specified type
+    // Handle special case for 'suite' to include all suite types
+    const whereClause = resourceType === 'suite' 
+      ? {
+          type: {
+            in: ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE']
+          },
+          isActive: true
+        }
+      : {
+          type: resourceType as string,
+          isActive: true
+        };
+
+    console.log(`Using where clause:`, whereClause);
+    
+    const resources = await prisma.resource.findMany({
+      where: whereClause,
+      include: {
+        // Include reservations that overlap with the date
+        reservations: {
+          where: {
+            OR: [
+              {
+                // Reservations that start during the requested day
+                startDate: {
+                  gte: startDate,
+                  lt: endDate
+                }
+              },
+              {
+                // Reservations that end during the requested day
+                endDate: {
+                  gt: startDate,
+                  lte: endDate
+                }
+              },
+              {
+                // Reservations that span the entire requested day
+                startDate: {
+                  lte: startDate
+                },
+                endDate: {
+                  gte: endDate
+                }
+              }
+            ],
+            status: {
+              in: ['PENDING', 'CONFIRMED', 'CHECKED_IN']
+            }
+          }
+        }
+      }
+    });
+    
+    // Process each resource to determine availability
+    const resourceAvailability = resources.map(resource => {
+      const conflictingReservations = resource.reservations;
+      const isAvailable = conflictingReservations.length === 0;
+      
+      return {
+        resourceId: resource.id,
+        resourceName: resource.name,
+        resourceType: resource.type,
+        isAvailable,
+        conflictingReservations: isAvailable ? [] : conflictingReservations
+      };
+    });
+    
+    // Return the availability data
+    res.status(200).json({
+      status: 'success',
+      data: {
+        date: parsedDate,
+        resources: resourceAvailability
+      }
+    });
+  } catch (error) {
+    console.error('Error getting resource availability:', error);
+    next(new AppError('Failed to get resource availability', 500));
+  }
+};
+
+export const getBatchResourceAvailability = async (
+  req: TenantRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { resourceIds, startDate, endDate } = req.body;
+    
+    // Validate required parameters
+    if (!resourceIds || !Array.isArray(resourceIds) || resourceIds.length === 0) {
+      return next(new AppError('Resource IDs array is required', 400));
+    }
+    
+    if (!startDate || !endDate) {
+      return next(new AppError('Start date and end date are required', 400));
+    }
+    
+    // Parse dates
+    const parsedStartDate = new Date(startDate);
+    const parsedEndDate = new Date(endDate);
+    
+    // Validate dates
+    if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
+      return next(new AppError('Invalid date format. Please use YYYY-MM-DD format', 400));
+    }
+    
+    console.log(`Getting batch availability for ${resourceIds.length} resources from ${parsedStartDate.toISOString()} to ${parsedEndDate.toISOString()}`);
+    
+    // Get all resources by IDs
+    const resources = await prisma.resource.findMany({
+      where: {
+        id: {
+          in: resourceIds
+        },
+        isActive: true
+      },
+      include: {
+        // Include reservations that overlap with the date range
+        reservations: {
+          where: {
+            OR: [
+              {
+                // Reservations that start during the requested period
+                startDate: {
+                  gte: parsedStartDate,
+                  lt: parsedEndDate
+                }
+              },
+              {
+                // Reservations that end during the requested period
+                endDate: {
+                  gt: parsedStartDate,
+                  lte: parsedEndDate
+                }
+              },
+              {
+                // Reservations that span the entire requested period
+                startDate: {
+                  lte: parsedStartDate
+                },
+                endDate: {
+                  gte: parsedEndDate
+                }
+              }
+            ],
+            status: {
+              in: ['PENDING', 'CONFIRMED', 'CHECKED_IN']
+            }
+          }
+        }
+      }
+    });
+    
+    // Process each resource to determine availability
+    const resourceAvailability = resources.map(resource => {
+      const conflictingReservations = resource.reservations;
+      const isAvailable = conflictingReservations.length === 0;
+      
+      return {
+        resourceId: resource.id,
+        resourceName: resource.name,
+        resourceType: resource.type,
+        isAvailable,
+        conflictingReservations: isAvailable ? [] : conflictingReservations
+      };
+    });
+    
+    // Return the availability data
+    res.status(200).json({
+      status: 'success',
+      data: {
+        startDate: parsedStartDate,
+        endDate: parsedEndDate,
+        resources: resourceAvailability
+      }
+    });
+  } catch (error) {
+    console.error('Error getting batch resource availability:', error);
+    next(new AppError('Failed to get resource availability', 500));
   }
 };

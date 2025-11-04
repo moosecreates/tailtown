@@ -1,0 +1,12 @@
+[Unit]
+Description=Tailtown Health Check
+After=network.target
+
+[Service]
+Type=oneshot
+User=tailtown
+Group=tailtown
+WorkingDirectory=/opt/tailtown
+ExecStart=/usr/bin/node scripts/health-check.js
+StandardOutput=append:/var/log/tailtown/health-check.log
+StandardError=append:/var/log/tailtown/health-check-error.log

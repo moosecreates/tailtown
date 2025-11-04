@@ -61,15 +61,10 @@ const InvoiceDetailsDialog: React.FC<InvoiceDetailsDialogProps> = ({ open, onClo
       const fetchReservation = async () => {
         try {
           setLoading(true);
-          console.log('Fetching reservation details for ID:', invoice.reservationId);
           // We already checked that reservationId exists in the if condition above,
           // but we need to reassure TypeScript that it's not undefined
           const reservationId = invoice.reservationId as string;
           const reservationData = await reservationService.getReservationById(reservationId);
-          console.log('Reservation data:', reservationData);
-          console.log('Reservation data (stringified):', JSON.stringify(reservationData, null, 2));
-          console.log('Service info:', reservationData.service);
-          console.log('Service ID:', reservationData.serviceId);
           setReservation(reservationData);
         } catch (err: any) {
           console.error('Error fetching reservation:', err);
@@ -89,8 +84,6 @@ const InvoiceDetailsDialog: React.FC<InvoiceDetailsDialogProps> = ({ open, onClo
   if (!invoice) return null;
   
   // Debug data
-  console.log('Invoice data:', invoice);
-  console.log('Reservation data:', reservation);
   
   // Get service name from reservation if available
   const serviceName = reservation?.service?.name || 
@@ -145,7 +138,6 @@ const InvoiceDetailsDialog: React.FC<InvoiceDetailsDialogProps> = ({ open, onClo
           // First priority: use service name from reservation if available
           if (reservation && reservation.service && reservation.service.name) {
             description = reservation.service.name;
-            console.log('Using service name from reservation:', description);
           } 
           // Second priority: use serviceId from reservation if available
           else if (reservation && reservation.serviceId) {
@@ -155,7 +147,6 @@ const InvoiceDetailsDialog: React.FC<InvoiceDetailsDialogProps> = ({ open, onClo
               description = serviceIdParts
                 .map((part: string) => part.charAt(0).toUpperCase() + part.slice(1))
                 .join(' ');
-              console.log('Using formatted serviceId:', description);
             }
           }
           // Otherwise use the original description
