@@ -49,13 +49,17 @@ jobs:
       working-directory: ./frontend
       run: |
         echo "Testing craco availability..."
+        echo "Checking symlink:"
+        ls -la node_modules/.bin/craco
+        echo "Checking target file:"
+        ls -la node_modules/@craco/craco/dist/bin/craco.js || echo "Target file NOT FOUND"
+        echo "Trying to run craco directly:"
+        node node_modules/@craco/craco/dist/bin/craco.js --version || echo "Direct execution failed"
+        echo "Trying npx:"
         if npx craco --version; then
           echo "✓ craco is available and working"
         else
-          echo "✗ craco is NOT available!"
-          echo "Debugging info:"
-          ls -la node_modules/.bin/craco || echo "craco binary NOT FOUND"
-          grep -A 5 "devDependencies" package.json || echo "No devDependencies"
+          echo "✗ npx craco failed!"
           exit 1
         fi
     
@@ -156,13 +160,17 @@ jobs:
       working-directory: ./frontend
       run: |
         echo "Testing craco availability..."
+        echo "Checking symlink:"
+        ls -la node_modules/.bin/craco
+        echo "Checking target file:"
+        ls -la node_modules/@craco/craco/dist/bin/craco.js || echo "Target file NOT FOUND"
+        echo "Trying to run craco directly:"
+        node node_modules/@craco/craco/dist/bin/craco.js --version || echo "Direct execution failed"
+        echo "Trying npx:"
         if npx craco --version; then
           echo "✓ craco is available and working"
         else
-          echo "✗ craco is NOT available!"
-          echo "Debugging info:"
-          ls -la node_modules/.bin/craco || echo "craco binary NOT FOUND"
-          grep -A 5 "devDependencies" package.json || echo "No devDependencies"
+          echo "✗ npx craco failed!"
           exit 1
         fi
     
@@ -225,13 +233,17 @@ jobs:
       working-directory: ./frontend
       run: |
         echo "Testing craco availability..."
+        echo "Checking symlink:"
+        ls -la node_modules/.bin/craco
+        echo "Checking target file:"
+        ls -la node_modules/@craco/craco/dist/bin/craco.js || echo "Target file NOT FOUND"
+        echo "Trying to run craco directly:"
+        node node_modules/@craco/craco/dist/bin/craco.js --version || echo "Direct execution failed"
+        echo "Trying npx:"
         if npx craco --version; then
           echo "✓ craco is available and working"
         else
-          echo "✗ craco is NOT available!"
-          echo "Debugging info:"
-          ls -la node_modules/.bin/craco || echo "craco binary NOT FOUND"
-          grep -A 5 "devDependencies" package.json || echo "No devDependencies"
+          echo "✗ npx craco failed!"
           exit 1
         fi
     
