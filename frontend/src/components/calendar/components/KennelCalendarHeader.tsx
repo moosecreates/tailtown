@@ -49,7 +49,7 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
   onTodayClick
 }) => {
   // Responsive hooks
-  const { isMobile, isTablet } = useResponsive();
+  const { isMobile } = useResponsive();
   
   // Navigation functions
   const navigatePrevious = () => {
@@ -160,11 +160,11 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
             display: 'flex', 
             alignItems: 'center', 
             gap: { xs: 1, md: 2 }, 
-            justifyContent: { xs: 'space-between', md: 'flex-end' },
-            flexWrap: { xs: 'wrap', sm: 'nowrap' }
+            justifyContent: { xs: 'flex-start', md: 'flex-end' },
+            flexWrap: 'nowrap'
           }}>
             {/* View Type Selector */}
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
+            <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
               <Tooltip title="Month View">
                 <IconButton
                   onClick={() => onViewTypeChange('month')}
@@ -198,10 +198,11 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
 
             {/* Kennel Type Filter */}
             <FormControl 
-              size={isMobile ? 'small' : 'small'} 
+              size="small"
               sx={{ 
-                minWidth: { xs: 120, sm: 150 },
-                flex: { xs: 1, sm: 'none' }
+                minWidth: { xs: 140, sm: 150 },
+                maxWidth: { xs: 180, sm: 200 },
+                flexShrink: 1
               }}
             >
               <InputLabel>Kennel Type</InputLabel>
