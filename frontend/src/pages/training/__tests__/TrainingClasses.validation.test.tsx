@@ -40,7 +40,8 @@ describe('TrainingClasses - Validation', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+        const alerts = screen.getAllByText(/please fill in all required fields/i);
+        expect(alerts.length).toBeGreaterThan(0);
       });
 
       // Should not call API
@@ -61,7 +62,8 @@ describe('TrainingClasses - Validation', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+        const alerts = screen.getAllByText(/please fill in all required fields/i);
+        expect(alerts.length).toBeGreaterThan(0);
       });
 
       expect(mockSchedulingService.trainingClasses.create).not.toHaveBeenCalled();
@@ -88,7 +90,8 @@ describe('TrainingClasses - Validation', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+        const alerts = screen.getAllByText(/please fill in all required fields/i);
+        expect(alerts.length).toBeGreaterThan(0);
       });
     });
 
@@ -112,7 +115,8 @@ describe('TrainingClasses - Validation', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+        const alerts = screen.getAllByText(/please fill in all required fields/i);
+        expect(alerts.length).toBeGreaterThan(0);
       });
     });
 
@@ -132,7 +136,8 @@ describe('TrainingClasses - Validation', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+        const alerts = screen.getAllByText(/please fill in all required fields/i);
+        expect(alerts.length).toBeGreaterThan(0);
       });
     });
 
@@ -152,7 +157,8 @@ describe('TrainingClasses - Validation', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+        const alerts = screen.getAllByText(/please fill in all required fields/i);
+        expect(alerts.length).toBeGreaterThan(0);
       });
     });
 
@@ -172,7 +178,8 @@ describe('TrainingClasses - Validation', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+        const alerts = screen.getAllByText(/please fill in all required fields/i);
+        expect(alerts.length).toBeGreaterThan(0);
       });
     });
 
@@ -192,7 +199,8 @@ describe('TrainingClasses - Validation', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+        const alerts = screen.getAllByText(/please fill in all required fields/i);
+        expect(alerts.length).toBeGreaterThan(0);
       });
     });
 
@@ -212,7 +220,8 @@ describe('TrainingClasses - Validation', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+        const alerts = screen.getAllByText(/please fill in all required fields/i);
+        expect(alerts.length).toBeGreaterThan(0);
       });
     });
   });
@@ -460,7 +469,8 @@ describe('TrainingClasses - Validation', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+        const alerts = screen.getAllByText(/please fill in all required fields/i);
+        expect(alerts.length).toBeGreaterThan(0);
       });
     });
 
