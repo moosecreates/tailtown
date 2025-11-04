@@ -3,11 +3,6 @@
   "version": "0.1.0",
   "description": "Pet Resort Management System for Tailtown",
   "private": true,
-  "workspaces": [
-    "services/*",
-    "frontend",
-    "shared/*"
-  ],
   "scripts": {
     "start": "docker-compose up",
     "dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up",

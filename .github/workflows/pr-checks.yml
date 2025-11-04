@@ -19,21 +19,16 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18.x'
-        # Disable cache - it's restoring workspace node_modules
-        # cache: 'npm'
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          services/*/package-lock.json
     
-    - name: Install frontend dependencies (isolated)
+    - name: Install frontend dependencies
+      working-directory: ./frontend
       run: |
-        echo "Installing frontend dependencies WITHOUT root workspace..."
-        cd frontend
-        rm -rf node_modules package-lock.json
-        # Install completely standalone
         npm install --legacy-peer-deps
         echo "✓ Frontend dependencies installed"
-        echo "Package count:"
-        ls node_modules | wc -l
-        echo "Verifying craco:"
-        ls -la node_modules/.bin/craco || echo "craco binary not found"
     
     - name: Install service dependencies
       run: |
@@ -107,21 +102,16 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18.x'
-        # Disable cache - it's restoring workspace node_modules
-        # cache: 'npm'
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          services/*/package-lock.json
     
-    - name: Install frontend dependencies (isolated)
+    - name: Install frontend dependencies
+      working-directory: ./frontend
       run: |
-        echo "Installing frontend dependencies WITHOUT root workspace..."
-        cd frontend
-        rm -rf node_modules package-lock.json
-        # Install completely standalone
         npm install --legacy-peer-deps
         echo "✓ Frontend dependencies installed"
-        echo "Package count:"
-        ls node_modules | wc -l
-        echo "Verifying craco:"
-        ls -la node_modules/.bin/craco || echo "craco binary not found"
     
     - name: Install service dependencies
       run: |
@@ -157,21 +147,16 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '18.x'
-        # Disable cache - it's restoring workspace node_modules
-        # cache: 'npm'
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          services/*/package-lock.json
     
-    - name: Install frontend dependencies (isolated)
+    - name: Install frontend dependencies
+      working-directory: ./frontend
       run: |
-        echo "Installing frontend dependencies WITHOUT root workspace..."
-        cd frontend
-        rm -rf node_modules package-lock.json
-        # Install completely standalone
         npm install --legacy-peer-deps
         echo "✓ Frontend dependencies installed"
-        echo "Package count:"
-        ls node_modules | wc -l
-        echo "Verifying craco:"
-        ls -la node_modules/.bin/craco || echo "craco binary not found"
     
     - name: Install service dependencies
       run: |
