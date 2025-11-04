@@ -9,7 +9,7 @@
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
+    "forceConsistentCasingInFileNames": false,
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "baseUrl": "./src",
@@ -17,7 +17,8 @@
       "*": ["*"]
     },
     "declaration": true,
-    "types": ["node", "express", "multer"]
+    "noEmitOnError": false,
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "**/*.test.ts"]
