@@ -612,8 +612,10 @@ const TrainingClasses: React.FC = () => {
             </Grid>
 
             <FormControl fullWidth required>
-              <InputLabel>Instructor</InputLabel>
+              <InputLabel id="instructor-label">Instructor</InputLabel>
               <Select
+                labelId="instructor-label"
+                id="instructor"
                 value={formData.instructorId}
                 onChange={(e) => setFormData({ ...formData, instructorId: e.target.value })}
                 label="Instructor"
