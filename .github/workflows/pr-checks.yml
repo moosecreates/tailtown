@@ -29,10 +29,8 @@ jobs:
       working-directory: ./frontend
       run: |
         echo "Installing frontend dependencies..."
-        rm -rf node_modules
-        # Generate package-lock.json first, then use npm ci
-        npm install --package-lock-only
-        npm ci
+        rm -rf node_modules package-lock.json
+        npm install --legacy-peer-deps
         echo "✓ Frontend dependencies installed"
     
     - name: Install service dependencies
@@ -131,10 +129,8 @@ jobs:
       working-directory: ./frontend
       run: |
         echo "Installing frontend dependencies..."
-        rm -rf node_modules
-        # Generate package-lock.json first, then use npm ci
-        npm install --package-lock-only
-        npm ci
+        rm -rf node_modules package-lock.json
+        npm install --legacy-peer-deps
         echo "✓ Frontend dependencies installed"
     
     - name: Install service dependencies
@@ -195,10 +191,8 @@ jobs:
       working-directory: ./frontend
       run: |
         echo "Installing frontend dependencies..."
-        rm -rf node_modules
-        # Generate package-lock.json first, then use npm ci
-        npm install --package-lock-only
-        npm ci
+        rm -rf node_modules package-lock.json
+        npm install --legacy-peer-deps
         echo "✓ Frontend dependencies installed"
     
     - name: Install service dependencies
