@@ -128,8 +128,8 @@ async function main() {
           weight: pet.type === 'DOG' ? 30 + Math.floor(Math.random() * 40) : 8 + Math.floor(Math.random() * 8),
           isActive: true,
           specialNeeds: Math.random() > 0.7 ? 'Needs extra attention' : null,
-          medications: Math.random() > 0.8 ? 'Daily medication required' : null,
-          dietaryRestrictions: Math.random() > 0.8 ? 'Grain-free diet' : null
+          medicationNotes: Math.random() > 0.8 ? 'Daily medication required' : null,
+          dietaryNotes: Math.random() > 0.8 ? 'Grain-free diet' : null
         }
       });
       petCount++;
