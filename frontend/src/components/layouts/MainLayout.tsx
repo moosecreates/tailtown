@@ -72,7 +72,10 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
-  const [customLogo, setCustomLogo] = useState<string | null>(null);
+  // Initialize customLogo from localStorage to prevent flash
+  const [customLogo, setCustomLogo] = useState<string | null>(() => {
+    return localStorage.getItem('businessLogo');
+  });
   const { user, logout, isLoading } = useAuth();
   const { openHelp } = useHelp();
   const location = useLocation();
@@ -101,7 +104,13 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
       if (response.ok) {
         const data = await response.json();
         if (data.logoUrl) {
-          setCustomLogo(`${API_URL}${data.logoUrl}`);
+          const logoUrl = `${API_URL}${data.logoUrl}`;
+          setCustomLogo(logoUrl);
+          // Cache in localStorage to prevent flash on reload
+          localStorage.setItem('businessLogo', logoUrl);
+        } else {
+          // No custom logo, remove from cache
+          localStorage.removeItem('businessLogo');
         }
       }
     } catch (error) {

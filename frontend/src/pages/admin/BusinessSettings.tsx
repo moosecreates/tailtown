@@ -105,6 +105,8 @@ const BusinessSettings: React.FC = () => {
       const data = await response.json();
       setSettings({ ...settings, logoUrl: data.logoUrl });
       setLogoPreview(data.logoUrl);
+      // Update localStorage cache
+      localStorage.setItem('businessLogo', `${API_URL}${data.logoUrl}`);
       setSuccess('Logo uploaded successfully! Refresh the page to see it in the header.');
     } catch (err: any) {
       setError(err.message || 'Failed to upload logo');
@@ -136,6 +138,8 @@ const BusinessSettings: React.FC = () => {
 
       setSettings({ ...settings, logoUrl: undefined });
       setLogoPreview(null);
+      // Clear localStorage cache
+      localStorage.removeItem('businessLogo');
       setSuccess('Logo removed successfully! Refresh the page to see the default logo.');
     } catch (err: any) {
       setError(err.message || 'Failed to delete logo');
