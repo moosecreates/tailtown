@@ -94,7 +94,7 @@ const Profile = () => {
       try {
         // Fetch fresh profile data from server
         if (user?.id) {
-          const response = await api.get(`/staff/${user.id}`);
+          const response = await api.get(`/api/staff/${user.id}`);
           // Backend returns { status: 'success', data: staff }
           const freshData = response.data.data || response.data;
           
