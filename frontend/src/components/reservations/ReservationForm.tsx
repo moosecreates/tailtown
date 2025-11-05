@@ -1074,6 +1074,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           {/* Customer/Pet search autocomplete - shows both customers and pets when user types 2+ characters */}
           <Autocomplete
             id="customer-search"
+            filterOptions={(x) => x}
             options={customerSearchInput.length >= 2 ? [
               ...customerSearchResults.map(c => ({ type: 'customer' as const, data: c })),
               ...petSearchResults.map(p => ({ type: 'pet' as const, data: p }))
