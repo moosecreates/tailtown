@@ -32,7 +32,9 @@ export const getAllStaff = async (
     const department = req.query.department as string;
     
     // Build where condition
-    const where: any = {};
+    const where: any = {
+      tenantId: (req as any).tenantId || 'dev' // Filter by tenant
+    };
     if (isActive !== undefined) {
       where.isActive = isActive;
     }
