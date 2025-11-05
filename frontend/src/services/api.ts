@@ -92,15 +92,22 @@ const customerApi = axios.create({
   timeout: API_TIMEOUT
 });
 
-// Ensure tenant header is attached dynamically for each request to customer API
+// Ensure tenant header and auth token are attached dynamically for each request to customer API
 customerApi.interceptors.request.use(
   (config) => {
     const tenantId = getTenantId();
+    const accessToken = localStorage.getItem('accessToken');
+    
     if (tenantId) {
       config.headers = { ...(config.headers || {}), 'x-tenant-id': tenantId } as any;
     } else {
       console.warn('Tenant ID not set; requests may be rejected by the server');
     }
+    
+    if (accessToken) {
+      config.headers = { ...(config.headers || {}), 'Authorization': `Bearer ${accessToken}` } as any;
+    }
+    
     return config;
   },
   (error) => Promise.reject(error)
@@ -123,15 +130,22 @@ const reservationApi = axios.create({
   timeout: API_TIMEOUT
 });
 
-// Ensure tenant header is attached dynamically for each request
+// Ensure tenant header and auth token are attached dynamically for each request
 reservationApi.interceptors.request.use(
   (config) => {
     const tenantId = getTenantId();
+    const accessToken = localStorage.getItem('accessToken');
+    
     if (tenantId) {
       config.headers = { ...(config.headers || {}), 'x-tenant-id': tenantId } as any;
     } else {
       console.warn('Tenant ID not set; requests may be rejected by the server');
     }
+    
+    if (accessToken) {
+      config.headers = { ...(config.headers || {}), 'Authorization': `Bearer ${accessToken}` } as any;
+    }
+    
     return config;
   },
   (error) => Promise.reject(error)
