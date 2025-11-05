@@ -108,7 +108,7 @@ export const getAllResources = async (
       } else {
         // Single type - handle 'suite' as a wildcard for all suite types
         if (typeStr.toLowerCase() === 'suite') {
-          query.where.type = { in: ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'] };
+          query.where.type = { in: ['SUITE', 'STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'] };
         } else {
           query.where.type = typeStr.toUpperCase();
         }
