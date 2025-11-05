@@ -108,7 +108,13 @@ export const getAllResources = async (
       } else {
         // Single type - handle 'suite' as a wildcard for all suite types
         if (typeStr.toLowerCase() === 'suite') {
-          query.where.type = { in: ['SUITE', 'STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'] };
+          // Use OR condition instead of IN for better Prisma compatibility
+          query.where.OR = [
+            { type: 'SUITE' },
+            { type: 'STANDARD_SUITE' },
+            { type: 'STANDARD_PLUS_SUITE' },
+            { type: 'VIP_SUITE' }
+          ];
         } else {
           query.where.type = typeStr.toUpperCase();
         }
