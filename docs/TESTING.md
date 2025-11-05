@@ -14,6 +14,42 @@ npm run test:builds
 npm run test:builds:full
 ```
 
+### Available Test Scripts
+
+### Localhost URL Checking
+
+**Purpose**: Detect hardcoded localhost URLs that would break in production
+
+**Script**: `scripts/check-localhost-urls.sh`
+
+**Usage**:
+```bash
+# Check for hardcoded localhost URLs
+npm run test:localhost
+
+# Or run directly
+./scripts/check-localhost-urls.sh
+```
+
+**What it checks**:
+- Hardcoded `localhost:XXXX` URLs in frontend source code
+- Direct API calls without environment variables
+- Excludes config files, test files, and environment variable fallbacks
+
+**Example issues caught**:
+```typescript
+// ❌ BAD - Hardcoded localhost
+fetch('http://localhost:4004/api/endpoint')
+
+// ✅ GOOD - Uses environment variable
+const apiUrl = process.env.REACT_APP_API_URL || '';
+fetch(`${apiUrl}/api/endpoint`)
+```
+
+**Integration**:
+- Runs automatically on `git push` (warning only, doesn't block)
+- Part of pre-deployment checks
+
 ### TypeScript Error Checking
 
 Check for TypeScript compilation errors without building:

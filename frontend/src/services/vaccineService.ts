@@ -11,8 +11,22 @@ import {
   VaccineRequirementFilters,
 } from '../types/vaccine';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4004';
-const TENANT_ID = 'dev'; // TODO: Get from auth context
+// Helper to get tenant ID from localStorage
+const getTenantId = () => {
+  return localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev';
+};
+
+// Use dynamic API URL based on environment
+const getApiBaseUrl = () => {
+  // In production, use the current origin (supports subdomains)
+  if (process.env.NODE_ENV === 'production') {
+    return window.location.origin;
+  }
+  // In development, use environment variable or localhost
+  return process.env.REACT_APP_API_URL || 'http://localhost:4004';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export const vaccineService = {
   /**
@@ -29,7 +43,7 @@ export const vaccineService = {
       {
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': TENANT_ID,
+          'x-tenant-id': getTenantId(),
         },
       }
     );
@@ -46,7 +60,7 @@ export const vaccineService = {
     const response = await fetch(`${API_BASE_URL}/api/vaccine-requirements/${id}`, {
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -63,7 +77,7 @@ export const vaccineService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify(requirement),
     });
@@ -87,7 +101,7 @@ export const vaccineService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify(updates),
     });
@@ -108,7 +122,7 @@ export const vaccineService = {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -123,7 +137,7 @@ export const vaccineService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify({ requirements }),
     });
@@ -141,7 +155,7 @@ export const vaccineService = {
       {
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': TENANT_ID,
+          'x-tenant-id': getTenantId(),
         },
       }
     );
@@ -161,7 +175,7 @@ export const vaccineService = {
       {
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': TENANT_ID,
+          'x-tenant-id': getTenantId(),
         },
       }
     );

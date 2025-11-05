@@ -61,6 +61,7 @@ const PriceRuleDetailsPage = lazy(() => import('./pages/settings/PriceRuleDetail
 const PaymentMethods = lazy(() => import('./pages/settings/PaymentMethods'));
 const Settings = lazy(() => import('./pages/settings/Settings'));
 const Users = lazy(() => import('./pages/settings/Users'));
+const BusinessSettings = lazy(() => import('./pages/admin/BusinessSettings'));
 const PriceRuleRedirect = lazy(() => import('./components/redirects/PriceRuleRedirect'));
 
 // Lazy loaded pages - Staff & Operations
@@ -87,10 +88,7 @@ const SuperAdminRoute = lazy(() => import('./components/auth/SuperAdminRoute'));
 const SuperAdminOnlyRoute = lazy(() => import('./components/auth/SuperAdminOnlyRoute'));
 
 // Lazy loaded pages - Tenant Management
-const TenantList = lazy(() => import('./pages/admin/TenantList'));
-const TenantDetail = lazy(() => import('./pages/admin/TenantDetail'));
-const TenantEdit = lazy(() => import('./pages/admin/TenantEdit'));
-const CreateTenant = lazy(() => import('./pages/admin/CreateTenant'));
+const TenantManagement = lazy(() => import('./pages/admin/TenantManagement'));
 const CheckInComplete = lazy(() => import('./pages/check-in/CheckInComplete'));
 const CheckInTemplateManager = lazy(() => import('./pages/admin/CheckInTemplateManager'));
 
@@ -199,6 +197,7 @@ const AppRoutes = () => {
         <Route path="/settings" element={isAuthenticated ? <Settings /> : <Navigate to="/login" />} />
         <Route path="/settings/users" element={isAuthenticated ? <Users /> : <Navigate to="/login" />} />
         <Route path="/settings/payment-methods" element={isAuthenticated ? <PaymentMethods /> : <Navigate to="/login" />} />
+        <Route path="/settings/business" element={isAuthenticated ? <BusinessSettings /> : <Navigate to="/login" />} />
         <Route path="/settings/price-rules" element={isAuthenticated ? <PriceRulesPage /> : <Navigate to="/login" />} />
         <Route path="/settings/price-rules/new" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />
         <Route path="/settings/price-rules/:id" element={isAuthenticated ? <PriceRuleDetailsPage /> : <Navigate to="/login" />} />
@@ -210,10 +209,7 @@ const AppRoutes = () => {
         <Route path="/analytics/customers" element={isAuthenticated ? <CustomerValueReport /> : <Navigate to="/login" />} />
         
         {/* Tenant Management Routes - Super Admin Only */}
-        <Route path="/admin/tenants" element={<SuperAdminOnlyRoute><TenantList /></SuperAdminOnlyRoute>} />
-        <Route path="/admin/tenants/new" element={<SuperAdminOnlyRoute><CreateTenant /></SuperAdminOnlyRoute>} />
-        <Route path="/admin/tenants/:id" element={<SuperAdminOnlyRoute><TenantDetail /></SuperAdminOnlyRoute>} />
-        <Route path="/admin/tenants/:id/edit" element={<SuperAdminOnlyRoute><TenantEdit /></SuperAdminOnlyRoute>} />
+        <Route path="/admin/tenants" element={<SuperAdminOnlyRoute><TenantManagement /></SuperAdminOnlyRoute>} />
         
         {/* Marketing Routes */}
         <Route path="/admin/marketing" element={isAuthenticated ? <MarketingHub /> : <Navigate to="/login" />} />

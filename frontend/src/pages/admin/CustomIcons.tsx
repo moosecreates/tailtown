@@ -58,10 +58,18 @@ const CustomIcons: React.FC = () => {
     severity: 'success' as 'success' | 'error'
   });
 
+  // Helper to get API URL
+  const getApiUrl = () => {
+    if (process.env.NODE_ENV === 'production') {
+      return window.location.origin;
+    }
+    return process.env.REACT_APP_API_URL || 'http://localhost:4004';
+  };
+
   // Load icons from API
   const loadIcons = async () => {
     try {
-      const response = await fetch('http://localhost:4004/api/custom-icons');
+      const response = await fetch(`${getApiUrl()}/api/custom-icons`);
       const data = await response.json();
       if (data.status === 'success') {
         setCustomIcons(data.data);
@@ -178,8 +186,8 @@ const CustomIcons: React.FC = () => {
       }
       
       const url = editingIcon 
-        ? `http://localhost:4004/api/custom-icons/${editingIcon.id}`
-        : 'http://localhost:4004/api/custom-icons';
+        ? `${getApiUrl()}/api/custom-icons/${editingIcon.id}`
+        : `${getApiUrl()}/api/custom-icons`;
       
       const response = await fetch(url, {
         method: editingIcon ? 'PUT' : 'POST',
@@ -214,7 +222,7 @@ const CustomIcons: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:4004/api/custom-icons/${iconId}`, { 
+      const response = await fetch(`${getApiUrl()}/api/custom-icons/${iconId}`, { 
         method: 'DELETE' 
       });
       

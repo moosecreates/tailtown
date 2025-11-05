@@ -39,8 +39,29 @@ export const getAllCustomers = async (
         { firstName: { contains: search, mode: 'insensitive' } },
         { lastName: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search } }
+        { phone: { contains: search } }, // Match with dashes (e.g., "555-0112")
       ];
+      
+      // If search contains only digits, also try matching with common phone formats
+      const digitsOnly = search.replace(/\D/g, '');
+      if (digitsOnly.length >= 3) {
+        // Try matching patterns like: 555-0112, (555) 0112, etc.
+        // For a search like "5550112", match against "555-0112"
+        if (digitsOnly.length === 7) {
+          // Format: XXX-XXXX
+          const formatted = `${digitsOnly.slice(0, 3)}-${digitsOnly.slice(3)}`;
+          where.OR.push({ phone: { contains: formatted } });
+        } else if (digitsOnly.length === 10) {
+          // Format: XXX-XXX-XXXX
+          const formatted = `${digitsOnly.slice(0, 3)}-${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6)}`;
+          where.OR.push({ phone: { contains: formatted } });
+        } else if (digitsOnly.length >= 4) {
+          // For partial searches, try last 4 digits with dash
+          const last4 = digitsOnly.slice(-4);
+          where.OR.push({ phone: { endsWith: last4 } });
+          where.OR.push({ phone: { endsWith: `-${last4}` } });
+        }
+      }
     }
     
     const customers = await prisma.customer.findMany({

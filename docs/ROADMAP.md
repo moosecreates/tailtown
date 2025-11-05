@@ -1,6 +1,6 @@
 # Tailtown Unified Roadmap
 
-**Last Updated**: November 4, 2025 - 2:15 AM PST
+**Last Updated**: November 4, 2025 - 9:37 PM PST
 
 This document provides a prioritized roadmap for the Tailtown Pet Resort Management System, organized by business value and urgency.
 
@@ -58,6 +58,263 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
   - Service hang detection and recovery procedures
   - MCP RAG server management and testing suite
   - Comprehensive service health integration tests
+- ✅ PM2 process management for production (Nov 4, 2025)
+  - Auto-restart on crashes
+  - Load balancing with 2 instances per service
+  - Auto-start on server reboot
+  - Centralized logging
+- ✅ Responsive layout improvements (Nov 4, 2025)
+  - Flexible layouts that wrap naturally without fixed breakpoints
+  - Calendar header controls adapt to available space
+  - Dashboard date controls wrap gracefully on narrow screens
+  - No overlap at any screen size
+
+---
+
+## 🎯 HIGH PRIORITY - Post-Launch
+
+### 1. 📧 Configure SendGrid and Twilio with Live Credentials
+**Priority**: HIGH | **Effort**: 2-4 hours | **Status**: Not Started
+
+**Why**: Email and SMS notifications are currently using test/sandbox credentials. Need to configure production credentials for customer communications.
+
+**Implementation**:
+- **SendGrid Setup**:
+  - Create production SendGrid account
+  - Generate API key with appropriate permissions
+  - Configure sender authentication (domain verification)
+  - Set up email templates for:
+    - Reservation confirmations
+    - Appointment reminders
+    - Password reset emails
+    - Invoice notifications
+  - Update environment variables with production API key
+  
+- **Twilio Setup**:
+  - Create production Twilio account
+  - Purchase phone number for SMS
+  - Configure messaging service
+  - Set up SMS templates for:
+    - Appointment reminders
+    - Check-in/check-out notifications
+    - Emergency alerts
+  - Update environment variables with production credentials
+
+**Environment Variables Needed**:
+```bash
+SENDGRID_API_KEY=SG.xxxxx
+SENDGRID_FROM_EMAIL=noreply@canicloud.com
+SENDGRID_FROM_NAME="Tailtown Pet Resort"
+TWILIO_ACCOUNT_SID=ACxxxxx
+TWILIO_AUTH_TOKEN=xxxxx
+TWILIO_PHONE_NUMBER=+1xxxxxxxxxx
+```
+
+**Benefits**:
+- Professional email communications
+- Automated SMS reminders reduce no-shows
+- Better customer engagement
+- Improved operational efficiency
+- Enhanced customer experience
+
+**Testing Checklist**:
+- [ ] Email delivery to all major providers (Gmail, Outlook, Yahoo)
+- [ ] SMS delivery to all carriers
+- [ ] Template rendering with dynamic data
+- [ ] Unsubscribe functionality
+- [ ] Rate limiting and error handling
+- [ ] Delivery tracking and logging
+
+### 2. 📊 Import Historical Revenue Data from Gingr
+**Priority**: HIGH | **Effort**: 2-4 hours | **Status**: Not Started
+
+**Why**: Dashboard currently shows only $54 revenue (1 test invoice). Need to import historical invoices from Gingr to show accurate financial data.
+
+**Implementation**:
+- Use existing Gingr API `/list_invoices` endpoint
+- Import all invoices with dates, totals, tax, status
+- Map to Tailtown invoice structure
+- Backfill revenue reports and analytics
+
+**Benefits**:
+- Accurate revenue dashboard and analytics
+- Historical financial reporting
+- Better business insights
+- Complete data migration from Gingr
+
+**API Available**:
+```typescript
+// Gingr provides: id, owner_id, invoice_number, invoice_date, 
+// due_date, subtotal, tax, total, status
+await gingrApi.fetchAllInvoices(fromDate, toDate);
+```
+
+### 3. 🎟️ Coupon and Loyalty System Testing
+**Priority**: HIGH | **Effort**: 1-2 days | **Status**: Not Started
+
+**Why**: System exists but needs comprehensive testing to ensure proper functionality in production.
+
+**Testing Required**:
+- Coupon code validation and application
+- Discount calculation accuracy
+- Expiration date handling
+- Usage limit enforcement
+- Loyalty points accrual
+- Loyalty rewards redemption
+- Edge cases and error handling
+
+**Benefits**:
+- Confidence in promotional features
+- Prevent revenue leakage from bugs
+- Better customer experience
+
+### 4. 🧹 Code Optimization and Cleanup
+**Priority**: HIGH | **Effort**: 1-2 weeks | **Status**: Not Started
+
+**Tasks**:
+- Remove unused code and variables
+- Fix remaining TypeScript errors
+- Eliminate dead code paths
+- Optimize imports and dependencies
+- Refactor complex functions
+- Improve code documentation
+
+**Benefits**:
+- Reduced bundle size
+- Faster build times
+- Easier maintenance
+- Better developer experience
+- Improved performance
+
+### 5. 📄 Documentation Cleanup
+**Priority**: MEDIUM | **Effort**: 2-3 days | **Status**: ✅ Complete (November 5, 2025)
+
+**Completed Tasks**:
+- ✅ Archived 21 outdated documents to `docs/archive/2025-11-pre-cleanup/`
+- ✅ Created master documentation index (DOCUMENTATION-INDEX.md)
+- ✅ Rewrote README.md (1451 lines → 200 lines, 86% reduction)
+- ✅ Created comprehensive API documentation (docs/api/API-OVERVIEW.md)
+- ✅ Organized documentation by audience (developers, ops, product)
+- ✅ Established archiving policy and maintenance schedule
+- ✅ Removed duplicate deployment docs
+- ✅ Consolidated command references
+
+**Remaining Tasks**:
+- [ ] Create user manuals for each major feature
+- [ ] Add video tutorials
+- [ ] Create interactive API documentation (Swagger/OpenAPI)
+
+**Benefits Achieved**:
+- Much easier to find relevant documentation
+- Clear structure by audience and purpose
+- Reduced confusion from outdated docs
+- Professional, maintainable documentation system
+
+### 6. 🔒 Security Audit and Penetration Testing
+**Priority**: CRITICAL | **Effort**: 1 week | **Status**: Not Started
+
+**Tasks**:
+- Check for vulnerabilities (OWASP Top 10)
+- Penetration testing
+- Dependency security audit
+- SQL injection testing
+- XSS vulnerability testing
+- Authentication/authorization review
+- Rate limiting verification
+- Input validation review
+
+**Benefits**:
+- Protect customer data
+- Prevent security breaches
+- Compliance with standards
+- Customer trust
+
+### 6. 🏠 Multi-Pet Room Check-in Testing
+**Priority**: HIGH | **Effort**: 2-3 days | **Status**: Not Started
+
+**Why**: Need to verify multiple pets can be checked into the same room for order placement and check-in workflows.
+
+**Testing Required**:
+- Multiple pets in same reservation
+- Room capacity validation
+- Check-in process for multiple pets
+- Order placement with multiple pets
+- Billing accuracy
+- Kennel card generation
+
+**Benefits**:
+- Support family bookings
+- Accurate room management
+- Proper billing
+
+### 7. 🔍 Enhanced Search Functionality
+**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started
+
+**Requirements**:
+- Add phone number search for pets
+- Add phone number search for customers
+- Search by partial phone numbers
+- Include phone in autocomplete results
+- Search optimization
+
+**Benefits**:
+- Faster customer lookup
+- Better staff efficiency
+- Improved user experience
+
+### 8. 🔔 Notification System Testing and Fixes
+**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started
+
+**Why**: Notifications may not be working properly.
+
+**Tasks**:
+- Audit notification system
+- Test email notifications
+- Test SMS notifications (if applicable)
+- Test in-app notifications
+- Fix delivery issues
+- Add notification logs
+- Test notification preferences
+
+**Benefits**:
+- Better customer communication
+- Automated reminders working
+- Staff alerts functioning
+
+### 9. 📅 Employee Scheduling Streamlining
+**Priority**: HIGH | **Effort**: 2 weeks | **Status**: Not Started
+
+**Requirements**:
+- Simplify scheduling interface
+- Drag-and-drop schedule builder
+- Shift templates
+- Availability management
+- Conflict detection
+- Schedule export/print
+- Mobile-friendly scheduling
+
+**Benefits**:
+- Faster schedule creation
+- Reduced scheduling errors
+- Better staff satisfaction
+- Time savings
+
+### 10. 🎨 Dashboard Customization Per User
+**Priority**: MEDIUM | **Effort**: 2 weeks | **Status**: Not Started
+
+**Features**:
+- Customizable widget layout
+- Show/hide widgets
+- Widget size preferences
+- Save user preferences
+- Role-based default layouts
+- Quick stats customization
+
+**Benefits**:
+- Personalized experience
+- Improved productivity
+- Better information access
+- User satisfaction
 
 ---
 

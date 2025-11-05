@@ -25,7 +25,9 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import VaccinationStatus from '../../components/VaccinationStatus';
 import PetIconSelector from '../../components/pets/PetIconSelector';
+import EmojiPetIconSelector from '../../components/pets/EmojiPetIconSelector';
 import PetIconDisplay from '../../components/pets/PetIconDisplay';
+import EmojiIconDisplay from '../../components/customers/EmojiIconDisplay';
 import VaccineComplianceBadge from '../../components/pets/VaccineComplianceBadge';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { Pet, petService } from '../../services/petService';
@@ -450,8 +452,8 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
             <Avatar
               src={pet.profilePhoto ? 
-                // Use a simple direct path to the image
-                `${process.env.REACT_APP_API_URL || 'http://localhost:4004'}${pet.profilePhoto}?t=${photoTimestamp}` : 
+                // Use dynamic origin for production, localhost for dev
+                `${process.env.NODE_ENV === 'production' ? window.location.origin : (process.env.REACT_APP_API_URL || 'http://localhost:4004')}${pet.profilePhoto}?t=${photoTimestamp}` : 
                 undefined
               }
               alt={pet.name || 'Pet'}
@@ -506,8 +508,8 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
                       
                       // Create a local cached URL to display immediately
                       if (updatedPet.profilePhoto) {
-                        // Use a simple direct path to the image
-                        const imageUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:4004'}${updatedPet.profilePhoto}`;
+                        // Use dynamic origin for production, localhost for dev
+                        const imageUrl = `${process.env.NODE_ENV === 'production' ? window.location.origin : (process.env.REACT_APP_API_URL || 'http://localhost:4004')}${updatedPet.profilePhoto}`;
                         
                         // Preload the image to ensure it's in browser cache
                         const preloadImg = new Image();
@@ -737,7 +739,7 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
           <Typography variant="h6" gutterBottom>Additional Information</Typography>
 
           {/* Pet Icons Selector */}
-          <PetIconSelector
+          <EmojiPetIconSelector
             selectedIcons={pet.petIcons || []}
             onChange={(icons) => setPet({ ...pet, petIcons: icons })}
           />

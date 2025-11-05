@@ -8,8 +8,7 @@ import {
   FormControl,
   InputLabel,
   Button,
-  Tooltip,
-  Grid
+  Tooltip
 } from '@mui/material';
 import {
   ChevronLeft as ChevronLeftIcon,
@@ -49,7 +48,7 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
   onTodayClick
 }) => {
   // Responsive hooks
-  const { isMobile, isTablet } = useResponsive();
+  const { isMobile } = useResponsive();
   
   // Navigation functions
   const navigatePrevious = () => {
@@ -101,124 +100,131 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
 
   return (
     <Box sx={{ mb: { xs: 2, md: 3 } }}>
-      <Grid container spacing={{ xs: 1, md: 2 }} alignItems="center">
-        {/* Date Navigation */}
-        <Grid item xs={12} md={6}>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: { xs: 0.5, sm: 1 },
-            justifyContent: { xs: 'space-between', md: 'flex-start' }
-          }}>
-            <Tooltip title="Previous">
-              <IconButton 
-                onClick={navigatePrevious} 
+      {/* Flexible container that wraps naturally */}
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap',
+        gap: 2,
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        {/* Date Navigation - will wrap to new line if needed */}
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: { xs: 0.5, sm: 1 },
+          flexShrink: 0,
+          minWidth: 'fit-content'
+        }}>
+          <Tooltip title="Previous">
+            <IconButton 
+              onClick={navigatePrevious} 
+              size={getResponsiveButtonSize(isMobile)}
+            >
+              <ChevronLeftIcon />
+            </IconButton>
+          </Tooltip>
+          
+          <Typography 
+            variant={isMobile ? 'subtitle1' : 'h6'} 
+            sx={{ 
+              textAlign: 'center',
+              fontSize: { xs: '0.9rem', sm: '1.25rem' },
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {formatCurrentDate()}
+          </Typography>
+          
+          <Tooltip title="Next">
+            <IconButton 
+              onClick={navigateNext} 
+              size={getResponsiveButtonSize(isMobile)}
+            >
+              <ChevronRightIcon />
+            </IconButton>
+          </Tooltip>
+          
+          <Tooltip title="Today">
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<TodayIcon />}
+              onClick={onTodayClick}
+              sx={{ 
+                ml: { xs: 0.5, sm: 2 },
+                display: { xs: 'none', sm: 'inline-flex' }
+              }}
+            >
+              Today
+            </Button>
+          </Tooltip>
+        </Box>
+
+        {/* View Type and Filter Controls - will wrap to new line if needed */}
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: { xs: 1, md: 2 },
+          flexShrink: 1,
+          minWidth: 'fit-content'
+        }}>
+          {/* View Type Selector */}
+          <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+            <Tooltip title="Month View">
+              <IconButton
+                onClick={() => onViewTypeChange('month')}
+                color={viewType === 'month' ? 'primary' : 'default'}
                 size={getResponsiveButtonSize(isMobile)}
               >
-                <ChevronLeftIcon />
+                <CalendarViewMonthIcon fontSize={isMobile ? 'small' : 'medium'} />
               </IconButton>
             </Tooltip>
             
-            <Typography 
-              variant={isMobile ? 'subtitle1' : 'h6'} 
-              sx={{ 
-                minWidth: { xs: 'auto', sm: 200 },
-                textAlign: 'center',
-                flex: { xs: 1, sm: 'none' },
-                fontSize: { xs: '0.9rem', sm: '1.25rem' }
-              }}
-            >
-              {formatCurrentDate()}
-            </Typography>
-            
-            <Tooltip title="Next">
-              <IconButton 
-                onClick={navigateNext} 
+            <Tooltip title="Week View">
+              <IconButton
+                onClick={() => onViewTypeChange('week')}
+                color={viewType === 'week' ? 'primary' : 'default'}
                 size={getResponsiveButtonSize(isMobile)}
               >
-                <ChevronRightIcon />
+                <CalendarViewWeekIcon fontSize={isMobile ? 'small' : 'medium'} />
               </IconButton>
             </Tooltip>
             
-            <Tooltip title="Today">
-              <Button
-                variant="outlined"
+            <Tooltip title="Day View">
+              <IconButton
+                onClick={() => onViewTypeChange('day')}
+                color={viewType === 'day' ? 'primary' : 'default'}
                 size={getResponsiveButtonSize(isMobile)}
-                startIcon={!isMobile ? <TodayIcon /> : undefined}
-                onClick={onTodayClick}
-                sx={{ ml: { xs: 0.5, sm: 2 }, minWidth: { xs: 'auto', sm: 'unset' } }}
               >
-                {isMobile ? <TodayIcon /> : 'Today'}
-              </Button>
+                <CalendarViewDayIcon fontSize={isMobile ? 'small' : 'medium'} />
+              </IconButton>
             </Tooltip>
           </Box>
-        </Grid>
 
-        {/* View Type and Filter Controls */}
-        <Grid item xs={12} md={6}>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: { xs: 1, md: 2 }, 
-            justifyContent: { xs: 'space-between', md: 'flex-end' },
-            flexWrap: { xs: 'wrap', sm: 'nowrap' }
-          }}>
-            {/* View Type Selector */}
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
-              <Tooltip title="Month View">
-                <IconButton
-                  onClick={() => onViewTypeChange('month')}
-                  color={viewType === 'month' ? 'primary' : 'default'}
-                  size={getResponsiveButtonSize(isMobile)}
-                >
-                  <CalendarViewMonthIcon fontSize={isMobile ? 'small' : 'medium'} />
-                </IconButton>
-              </Tooltip>
-              
-              <Tooltip title="Week View">
-                <IconButton
-                  onClick={() => onViewTypeChange('week')}
-                  color={viewType === 'week' ? 'primary' : 'default'}
-                  size={getResponsiveButtonSize(isMobile)}
-                >
-                  <CalendarViewWeekIcon fontSize={isMobile ? 'small' : 'medium'} />
-                </IconButton>
-              </Tooltip>
-              
-              <Tooltip title="Day View">
-                <IconButton
-                  onClick={() => onViewTypeChange('day')}
-                  color={viewType === 'day' ? 'primary' : 'default'}
-                  size={getResponsiveButtonSize(isMobile)}
-                >
-                  <CalendarViewDayIcon fontSize={isMobile ? 'small' : 'medium'} />
-                </IconButton>
-              </Tooltip>
-            </Box>
-
-            {/* Kennel Type Filter */}
-            <FormControl 
-              size={isMobile ? 'small' : 'small'} 
-              sx={{ 
-                minWidth: { xs: 120, sm: 150 },
-                flex: { xs: 1, sm: 'none' }
-              }}
+          {/* Kennel Type Filter */}
+          <FormControl 
+            size="small"
+            sx={{ 
+              minWidth: { xs: 140, sm: 150 },
+              maxWidth: { xs: 180, sm: 200 },
+              flexShrink: 1
+            }}
+          >
+            <InputLabel>Kennel Type</InputLabel>
+            <Select
+              value={kennelTypeFilter}
+              label="Kennel Type"
+              onChange={(e) => onKennelTypeFilterChange(e.target.value as KennelType | 'ALL')}
             >
-              <InputLabel>Kennel Type</InputLabel>
-              <Select
-                value={kennelTypeFilter}
-                label="Kennel Type"
-                onChange={(e) => onKennelTypeFilterChange(e.target.value as KennelType | 'ALL')}
-              >
-                <MenuItem value="ALL">All Types</MenuItem>
-                <MenuItem value="STANDARD_SUITE">{isMobile ? 'Std' : 'Standard'}</MenuItem>
-                <MenuItem value="STANDARD_PLUS_SUITE">{isMobile ? 'Std+' : 'Standard Plus'}</MenuItem>
-                <MenuItem value="VIP_SUITE">VIP</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        </Grid>
-      </Grid>
+              <MenuItem value="ALL">All Types</MenuItem>
+              <MenuItem value="STANDARD_SUITE">{isMobile ? 'Std' : 'Standard'}</MenuItem>
+              <MenuItem value="STANDARD_PLUS_SUITE">{isMobile ? 'Std+' : 'Standard Plus'}</MenuItem>
+              <MenuItem value="VIP_SUITE">VIP</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      </Box>
     </Box>
   );
 });

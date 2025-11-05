@@ -806,10 +806,17 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       return;
     }
     
+    const getApiUrl = () => {
+      if (process.env.NODE_ENV === 'production') {
+        return window.location.origin;
+      }
+      return process.env.REACT_APP_API_URL || 'http://localhost:4003';
+    };
+    
     console.log('Deleting reservation:', initialData.id);
     setDeleting(true);
     try {
-      const response = await fetch(`http://localhost:4003/api/reservations/${initialData.id}`, {
+      const response = await fetch(`${getApiUrl()}/api/reservations/${initialData.id}`, {
         method: 'DELETE',
         headers: {
           'x-tenant-id': 'dev',
@@ -1074,6 +1081,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
           {/* Customer/Pet search autocomplete - shows both customers and pets when user types 2+ characters */}
           <Autocomplete
             id="customer-search"
+            filterOptions={(x) => x}
             options={customerSearchInput.length >= 2 ? [
               ...customerSearchResults.map(c => ({ type: 'customer' as const, data: c })),
               ...petSearchResults.map(p => ({ type: 'pet' as const, data: p }))

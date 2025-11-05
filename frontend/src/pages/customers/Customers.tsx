@@ -25,6 +25,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import debounce from 'lodash/debounce';
 import { Customer, customerService } from '../../services/customerService';
 import CustomerIconBadges from '../../components/customers/CustomerIconBadges';
+import EmojiIconDisplay from '../../components/customers/EmojiIconDisplay';
 import CustomerIconSelectorNew from '../../components/customers/CustomerIconSelectorNew';
 import { ALL_CUSTOMER_ICONS, getCustomerIconById } from '../../constants/customerIcons';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -354,9 +355,8 @@ const Customers = () => {
                     )}
                     <TableCell onClick={(e) => handleIconClick(e, customer)} sx={{ cursor: 'pointer', minWidth: 120 }}>
                       {customer.customerIcons && customer.customerIcons.length > 0 ? (
-                        <CustomerIconBadges
-                          iconIds={customer.customerIcons}
-                          iconNotes={customer.iconNotes}
+                        <EmojiIconDisplay
+                          icons={customer.customerIcons}
                           maxDisplay={3}
                           size="small"
                         />
@@ -365,8 +365,7 @@ const Customers = () => {
                           Click to add
                         </Typography>
                       )}
-                    </TableCell>
-                    <TableCell 
+                    </TableCell>                    <TableCell 
                       onClick={() => handleRowClick(customer.id)}
                       sx={{ cursor: 'pointer' }}
                     >{`${customer.firstName} ${customer.lastName}`}</TableCell>

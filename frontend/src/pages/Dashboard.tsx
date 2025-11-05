@@ -26,7 +26,7 @@ const Dashboard = () => {
   usePageHelp(dashboardHelp);
   
   // Responsive hooks
-  const { isMobile, isTablet } = useResponsive();
+  const { isMobile } = useResponsive();
 
   const {
     inCount,
@@ -133,8 +133,8 @@ const Dashboard = () => {
           display: 'flex', 
           gap: 1, 
           alignItems: 'center',
-          justifyContent: { xs: 'space-between', sm: 'flex-end' },
-          flexWrap: { xs: 'wrap', sm: 'nowrap' }
+          flexWrap: 'wrap',
+          justifyContent: { xs: 'flex-start', sm: 'flex-end' }
         }}>
           {/* Previous Day Button */}
           <IconButton
@@ -143,7 +143,8 @@ const Dashboard = () => {
             sx={{ 
               border: '1px solid',
               borderColor: 'divider',
-              borderRadius: 1
+              borderRadius: 1,
+              flexShrink: 0
             }}
             title="Previous day"
           >
@@ -159,7 +160,11 @@ const Dashboard = () => {
             InputLabelProps={{
               shrink: true,
             }}
-            sx={{ width: { xs: 'auto', sm: 180 }, flex: { xs: 1, sm: 'none' } }}
+            sx={{ 
+              width: { xs: 140, sm: 180 },
+              minWidth: 'fit-content',
+              flexShrink: 1
+            }}
           />
           
           {/* Next Day Button */}
@@ -169,7 +174,8 @@ const Dashboard = () => {
             sx={{ 
               border: '1px solid',
               borderColor: 'divider',
-              borderRadius: 1
+              borderRadius: 1,
+              flexShrink: 0
             }}
             title="Next day"
           >
@@ -182,7 +188,11 @@ const Dashboard = () => {
             size={getResponsiveButtonSize(isMobile)}
             startIcon={!isMobile ? <TodayIcon /> : undefined}
             onClick={handleTodayClick}
-            sx={{ whiteSpace: 'nowrap' }}
+            sx={{ 
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              display: { xs: 'none', sm: 'inline-flex' }
+            }}
           >
             {isMobile ? <TodayIcon /> : 'Today'}
           </Button>

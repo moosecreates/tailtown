@@ -108,7 +108,20 @@ export const getAllResources = async (
       } else {
         // Single type - handle 'suite' as a wildcard for all suite types
         if (typeStr.toLowerCase() === 'suite') {
-          query.where.type = { in: ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'] };
+          // Use OR with AND to preserve tenantId filter
+          query.where.AND = [
+            { tenantId },
+            {
+              OR: [
+                { type: 'SUITE' },
+                { type: 'STANDARD_SUITE' },
+                { type: 'STANDARD_PLUS_SUITE' },
+                { type: 'VIP_SUITE' }
+              ]
+            }
+          ];
+          // Remove the top-level tenantId since it's now in AND
+          delete query.where.tenantId;
         } else {
           query.where.type = typeStr.toUpperCase();
         }

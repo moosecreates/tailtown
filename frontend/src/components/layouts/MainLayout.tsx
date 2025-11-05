@@ -72,6 +72,10 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  // Initialize customLogo from localStorage to prevent flash
+  const [customLogo, setCustomLogo] = useState<string | null>(() => {
+    return localStorage.getItem('businessLogo');
+  });
   const { user, logout, isLoading } = useAuth();
   const { openHelp } = useHelp();
   const location = useLocation();
@@ -80,11 +84,45 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   // Load announcements on mount
   useEffect(() => {
     loadAnnouncements();
+    loadBusinessSettings();
   }, []);
 
   const loadAnnouncements = async () => {
     const data = await announcementService.getActiveAnnouncements();
     setAnnouncements(data);
+  };
+
+  const loadBusinessSettings = async () => {
+    try {
+      // Use dynamic API URL based on environment
+      const getApiUrl = () => {
+        if (process.env.NODE_ENV === 'production') {
+          return window.location.origin;
+        }
+        return process.env.REACT_APP_API_URL || 'http://localhost:4004';
+      };
+      const API_URL = getApiUrl();
+      const response = await fetch(`${API_URL}/api/business-settings`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.logoUrl) {
+          const logoUrl = `${API_URL}${data.logoUrl}`;
+          setCustomLogo(logoUrl);
+          // Cache in localStorage to prevent flash on reload
+          localStorage.setItem('businessLogo', logoUrl);
+        } else {
+          // No custom logo, remove from cache
+          localStorage.removeItem('businessLogo');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading business settings:', error);
+    }
   };
 
   const handleDismissAnnouncement = async (id: string) => {
@@ -178,9 +216,9 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
       }}>
         <Box sx={{ width: '140px', height: '140px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <img 
-            src={logoImage} 
-            alt="Tailtown Pet Resort" 
-            style={{ width: '100%', height: '100%', objectFit: 'contain', transform: 'scale(1.2)' }} 
+            src={customLogo || logoImage} 
+            alt="Business Logo" 
+            style={{ width: '100%', height: '100%', objectFit: 'contain', transform: customLogo ? 'scale(1)' : 'scale(1.2)' }} 
           />
         </Box>
       </Toolbar>

@@ -43,6 +43,7 @@ import referenceDataRoutes from './routes/referenceData.routes';
 import messageTemplatesRoutes from './routes/messageTemplates.routes';
 import announcementRoutes from './routes/announcement.routes';
 import superAdminRoutes from './routes/super-admin.routes';
+import businessSettingsRoutes from './routes/business-settings.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 import { enforceHTTPS, securityHeaders, sanitizeInput } from './middleware/security.middleware';
@@ -88,15 +89,36 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 // Enhanced CORS configuration to ensure frontend can connect
-// In production, restrict to specific domains
+// In production, allow all subdomains of canicloud.com
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
   : ['http://localhost:3000', 'http://localhost:3001']; // Default for development
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? allowedOrigins 
-    : '*', // Allow all origins in development only
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // In development, allow all origins
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    // In production, allow canicloud.com and all its subdomains
+    const allowedDomains = [
+      'https://canicloud.com',
+      'https://www.canicloud.com'
+    ];
+    
+    // Check if origin matches canicloud.com or any subdomain
+    if (allowedDomains.includes(origin) || origin.match(/^https:\/\/[a-z0-9-]+\.canicloud\.com$/)) {
+      callback(null, true);
+    } else if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'x-api-key', 'X-API-Key', 'X-Tenant-Subdomain'],
   credentials: true
@@ -336,6 +358,9 @@ app.use('/api/message-templates', requireTenant, messageTemplatesRoutes);
 
 // Announcement Routes
 app.use('/api', requireTenant, announcementRoutes);
+
+// Business Settings Routes (tenant-specific)
+app.use('/api/business-settings', requireTenant, businessSettingsRoutes);
 
 // Serve uploaded icons statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
