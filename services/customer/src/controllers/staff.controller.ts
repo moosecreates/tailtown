@@ -3,6 +3,7 @@ import { PrismaClient, Prisma } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 import bcrypt from 'bcrypt';
 import { validatePasswordOrThrow } from '../utils/passwordValidator';
+import { generateToken } from '../utils/jwt';
 import fs from 'fs';
 import path from 'path';
 
@@ -367,6 +368,14 @@ export const loginStaff = async (
       } as any
     });
     
+    // Generate JWT token
+    const token = generateToken({
+      id: staff.id,
+      email: staff.email,
+      role: staff.role,
+      tenantId
+    });
+    
     // Create a new object without sensitive fields
     const staffData = {
       id: staff.id,
@@ -388,6 +397,7 @@ export const loginStaff = async (
     res.status(200).json({
       status: 'success',
       data: staffData,
+      accessToken: token
     });
   } catch (error) {
     next(error);
