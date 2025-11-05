@@ -48,7 +48,12 @@ const PetNameWithIcons: React.FC<PetNameWithIconsProps> = memo(({
   
   // Memoized profile photo URL
   const photoUrl = useMemo(() => {
-    return profilePhoto ? `${process.env.REACT_APP_API_URL || 'http://localhost:4004'}${profilePhoto}` : undefined;
+    if (!profilePhoto) return undefined;
+    // If profilePhoto is already a full URL, use it as-is
+    if (profilePhoto.startsWith('http')) return profilePhoto;
+    // Otherwise, use current origin for relative paths
+    const baseUrl = process.env.NODE_ENV === 'production' ? window.location.origin : (process.env.REACT_APP_API_URL || 'http://localhost:4004');
+    return `${baseUrl}${profilePhoto}`;
   }, [profilePhoto]);
 
   return (
