@@ -60,7 +60,7 @@ export const vaccineService = {
     const response = await fetch(`${API_BASE_URL}/api/vaccine-requirements/${id}`, {
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -77,7 +77,7 @@ export const vaccineService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify(requirement),
     });
@@ -101,7 +101,7 @@ export const vaccineService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify(updates),
     });
@@ -122,7 +122,7 @@ export const vaccineService = {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -137,7 +137,7 @@ export const vaccineService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify({ requirements }),
     });
