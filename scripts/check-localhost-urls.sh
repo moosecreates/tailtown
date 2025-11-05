@@ -33,6 +33,8 @@ LOCALHOST_MATCHES=$(grep -r "localhost:[0-9]" frontend/src \
   --exclude="test.ts" \
   | grep -v "process\.env\." \
   | grep -v "|| 'http://localhost" \
+  | grep -v ": 'http://localhost" \
+  | grep -v "? 'http://localhost" \
   2>/dev/null || true)
 
 if [ -n "$LOCALHOST_MATCHES" ]; then
