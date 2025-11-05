@@ -1,6 +1,6 @@
 # Tailtown Unified Roadmap
 
-**Last Updated**: November 4, 2025 - 10:45 AM PST
+**Last Updated**: November 4, 2025 - 9:37 PM PST
 
 This document provides a prioritized roadmap for the Tailtown Pet Resort Management System, organized by business value and urgency.
 
@@ -96,6 +96,166 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 // due_date, subtotal, tax, total, status
 await gingrApi.fetchAllInvoices(fromDate, toDate);
 ```
+
+### 2. 🎟️ Coupon and Loyalty System Testing
+**Priority**: HIGH | **Effort**: 1-2 days | **Status**: Not Started
+
+**Why**: System exists but needs comprehensive testing to ensure proper functionality in production.
+
+**Testing Required**:
+- Coupon code validation and application
+- Discount calculation accuracy
+- Expiration date handling
+- Usage limit enforcement
+- Loyalty points accrual
+- Loyalty rewards redemption
+- Edge cases and error handling
+
+**Benefits**:
+- Confidence in promotional features
+- Prevent revenue leakage from bugs
+- Better customer experience
+
+### 3. 🧹 Code Optimization and Cleanup
+**Priority**: HIGH | **Effort**: 1-2 weeks | **Status**: Not Started
+
+**Tasks**:
+- Remove unused code and variables
+- Fix remaining TypeScript errors
+- Eliminate dead code paths
+- Optimize imports and dependencies
+- Refactor complex functions
+- Improve code documentation
+
+**Benefits**:
+- Reduced bundle size
+- Faster build times
+- Easier maintenance
+- Better developer experience
+- Improved performance
+
+### 4. 📄 Documentation Cleanup
+**Priority**: MEDIUM | **Effort**: 2-3 days | **Status**: Not Started
+
+**Tasks**:
+- Archive outdated documentation
+- Consolidate duplicate docs
+- Update deployment guides
+- Create user manuals
+- Document API endpoints
+- Update README files
+
+**Benefits**:
+- Easier onboarding
+- Reduced confusion
+- Better knowledge transfer
+- Professional appearance
+
+### 5. 🔒 Security Audit and Penetration Testing
+**Priority**: CRITICAL | **Effort**: 1 week | **Status**: Not Started
+
+**Tasks**:
+- Check for vulnerabilities (OWASP Top 10)
+- Penetration testing
+- Dependency security audit
+- SQL injection testing
+- XSS vulnerability testing
+- Authentication/authorization review
+- Rate limiting verification
+- Input validation review
+
+**Benefits**:
+- Protect customer data
+- Prevent security breaches
+- Compliance with standards
+- Customer trust
+
+### 6. 🏠 Multi-Pet Room Check-in Testing
+**Priority**: HIGH | **Effort**: 2-3 days | **Status**: Not Started
+
+**Why**: Need to verify multiple pets can be checked into the same room for order placement and check-in workflows.
+
+**Testing Required**:
+- Multiple pets in same reservation
+- Room capacity validation
+- Check-in process for multiple pets
+- Order placement with multiple pets
+- Billing accuracy
+- Kennel card generation
+
+**Benefits**:
+- Support family bookings
+- Accurate room management
+- Proper billing
+
+### 7. 🔍 Enhanced Search Functionality
+**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started
+
+**Requirements**:
+- Add phone number search for pets
+- Add phone number search for customers
+- Search by partial phone numbers
+- Include phone in autocomplete results
+- Search optimization
+
+**Benefits**:
+- Faster customer lookup
+- Better staff efficiency
+- Improved user experience
+
+### 8. 🔔 Notification System Testing and Fixes
+**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started
+
+**Why**: Notifications may not be working properly.
+
+**Tasks**:
+- Audit notification system
+- Test email notifications
+- Test SMS notifications (if applicable)
+- Test in-app notifications
+- Fix delivery issues
+- Add notification logs
+- Test notification preferences
+
+**Benefits**:
+- Better customer communication
+- Automated reminders working
+- Staff alerts functioning
+
+### 9. 📅 Employee Scheduling Streamlining
+**Priority**: HIGH | **Effort**: 2 weeks | **Status**: Not Started
+
+**Requirements**:
+- Simplify scheduling interface
+- Drag-and-drop schedule builder
+- Shift templates
+- Availability management
+- Conflict detection
+- Schedule export/print
+- Mobile-friendly scheduling
+
+**Benefits**:
+- Faster schedule creation
+- Reduced scheduling errors
+- Better staff satisfaction
+- Time savings
+
+### 10. 🎨 Dashboard Customization Per User
+**Priority**: MEDIUM | **Effort**: 2 weeks | **Status**: Not Started
+
+**Features**:
+- Customizable widget layout
+- Show/hide widgets
+- Widget size preferences
+- Save user preferences
+- Role-based default layouts
+- Quick stats customization
+
+**Benefits**:
+- Personalized experience
+- Improved productivity
+- Better information access
+- User satisfaction
 
 ---
 
