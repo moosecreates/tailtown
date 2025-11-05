@@ -23,9 +23,22 @@ import {
   TrainingClassFilters,
   AvailableGroomersQuery,
 } from '../types/scheduling';
+// Helper to get tenant ID from localStorage
+const getTenantId = () => {
+  return localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev';
+};
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4004';
-const TENANT_ID = 'dev'; // TODO: Get from auth context
+// Use dynamic API URL based on environment
+const getApiBaseUrl = () => {
+  // In production, use the current origin (supports subdomains)
+  if (process.env.NODE_ENV === 'production') {
+    return window.location.origin;
+  }
+  // In development, use environment variable or localhost
+  return process.env.REACT_APP_API_URL || 'http://localhost:4004';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // ============================================
 // GROOMER APPOINTMENT APIs
@@ -47,7 +60,7 @@ export const groomerAppointmentService = {
       {
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': TENANT_ID,
+          'x-tenant-id': getTenantId() || 'dev',
         },
       }
     );
@@ -64,7 +77,7 @@ export const groomerAppointmentService = {
     const response = await fetch(`${API_BASE_URL}/api/groomer-appointments/${id}`, {
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -81,7 +94,7 @@ export const groomerAppointmentService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify(appointment),
     });
@@ -102,7 +115,7 @@ export const groomerAppointmentService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify(updates),
     });
@@ -120,7 +133,7 @@ export const groomerAppointmentService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify(request),
     });
@@ -138,7 +151,7 @@ export const groomerAppointmentService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -155,7 +168,7 @@ export const groomerAppointmentService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify({ notes }),
     });
@@ -173,7 +186,7 @@ export const groomerAppointmentService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify({ reason }),
     });
@@ -191,7 +204,7 @@ export const groomerAppointmentService = {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -211,7 +224,7 @@ export const groomerAppointmentService = {
       {
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': TENANT_ID,
+          'x-tenant-id': getTenantId() || 'dev',
         },
       }
     );
@@ -236,7 +249,7 @@ export const groomerAppointmentService = {
       {
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': TENANT_ID,
+          'x-tenant-id': getTenantId() || 'dev',
         },
       }
     );
@@ -268,7 +281,7 @@ export const trainingClassService = {
       {
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': TENANT_ID,
+          'x-tenant-id': getTenantId() || 'dev',
         },
       }
     );
@@ -285,7 +298,7 @@ export const trainingClassService = {
     const response = await fetch(`${API_BASE_URL}/api/training-classes/${id}`, {
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -302,7 +315,7 @@ export const trainingClassService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify(classData),
     });
@@ -320,7 +333,7 @@ export const trainingClassService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify(updates),
     });
@@ -338,7 +351,7 @@ export const trainingClassService = {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -353,7 +366,7 @@ export const trainingClassService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify({ startDate }),
     });
@@ -370,7 +383,7 @@ export const trainingClassService = {
     const response = await fetch(`${API_BASE_URL}/api/training-classes/${classId}/sessions`, {
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -387,7 +400,7 @@ export const trainingClassService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify(updates),
     });
@@ -405,7 +418,7 @@ export const trainingClassService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -422,7 +435,7 @@ export const trainingClassService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify({ notes }),
     });
@@ -446,7 +459,7 @@ export const enrollmentService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify(enrollment),
     });
@@ -463,7 +476,7 @@ export const enrollmentService = {
     const response = await fetch(`${API_BASE_URL}/api/enrollments/${id}`, {
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -480,7 +493,7 @@ export const enrollmentService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify(updates),
     });
@@ -498,7 +511,7 @@ export const enrollmentService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify({ reason }),
     });
@@ -516,7 +529,7 @@ export const enrollmentService = {
       {
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': TENANT_ID,
+          'x-tenant-id': getTenantId() || 'dev',
         },
       }
     );
@@ -533,7 +546,7 @@ export const enrollmentService = {
     const response = await fetch(`${API_BASE_URL}/api/pets/${petId}/enrollments`, {
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -550,7 +563,7 @@ export const enrollmentService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -571,7 +584,7 @@ export const enrollmentService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
       body: JSON.stringify({ petId, customerId }),
     });
@@ -589,7 +602,7 @@ export const enrollmentService = {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
@@ -603,7 +616,7 @@ export const enrollmentService = {
     const response = await fetch(`${API_BASE_URL}/api/training-classes/${classId}/waitlist`, {
       headers: {
         'Content-Type': 'application/json',
-        'x-tenant-id': TENANT_ID,
+        'x-tenant-id': getTenantId(),
       },
     });
 
