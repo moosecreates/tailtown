@@ -233,11 +233,13 @@ export const updateStaff = async (
       return next(new AppError('Staff member not found', 404));
     }
     
-    // If updating email, check if it's already in use by another staff
+    // If updating email, check if it's already in use by another staff in the same tenant
     if (staffData.email) {
+      const tenantId = (req as any).tenantId || 'dev';
       const emailInUse = await prisma.staff.findFirst({
         where: {
           email: staffData.email,
+          tenantId,
           id: { not: id }
         },
         select: { id: true }
