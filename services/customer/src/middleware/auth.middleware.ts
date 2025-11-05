@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { verifyToken } from '../utils/jwt';
 
 // Extended Request type to include user info
 export interface AuthRequest extends Request {
@@ -30,21 +31,26 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
     return next();
   }
 
-  // Check for Bearer token (future JWT implementation)
+  // Check for Bearer token and validate JWT
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
     
-    // TODO: Validate JWT token here
-    // For now, just check if token exists
-    if (token) {
-      // Mock user for development
+    try {
+      // Verify and decode JWT token
+      const decoded = verifyToken(token);
       req.user = {
-        id: 'user-1',
-        email: 'user@example.com',
-        role: 'STAFF',
-        tenantId: 'dev',
+        id: decoded.id,
+        email: decoded.email,
+        role: decoded.role as 'SUPER_ADMIN' | 'TENANT_ADMIN' | 'MANAGER' | 'STAFF',
+        tenantId: decoded.tenantId,
       };
       return next();
+    } catch (error) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'Invalid or expired token',
+      });
     }
   }
 
