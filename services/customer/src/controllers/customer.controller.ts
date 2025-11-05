@@ -35,12 +35,20 @@ export const getAllCustomers = async (
       };
     }
     if (search) {
+      // For phone search, remove all non-numeric characters to match against stored format
+      const phoneDigits = search.replace(/\D/g, '');
+      
       where.OR = [
         { firstName: { contains: search, mode: 'insensitive' } },
         { lastName: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },
-        { phone: { contains: search } }
+        { phone: { contains: search } }, // Match exact format (e.g., "555-0112")
       ];
+      
+      // If user entered digits, also search for those digits in phone field
+      if (phoneDigits.length > 0) {
+        where.OR.push({ phone: { contains: phoneDigits } });
+      }
     }
     
     const customers = await prisma.customer.findMany({
