@@ -1,6 +1,7 @@
 import React, { memo, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import PetIconDisplay from './PetIconDisplay';
+import EmojiIconDisplay from '../customers/EmojiIconDisplay';
 import ClickableAvatar from './ClickableAvatar';
 
 interface PetNameWithIconsProps {
@@ -80,11 +81,10 @@ const PetNameWithIcons: React.FC<PetNameWithIconsProps> = memo(({
       </Typography>
       
       {hasIcons && (
-        <PetIconDisplay
-          iconIds={petIcons}
-          size={size}
-          showLabels={showLabels}
-          customNotes={iconNotes}
+        <EmojiIconDisplay
+          icons={petIcons}
+          size={size === 'large' ? 'medium' : size}
+          maxDisplay={5}
         />
       )}
     </Box>
