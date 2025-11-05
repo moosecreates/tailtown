@@ -122,9 +122,17 @@ const Products: React.FC = () => {
     filterProducts();
   }, [products, searchQuery, selectedCategory, currentTab]);
 
+  // Helper to get dynamic API URL
+  const getApiUrl = () => {
+    if (process.env.NODE_ENV === 'production') {
+      return window.location.origin;
+    }
+    return process.env.REACT_APP_API_URL || 'http://localhost:4004';
+  };
+
   const loadProducts = async () => {
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || '';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/products`, {
         headers: {
           'x-tenant-id': 'dev'
@@ -141,7 +149,7 @@ const Products: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || '';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/products/categories`, {
         headers: {
           'x-tenant-id': 'dev'
@@ -241,7 +249,7 @@ const Products: React.FC = () => {
     }
 
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || '';
+      const apiUrl = getApiUrl();
       const url = editingProduct
         ? `${apiUrl}/api/products/${editingProduct.id}`
         : `${apiUrl}/api/products`;
@@ -287,7 +295,7 @@ const Products: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || '';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/products/${id}`, {
         method: 'DELETE',
         headers: { 'x-tenant-id': 'dev' }
@@ -346,7 +354,7 @@ const Products: React.FC = () => {
     }
 
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || '';
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/products/${selectedProduct.id}/inventory/adjust`, {
         method: 'POST',
         headers: {
