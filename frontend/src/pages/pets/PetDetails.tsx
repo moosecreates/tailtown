@@ -25,7 +25,9 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import VaccinationStatus from '../../components/VaccinationStatus';
 import PetIconSelector from '../../components/pets/PetIconSelector';
+import EmojiPetIconSelector from '../../components/pets/EmojiPetIconSelector';
 import PetIconDisplay from '../../components/pets/PetIconDisplay';
+import EmojiIconDisplay from '../../components/customers/EmojiIconDisplay';
 import VaccineComplianceBadge from '../../components/pets/VaccineComplianceBadge';
 import { SelectChangeEvent } from '@mui/material/Select';
 import { Pet, petService } from '../../services/petService';
@@ -737,7 +739,7 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
           <Typography variant="h6" gutterBottom>Additional Information</Typography>
 
           {/* Pet Icons Selector */}
-          <PetIconSelector
+          <EmojiPetIconSelector
             selectedIcons={pet.petIcons || []}
             onChange={(icons) => setPet({ ...pet, petIcons: icons })}
           />
