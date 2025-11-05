@@ -151,7 +151,7 @@ const Profile = () => {
       setProfileSuccess(null);
 
       // Update profile via API
-      const response = await api.put(`/staff/${user?.id}`, values);
+      const response = await api.put(`/api/staff/${user?.id}`, values);
 
       // Update user context with the returned data
       if (updateUser && response.data) {
@@ -209,7 +209,7 @@ const Profile = () => {
       const formData = new FormData();
       formData.append('photo', photoFile);
       
-      const response = await api.post(`/staff/${user?.id}/photo`, formData, {
+      const response = await api.post(`/api/staff/${user?.id}/photo`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -235,7 +235,7 @@ const Profile = () => {
   const handlePhotoDelete = async () => {
     try {
       setProfileError(null);
-      await api.delete(`/staff/${user?.id}/photo`);
+      await api.delete(`/api/staff/${user?.id}/photo`);
       
       setProfilePhoto(null);
       setPhotoPreview(null);
