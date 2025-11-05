@@ -60,10 +60,17 @@ const ImpersonationBanner: React.FC<ImpersonationBannerProps> = ({ onExit }) => 
     try {
       const token = localStorage.getItem('superAdminAccessToken');
       
+      const getApiUrl = () => {
+        if (process.env.NODE_ENV === 'production') {
+          return window.location.origin;
+        }
+        return process.env.REACT_APP_API_URL || 'http://localhost:4004';
+      };
+      
       if (session && token) {
         // End the impersonation session on backend
         await axios.post(
-          `http://localhost:4004/api/super-admin/impersonate/end/${session.id}`,
+          `${getApiUrl()}/api/super-admin/impersonate/end/${session.id}`,
           {},
           {
             headers: {

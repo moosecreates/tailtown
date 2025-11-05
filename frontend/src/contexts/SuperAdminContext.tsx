@@ -26,9 +26,14 @@ interface SuperAdminContextType {
 
 const SuperAdminContext = createContext<SuperAdminContextType | undefined>(undefined);
 
-const SUPER_ADMIN_API = process.env.REACT_APP_API_URL 
-  ? `${process.env.REACT_APP_API_URL}/api/super-admin`
-  : 'http://localhost:4004/api/super-admin';
+const getApiUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return window.location.origin;
+  }
+  return process.env.REACT_APP_API_URL || 'http://localhost:4004';
+};
+
+const SUPER_ADMIN_API = `${getApiUrl()}/api/super-admin`;
 
 export const SuperAdminProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [superAdmin, setSuperAdmin] = useState<SuperAdmin | null>(null);
