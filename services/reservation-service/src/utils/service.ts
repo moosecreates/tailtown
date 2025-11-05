@@ -38,17 +38,38 @@ export function createService(options: {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   
-  // CORS configuration - restrict in production
+  // CORS configuration - allow all subdomains in production
   const allowedOrigins = process.env.ALLOWED_ORIGINS 
     ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
     : ['http://localhost:3000', 'http://localhost:3001'];
   
   app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? allowedOrigins 
-      : '*', // Allow all origins in development only
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      // In development, allow all origins
+      if (process.env.NODE_ENV !== 'production') {
+        return callback(null, true);
+      }
+      
+      // In production, allow canicloud.com and all its subdomains
+      const allowedDomains = [
+        'https://canicloud.com',
+        'https://www.canicloud.com'
+      ];
+      
+      // Check if origin matches canicloud.com or any subdomain
+      if (allowedDomains.includes(origin) || origin.match(/^https:\/\/[a-z0-9-]+\.canicloud\.com$/)) {
+        callback(null, true);
+      } else if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'X-Tenant-Subdomain'],
     credentials: true
   }));
   app.use(helmet());
