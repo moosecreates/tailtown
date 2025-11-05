@@ -37,7 +37,14 @@ const BusinessSettings: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4004';
+  // Use dynamic API URL based on environment
+  const getApiUrl = () => {
+    if (process.env.NODE_ENV === 'production') {
+      return window.location.origin;
+    }
+    return process.env.REACT_APP_API_URL || 'http://localhost:4004';
+  };
+  const API_URL = getApiUrl();
 
   useEffect(() => {
     loadSettings();

@@ -94,7 +94,14 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
 
   const loadBusinessSettings = async () => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4004';
+      // Use dynamic API URL based on environment
+      const getApiUrl = () => {
+        if (process.env.NODE_ENV === 'production') {
+          return window.location.origin;
+        }
+        return process.env.REACT_APP_API_URL || 'http://localhost:4004';
+      };
+      const API_URL = getApiUrl();
       const response = await fetch(`${API_URL}/api/business-settings`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
