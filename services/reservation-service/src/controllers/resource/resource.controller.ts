@@ -123,9 +123,9 @@ export const getAllResources = catchAsync(async (req: TenantRequest, res: Respon
         // Single type - handle 'suite' as a wildcard for all suite types
         if (typeStr.toLowerCase() === 'suite') {
           whereConditions.type = {
-            in: [ResourceType.STANDARD_SUITE, ResourceType.STANDARD_PLUS_SUITE, ResourceType.VIP_SUITE]
+            in: [ResourceType.SUITE, ResourceType.STANDARD_SUITE, ResourceType.STANDARD_PLUS_SUITE, ResourceType.VIP_SUITE]
           };
-          logger.debug(`Suite wildcard filter applied: all suite types`);
+          logger.debug(`Suite wildcard filter applied: all suite types including SUITE`);
         } else {
           const upperType = typeStr.toUpperCase();
           if (Object.values(ResourceType).includes(upperType as ResourceType)) {
