@@ -70,11 +70,23 @@ const addResponseInterceptor = (instance: AxiosInstance) => {
 };
 
 /**
+ * Get API base URL - uses current origin in production for multi-tenant support
+ */
+const getApiBaseUrl = (): string => {
+  // In production, use the current origin (supports subdomains like brangro.canicloud.com)
+  if (process.env.NODE_ENV === 'production' && typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  // In development, use environment variable or localhost
+  return process.env.REACT_APP_API_URL || 'http://localhost:4004';
+};
+
+/**
  * Customer Service API client
  * Handles customer and pet data operations
  */
 const customerApi = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:4004',
+  baseURL: getApiBaseUrl(),
   headers: defaultHeaders,
   validateStatus: defaultValidateStatus,
   timeout: API_TIMEOUT
@@ -103,7 +115,7 @@ addResponseInterceptor(customerApi);
  * Handles reservation and resource operations
  */
 const reservationApi = axios.create({
-  baseURL: process.env.REACT_APP_RESERVATION_API_URL || 'http://localhost:4003',
+  baseURL: getApiBaseUrl(), // Use same base URL as customer API (nginx routes to correct service)
   headers: {
     ...defaultHeaders
   },
