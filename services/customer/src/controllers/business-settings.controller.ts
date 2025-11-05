@@ -63,7 +63,7 @@ export const getBusinessSettings = async (req: Request, res: Response, next: Nex
     }
 
     const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
+      where: { subdomain: tenantId },
       select: {
         id: true,
         businessName: true,
@@ -101,7 +101,7 @@ export const uploadLogo = async (req: Request, res: Response, next: NextFunction
 
     // Get the old logo URL to delete it
     const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
+      where: { subdomain: tenantId },
       select: { logoUrl: true }
     });
 
@@ -121,7 +121,7 @@ export const uploadLogo = async (req: Request, res: Response, next: NextFunction
 
     // Update tenant with new logo URL
     await prisma.tenant.update({
-      where: { id: tenantId },
+      where: { subdomain: tenantId },
       data: { logoUrl }
     });
 
@@ -147,7 +147,7 @@ export const deleteLogo = async (req: Request, res: Response, next: NextFunction
     }
 
     const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
+      where: { subdomain: tenantId },
       select: { logoUrl: true }
     });
 
@@ -168,7 +168,7 @@ export const deleteLogo = async (req: Request, res: Response, next: NextFunction
 
     // Remove logo URL from tenant
     await prisma.tenant.update({
-      where: { id: tenantId },
+      where: { subdomain: tenantId },
       data: { logoUrl: null }
     });
 
