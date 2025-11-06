@@ -108,6 +108,12 @@ const CustomIcons = lazy(() => import('./pages/admin/CustomIcons'));
 // Lazy loaded pages - Announcements
 const AnnouncementManager = lazy(() => import('./pages/admin/AnnouncementManager'));
 
+// Lazy loaded pages - Loyalty Program
+const LoyaltyProgram = lazy(() => import('./pages/admin/LoyaltyProgram'));
+
+// Lazy loaded pages - Coupons
+const CouponManagement = lazy(() => import('./pages/admin/CouponManagement'));
+
 // Lazy loaded pages - Products/POS
 const Products = lazy(() => import('./pages/products/Products'));
 
@@ -157,6 +163,11 @@ const AppRoutes = () => {
           <SuperAdminRoute>
             <SuperAdminDashboard />
           </SuperAdminRoute>
+        } />
+        <Route path="/admin/tenants" element={
+          <SuperAdminOnlyRoute>
+            <TenantManagement />
+          </SuperAdminOnlyRoute>
         } />
         
         {/* Public Booking Portal - No authentication required */}
@@ -208,9 +219,6 @@ const AppRoutes = () => {
         <Route path="/analytics" element={isAuthenticated ? <AnalyticsDashboard /> : <Navigate to="/login" />} />
         <Route path="/analytics/customers" element={isAuthenticated ? <CustomerValueReport /> : <Navigate to="/login" />} />
         
-        {/* Tenant Management Routes - Super Admin Only */}
-        <Route path="/admin/tenants" element={<SuperAdminOnlyRoute><TenantManagement /></SuperAdminOnlyRoute>} />
-        
         {/* Marketing Routes */}
         <Route path="/admin/marketing" element={isAuthenticated ? <MarketingHub /> : <Navigate to="/login" />} />
         <Route path="/admin/marketing/sms" element={isAuthenticated ? <SmsMarketing /> : <Navigate to="/login" />} />
@@ -237,6 +245,12 @@ const AppRoutes = () => {
         
         {/* Announcement Routes */}
         <Route path="/admin/announcements" element={isAuthenticated ? <AnnouncementManager /> : <Navigate to="/login" />} />
+        
+        {/* Loyalty Program Route */}
+        <Route path="/admin/loyalty" element={isAuthenticated ? <LoyaltyProgram /> : <Navigate to="/login" />} />
+        
+        {/* Coupon Management Route */}
+        <Route path="/admin/coupons" element={isAuthenticated ? <CouponManagement /> : <Navigate to="/login" />} />
         
         {/* Products/POS Routes */}
         <Route path="/products" element={isAuthenticated ? <Products /> : <Navigate to="/login" />} />

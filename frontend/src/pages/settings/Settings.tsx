@@ -6,8 +6,7 @@ import {
   Paper, 
   Grid,
   Card,
-  CardContent,
-  Button
+  CardContent
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -16,7 +15,6 @@ import {
   Schedule as ScheduleIcon,
   People as UsersIcon,
   AttachMoney as PriceRulesIcon,
-  Settings as GeneralIcon,
   Campaign as MarketingIcon,
   Assignment as CheckInIcon,
   ChecklistRtl as ChecklistIcon,
@@ -26,7 +24,9 @@ import {
   EmojiEmotions as IconsIcon,
   ShoppingCart as ProductsIcon,
   Payment as PaymentIcon,
-  Business as BusinessIcon
+  Business as BusinessIcon,
+  CardGiftcard as LoyaltyIcon,
+  ConfirmationNumber as CouponIcon
 } from '@mui/icons-material';
 
 const Settings: React.FC = () => {
@@ -83,6 +83,20 @@ const Settings: React.FC = () => {
       stats: 'Campaigns: 0'
     },
     {
+      title: 'Loyalty Program',
+      description: 'Configure rewards, points, tiers, and redemption options',
+      icon: <LoyaltyIcon sx={{ fontSize: 40, color: 'secondary.main' }} />,
+      path: '/admin/loyalty',
+      stats: 'Rewards System'
+    },
+    {
+      title: 'Coupons',
+      description: 'Create and manage discount coupons with percentage or fixed amounts',
+      icon: <CouponIcon sx={{ fontSize: 40, color: 'success.main' }} />,
+      path: '/admin/coupons',
+      stats: 'Active Coupons: 2'
+    },
+    {
       title: 'Check-In Templates',
       description: 'Configure check-in questionnaires, fields, and pre-populated options',
       icon: <CheckInIcon sx={{ fontSize: 40, color: 'success.main' }} />,
@@ -137,13 +151,6 @@ const Settings: React.FC = () => {
       icon: <PriceRulesIcon sx={{ fontSize: 40, color: 'secondary.main' }} />,
       path: '/settings/price-rules',
       stats: 'Active Rules: 3'
-    },
-    {
-      title: 'General Settings',
-      description: 'System configuration and preferences',
-      icon: <GeneralIcon sx={{ fontSize: 40, color: 'text.secondary' }} />,
-      path: '/settings',
-      stats: 'Version: 1.2.1'
     }
   ];
 
