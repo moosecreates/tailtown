@@ -33,7 +33,7 @@ const getTenantId = (): string | undefined => {
   return fromEnv && fromEnv.trim() ? fromEnv.trim() : undefined;
 };
 
-// Add request interceptor for logging
+// Add request interceptor for logging and auth token
 const addRequestInterceptor = (instance: AxiosInstance) => {
   instance.interceptors.request.use(
     (config) => {
@@ -41,6 +41,18 @@ const addRequestInterceptor = (instance: AxiosInstance) => {
         params: config.params,
         data: config.data
       });
+      
+      // Add JWT token to requests if available
+      try {
+        const token = localStorage.getItem('token');
+        if (token && config.headers) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+      } catch (error) {
+        // localStorage might not be available
+        console.warn('Could not access token from localStorage:', error);
+      }
+      
       return config;
     },
     (error) => {
@@ -96,7 +108,9 @@ const customerApi = axios.create({
 customerApi.interceptors.request.use(
   (config) => {
     const tenantId = getTenantId();
-    const accessToken = localStorage.getItem('accessToken');
+    // Check for impersonation token first, then fall back to regular access token or token
+    const impersonationToken = localStorage.getItem('impersonationToken');
+    const accessToken = impersonationToken || localStorage.getItem('accessToken') || localStorage.getItem('token');
     
     if (tenantId) {
       config.headers = { ...(config.headers || {}), 'x-tenant-id': tenantId } as any;
@@ -134,7 +148,9 @@ const reservationApi = axios.create({
 reservationApi.interceptors.request.use(
   (config) => {
     const tenantId = getTenantId();
-    const accessToken = localStorage.getItem('accessToken');
+    // Check for impersonation token first, then fall back to regular access token or token
+    const impersonationToken = localStorage.getItem('impersonationToken');
+    const accessToken = impersonationToken || localStorage.getItem('accessToken') || localStorage.getItem('token');
     
     if (tenantId) {
       config.headers = { ...(config.headers || {}), 'x-tenant-id': tenantId } as any;

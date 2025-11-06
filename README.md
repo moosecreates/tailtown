@@ -54,6 +54,7 @@ cd frontend && npm start
 
 ### Essential Reading
 - **[Documentation Index](DOCUMENTATION-INDEX.md)** - Master index of all documentation
+- **[Development Best Practices](docs/DEVELOPMENT-BEST-PRACTICES.md)** - ⭐ Common patterns & pitfalls
 - **[Developer Toolkit](DEVELOPER-TOOLKIT.md)** - Essential commands and tools
 - **[Deployment Guide](deployment/DEPLOYMENT-GUIDE.md)** - How to deploy to production
 - **[Product Roadmap](docs/ROADMAP.md)** - Feature roadmap and priorities
@@ -91,15 +92,24 @@ cd frontend && npm start
 - **Frontend:** React 18, TypeScript, Material-UI
 - **Backend:** Node.js, Express, TypeScript
 - **Database:** PostgreSQL with Prisma ORM
-- **Authentication:** JWT with bcrypt
-- **Deployment:** PM2, Nginx, Let's Encrypt SSL
+- **Authentication:** JWT with bcrypt, automatic token management
+- **Deployment:** PM2 (cluster mode), Nginx, Let's Encrypt SSL
+- **Testing:** Jest with 18+ test cases for critical middleware
 
 ### Services
 ```
-Frontend (Port 3000)           - React SPA
-Customer Service (Port 4004)   - Customer, pet, staff management
+Frontend (Port 3000)           - React SPA with JWT auth
+Customer Service (Port 4004)   - Customer, pet, staff, products, announcements
 Reservation Service (Port 4003) - Reservations, resources, scheduling
 ```
+
+### Multi-Tenant Architecture
+- Subdomain-based tenant detection (e.g., brangro.canicloud.com)
+- Complete data isolation per tenant
+- 13 controllers with proper tenant context
+- Middleware-based tenant extraction and validation
+
+For detailed architecture, see [CURRENT-SYSTEM-ARCHITECTURE.md](docs/CURRENT-SYSTEM-ARCHITECTURE.md)
 
 ---
 
@@ -122,9 +132,10 @@ npm run test:integration
 ```
 
 ### Test Coverage
-- **470+ automated tests**
+- **488+ automated tests** (18 new middleware tests added Nov 5)
 - **80%+ code coverage**
 - **Integration tests** for critical workflows
+- **Middleware tests** for tenant isolation and authentication
 
 ---
 
@@ -189,13 +200,21 @@ npm run type-check
 ## 📊 Production Status
 
 ### Current Deployment (November 5, 2025)
-- **Tenant:** Brangro (brangro.canicloud.com)
-- **Customers:** 20
-- **Pets:** 20
-- **Reservations:** 10
-- **Staff:** 4
-- **Resources:** 15 suites, 5 runs
-- **Training Classes:** 3
+
+**Production Tenant**: Tailtown (tailtown.canicloud.com)
+- 🔴 **CRITICAL** - Your business, real data
+- Real customers, pets, and reservations
+- Daily operations and staff usage
+
+**Demo Tenant**: BranGro (brangro.canicloud.com)
+- 🟡 **DEMO** - Customer demos, mock data
+- 20 demo customers, 20 demo pets
+- 10 sample reservations, 4 staff accounts
+- 6 template POS products
+
+**Dev Tenant**: Dev (dev.canicloud.com / localhost)
+- 🟢 **DEVELOPMENT** - Safe to break
+- Local testing and experiments
 
 ### System Health
 - ✅ All services operational
@@ -203,6 +222,8 @@ npm run type-check
 - ✅ SSL certificate valid
 - ✅ Database backups running
 - ✅ Monitoring active
+
+For tenant strategy details, see [docs/TENANT-STRATEGY.md](docs/TENANT-STRATEGY.md)
 
 ---
 
@@ -240,11 +261,14 @@ Proprietary - All rights reserved
 
 ## 🎉 Recent Updates
 
-### November 5, 2025
-- ✅ Fixed phone number search in reservation modal
-- ✅ Fixed products API localhost URLs
-- ✅ Added SendGrid/Twilio to roadmap
-- ✅ Documentation cleanup and organization
+### November 5, 2025 - Major Cleanup & Testing
+- ✅ **Code Cleanup**: Fixed 13 controllers (86+ functions) for proper tenant context
+- ✅ **Authentication**: Implemented proper JWT flow, removed 'default-user' fallback
+- ✅ **Testing**: Created comprehensive test suite (18 test cases)
+- ✅ **Bug Fixes**: Profile photo display, login API URLs, announcement persistence
+- ✅ **POS**: Added 5 template products for BranGro tenant
+- ✅ **Deployments**: 11 frontend + 5 backend deployments, all successful
+- ✅ **Documentation**: Updated architecture diagrams and system docs
 
 ### November 4, 2025
 - ✅ Production deployment to canicloud.com

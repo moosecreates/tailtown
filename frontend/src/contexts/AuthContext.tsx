@@ -84,7 +84,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Login function
+  /**
+   * Authenticate user and create session
+   * Uses dynamic API URL based on environment (window.location.origin in production)
+   * Stores user data including profilePhoto in localStorage for session persistence
+   * @param email - User's email address
+   * @param password - User's password
+   * @throws Error if credentials are invalid or API call fails
+   */
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
@@ -95,8 +102,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error('Email and password are required');
       }
 
-      // Real API call to login endpoint
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4004'}/api/staff/login`, {
+      // Real API call to login endpoint - uses dynamic URL for multi-tenant support
+      const apiUrl = process.env.NODE_ENV === 'production' ? window.location.origin : (process.env.REACT_APP_API_URL || 'http://localhost:4004');
+      const response = await fetch(`${apiUrl}/api/staff/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,21 +119,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       const data = await response.json();
       
-      // The backend returns { status: 'success', data: { staff data } } instead of { user, token }
-      // Extract the staff data from the response
+      // The backend returns { status: 'success', data: { staff data }, accessToken: 'jwt...' }
+      // Extract the staff data and JWT token from the response
       const userData: User = {
         id: data.data.id,
         email: data.data.email,
         firstName: data.data.firstName,
         lastName: data.data.lastName,
-        role: data.data.role
+        role: data.data.role,
+        profilePhoto: data.data.profilePhoto
       };
       
-      // For now, use the user ID as a simple token since the backend doesn't provide one
-      const token = data.data.id;
+      // Store JWT token from backend
+      const token = data.accessToken;
       
-      // Store in localStorage with timestamp
+      // Store in localStorage with timestamp (store as both 'token' and 'accessToken' for compatibility)
       localStorage.setItem('token', token);
+      localStorage.setItem('accessToken', token);
       localStorage.setItem('tokenTimestamp', Date.now().toString());
       localStorage.setItem('user', JSON.stringify(userData));
       
@@ -142,6 +152,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Logout function
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
     localStorage.removeItem('tokenTimestamp');
     localStorage.removeItem('user');
     setUser(null);
