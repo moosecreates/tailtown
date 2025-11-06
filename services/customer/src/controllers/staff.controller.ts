@@ -1,3 +1,4 @@
+import { TenantRequest } from '../middleware/tenant.middleware';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
@@ -144,13 +145,13 @@ export const getStaffById = async (
 
 // Create a new staff member
 export const createStaff = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const staffData = req.body;
-    const tenantId = (req.headers['x-tenant-id'] as string) || 'dev';
+    const tenantId = (req.tenantId || 'dev') || 'dev';
     
     // Check if email already exists
     const existingStaff = await prisma.staff.findUnique({
@@ -331,13 +332,13 @@ export const deleteStaff = async (
 
 // Authenticate staff member (login)
 export const loginStaff = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { email, password } = req.body;
-    const tenantId = (req.headers['x-tenant-id'] as string) || 'dev';
+    const tenantId = (req.tenantId || 'dev') || 'dev';
     
     if (!email || !password) {
       return next(new AppError('Please provide email and password', 400));

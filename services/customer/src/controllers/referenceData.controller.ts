@@ -1,3 +1,4 @@
+import { TenantRequest } from '../middleware/tenant.middleware';
 /**
  * Reference Data Controller
  * 
@@ -14,7 +15,7 @@ const prisma = new PrismaClient();
  * Returns breeds from the Gingr reference data file
  */
 export const getBreeds = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -61,12 +62,12 @@ export const getBreeds = async (
  * Returns unique veterinarians from pets table
  */
 export const getVeterinarians = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev' || 'dev';
 
     // Get unique veterinarians from pets table
     const vets = await prisma.$queryRaw`
@@ -95,7 +96,7 @@ export const getVeterinarians = async (
  * Returns static list based on PlayGroupType enum
  */
 export const getTemperamentTypes = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
@@ -126,13 +127,13 @@ export const getTemperamentTypes = async (
  * Returns the idealPlayGroup from the pet record
  */
 export const getPetTemperaments = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { petId } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev' || 'dev';
 
     // Get the pet's idealPlayGroup
     const pet = await prisma.pet.findFirst({
@@ -158,14 +159,14 @@ export const getPetTemperaments = async (
  * Updates the idealPlayGroup field on the pet
  */
 export const updatePetTemperaments = async (
-  req: Request,
+  req: TenantRequest,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { petId } = req.params;
     const { temperaments } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev' || 'dev';
 
     // Update the pet's idealPlayGroup (take first temperament if multiple)
     const idealPlayGroup = temperaments && temperaments.length > 0 ? temperaments[0] : null;

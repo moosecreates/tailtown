@@ -1,3 +1,4 @@
+import { TenantRequest } from '../middleware/tenant.middleware';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
@@ -11,10 +12,10 @@ const prisma = new PrismaClient();
  */
 
 // Get all training classes
-export const getAllTrainingClasses = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllTrainingClasses = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { status, category, level, instructorId, isActive } = req.query;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const where: any = { tenantId };
     if (status) where.status = status;
@@ -52,10 +53,10 @@ export const getAllTrainingClasses = async (req: Request, res: Response, next: N
 };
 
 // Get training class by ID
-export const getTrainingClassById = async (req: Request, res: Response, next: NextFunction) => {
+export const getTrainingClassById = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const trainingClass = await prisma.trainingClass.findFirst({
       where: { id, tenantId },
@@ -106,7 +107,7 @@ export const getTrainingClassById = async (req: Request, res: Response, next: Ne
 };
 
 // Create training class
-export const createTrainingClass = async (req: Request, res: Response, next: NextFunction) => {
+export const createTrainingClass = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const {
       name,
@@ -130,7 +131,7 @@ export const createTrainingClass = async (req: Request, res: Response, next: Nex
       prerequisites,
       notes
     } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     // Validate required fields
     if (!name || !level || !category || !maxCapacity || 
@@ -237,10 +238,10 @@ async function generateClassSessions(
 }
 
 // Update training class
-export const updateTrainingClass = async (req: Request, res: Response, next: NextFunction) => {
+export const updateTrainingClass = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     // Verify class exists
     const existing = await prisma.trainingClass.findFirst({
@@ -285,10 +286,10 @@ export const updateTrainingClass = async (req: Request, res: Response, next: Nex
 };
 
 // Delete training class
-export const deleteTrainingClass = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteTrainingClass = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const existing = await prisma.trainingClass.findFirst({
       where: { id, tenantId },
@@ -316,11 +317,11 @@ export const deleteTrainingClass = async (req: Request, res: Response, next: Nex
 };
 
 // Duplicate training class for next session
-export const duplicateTrainingClass = async (req: Request, res: Response, next: NextFunction) => {
+export const duplicateTrainingClass = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { startDate } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     if (!startDate) {
       return next(new AppError('Start date is required', 400));
@@ -384,10 +385,10 @@ export const duplicateTrainingClass = async (req: Request, res: Response, next: 
 };
 
 // Get class sessions
-export const getClassSessions = async (req: Request, res: Response, next: NextFunction) => {
+export const getClassSessions = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { classId } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const sessions = await prisma.classSession.findMany({
       where: {
@@ -409,10 +410,10 @@ export const getClassSessions = async (req: Request, res: Response, next: NextFu
 };
 
 // Update class session
-export const updateClassSession = async (req: Request, res: Response, next: NextFunction) => {
+export const updateClassSession = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const updateData: any = {};
     const allowedFields = ['topic', 'objectives', 'materials', 'homework', 'status', 'notes'];
@@ -435,7 +436,7 @@ export const updateClassSession = async (req: Request, res: Response, next: Next
 };
 
 // Start class session
-export const startClassSession = async (req: Request, res: Response, next: NextFunction) => {
+export const startClassSession = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     
@@ -454,7 +455,7 @@ export const startClassSession = async (req: Request, res: Response, next: NextF
 };
 
 // Complete class session
-export const completeClassSession = async (req: Request, res: Response, next: NextFunction) => {
+export const completeClassSession = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { notes } = req.body;
