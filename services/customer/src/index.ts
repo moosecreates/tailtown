@@ -1,3 +1,15 @@
+/**
+ * Customer Service - Main Entry Point
+ * 
+ * IMPORTANT: When modifying this file, follow patterns in:
+ * /docs/DEVELOPMENT-BEST-PRACTICES.md
+ * 
+ * Key reminders:
+ * - Auth middleware at ROUTE level, not router level (login must be public)
+ * - Always set trust proxy when behind nginx
+ * - Middleware order matters: tenant extraction → validation → auth
+ */
+
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -47,6 +59,7 @@ import businessSettingsRoutes from './routes/business-settings.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 import { enforceHTTPS, securityHeaders, sanitizeInput } from './middleware/security.middleware';
+import { authenticate, requireTenantAdmin, optionalAuth } from './middleware/auth.middleware';
 
 // Load environment variables
 dotenv.config();
@@ -54,6 +67,9 @@ dotenv.config();
 // Initialize the Express application
 const app = express();
 const PORT = 4004; // Explicitly setting port 4004 for customer service
+
+// Trust proxy - required for rate limiting behind nginx/reverse proxy
+app.set('trust proxy', 1);
 
 // Increase HTTP header limits to prevent 431 errors
 app.set('etag', false); // Disable ETag generation to reduce header size
@@ -306,68 +322,74 @@ app.use('/api/tenants', tenantRoutes);
 // This extracts the subdomain and attaches tenant info to the request
 app.use('/api', extractTenantContext);
 
-// Tenant-specific routes (require tenant context)
-app.use('/api/customers', requireTenant, customerRoutes);
-app.use('/api/pets', requireTenant, petRoutes);
-app.use('/api/reservations', requireTenant, reservationRoutes);
-app.use('/api/services', requireTenant, serviceRoutes);
-app.use('/api/resources', requireTenant, resourceRoutes);
-app.use('/api/suites', requireTenant, suiteRoutes);
+// ============================================
+// ADMIN-ONLY ROUTES (require admin role)
+// ============================================
+// Note: Staff routes handle their own auth (login endpoint is public)
 app.use('/api/staff', requireTenant, staffRoutes);
-app.use('/api/price-rules', requireTenant, priceRuleRoutes);
-app.use('/api/coupons', requireTenant, couponRoutes);
-app.use('/api/availability', requireTenant, availabilityRoutes);
-app.use('/api/loyalty', requireTenant, loyaltyRoutes);
-app.use('/api/deposits', requireTenant, depositRoutes);
-app.use('/api/multi-pet', requireTenant, multiPetRoutes);
-app.use('/api/checklists', requireTenant, checklistRoutes);
-app.use('/api/schedules', requireTenant, scheduleRoutes);
-app.use('/api/invoices', requireTenant, invoiceRoutes);
-app.use('/api/payments', requireTenant, paymentRoutes);
-app.use('/api/addons', requireTenant, addonRoutes);
-app.use('/api/analytics', requireTenant, analyticsRoutes);
-app.use('/api/emails', requireTenant, emailRoutes);
-app.use('/api/sms', requireTenant, smsRoutes);
-app.use('/api/pets', requireTenant, vaccineUploadRoutes);
+app.use('/api/price-rules', requireTenant, authenticate, requireTenantAdmin, priceRuleRoutes);
+app.use('/api/coupons', requireTenant, authenticate, requireTenantAdmin, couponRoutes);
+app.use('/api/loyalty', requireTenant, authenticate, requireTenantAdmin, loyaltyRoutes);
+app.use('/api/analytics', requireTenant, authenticate, requireTenantAdmin, analyticsRoutes);
+app.use('/api/emails', requireTenant, authenticate, requireTenantAdmin, emailRoutes);
+app.use('/api/sms', requireTenant, authenticate, requireTenantAdmin, smsRoutes);
+app.use('/api/reports', requireTenant, authenticate, requireTenantAdmin, reportRoutes);
+
+// ============================================
+// STAFF ROUTES (require authentication)
+// ============================================
+app.use('/api/customers', requireTenant, authenticate, customerRoutes);
+app.use('/api/pets', requireTenant, authenticate, petRoutes);
+app.use('/api/reservations', requireTenant, authenticate, reservationRoutes);
+app.use('/api/services', requireTenant, authenticate, serviceRoutes);
+app.use('/api/resources', requireTenant, authenticate, resourceRoutes);
+app.use('/api/suites', requireTenant, authenticate, suiteRoutes);
+app.use('/api/availability', requireTenant, authenticate, availabilityRoutes);
+app.use('/api/deposits', requireTenant, authenticate, depositRoutes);
+app.use('/api/multi-pet', requireTenant, authenticate, multiPetRoutes);
+app.use('/api/checklists', requireTenant, authenticate, checklistRoutes);
+app.use('/api/schedules', requireTenant, authenticate, scheduleRoutes);
+app.use('/api/invoices', requireTenant, authenticate, invoiceRoutes);
+app.use('/api/payments', requireTenant, authenticate, paymentRoutes);
+app.use('/api/addons', requireTenant, authenticate, addonRoutes);
+app.use('/api/pets', requireTenant, authenticate, vaccineUploadRoutes);
 
 // Advanced Scheduling Routes
-app.use('/api', requireTenant, groomerAppointmentRoutes);
-app.use('/api', requireTenant, trainingClassRoutes);
-app.use('/api', requireTenant, enrollmentRoutes);
+app.use('/api', requireTenant, authenticate, groomerAppointmentRoutes);
+app.use('/api', requireTenant, authenticate, trainingClassRoutes);
+app.use('/api', requireTenant, authenticate, enrollmentRoutes);
 
-// Vaccine Requirement Routes
-app.use('/api', requireTenant, vaccineRequirementRoutes);
+// Vaccine Requirement Routes (admin only)
+app.use('/api', requireTenant, authenticate, requireTenantAdmin, vaccineRequirementRoutes);
 
-// Custom Icon Routes
-app.use('/api/custom-icons', requireTenant, customIconRoutes);
+// Custom Icon Routes (admin only)
+app.use('/api/custom-icons', requireTenant, authenticate, requireTenantAdmin, customIconRoutes);
 
 // Products & POS Routes
-app.use('/api/products', requireTenant, productsRoutes);
-
-// Reports Routes
-app.use('/api/reports', requireTenant, reportRoutes);
+app.use('/api/products', requireTenant, authenticate, productsRoutes);
 
 // Gingr Migration Routes (no tenant required - for super admin)
 app.use('/api/gingr', gingrRoutes);
 
-// Reference Data Routes (breeds, vets, temperaments)
-app.use('/api', requireTenant, referenceDataRoutes);
+// Reference Data Routes (breeds, vets, temperaments) - read-only, optional auth
+app.use('/api', requireTenant, optionalAuth, referenceDataRoutes);
 
-// Message Templates Routes
-app.use('/api/message-templates', requireTenant, messageTemplatesRoutes);
+// Message Templates Routes (admin only)
+app.use('/api/message-templates', requireTenant, authenticate, requireTenantAdmin, messageTemplatesRoutes);
 
-// Announcement Routes
-app.use('/api', requireTenant, announcementRoutes);
+// Announcement Routes (read with optional auth, write requires admin)
+app.use('/api', requireTenant, optionalAuth, announcementRoutes);
 
-// Business Settings Routes (tenant-specific)
-app.use('/api/business-settings', requireTenant, businessSettingsRoutes);
+// Business Settings Routes (admin only)
+app.use('/api/business-settings', requireTenant, authenticate, requireTenantAdmin, businessSettingsRoutes);
 
 // Serve uploaded icons statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Additional routes without /api prefix for staff (to match frontend API calls)
+// Note: Staff routes handle their own auth internally
 app.use('/staff', staffRoutes);
-app.use('/schedules', scheduleRoutes);
+app.use('/schedules', authenticate, scheduleRoutes);
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));

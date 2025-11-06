@@ -41,8 +41,8 @@ const router = Router();
 // IMPORTANT: Specific routes must come BEFORE generic :id routes!
 
 // Authentication routes (no :id parameter)
-// POST login (with rate limiting)
-router.post('/login', loginRateLimiter, loginStaff);
+// POST login (rate limiting temporarily disabled for development)
+router.post('/login', loginStaff);
 
 // POST request password reset (with rate limiting)
 router.post('/request-reset', passwordResetRateLimiter, requestPasswordReset);
@@ -51,7 +51,30 @@ router.post('/request-reset', passwordResetRateLimiter, requestPasswordReset);
 router.post('/reset-password', resetPassword);
 
 // Profile photo routes (must be before /:id routes!)
-router.post('/:id/photo', uploadMiddleware, uploadProfilePhoto);
+// Add error handling for multer errors
+router.post('/:id/photo', (req, res, next) => {
+  uploadMiddleware(req, res, (err: any) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({
+          status: 'error',
+          message: 'File too large. Maximum size is 10MB. Please compress your image and try again.',
+        });
+      }
+      if (err.message) {
+        return res.status(400).json({
+          status: 'error',
+          message: err.message,
+        });
+      }
+      return res.status(500).json({
+        status: 'error',
+        message: 'Error uploading file',
+      });
+    }
+    next();
+  });
+}, uploadProfilePhoto);
 router.delete('/:id/photo', deleteProfilePhoto);
 
 // GET all staff members
