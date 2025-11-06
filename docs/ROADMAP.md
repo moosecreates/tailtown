@@ -1,6 +1,6 @@
 # Tailtown Unified Roadmap
 
-**Last Updated**: November 4, 2025 - 9:37 PM PST
+**Last Updated**: November 5, 2025 - 3:11 PM PST
 
 This document provides a prioritized roadmap for the Tailtown Pet Resort Management System, organized by business value and urgency.
 
@@ -68,6 +68,15 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
   - Calendar header controls adapt to available space
   - Dashboard date controls wrap gracefully on narrow screens
   - No overlap at any screen size
+- ✅ Multi-tenant bug fixes and improvements (Nov 5, 2025)
+  - Fixed critical tenant context bug in products API
+  - Fixed login API URL hardcoded to localhost
+  - Fixed profile photo not included in user session
+  - Fixed login form label overlap on refresh
+  - Fixed announcement count persistence after modal close
+  - Added 5 template POS products for BranGro tenant
+  - Profile picture display in header avatar
+  - 8 frontend deployments, 2 backend deployments
 
 ---
 
