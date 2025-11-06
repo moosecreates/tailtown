@@ -43,12 +43,14 @@
   },
   "scripts": {
     "start": "craco start",
-    "build": "GENERATE_SOURCEMAP=false craco build",
+    "build": "FAST_REFRESH=false GENERATE_SOURCEMAP=false craco build",
     "build:analyze": "GENERATE_SOURCEMAP=false craco build && npx webpack-bundle-analyzer build/static/js/*.js",
     "test": "craco test",
     "test:coverage": "craco test --coverage --watchAll=false",
     "test:coverage:watch": "craco test --coverage",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "verify-build": "node scripts/check-build.js",
+    "predeploy": "npm run verify-build"
   },
   "eslintConfig": {
     "extends": [
