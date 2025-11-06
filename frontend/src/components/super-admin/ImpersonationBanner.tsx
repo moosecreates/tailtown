@@ -86,6 +86,25 @@ const ImpersonationBanner: React.FC<ImpersonationBannerProps> = ({ onExit }) => 
       localStorage.removeItem('impersonationToken');
       localStorage.removeItem('impersonationSession');
       
+      // Restore super admin access token as the active token for both auth systems
+      const superAdminToken = localStorage.getItem('superAdminAccessToken');
+      if (superAdminToken) {
+        localStorage.setItem('accessToken', superAdminToken);
+        localStorage.setItem('token', superAdminToken); // For AuthContext
+        localStorage.setItem('tokenTimestamp', Date.now().toString()); // For AuthContext
+      } else {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenTimestamp');
+      }
+      
+      // Clear tenant ID to return to super admin context
+      localStorage.removeItem('tailtown_tenant_id');
+      localStorage.removeItem('tenantId');
+      
+      // Clear user data so it refreshes
+      localStorage.removeItem('user');
+      
       // Redirect back to tenant list
       window.location.href = '/admin/tenants';
     }

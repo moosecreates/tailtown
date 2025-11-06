@@ -1,8 +1,8 @@
 import React, { memo, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
-import PetIconDisplay from './PetIconDisplay';
 import EmojiIconDisplay from '../customers/EmojiIconDisplay';
 import ClickableAvatar from './ClickableAvatar';
+import { mapPetIconsToEmojis } from '../../utils/petIconMapping';
 
 interface PetNameWithIconsProps {
   petName: string;
@@ -38,7 +38,9 @@ const PetNameWithIcons: React.FC<PetNameWithIconsProps> = memo(({
   direction = 'row',
   gap = 1
 }) => {
-  const hasIcons = useMemo(() => petIcons && petIcons.length > 0, [petIcons]);
+  // Convert icon IDs to emojis
+  const emojiIcons = useMemo(() => mapPetIconsToEmojis(petIcons), [petIcons]);
+  const hasIcons = useMemo(() => emojiIcons && emojiIcons.length > 0, [emojiIcons]);
   
   // Memoized size mapping for avatars
   const avatarSize = useMemo(() => {
@@ -87,7 +89,7 @@ const PetNameWithIcons: React.FC<PetNameWithIconsProps> = memo(({
       
       {hasIcons && (
         <EmojiIconDisplay
-          icons={petIcons}
+          icons={emojiIcons}
           size={size === 'large' ? 'medium' : size}
           maxDisplay={5}
         />

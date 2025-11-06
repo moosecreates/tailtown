@@ -81,6 +81,7 @@ const Login = () => {
               error={touched.email && Boolean(errors.email)}
               helperText={touched.email && errors.email}
               disabled={isSubmitting}
+              InputLabelProps={{ shrink: true }}
             />
             
             <Field
@@ -94,6 +95,7 @@ const Login = () => {
               error={touched.password && Boolean(errors.password)}
               helperText={touched.password && errors.password}
               disabled={isSubmitting}
+              InputLabelProps={{ shrink: true }}
             />
             
             <Button

@@ -308,30 +308,39 @@ const ReservationList: React.FC<ReservationListProps> = ({
                       • {reservation.customer?.firstName || ''} {reservation.customer?.lastName || 'Unknown'}
                     </Typography>
                   </Box>
-                  {/* Row 2: Time, Service, Kennel */}
+                  {/* Row 2: Kennel, Service, Time */}
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                    <Typography variant="caption" color="text.secondary">
-                      {formatTime(reservation.startDate)}
-                    </Typography>
+                    {reservation.resource?.name && (
+                      <>
+                        <Chip 
+                          label={
+                            reservation.resource.name.length > 1
+                              ? reservation.resource.name.slice(0, -1) + ' ' + reservation.resource.name.slice(-1)
+                              : reservation.resource.name
+                          } 
+                          size="small" 
+                          variant="outlined"
+                          sx={{ 
+                            height: 18, 
+                            fontSize: '0.75rem', 
+                            fontWeight: 600,
+                            backgroundColor: 'white'
+                          }}
+                        />
+                        <Typography variant="caption" color="text.secondary">•</Typography>
+                      </>
+                    )}
                     {reservation.service?.name && (
                       <>
-                        <Typography variant="caption" color="text.secondary">•</Typography>
                         <Typography variant="caption" color="text.secondary">
                           {reservation.service.name}
                         </Typography>
-                      </>
-                    )}
-                    {reservation.resource?.name && (
-                      <>
                         <Typography variant="caption" color="text.secondary">•</Typography>
-                        <Chip 
-                          label={reservation.resource.name} 
-                          size="small" 
-                          variant="outlined"
-                          sx={{ height: 18, fontSize: '0.65rem', fontWeight: 600 }}
-                        />
                       </>
                     )}
+                    <Typography variant="caption" color="text.secondary">
+                      {formatTime(reservation.startDate)}
+                    </Typography>
                   </Box>
                 </Box>
               </ListItem>

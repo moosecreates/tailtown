@@ -1328,32 +1328,43 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             
             return (
               <>
-                <FormControl fullWidth required size="small" sx={{ mb: 1 }}>
-                  <InputLabel id="kennel-type-label" shrink={true}>Kennel Type</InputLabel>
-                  <Select
-                    labelId="kennel-type-label"
-                    id="kennel-type-select"
-                    value={selectedSuiteType && ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'].includes(selectedSuiteType) ? selectedSuiteType : ""}
-                    label="Kennel Type"
-                    // Add proper ARIA attributes to fix accessibility warning
-                    inputProps={{
-                      'aria-label': 'Select kennel type',
-                      'aria-hidden': 'false'
-                    }}
-                    onChange={e => {
-                      setSelectedSuiteType(e.target.value);
-                      setSelectedSuiteId(''); // Reset suite selection on type change
-                    }}
-                    required
-                    displayEmpty
-                    notched
-                  >
-                    <MenuItem value="" disabled>Select kennel type</MenuItem>
-                    <MenuItem value="VIP_SUITE">VIP Suite</MenuItem>
-                    <MenuItem value="STANDARD_PLUS_SUITE">Standard Plus Suite</MenuItem>
-                    <MenuItem value="STANDARD_SUITE">Standard Suite</MenuItem>
-                  </Select>
-                </FormControl>
+                {/* Only show kennel type selector if no specific kennel is pre-selected */}
+                {!selectedSuiteId && (
+                  <FormControl fullWidth required size="small" sx={{ mb: 1 }}>
+                    <InputLabel id="kennel-type-label" shrink={true}>Kennel Type</InputLabel>
+                    <Select
+                      labelId="kennel-type-label"
+                      id="kennel-type-select"
+                      value={selectedSuiteType && ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'].includes(selectedSuiteType) ? selectedSuiteType : ""}
+                      label="Kennel Type"
+                      // Add proper ARIA attributes to fix accessibility warning
+                      inputProps={{
+                        'aria-label': 'Select kennel type',
+                        'aria-hidden': 'false'
+                      }}
+                      onChange={e => {
+                        const newSuiteType = e.target.value;
+                        setSelectedSuiteType(newSuiteType);
+                        
+                        // Only reset suite selection if the currently selected suite doesn't match the new type
+                        if (selectedSuiteId) {
+                          const currentSuite = availableSuites.find(s => s.id === selectedSuiteId);
+                          if (currentSuite && currentSuite.type !== newSuiteType) {
+                            setSelectedSuiteId(''); // Reset only if type doesn't match
+                          }
+                        }
+                      }}
+                      required
+                      displayEmpty
+                      notched
+                    >
+                      <MenuItem value="" disabled>Select kennel type</MenuItem>
+                      <MenuItem value="VIP_SUITE">VIP Suite</MenuItem>
+                      <MenuItem value="STANDARD_PLUS_SUITE">Standard Plus Suite</MenuItem>
+                      <MenuItem value="STANDARD_SUITE">Standard Suite</MenuItem>
+                    </Select>
+                  </FormControl>
+                )}
                 
                 {/* Kennel/Suite Number Selection - Per Pet when multiple pets selected */}
                 {requiresSuiteType && selectedSuiteType && selectedPets.length > 1 && (

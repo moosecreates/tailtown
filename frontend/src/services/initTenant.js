@@ -33,6 +33,15 @@ function getTenantFromSubdomain() {
 
 function initTenantId() {
   try {
+    // Check if we're on a super admin route - don't set tenant ID for super admin
+    const pathname = window.location.pathname;
+    const isSuperAdminRoute = pathname.startsWith('/super-admin') || pathname.startsWith('/admin/tenants');
+    
+    if (isSuperAdminRoute) {
+      console.log('Super admin route detected. Skipping tenant ID initialization.');
+      return;
+    }
+    
     // First, check if subdomain specifies a tenant
     const subdomainTenant = getTenantFromSubdomain();
     

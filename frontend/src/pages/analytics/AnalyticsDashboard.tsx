@@ -15,7 +15,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Divider,
   useTheme
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
@@ -255,33 +254,38 @@ const AnalyticsDashboard = () => {
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <Card>
-                  <CardHeader title="Service Revenue Breakdown" />
-                  <CardContent>
-                    <Box sx={{ height: 400 }}>
+                  <CardHeader 
+                    title="Service Revenue Breakdown" 
+                    titleTypographyProps={{ variant: 'h6', fontSize: '1rem' }}
+                    sx={{ pb: 1 }}
+                  />
+                  <CardContent sx={{ pt: 1 }}>
+                    <Box sx={{ height: { xs: 250, sm: 300 } }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={serviceData.services}
-                          margin={{ top: 20, right: 20, left: 10, bottom: 100 }}
+                          margin={{ top: 10, right: 10, left: 0, bottom: 80 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis 
                             dataKey="name" 
                             angle={-45} 
                             textAnchor="end"
-                            height={90}
+                            height={70}
                             interval={0}
-                            tick={{ fontSize: 10 }}
+                            tick={{ fontSize: 9 }}
                             tickFormatter={(value) => {
                               // Truncate long service names
-                              if (value.length > 20) {
-                                return value.substring(0, 18) + '...';
+                              if (value.length > 15) {
+                                return value.substring(0, 13) + '...';
                               }
                               return value;
                             }}
                           />
                           <YAxis 
                             tickFormatter={(value) => formatCurrency(value)}
-                            tick={{ fontSize: 11 }}
+                            tick={{ fontSize: 10 }}
+                            width={60}
                           />
                           <Tooltip 
                             formatter={(value) => formatCurrency(Number(value))}
@@ -299,20 +303,24 @@ const AnalyticsDashboard = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <Card>
-                  <CardHeader title="Service Bookings" />
-                  <CardContent>
-                    <Box sx={{ height: 400, display: 'flex', justifyContent: 'center' }}>
+                  <CardHeader 
+                    title="Service Bookings" 
+                    titleTypographyProps={{ variant: 'h6', fontSize: '1rem' }}
+                    sx={{ pb: 1 }}
+                  />
+                  <CardContent sx={{ pt: 1 }}>
+                    <Box sx={{ height: { xs: 250, sm: 300 } }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
                             data={serviceData.services}
                             cx="50%"
                             cy="50%"
-                            labelLine={true}
-                            label={({ name, percent }: { name: string, percent: number }) => 
-                              `${(percent * 100).toFixed(0)}%`
+                            labelLine={false}
+                            label={({ percent }: { percent: number }) => 
+                              percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''
                             }
-                            outerRadius={120}
+                            outerRadius={window.innerWidth < 600 ? 60 : 80}
                             fill="#8884d8"
                             dataKey="count"
                           >
@@ -327,10 +335,12 @@ const AnalyticsDashboard = () => {
                             formatter={(value: number) => [`${value} bookings`, 'Count']}
                           />
                           <Legend 
-                            layout="vertical"
-                            verticalAlign="middle"
-                            align="right"
-                            wrapperStyle={{ paddingLeft: '20px' }}
+                            layout="horizontal"
+                            verticalAlign="bottom"
+                            align="center"
+                            wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
+                            iconSize={8}
+                            formatter={(value) => value.length > 20 ? value.substring(0, 18) + '...' : value}
                           />
                         </PieChart>
                       </ResponsiveContainer>
@@ -396,13 +406,17 @@ const AnalyticsDashboard = () => {
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <Card>
-                  <CardHeader title="Add-On Revenue Breakdown" />
-                  <CardContent>
-                    <Box sx={{ height: 400 }}>
+                  <CardHeader 
+                    title="Add-On Revenue Breakdown" 
+                    titleTypographyProps={{ variant: 'h6', fontSize: '1rem' }}
+                    sx={{ pb: 1 }}
+                  />
+                  <CardContent sx={{ pt: 1 }}>
+                    <Box sx={{ height: { xs: 250, sm: 300 } }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={addonData.addOns}
-                          margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                          margin={{ top: 10, right: 10, left: 0, bottom: 80 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis 
@@ -410,9 +424,19 @@ const AnalyticsDashboard = () => {
                             angle={-45} 
                             textAnchor="end"
                             height={70}
+                            interval={0}
+                            tick={{ fontSize: 9 }}
+                            tickFormatter={(value) => {
+                              if (value.length > 15) {
+                                return value.substring(0, 13) + '...';
+                              }
+                              return value;
+                            }}
                           />
                           <YAxis 
                             tickFormatter={(value) => formatCurrency(value)}
+                            tick={{ fontSize: 10 }}
+                            width={60}
                           />
                           <Tooltip 
                             formatter={(value) => formatCurrency(Number(value))}
@@ -430,20 +454,24 @@ const AnalyticsDashboard = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <Card>
-                  <CardHeader title="Add-On Usage" />
-                  <CardContent>
-                    <Box sx={{ height: 400, display: 'flex', justifyContent: 'center' }}>
+                  <CardHeader 
+                    title="Add-On Usage" 
+                    titleTypographyProps={{ variant: 'h6', fontSize: '1rem' }}
+                    sx={{ pb: 1 }}
+                  />
+                  <CardContent sx={{ pt: 1 }}>
+                    <Box sx={{ height: { xs: 250, sm: 300 } }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
                             data={addonData.addOns}
                             cx="50%"
                             cy="50%"
-                            labelLine={true}
-                            label={({ name, percent }: { name: string, percent: number }) => 
-                              `${(percent * 100).toFixed(0)}%`
+                            labelLine={false}
+                            label={({ percent }: { percent: number }) => 
+                              percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''
                             }
-                            outerRadius={120}
+                            outerRadius={window.innerWidth < 600 ? 60 : 80}
                             fill="#8884d8"
                             dataKey="count"
                           >
@@ -458,10 +486,12 @@ const AnalyticsDashboard = () => {
                             formatter={(value: number) => [`${value} usages`, 'Count']}
                           />
                           <Legend 
-                            layout="vertical"
-                            verticalAlign="middle"
-                            align="right"
-                            wrapperStyle={{ paddingLeft: '20px' }}
+                            layout="horizontal"
+                            verticalAlign="bottom"
+                            align="center"
+                            wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
+                            iconSize={8}
+                            formatter={(value) => value.length > 20 ? value.substring(0, 18) + '...' : value}
                           />
                         </PieChart>
                       </ResponsiveContainer>

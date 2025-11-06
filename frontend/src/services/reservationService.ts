@@ -116,6 +116,9 @@ export const reservationService = {
       } else if (response.data?.data?.reservation) {
         // Alternative format
         reservationData = response.data.data.reservation;
+      } else if (response.data?.data?.reservations && Array.isArray(response.data.data.reservations)) {
+        // Nested reservations array format (from GET endpoint)
+        reservationData = response.data.data.reservations[0];
       } else if (response.data?.data && response.data.data.id) {
         // Data directly in data field
         reservationData = response.data.data;

@@ -83,6 +83,15 @@ export const SuperAdminProvider: React.FC<{ children: ReactNode }> = ({ children
         localStorage.setItem('superAdminAccessToken', accessToken);
         localStorage.setItem('superAdminRefreshToken', refreshToken);
         
+        // CRITICAL: Also set as regular tokens so AuthContext and SuperAdminOnlyRoute work
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('token', accessToken);
+        localStorage.setItem('tokenTimestamp', Date.now().toString());
+        
+        // CRITICAL: Clear any tenant IDs - super admin should not have tenant context
+        localStorage.removeItem('tailtown_tenant_id');
+        localStorage.removeItem('tenantId');
+        
         // Set user
         setSuperAdmin(user);
       } else {
@@ -111,6 +120,11 @@ export const SuperAdminProvider: React.FC<{ children: ReactNode }> = ({ children
       // Clear tokens and user regardless of API call success
       localStorage.removeItem('superAdminAccessToken');
       localStorage.removeItem('superAdminRefreshToken');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('token');
+      localStorage.removeItem('tokenTimestamp');
+      localStorage.removeItem('tailtown_tenant_id');
+      localStorage.removeItem('tenantId');
       setSuperAdmin(null);
     }
   };
@@ -132,6 +146,11 @@ export const SuperAdminProvider: React.FC<{ children: ReactNode }> = ({ children
         
         localStorage.setItem('superAdminAccessToken', accessToken);
         localStorage.setItem('superAdminRefreshToken', newRefreshToken);
+        
+        // Also update regular tokens
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('token', accessToken);
+        localStorage.setItem('tokenTimestamp', Date.now().toString());
       }
     } catch (error) {
       console.error('Token refresh error:', error);

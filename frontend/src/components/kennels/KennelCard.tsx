@@ -202,6 +202,11 @@ const KennelCard: React.FC<KennelCardProps> = React.memo(({
     });
   }, [startDate]);
 
+  // Format kennel number with space before last character (e.g., "A 03")
+  const formattedKennelNumber = typeof kennelNumber === 'string' && kennelNumber.length > 1
+    ? kennelNumber.slice(0, -1) + ' ' + kennelNumber.slice(-1)
+    : kennelNumber;
+
   return (
     <PrintableCard>
       <CardHeader>
@@ -209,7 +214,7 @@ const KennelCard: React.FC<KennelCardProps> = React.memo(({
           {petName}
         </Typography>
         <Typography variant="h4" component="h2">
-          Kennel #{kennelNumber} - {formattedSuiteType}
+          {formattedDates.startTime} - {formattedSuiteType}
         </Typography>
       </CardHeader>
 
@@ -242,6 +247,9 @@ const KennelCard: React.FC<KennelCardProps> = React.memo(({
             <Box sx={{ mt: 4, mb: 4 }}>
               <SectionTitle variant="h5" sx={{ fontSize: '1.5rem', mb: 2 }}>Stay Information</SectionTitle>
               <Box sx={{ pl: 2 }}>
+                <Typography variant="h6" sx={{ mb: 1, fontSize: '1.375rem' }}>
+                  <strong>Kennel #</strong>{formattedKennelNumber}
+                </Typography>
                 <Typography variant="h6" sx={{ mb: 1 }}>
                   <strong>Check-In:</strong> {formattedDates.startDate} at {formattedDates.startTime}
                 </Typography>
