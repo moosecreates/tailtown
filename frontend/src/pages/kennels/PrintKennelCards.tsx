@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './PrintKennelCards.css';
 import { 
   Container, 
@@ -11,7 +11,6 @@ import {
   InputLabel, 
   Select, 
   MenuItem,
-  TextField,
   CircularProgress,
   Divider,
   Alert,
@@ -23,8 +22,6 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { Print as PrintIcon, FilterList as FilterIcon } from '@mui/icons-material';
 import KennelCard from '../../components/kennels/KennelCard';
 import { reservationService } from '../../services/reservationService';
-import { petService } from '../../services/petService';
-import { customerService } from '../../services/customerService';
 import { format } from 'date-fns';
 
 /**
@@ -187,39 +184,33 @@ const PrintKennelCards: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, selectedStatus]); // fetchAdditionalData and filterReservations are stable (useCallback below)
   
-  // Memoize the fetch function to prevent unnecessary re-calls
+  // Extract pet and customer data from reservations (they're already included in the API response)
   const fetchAdditionalData = useCallback(async (reservationsData: any[]) => {
     try {
-      // Create arrays of unique IDs to fetch
-      const petIds = Array.from(new Set(reservationsData.map(res => res.petId)));
-      const customerIds = Array.from(new Set(reservationsData.map(res => res.customerId)));
-      
-      // Fetch all pets data
+      // The reservation API already includes pet and customer data
+      // Extract them from the reservations instead of making separate API calls
       const petsTemp: {[key: string]: any} = {};
-      for (const petId of petIds) {
-        try {
-          const petResponse = await petService.getPetById(petId);
-          petsTemp[petId] = petResponse;
-        } catch (err) {
-          console.error(`Error fetching pet ${petId}:`, err);
-        }
-      }
-      setPetData(petsTemp);
-      
-      // Fetch all customers data
       const customersTemp: {[key: string]: any} = {};
-      for (const customerId of customerIds) {
-        try {
-          const customerResponse = await customerService.getCustomerById(customerId);
-          customersTemp[customerId] = customerResponse;
-        } catch (err) {
-          console.error(`Error fetching customer ${customerId}:`, err);
+      
+      reservationsData.forEach(reservation => {
+        // Extract pet data if included
+        if (reservation.pet && reservation.petId) {
+          petsTemp[reservation.petId] = reservation.pet;
         }
-      }
+        
+        // Extract customer data if included
+        if (reservation.customer && reservation.customerId) {
+          customersTemp[reservation.customerId] = reservation.customer;
+        }
+      });
+      
+      setPetData(petsTemp);
       setCustomerData(customersTemp);
       
+      console.log(`Extracted ${Object.keys(petsTemp).length} pets and ${Object.keys(customersTemp).length} customers from reservations`);
+      
     } catch (err) {
-      console.error('Error fetching additional data:', err);
+      console.error('Error extracting additional data:', err);
     }
   }, []);
   
@@ -256,8 +247,7 @@ const PrintKennelCards: React.FC = () => {
       // For kennel cards, we'll show all reservations even if they don't have a resource assigned
       // This ensures we print cards for all pets regardless of kennel assignment
       
-      // Log the reservation service type to help with debugging
-      const serviceType = res.serviceType || 'Unknown';
+      // For kennel cards, we show all reservations with pet and customer data
       
       return true;
     });
@@ -470,11 +460,9 @@ const PrintKennelCards: React.FC = () => {
               // Extract kennel number from resource attributes
               // Default to a placeholder if not found
               let kennelNumber: string | number = 0;
-              let resourceName = 'Unknown';
               let suiteType = 'STANDARD_SUITE';
               
               if (resource) {
-                resourceName = resource.name || 'Unknown';
                 
                 // Use the suite.type directly from the database, or fall back to attributes.suiteType, or default to STANDARD_SUITE
                 if (resource.attributes && resource.attributes.suiteType) {
@@ -491,8 +479,7 @@ const PrintKennelCards: React.FC = () => {
                   kennelNumber = resource.name;
                 }
               } else if (reservation.resourceId) {
-                // If we have resourceId but no resource object
-                resourceName = `Resource ${reservation.resourceId}`;
+                // If we have resourceId but no resource object, use default kennel number
                 kennelNumber = 1; // Default to 1 if we can't determine
               }
               
@@ -643,7 +630,7 @@ const PrintKennelCards: React.FC = () => {
                     petIconIds={petIconIds}
                     petType={pet.type || 'DOG'}
                     customNotes={pet.iconNotes || {}}
-                    petNotes={pet.notes}
+                    petNotes={pet.behaviorNotes || ''}
                     ownerName={`${customer.firstName} ${customer.lastName}`}
                     ownerPhone={customer.phone}
                     startDate={new Date(reservation.startDate)}

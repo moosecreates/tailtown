@@ -239,8 +239,15 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
               name: true,
               type: true,
               breed: true,
+              weight: true,
               profilePhoto: true,
-              petIcons: true
+              petIcons: true,
+              iconNotes: true,
+              behaviorNotes: true,
+              specialNeeds: true,
+              medicationNotes: true,
+              allergies: true,
+              vaccinationStatus: true
             }
           },
           resource: {
@@ -367,8 +374,15 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
               name: true,
               type: true,
               breed: true,
+              weight: true,
               profilePhoto: true,
-              petIcons: true
+              petIcons: true,
+              iconNotes: true,
+              behaviorNotes: true,
+              specialNeeds: true,
+              medicationNotes: true,
+              allergies: true,
+              vaccinationStatus: true
             }
           },
           resource: {
