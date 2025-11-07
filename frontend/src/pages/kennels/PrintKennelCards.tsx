@@ -80,8 +80,11 @@ const PrintKennelCards: React.FC = () => {
         
         console.log(`Initial load: Loading kennel cards for check-in date: ${formattedDate}`);
         
+        // TODO: Fetch tenant timezone from tenant settings
+        const timezone = 'America/Los_Angeles';
+        
         const response = await reservationService.getAllReservations(
-          1, 500, 'startDate', 'asc', '', undefined, formattedDate
+          1, 500, 'startDate', 'asc', '', undefined, formattedDate, timezone
         );
         
         let reservationsData: any[] = [];
@@ -135,8 +138,12 @@ const PrintKennelCards: React.FC = () => {
       
       console.log(`Loading kennel cards for check-in date: ${formattedDate}`);
       
+      // TODO: Fetch tenant timezone from tenant settings
+      // For now, hardcode to America/Los_Angeles (PST/PDT)
+      const timezone = 'America/Los_Angeles';
+      
       // Fetch reservations checking in on the selected date
-      // Use checkInDate parameter to get only dogs checking in on this specific day
+      // Use checkInDate parameter to get only dogs checking in on this specific day in tenant's timezone
       const response = await reservationService.getAllReservations(
         1,          // page
         500,        // limit - increased to get more reservations
@@ -144,7 +151,8 @@ const PrintKennelCards: React.FC = () => {
         'asc',      // sortOrder
         selectedStatus === 'ALL' ? '' : selectedStatus, // If ALL, don't filter by status
         undefined,  // date (not used when checkInDate is provided)
-        formattedDate // checkInDate - filter for exact check-in date
+        formattedDate, // checkInDate - filter for exact check-in date
+        timezone    // timezone - tenant's local timezone
       );
       
       // Ensure we have an array

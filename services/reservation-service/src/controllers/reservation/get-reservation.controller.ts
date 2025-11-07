@@ -114,14 +114,43 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
   if (req.query.checkInDate) {
     try {
       const dateStr = req.query.checkInDate as string;
+      
+      // Get tenant timezone from query parameter (passed from frontend)
+      // Default to America/New_York if not provided
+      const timezone = (req.query.timezone as string) || 'America/New_York';
+      
+      // Parse the date string and convert to UTC based on tenant's timezone
+      // The date string is in YYYY-MM-DD format and represents a date in the tenant's local timezone
       const [year, month, day] = dateStr.split('-').map(num => parseInt(num, 10));
-      // Use UTC dates to match database storage
-      const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
-      const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+      
+      // Calculate timezone offset in hours
+      // This is a simplified approach - for production, use a library like date-fns-tz or luxon
+      const timezoneOffsets: { [key: string]: number } = {
+        'America/New_York': -5,    // EST (UTC-5)
+        'America/Chicago': -6,     // CST (UTC-6)
+        'America/Denver': -7,      // MST (UTC-7)
+        'America/Los_Angeles': -8, // PST (UTC-8)
+        'America/Phoenix': -7,     // MST (no DST)
+        'America/Anchorage': -9,   // AKST (UTC-9)
+        'Pacific/Honolulu': -10,   // HST (UTC-10)
+        'UTC': 0
+      };
+      
+      const offsetHours = timezoneOffsets[timezone] || -5; // Default to EST
+      
+      // Create start and end of day in tenant's local timezone, then convert to UTC
+      // Start of day: midnight in local timezone
+      const localStartOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+      const startOfDay = new Date(localStartOfDay.getTime() - (offsetHours * 60 * 60 * 1000));
+      
+      // End of day: 23:59:59.999 in local timezone
+      const localEndOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+      const endOfDay = new Date(localEndOfDay.getTime() - (offsetHours * 60 * 60 * 1000));
+      
       if (!isNaN(startOfDay.getTime()) && !isNaN(endOfDay.getTime())) {
-        // Filter for reservations checking in on this specific date (UTC)
+        // Filter for reservations checking in on this specific date in tenant's timezone
         filter.startDate = { gte: startOfDay, lte: endOfDay };
-        logger.info(`Filtering reservations checking in on date: ${dateStr} (UTC: ${startOfDay.toISOString()} to ${endOfDay.toISOString()})`, { requestId });
+        logger.info(`Filtering reservations checking in on date: ${dateStr} in timezone ${timezone} (UTC: ${startOfDay.toISOString()} to ${endOfDay.toISOString()})`, { requestId });
       } else {
         logger.warn(`Invalid checkInDate filter`, { requestId, checkInDate: req.query.checkInDate });
         warnings.push(`Invalid checkInDate filter: ${req.query.checkInDate}`);

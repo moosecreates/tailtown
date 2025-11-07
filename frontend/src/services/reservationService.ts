@@ -72,7 +72,8 @@ export const reservationService = {
     sortOrder: 'asc' | 'desc' = 'asc',
     status?: string,
     date?: string,
-    checkInDate?: string
+    checkInDate?: string,
+    timezone?: string
   ): Promise<{ status: string; data: Reservation[]; totalPages: number; currentPage: number; results: number }> => {
     try {
       const response: AxiosResponse = await api.get('/api/reservations', {
@@ -83,7 +84,8 @@ export const reservationService = {
           sortOrder,
           status,
           date,
-          checkInDate
+          checkInDate,
+          timezone
         }
       });
       return response.data;
