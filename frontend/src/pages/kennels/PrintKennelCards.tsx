@@ -139,8 +139,8 @@ const PrintKennelCards: React.FC = () => {
       console.log(`Loading kennel cards for check-in date: ${formattedDate}`);
       
       // TODO: Fetch tenant timezone from tenant settings
-      // For now, hardcode to America/Los_Angeles (PST/PDT)
-      const timezone = 'America/Los_Angeles';
+      // For now, hardcode to America/Denver (MST/MDT)
+      const timezone = 'America/Denver';
       
       // Fetch reservations checking in on the selected date
       // Use checkInDate parameter to get only dogs checking in on this specific day in tenant's timezone
