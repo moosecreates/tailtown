@@ -115,12 +115,13 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
     try {
       const dateStr = req.query.checkInDate as string;
       const [year, month, day] = dateStr.split('-').map(num => parseInt(num, 10));
-      const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
-      const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+      // Use UTC dates to match database storage
+      const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+      const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
       if (!isNaN(startOfDay.getTime()) && !isNaN(endOfDay.getTime())) {
-        // Filter for reservations checking in on this specific date
+        // Filter for reservations checking in on this specific date (UTC)
         filter.startDate = { gte: startOfDay, lte: endOfDay };
-        logger.info(`Filtering reservations checking in on date: ${dateStr}`, { requestId });
+        logger.info(`Filtering reservations checking in on date: ${dateStr} (UTC: ${startOfDay.toISOString()} to ${endOfDay.toISOString()})`, { requestId });
       } else {
         logger.warn(`Invalid checkInDate filter`, { requestId, checkInDate: req.query.checkInDate });
         warnings.push(`Invalid checkInDate filter: ${req.query.checkInDate}`);
