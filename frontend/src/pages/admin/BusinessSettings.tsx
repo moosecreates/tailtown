@@ -186,14 +186,19 @@ const BusinessSettings: React.FC = () => {
     setSuccess('');
 
     try {
-      // Get current subdomain
-      const subdomain = window.location.hostname.split('.')[0];
-      
-      // Get tenant by subdomain
-      const tenant = await tenantService.getTenantBySubdomain(subdomain);
-      
-      // Update tenant timezone
-      await tenantService.updateTenant(tenant.id, { timezone: newTimezone });
+      // Update tenant timezone using the new endpoint
+      const response = await fetch(`${API_URL}/api/tenants/me/settings`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({ timezone: newTimezone })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update timezone');
+      }
       
       // Update local state and cache
       setTimezone(newTimezone);

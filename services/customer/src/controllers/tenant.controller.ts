@@ -177,6 +177,41 @@ export class TenantController {
   }
 
   /**
+   * PATCH /api/tenants/me/settings
+   * Update current tenant's settings (timezone, etc.)
+   */
+  async updateCurrentTenantSettings(req: Request, res: Response) {
+    try {
+      const tenantId = req.user?.tenantId;
+      
+      if (!tenantId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Unauthorized',
+          message: 'No tenant ID found in request',
+        });
+      }
+
+      const data: UpdateTenantDto = req.body;
+
+      const tenant = await tenantService.updateTenant(tenantId, data);
+
+      res.json({
+        success: true,
+        data: tenant,
+        message: 'Settings updated successfully',
+      });
+    } catch (error: any) {
+      console.error('Error updating tenant settings:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update settings',
+        message: error.message,
+      });
+    }
+  }
+
+  /**
    * POST /api/tenants/:id/pause
    * Pause a tenant
    */
