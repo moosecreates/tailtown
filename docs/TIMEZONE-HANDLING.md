@@ -525,11 +525,13 @@ newEndDate.setHours(newEndDate.getHours() + 7);
 
 ### Kennel Cards Integration
 
-The kennel cards page uses the tenant's timezone setting to filter reservations:
+The kennel cards page dynamically fetches the tenant's timezone setting:
 
 ```typescript
 // Frontend: PrintKennelCards.tsx
-const timezone = 'America/Denver'; // Mountain Time
+// Fetch tenant timezone from tenant settings
+const timezone = await tenantService.getCurrentTenantTimezone();
+setTenantTimezone(timezone);
 
 // Backend: get-reservation.controller.ts
 const timezoneOffsets: { [key: string]: number } = {
@@ -543,10 +545,26 @@ const timezoneOffsets: { [key: string]: number } = {
 const offsetHours = timezoneOffsets[timezone] || -5;
 ```
 
+**How It Works:**
+1. Frontend fetches tenant timezone from API on page load
+2. Timezone is cached in localStorage for performance
+3. Backend uses timezone to convert check-in date to UTC range
+4. Reservations are filtered correctly for tenant's local time
+
+**Managing Tenant Timezone:**
+```bash
+# Check current timezone
+node scripts/test-tenant-timezone.js
+
+# Update timezone
+node scripts/update-tenant-timezone.js tailtown America/Denver
+```
+
 This ensures:
 - Dogs checking in at 11:30 PM on Nov 5 appear on Nov 5 cards (not Nov 6)
 - Kennel cards show correct local times
 - Date filtering works correctly for the business's timezone
+- Each tenant can have their own timezone setting
 
 ### Best Practices for Gingr Imports
 
@@ -600,11 +618,13 @@ After importing Gingr data:
 
 ---
 
-**Last Updated:** November 6, 2025
-**Version:** 1.2.0
+**Last Updated:** November 7, 2025
+**Version:** 1.3.0
 **Status:** Production Ready
 **Test Coverage:** 75 passing tests (28 date utils + 21 backend + 11 frontend + 15 Gingr timezone)
 **Special Notes:** 
 - Sunday (day 0) scheduling fully validated
 - Gingr import timezone handling (Mountain Time) fully tested
 - 6,535 reservations migrated successfully
+- Dynamic tenant timezone support implemented
+- Timezone management scripts available
