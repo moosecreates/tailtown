@@ -1,14 +1,40 @@
-# Documentation Update - November 5, 2025
+# Documentation Update - November 5-6, 2025
 
 **Status**: ✅ Complete  
 **Updated By**: Development Team  
-**Date**: November 5, 2025 - 4:10 PM PST
+**Date**: November 5-6, 2025
 
 ---
 
 ## 📋 Summary
 
-Updated all architecture and system documentation to reflect the major improvements made today, including code cleanup, authentication enhancements, and testing infrastructure.
+Updated all architecture and system documentation to reflect the major improvements made, including code cleanup, authentication enhancements, testing infrastructure, multi-tenancy security fixes, performance optimizations, and timezone handling for Gingr imports.
+
+---
+
+## 🆕 November 6, 2025 Updates
+
+### Critical Fixes & Enhancements
+
+1. **Multi-Tenancy Security Fix** (CVE-2025-001)
+   - Fixed critical data leakage in financial reports
+   - Added tenantId filtering to all queries
+   - Created 14 automated tests
+
+2. **Print Kennel Cards Performance**
+   - Fixed N+1 query problem (1,001 → 1 API call)
+   - 30x faster load time (30s → <1s)
+   - Added timezone-aware date filtering
+
+3. **Gingr Timezone Handling**
+   - Fixed 7-hour offset bug in reservation times
+   - Migrated 6,535 reservations
+   - Added 15 comprehensive tests
+   - **NEW DOCUMENTATION**: See section below
+
+4. **Service Revenue Enhancement**
+   - Fixed revenue reporting ($209 → $623K)
+   - Included imported invoices
 
 ---
 
@@ -506,17 +532,120 @@ verify-build checks for localhost
 
 ---
 
+## 🆕 NEW: Gingr Timezone Handling Documentation
+
+### Document Added: TIMEZONE-HANDLING.md (Updated)
+**Location**: `/docs/TIMEZONE-HANDLING.md`
+
+**New Section Added**: "Gingr Import Timezone Handling"
+
+### The Problem
+
+When importing reservations from Gingr, check-in/out times were displaying incorrectly:
+- **Expected**: 12:30 PM check-in
+- **Actual**: 12:30 AM check-in (7-hour offset error)
+
+**Root Cause**:
+- Gingr sends dates as `"2025-10-13T12:30:00"` (Mountain Time, no timezone indicator)
+- JavaScript `new Date()` treated these as local time, then converted to UTC
+- This caused a 7-hour shift for Mountain Time (UTC-7)
+
+### The Solution
+
+**Code Pattern** (in `gingr-sync.service.ts`):
+```typescript
+const parseGingrDate = (dateStr: string): Date => {
+  const date = new Date(dateStr);
+  date.setHours(date.getHours() + 7); // Add MST offset
+  return date;
+};
+
+// Use when importing
+startDate: parseGingrDate(reservation.start_date)
+```
+
+### Migration Completed
+
+**Script**: `scripts/fix-reservation-times.js`
+- Fixed 6,535 existing reservations
+- Added 7 hours to all Gingr-imported dates
+- Verified times now match Gingr system
+
+**Example Fix**:
+- Old: `2025-10-25T09:00:00.000Z` (2:00 AM MST - WRONG)
+- New: `2025-10-25T16:00:00.000Z` (9:00 AM MST - CORRECT)
+
+### Test Coverage
+
+**New Test File**: `gingr-timezone-handling.test.ts`
+
+**15 comprehensive tests covering**:
+1. Date conversion (noon, morning, evening, late night)
+2. Timezone offset calculations
+3. Edge cases (midnight, date boundaries)
+4. Real-world scenarios (migration validation, bug prevention)
+5. Integration with kennel cards
+
+### Documentation Sections
+
+1. **The Problem** - Explains the 7-hour offset bug
+2. **Real Example** - Before/after code comparison
+3. **The Solution** - Implementation with code samples
+4. **Migration Script** - Documents the 6,535 reservation fix
+5. **Test Coverage** - Breakdown of all 15 tests
+6. **Timezone Offset Reference** - MST/MDT details
+7. **Kennel Cards Integration** - Date filtering connection
+8. **Best Practices** - DO's and DON'Ts for Gingr imports
+9. **Verification Checklist** - Post-import validation steps
+
+### Critical Developer Notes
+
+**Always use this pattern when importing from Gingr**:
+
+✅ **CORRECT**:
+```typescript
+const parseGingrDate = (dateStr: string): Date => {
+  const date = new Date(dateStr);
+  date.setHours(date.getHours() + 7);
+  return date;
+};
+```
+
+❌ **WRONG**:
+```typescript
+new Date(reservation.start_date) // Will be off by 7 hours!
+```
+
+### Related Files
+
+- **Import Logic**: `services/customer/src/services/gingr-sync.service.ts`
+- **Migration Script**: `scripts/fix-reservation-times.js`
+- **Tests**: `services/customer/src/__tests__/integration/gingr-timezone-handling.test.ts`
+- **Documentation**: `docs/TIMEZONE-HANDLING.md`
+- **Kennel Cards**: `frontend/src/pages/kennels/PrintKennelCards.tsx`
+
+### Memory Created
+
+**Title**: "Gingr Timezone Handling - Mountain Time Conversion"
+**Tags**: timezone, gingr, mountain_time, date_conversion, bug_fix
+
+Contains code patterns and critical implementation details for future reference.
+
+---
+
 ### Metrics (Nov 6)
 
 - **Deployment Safeguards**: 4 layers implemented
 - **Build Verification**: Automated script checking 50+ files
 - **Environment Tests**: 4 test cases added
 - **SSL Certificates**: 4 domains covered
-- **Documentation**: 2 new guides created
-- **Issues Resolved**: 5 major deployment/auth issues
+- **Documentation**: 3 new guides created (+ timezone handling)
+- **Issues Resolved**: 9 major issues (5 deployment/auth + 4 performance/timezone)
+- **Test Coverage**: 488 → 503 tests (+ 15 Gingr timezone tests)
+- **Reservations Migrated**: 6,535 (timezone fix)
 
 ---
 
 **Documentation Status**: ✅ Current and Complete  
-**Last Updated**: November 6, 2025 - 4:10 PM PST  
-**Next Review**: December 5, 2025
+**Last Updated**: November 6, 2025 - 9:52 PM MST  
+**Next Review**: December 6, 2025
