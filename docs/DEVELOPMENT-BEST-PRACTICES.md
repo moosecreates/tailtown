@@ -487,6 +487,61 @@ certbot renew
 
 ---
 
+## 🕐 Gingr Import Timezone Handling
+
+### The Critical Bug (Fixed Nov 6, 2025)
+
+**Problem**: Gingr sends dates without timezone info, causing 7-hour offset errors.
+
+**❌ WRONG - Direct Date parsing:**
+```typescript
+// DON'T DO THIS - Will be off by 7 hours!
+const reservation = {
+  startDate: new Date(gingrData.start_date),  // "2025-10-13T12:30:00"
+  endDate: new Date(gingrData.end_date)
+};
+// Result: 12:30 PM MST displays as 12:30 AM MST (WRONG!)
+```
+
+**✅ CORRECT - Add timezone offset:**
+```typescript
+// DO THIS - Converts Mountain Time to UTC correctly
+const parseGingrDate = (dateStr: string): Date => {
+  const date = new Date(dateStr);
+  date.setHours(date.getHours() + 7);  // Add MST offset (UTC-7)
+  return date;
+};
+
+const reservation = {
+  startDate: parseGingrDate(gingrData.start_date),
+  endDate: parseGingrDate(gingrData.end_date)
+};
+// Result: 12:30 PM MST displays correctly!
+```
+
+**Why**: 
+- Gingr sends: `"2025-10-13T12:30:00"` (meant as 12:30 PM Mountain Time)
+- No timezone indicator (no `Z` or offset)
+- JavaScript treats as local time, then converts to UTC
+- Must add 7 hours to get correct UTC time for Mountain Time
+
+**Real Example**:
+```typescript
+// Gingr sends: "2025-10-13T12:30:00" (12:30 PM MST)
+// Wrong: new Date() → 2025-10-13T12:30:00Z (5:30 AM MST) ❌
+// Right: Add 7 hours → 2025-10-13T19:30:00Z (12:30 PM MST) ✅
+```
+
+**Location**: `services/customer/src/services/gingr-sync.service.ts`
+
+**Tests**: `services/customer/src/__tests__/integration/gingr-timezone-handling.test.ts` (15 tests)
+
+**Documentation**: See `docs/TIMEZONE-HANDLING.md` for full details
+
+**Migration**: 6,535 reservations were fixed with `scripts/fix-reservation-times.js`
+
+---
+
 ## 💡 Pro Tips
 
 1. **Always test in dev tenant first** - Never test directly in production
@@ -497,6 +552,8 @@ certbot renew
 6. **Use TypeScript strictly** - Catches errors at compile time
 7. **Keep middleware order consistent** - Prevents subtle bugs
 8. **Test authentication edge cases** - Expired tokens, invalid tokens, etc.
+9. **Always use parseGingrDate() for Gingr imports** - Prevents timezone bugs
+10. **Test timezone conversions with various times** - Morning, noon, evening, late night
 
 ---
 
@@ -504,4 +561,4 @@ certbot renew
 
 **Questions?** Check the related documentation or ask the team.
 
-**Last Updated**: November 6, 2025
+**Last Updated**: November 6, 2025 - 9:53 PM MST
