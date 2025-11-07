@@ -22,6 +22,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { Print as PrintIcon, FilterList as FilterIcon } from '@mui/icons-material';
 import KennelCard from '../../components/kennels/KennelCard';
 import { reservationService } from '../../services/reservationService';
+import { tenantService } from '../../services/tenantService';
 import { format } from 'date-fns';
 
 /**
@@ -49,6 +50,9 @@ const PrintKennelCards: React.FC = () => {
   // State for pet and customer data
   const [petData, setPetData] = useState<{[key: string]: any}>({});
   const [customerData, setCustomerData] = useState<{[key: string]: any}>({});
+  
+  // State for tenant timezone
+  const [tenantTimezone, setTenantTimezone] = useState<string>('America/Denver');
 
   // Load reservations when filters change (but not on initial mount)
   useEffect(() => {
@@ -80,8 +84,10 @@ const PrintKennelCards: React.FC = () => {
         
         console.log(`Initial load: Loading kennel cards for check-in date: ${formattedDate}`);
         
-        // TODO: Fetch tenant timezone from tenant settings
-        const timezone = 'America/Los_Angeles';
+        // Fetch tenant timezone from tenant settings
+        const timezone = await tenantService.getCurrentTenantTimezone();
+        setTenantTimezone(timezone);
+        console.log(`Using tenant timezone: ${timezone}`);
         
         const response = await reservationService.getAllReservations(
           1, 500, 'startDate', 'asc', '', undefined, formattedDate, timezone
@@ -137,10 +143,7 @@ const PrintKennelCards: React.FC = () => {
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       
       console.log(`Loading kennel cards for check-in date: ${formattedDate}`);
-      
-      // TODO: Fetch tenant timezone from tenant settings
-      // For now, hardcode to America/Denver (MST/MDT)
-      const timezone = 'America/Denver';
+      console.log(`Using tenant timezone: ${tenantTimezone}`);
       
       // Fetch reservations checking in on the selected date
       // Use checkInDate parameter to get only dogs checking in on this specific day in tenant's timezone
@@ -152,7 +155,7 @@ const PrintKennelCards: React.FC = () => {
         selectedStatus === 'ALL' ? '' : selectedStatus, // If ALL, don't filter by status
         undefined,  // date (not used when checkInDate is provided)
         formattedDate, // checkInDate - filter for exact check-in date
-        timezone    // timezone - tenant's local timezone
+        tenantTimezone    // timezone - tenant's local timezone
       );
       
       // Ensure we have an array
@@ -190,7 +193,7 @@ const PrintKennelCards: React.FC = () => {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, selectedStatus]); // fetchAdditionalData and filterReservations are stable (useCallback below)
+  }, [selectedDate, selectedStatus, tenantTimezone]); // fetchAdditionalData and filterReservations are stable (useCallback below)
   
   // Extract pet and customer data from reservations (they're already included in the API response)
   const fetchAdditionalData = useCallback((reservationsData: any[]) => {
