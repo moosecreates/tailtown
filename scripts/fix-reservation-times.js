@@ -72,7 +72,7 @@ async function fixReservationTimes() {
           console.log(`  Old end:   ${reservation.endDate.toISOString()}`);
           console.log(`  New end:   ${newEndDate.toISOString()}`);
         }
-      } catch (error: any) {
+      } catch (error) {
         console.error(`Error fixing reservation ${reservation.id}:`, error.message);
       }
     }
