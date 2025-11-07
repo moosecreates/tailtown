@@ -396,13 +396,19 @@ const ReservationList: React.FC<ReservationListProps> = ({
         <Box sx={{ display: 'none', '@media print': { display: 'block' } }}>
           {(() => {
             const reservation = reservations.find(r => r.id === printingReservationId);
-            if (!reservation) return null;
+            if (!reservation || !reservation.pet || !reservation.customer) return null;
             
             return (
               <KennelCard
-                reservation={reservation}
-                pet={reservation.pet}
-                customer={reservation.customer}
+                kennelNumber={reservation.resource?.name || 'N/A'}
+                suiteType={reservation.resource?.type || 'STANDARD'}
+                petName={reservation.pet.name}
+                petBreed={reservation.pet.breed}
+                petIconIds={reservation.pet.petIcons || []}
+                petType={reservation.pet.type as 'DOG' | 'CAT' | 'OTHER'}
+                ownerName={`${reservation.customer.firstName || ''} ${reservation.customer.lastName || ''}`.trim()}
+                startDate={new Date(reservation.startDate)}
+                endDate={new Date(reservation.endDate)}
               />
             );
           })()}
