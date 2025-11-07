@@ -2,9 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardHeader, CardContent, Box, Typography, Chip, Button, CircularProgress, List, ListItem, IconButton, Tooltip, TextField, InputAdornment } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PrintIcon from '@mui/icons-material/Print';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import PetNameWithIcons from '../pets/PetNameWithIcons';
+import KennelCard from '../kennels/KennelCard';
 
 interface Reservation {
   id: string;
@@ -81,6 +83,7 @@ const ReservationList: React.FC<ReservationListProps> = ({
 }) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [printingReservationId, setPrintingReservationId] = useState<string | null>(null);
 
   // Filter reservations based on search query
   const filteredReservations = useMemo(() => {
@@ -110,6 +113,19 @@ const ReservationList: React.FC<ReservationListProps> = ({
 
   const handleClearSearch = () => {
     setSearchQuery('');
+  };
+
+  /**
+   * Print a single kennel card for a reservation
+   */
+  const handlePrintKennelCard = (reservation: Reservation) => {
+    setPrintingReservationId(reservation.id);
+    
+    // Small delay to ensure the component renders
+    setTimeout(() => {
+      window.print();
+      setPrintingReservationId(null);
+    }, 100);
   };
 
   /**
@@ -272,26 +288,40 @@ const ReservationList: React.FC<ReservationListProps> = ({
                   }
                 }}
                 secondaryAction={
-                  filter === 'in' && reservation.status === 'CONFIRMED' ? (
-                    <Tooltip title="Start Check-In">
+                  <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                    <Tooltip title="Print Kennel Card">
                       <IconButton
-                        edge="end"
+                        size="small"
                         color="primary"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/check-in/${reservation.id}`);
+                          handlePrintKennelCard(reservation);
                         }}
                       >
-                        <CheckCircleIcon />
+                        <PrintIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                  ) : (
-                    <Chip 
-                      label={reservation.status} 
-                      color={getStatusColor(reservation.status)}
-                      size="small"
-                    />
-                  )
+                    {filter === 'in' && reservation.status === 'CONFIRMED' ? (
+                      <Tooltip title="Start Check-In">
+                        <IconButton
+                          edge="end"
+                          color="primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/check-in/${reservation.id}`);
+                          }}
+                        >
+                          <CheckCircleIcon />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <Chip 
+                        label={reservation.status} 
+                        color={getStatusColor(reservation.status)}
+                        size="small"
+                      />
+                    )}
+                  </Box>
                 }
               >
                 <Box 
@@ -360,6 +390,24 @@ const ReservationList: React.FC<ReservationListProps> = ({
           </Box>
         )}
       </CardContent>
+
+      {/* Hidden kennel card for printing */}
+      {printingReservationId && (
+        <Box sx={{ display: 'none', '@media print': { display: 'block' } }}>
+          {(() => {
+            const reservation = reservations.find(r => r.id === printingReservationId);
+            if (!reservation) return null;
+            
+            return (
+              <KennelCard
+                reservation={reservation}
+                pet={reservation.pet}
+                customer={reservation.customer}
+              />
+            );
+          })()}
+        </Box>
+      )}
     </Card>
   );
 };
