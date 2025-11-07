@@ -19,8 +19,6 @@ export const getSalesByService = async (req: Request, res: Response, next: NextF
     const { period = 'all', startDate, endDate } = req.query;
     const tenantId = (req as any).tenantId || 'dev';
     
-    console.log('Analytics: Getting sales by service with period:', period);
-    
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
       period as string, 
@@ -60,8 +58,6 @@ export const getSalesByAddOn = async (req: Request, res: Response, next: NextFun
   try {
     const { period = 'all', startDate, endDate } = req.query;
     const tenantId = (req as any).tenantId || 'dev';
-    
-    console.log('Analytics: Getting sales by add-on with period:', period);
     
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
@@ -103,8 +99,6 @@ export const getCustomerValue = async (req: Request, res: Response, next: NextFu
     const { period = 'all', startDate, endDate } = req.query;
     const tenantId = (req as any).tenantId || 'dev';
     
-    console.log('Analytics: Getting customer value with period:', period);
-    
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
       period as string, 
@@ -136,8 +130,6 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
     const { period = 'all', startDate, endDate } = req.query;
     const tenantId = (req as any).tenantId || 'dev';
     
-    console.log('Analytics: Getting dashboard summary with period:', period, 'tenantId:', tenantId);
-    
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
       period as string, 
@@ -166,12 +158,6 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
     
     // Get customer revenue data to get unique customer count 
     const customerRevenue = await financialService.getCustomerRevenue(dateRange, tenantId);
-    
-    console.log('Dashboard Summary Debug:');
-    console.log('  Total Revenue:', financialSummary.totalRevenue);
-    console.log('  Customer Count:', customerRevenue.length);
-    console.log('  Invoice Count:', financialSummary.invoiceCount);
-    console.log('  Service Data Length:', serviceData.length);
     
     res.status(200).json({
       status: 'success',
