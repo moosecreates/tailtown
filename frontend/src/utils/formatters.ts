@@ -1,9 +1,20 @@
 /**
  * Format a number as currency (USD)
  * @param amount - The amount to format
+ * @param compact - Whether to use compact notation for large numbers
  * @returns Formatted currency string
  */
-export const formatCurrency = (amount: number): string => {
+export const formatCurrency = (amount: number, compact: boolean = false): string => {
+  if (compact && Math.abs(amount) >= 1000) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      notation: 'compact',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 1,
+    }).format(amount);
+  }
+  
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',

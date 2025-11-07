@@ -85,13 +85,19 @@ interface GingrReservation {
 interface GingrInvoice {
   id: string;
   owner_id: string;
-  invoice_number?: string;
-  invoice_date: number;
-  due_date?: number;
-  subtotal: number;
-  tax: number;
-  total: number;
-  status: string;
+  subtotal: string;
+  tax_amount: string;
+  total: string;
+  create_stamp: string; // Unix timestamp as string
+  location_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  username: string;
+  user_id: string;
+  item_count: string;
+  voided_item_count: string | null;
+  is_returned: string | null;
 }
 
 interface GingrReservationType {

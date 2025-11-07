@@ -191,7 +191,7 @@ const AnalyticsDashboard = () => {
                   Total Revenue
                 </Typography>
                 <Typography variant="h4" sx={{ mt: 1, color: 'primary.main' }}>
-                  {formatCurrency(dashboardData.totalRevenue)}
+                  {formatCurrency(dashboardData.totalRevenue, true)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                   {getPeriodLabel()}
@@ -252,48 +252,79 @@ const AnalyticsDashboard = () => {
         <TabPanel value={tabValue} index={0}>
           {serviceData && (
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              {/* Top Services Summary Cards */}
+              <Grid item xs={12}>
+                <Grid container spacing={2}>
+                  {serviceData.services
+                    .sort((a, b) => b.revenue - a.revenue)
+                    .slice(0, 4)
+                    .map((service, index) => (
+                      <Grid item xs={12} sm={6} md={3} key={service.id}>
+                        <Paper 
+                          elevation={1} 
+                          sx={{ 
+                            p: 2, 
+                            borderLeft: `4px solid ${COLORS[index % COLORS.length]}`,
+                            height: '100%'
+                          }}
+                        >
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                            {service.name.length > 25 ? service.name.substring(0, 23) + '...' : service.name}
+                          </Typography>
+                          <Typography variant="h5" sx={{ fontWeight: 600, mb: 0.5 }}>
+                            {formatCurrency(service.revenue)}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {service.count} bookings • {formatCurrency(service.count > 0 ? service.revenue / service.count : 0)} avg
+                          </Typography>
+                        </Paper>
+                      </Grid>
+                    ))}
+                </Grid>
+              </Grid>
+
+              {/* Revenue Chart - Top 10 Services */}
+              <Grid item xs={12} lg={8}>
                 <Card>
                   <CardHeader 
-                    title="Service Revenue Breakdown" 
-                    titleTypographyProps={{ variant: 'h6', fontSize: '1rem' }}
-                    sx={{ pb: 1 }}
+                    title="Top 10 Services by Revenue" 
+                    titleTypographyProps={{ variant: 'h6' }}
                   />
-                  <CardContent sx={{ pt: 1 }}>
-                    <Box sx={{ height: { xs: 250, sm: 300 } }}>
+                  <CardContent>
+                    <Box sx={{ height: 400 }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
-                          data={serviceData.services}
-                          margin={{ top: 10, right: 10, left: 0, bottom: 80 }}
+                          data={serviceData.services
+                            .sort((a, b) => b.revenue - a.revenue)
+                            .slice(0, 10)}
+                          layout="vertical"
+                          margin={{ top: 5, right: 30, left: 150, bottom: 5 }}
                         >
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis 
+                            type="number"
+                            tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                          />
+                          <YAxis 
+                            type="category"
                             dataKey="name" 
-                            angle={-45} 
-                            textAnchor="end"
-                            height={70}
-                            interval={0}
-                            tick={{ fontSize: 9 }}
+                            width={140}
+                            tick={{ fontSize: 12 }}
                             tickFormatter={(value) => {
-                              // Truncate long service names
-                              if (value.length > 15) {
-                                return value.substring(0, 13) + '...';
+                              if (value.length > 20) {
+                                return value.substring(0, 18) + '...';
                               }
                               return value;
                             }}
                           />
-                          <YAxis 
-                            tickFormatter={(value) => formatCurrency(value)}
-                            tick={{ fontSize: 10 }}
-                            width={60}
-                          />
                           <Tooltip 
-                            formatter={(value) => formatCurrency(Number(value))}
+                            formatter={(value) => [formatCurrency(Number(value)), 'Revenue']}
                             labelFormatter={(label) => `${label}`}
                           />
                           <Bar 
                             dataKey="revenue" 
                             fill={theme.palette.primary.main}
+                            radius={[0, 4, 4, 0]}
                           />
                         </BarChart>
                       </ResponsiveContainer>
@@ -301,49 +332,52 @@ const AnalyticsDashboard = () => {
                   </CardContent>
                 </Card>
               </Grid>
-              <Grid item xs={12} md={6}>
-                <Card>
+
+              {/* Quick Stats */}
+              <Grid item xs={12} lg={4}>
+                <Card sx={{ height: '100%' }}>
                   <CardHeader 
-                    title="Service Bookings" 
-                    titleTypographyProps={{ variant: 'h6', fontSize: '1rem' }}
-                    sx={{ pb: 1 }}
+                    title="Service Overview" 
+                    titleTypographyProps={{ variant: 'h6' }}
                   />
-                  <CardContent sx={{ pt: 1 }}>
-                    <Box sx={{ height: { xs: 250, sm: 300 } }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={serviceData.services}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ percent }: { percent: number }) => 
-                              percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''
-                            }
-                            outerRadius={window.innerWidth < 600 ? 60 : 80}
-                            fill="#8884d8"
-                            dataKey="count"
-                          >
-                            {serviceData.services.map((entry, index) => (
-                              <Cell 
-                                key={`cell-${index}`} 
-                                fill={COLORS[index % COLORS.length]} 
-                              />
-                            ))}
-                          </Pie>
-                          <Tooltip 
-                            formatter={(value: number) => [`${value} bookings`, 'Count']}
-                          />
-                          <Legend 
-                            layout="horizontal"
-                            verticalAlign="bottom"
-                            align="center"
-                            wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
-                            iconSize={8}
-                            formatter={(value) => value.length > 20 ? value.substring(0, 18) + '...' : value}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          Total Services
+                        </Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                          {serviceData.services.length}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          Total Revenue
+                        </Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                          {formatCurrency(serviceData.totalRevenue)}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          Total Bookings
+                        </Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                          {serviceData.services.reduce((sum, s) => sum + s.count, 0)}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="body2" color="text.secondary">
+                          Average per Booking
+                        </Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                          {formatCurrency(
+                            serviceData.services.reduce((sum, s) => sum + s.count, 0) > 0
+                              ? serviceData.totalRevenue / serviceData.services.reduce((sum, s) => sum + s.count, 0)
+                              : 0
+                          )}
+                        </Typography>
+                      </Box>
                     </Box>
                   </CardContent>
                 </Card>

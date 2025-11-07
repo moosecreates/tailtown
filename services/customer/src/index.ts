@@ -406,9 +406,11 @@ app.get('/health', (req, res) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Customer service running on port ${PORT}`);
-});
+// Start the server only if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Customer service running on port ${PORT}`);
+  });
+}
 
 export default app;

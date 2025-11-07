@@ -420,13 +420,13 @@ export class GingrSyncService {
 
         const invoiceData: any = {
           customerId: customer.id,
-          invoiceNumber: invoice.invoice_number || `GINGR-${invoice.id}`,
-          invoiceDate: new Date(invoice.invoice_date * 1000),
-          dueDate: invoice.due_date ? new Date(invoice.due_date * 1000) : undefined,
-          subtotal: invoice.subtotal,
-          tax: invoice.tax,
-          total: invoice.total,
-          status: invoice.status ? invoice.status.toUpperCase() : 'DRAFT',
+          invoiceNumber: `GINGR-${invoice.id}`,
+          invoiceDate: new Date(parseInt(invoice.create_stamp) * 1000),
+          dueDate: new Date(parseInt(invoice.create_stamp) * 1000 + 30 * 24 * 60 * 60 * 1000),
+          subtotal: parseFloat(invoice.subtotal),
+          tax: parseFloat(invoice.tax_amount),
+          total: parseFloat(invoice.total),
+          status: 'PAID', // All imported invoices are completed transactions
           externalId: invoice.id
         };
 
