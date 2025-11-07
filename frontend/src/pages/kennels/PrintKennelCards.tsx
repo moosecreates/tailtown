@@ -98,10 +98,8 @@ const PrintKennelCards: React.FC = () => {
         setReservations(reservationsData);
         
         if (reservationsData.length > 0) {
-          await fetchAdditionalData(reservationsData);
-          setTimeout(() => {
-            filterReservations(reservationsData);
-          }, 100);
+          const extracted = fetchAdditionalData(reservationsData);
+          filterReservations(reservationsData, extracted.pets, extracted.customers);
         } else {
           setFilteredReservations([]);
         }
@@ -171,13 +169,11 @@ const PrintKennelCards: React.FC = () => {
       
       setReservations(reservationsData);
       
-      // Fetch additional data for each reservation
-      await fetchAdditionalData(reservationsData);
+      // Extract pet and customer data from reservations
+      const extracted = fetchAdditionalData(reservationsData);
       
-      // Apply filters after setting reservations
-      setTimeout(() => {
-        filterReservations(reservationsData);
-      }, 100);
+      // Apply filters immediately with the extracted data
+      filterReservations(reservationsData, extracted.pets, extracted.customers);
       
     } catch (err: any) {
       console.error('Error loading reservations:', err);
@@ -189,7 +185,7 @@ const PrintKennelCards: React.FC = () => {
   }, [selectedDate, selectedStatus]); // fetchAdditionalData and filterReservations are stable (useCallback below)
   
   // Extract pet and customer data from reservations (they're already included in the API response)
-  const fetchAdditionalData = useCallback(async (reservationsData: any[]) => {
+  const fetchAdditionalData = useCallback((reservationsData: any[]) => {
     try {
       // The reservation API already includes pet and customer data
       // Extract them from the reservations instead of making separate API calls
@@ -213,14 +209,20 @@ const PrintKennelCards: React.FC = () => {
       
       console.log(`Extracted ${Object.keys(petsTemp).length} pets and ${Object.keys(customersTemp).length} customers from reservations`);
       
+      // Return the extracted data so we can use it immediately
+      return { pets: petsTemp, customers: customersTemp };
+      
     } catch (err) {
       console.error('Error extracting additional data:', err);
+      return { pets: {}, customers: {} };
     }
   }, []);
   
   // Memoize the filter function to prevent excessive re-filtering
-  const filterReservations = useCallback((reservationsToFilter?: any[]) => {
+  const filterReservations = useCallback((reservationsToFilter?: any[], extractedPets?: any, extractedCustomers?: any) => {
     const reservationsData = reservationsToFilter || reservations;
+    const pets = extractedPets || petData;
+    const customers = extractedCustomers || customerData;
     
     // Ensure we have an array
     if (!Array.isArray(reservationsData)) {
@@ -229,35 +231,35 @@ const PrintKennelCards: React.FC = () => {
       return;
     }
     
-    // Log all reservations for debugging
+    console.log(`Filtering ${reservationsData.length} reservations with ${Object.keys(pets).length} pets and ${Object.keys(customers).length} customers`);
     
     // For kennel cards, we want to show all reservations that have pet and customer data
     // We'll be more lenient with resource requirements
     const filtered = reservationsData.filter(res => {
       // Check if reservation has pet and customer IDs
       if (!res.petId || !res.customerId) {
+        console.log(`Reservation ${res.id} missing petId or customerId`);
         return false;
       }
       
       // Check if we have the pet and customer data
-      if (!petData[res.petId]) {
+      if (!pets[res.petId]) {
+        console.log(`Reservation ${res.id} missing pet data for petId: ${res.petId}`);
         return false;
       }
       
-      if (!customerData[res.customerId]) {
+      if (!customers[res.customerId]) {
+        console.log(`Reservation ${res.id} missing customer data for customerId: ${res.customerId}`);
         return false;
       }
       
       // For kennel cards, we'll show all reservations even if they don't have a resource assigned
       // This ensures we print cards for all pets regardless of kennel assignment
       
-      // For kennel cards, we show all reservations with pet and customer data
-      
       return true;
     });
     
-    if (filtered.length > 0) {
-    }
+    console.log(`Filtered to ${filtered.length} reservations`);
     setFilteredReservations(filtered);
   }, [reservations, petData, customerData]); // All data used in filtering
   
