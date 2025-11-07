@@ -78,8 +78,10 @@ const PrintKennelCards: React.FC = () => {
         
         const formattedDate = format(today, 'yyyy-MM-dd');
         
+        console.log(`Initial load: Loading kennel cards for check-in date: ${formattedDate}`);
+        
         const response = await reservationService.getAllReservations(
-          1, 500, 'startDate', 'asc', '', formattedDate
+          1, 500, 'startDate', 'asc', '', undefined, formattedDate
         );
         
         let reservationsData: any[] = [];
@@ -133,16 +135,18 @@ const PrintKennelCards: React.FC = () => {
       // Format date for API
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       
+      console.log(`Loading kennel cards for check-in date: ${formattedDate}`);
       
-      // Fetch reservations for the selected date, regardless of status
-      // Use a larger limit to ensure we get all reservations
+      // Fetch reservations checking in on the selected date
+      // Use checkInDate parameter to get only dogs checking in on this specific day
       const response = await reservationService.getAllReservations(
         1,          // page
         500,        // limit - increased to get more reservations
         'startDate', // sortBy
         'asc',      // sortOrder
         selectedStatus === 'ALL' ? '' : selectedStatus, // If ALL, don't filter by status
-        formattedDate
+        undefined,  // date (not used when checkInDate is provided)
+        formattedDate // checkInDate - filter for exact check-in date
       );
       
       // Ensure we have an array

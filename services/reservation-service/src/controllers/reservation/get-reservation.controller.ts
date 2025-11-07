@@ -25,6 +25,7 @@ import { safeExecutePrismaQuery, prisma } from './utils/prisma-helpers';
  * @param {string} req.query.status - Filter by reservation status
  * @param {string} req.query.startDate - Filter by start date
  * @param {string} req.query.endDate - Filter by end date
+ * @param {string} req.query.checkInDate - Filter by check-in date (startDate equals this date)
  * @param {string} req.query.customerId - Filter by customer ID
  * @param {string} req.query.petId - Filter by pet ID
  * @param {string} req.query.resourceId - Filter by resource ID
@@ -109,9 +110,30 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
   }
   
   // Handle date filters
-  // Support overlapping range when both startDate and endDate are provided
+  // Priority 1: Check-in date filter (for kennel cards - exact startDate match)
+  if (req.query.checkInDate) {
+    try {
+      const dateStr = req.query.checkInDate as string;
+      const [year, month, day] = dateStr.split('-').map(num => parseInt(num, 10));
+      const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+      const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
+      if (!isNaN(startOfDay.getTime()) && !isNaN(endOfDay.getTime())) {
+        // Filter for reservations checking in on this specific date
+        filter.startDate = { gte: startOfDay, lte: endOfDay };
+        logger.info(`Filtering reservations checking in on date: ${dateStr}`, { requestId });
+      } else {
+        logger.warn(`Invalid checkInDate filter`, { requestId, checkInDate: req.query.checkInDate });
+        warnings.push(`Invalid checkInDate filter: ${req.query.checkInDate}`);
+      }
+    } catch (error) {
+      logger.warn(`Error parsing checkInDate filter`, { requestId, checkInDate: req.query.checkInDate, error });
+      warnings.push(`Error parsing checkInDate filter: ${req.query.checkInDate}`);
+    }
+  }
+  
+  // Priority 2: Support overlapping range when both startDate and endDate are provided
   let rangeApplied = false;
-  if (req.query.startDate && req.query.endDate) {
+  if (!req.query.checkInDate && req.query.startDate && req.query.endDate) {
     try {
       const startStr = req.query.startDate as string;
       const endStr = req.query.endDate as string;
@@ -141,8 +163,8 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
     }
   }
 
-  // If no valid range, support single-day filtering via 'date' or 'startDate'
-  if (!rangeApplied) {
+  // Priority 3: If no checkInDate or range, support single-day filtering via 'date' or 'startDate'
+  if (!req.query.checkInDate && !rangeApplied) {
     const dateParam = req.query.startDate || req.query.date;
     if (dateParam) {
       try {
