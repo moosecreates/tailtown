@@ -9,7 +9,7 @@
  * Solution: Add 7 hours to all reservation times that came from Gingr (have externalId)
  */
 
-import { PrismaClient } from '@prisma/client';
+const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
