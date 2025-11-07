@@ -181,6 +181,8 @@ export async function getServiceRevenue(dateRange: DateRange, tenantId: string):
   const invoices = await getInvoicesInRange(dateRange, tenantId);
   
   const serviceMap = new Map<string, ServiceRevenue>();
+  let importedRevenue = 0;
+  let importedCount = 0;
   
   // Process invoices to extract service revenue
   for (const invoice of invoices) {
@@ -210,7 +212,23 @@ export async function getServiceRevenue(dateRange: DateRange, tenantId: string):
       data.count += 1;
       data.revenue += serviceRevenue;
       serviceMap.set(service.id, data);
+    } else {
+      // Invoice without reservation - likely imported from external system
+      // Add to "Historical Services" category
+      importedRevenue += invoice.total;
+      importedCount += 1;
     }
+  }
+  
+  // Add imported services as a separate category if there's any
+  if (importedRevenue > 0) {
+    serviceMap.set('imported-services', {
+      id: 'imported-services',
+      name: 'Historical Services (Imported)',
+      count: importedCount,
+      revenue: importedRevenue,
+      percentageOfTotal: 0
+    });
   }
   
   // Convert map to array
