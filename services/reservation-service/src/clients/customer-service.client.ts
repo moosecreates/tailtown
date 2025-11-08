@@ -13,6 +13,8 @@ import { AppError } from '../utils/service';
 // Environment configuration
 const CUSTOMER_SERVICE_URL = process.env.CUSTOMER_SERVICE_URL || 'http://localhost:4004';
 const SERVICE_TIMEOUT = parseInt(process.env.SERVICE_TIMEOUT || '5000', 10);
+const MAX_RETRIES = parseInt(process.env.SERVICE_MAX_RETRIES || '3', 10);
+const RETRY_DELAY_MS = parseInt(process.env.SERVICE_RETRY_DELAY_MS || '1000', 10);
 
 // Response types
 interface Customer {
@@ -66,38 +68,75 @@ export class CustomerServiceClient {
   }
 
   /**
+   * Retry helper with exponential backoff
+   * @param fn - Function to retry
+   * @param retries - Number of retries remaining
+   * @returns Result of function
+   */
+  private async retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    retries: number = MAX_RETRIES
+  ): Promise<T> {
+    try {
+      return await fn();
+    } catch (error) {
+      if (retries <= 0) {
+        throw error;
+      }
+
+      // Only retry on network errors or 5xx server errors
+      const shouldRetry =
+        error instanceof AppError
+          ? error.statusCode >= 500
+          : true; // Retry on network errors
+
+      if (!shouldRetry) {
+        throw error;
+      }
+
+      // Exponential backoff: 1s, 2s, 4s
+      const delay = RETRY_DELAY_MS * Math.pow(2, MAX_RETRIES - retries);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
+      return this.retryWithBackoff(fn, retries - 1);
+    }
+  }
+
+  /**
    * Get customer by ID
    * @param customerId - Customer UUID
    * @param tenantId - Tenant ID for verification
    * @returns Customer data
    */
   async getCustomer(customerId: string, tenantId: string): Promise<Customer> {
-    try {
-      const response = await this.client.get<ApiResponse<Customer>>(
-        `/api/customers/${customerId}`,
-        {
-          headers: {
-            'x-tenant-id': tenantId,
-          },
+    return this.retryWithBackoff(async () => {
+      try {
+        const response = await this.client.get<ApiResponse<Customer>>(
+          `/api/customers/${customerId}`,
+          {
+            headers: {
+              'x-tenant-id': tenantId,
+            },
+          }
+        );
+
+        if (response.data.status === 'error' || !response.data.data) {
+          throw AppError.notFoundError('Customer', customerId);
         }
-      );
 
-      if (response.data.status === 'error' || !response.data.data) {
-        throw AppError.notFoundError('Customer', customerId);
-      }
+        // Verify tenant matches (security check)
+        if (response.data.data.tenantId !== tenantId) {
+          throw AppError.forbiddenError('Customer does not belong to this tenant');
+        }
 
-      // Verify tenant matches (security check)
-      if (response.data.data.tenantId !== tenantId) {
-        throw AppError.forbiddenError('Customer does not belong to this tenant');
+        return response.data.data;
+      } catch (error) {
+        if (error instanceof AppError) {
+          throw error;
+        }
+        throw AppError.serverError(`Failed to fetch customer: ${(error as Error).message}`);
       }
-
-      return response.data.data;
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw AppError.serverError(`Failed to fetch customer: ${(error as Error).message}`);
-    }
+    });
   }
 
   /**
@@ -107,32 +146,34 @@ export class CustomerServiceClient {
    * @returns Pet data
    */
   async getPet(petId: string, tenantId: string): Promise<Pet> {
-    try {
-      const response = await this.client.get<ApiResponse<Pet>>(
-        `/api/pets/${petId}`,
-        {
-          headers: {
-            'x-tenant-id': tenantId,
-          },
+    return this.retryWithBackoff(async () => {
+      try {
+        const response = await this.client.get<ApiResponse<Pet>>(
+          `/api/pets/${petId}`,
+          {
+            headers: {
+              'x-tenant-id': tenantId,
+            },
+          }
+        );
+
+        if (response.data.status === 'error' || !response.data.data) {
+          throw AppError.notFoundError('Pet', petId);
         }
-      );
 
-      if (response.data.status === 'error' || !response.data.data) {
-        throw AppError.notFoundError('Pet', petId);
-      }
+        // Verify tenant matches (security check)
+        if (response.data.data.tenantId !== tenantId) {
+          throw AppError.forbiddenError('Pet does not belong to this tenant');
+        }
 
-      // Verify tenant matches (security check)
-      if (response.data.data.tenantId !== tenantId) {
-        throw AppError.forbiddenError('Pet does not belong to this tenant');
+        return response.data.data;
+      } catch (error) {
+        if (error instanceof AppError) {
+          throw error;
+        }
+        throw AppError.serverError(`Failed to fetch pet: ${(error as Error).message}`);
       }
-
-      return response.data.data;
-    } catch (error) {
-      if (error instanceof AppError) {
-        throw error;
-      }
-      throw AppError.serverError(`Failed to fetch pet: ${(error as Error).message}`);
-    }
+    });
   }
 
   /**
