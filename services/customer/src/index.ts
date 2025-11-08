@@ -404,6 +404,10 @@ app.use('/api', requireTenant, optionalAuth, announcementRoutes);
 // Business Settings Routes (admin only)
 app.use('/api/business-settings', requireTenant, authenticate, requireTenantAdmin, businessSettingsRoutes);
 
+// System Routes (health monitoring, metrics)
+import { systemRoutes } from './routes/system.routes';
+app.use('/api/system', systemRoutes);
+
 // Serve uploaded icons statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

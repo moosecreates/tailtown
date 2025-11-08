@@ -1,0 +1,61 @@
+pull_request_rules:
+  - name: Auto-merge approved PRs with automerge label
+    conditions:
+      - check-success=code-quality
+      - check-success=quick-tests
+      - check-success=build-check
+      - label=automerge
+      - -draft
+      - -conflict
+    actions:
+      merge:
+        method: squash
+        commit_message: title+body
+      delete_head_branch: {}
+        
+  - name: Auto-update branches to avoid conflicts
+    conditions:
+      - -conflict
+      - -draft
+      - -closed
+    actions:
+      update: {}
+      
+  - name: Auto-label frontend changes
+    conditions:
+      - files~=^frontend/
+    actions:
+      label:
+        add: ["frontend"]
+        
+  - name: Auto-label backend changes
+    conditions:
+      - files~=^services/
+    actions:
+      label:
+        add: ["backend"]
+        
+  - name: Auto-label documentation changes
+    conditions:
+      - files~=^docs/
+      - files~=\.md$
+    actions:
+      label:
+        add: ["documentation"]
+        
+  - name: Auto-label test changes
+    conditions:
+      - files~=\.test\.ts$
+      - files~=\.spec\.ts$
+      - files~=__tests__/
+    actions:
+      label:
+        add: ["tests"]
+        
+  - name: Request review for large PRs
+    conditions:
+      - files>=20
+    actions:
+      comment:
+        message: |
+          ⚠️ This PR modifies {{files}} files. Consider breaking it into smaller PRs for easier review.
