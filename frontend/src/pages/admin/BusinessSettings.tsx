@@ -16,16 +16,22 @@ import {
   Card,
   CardContent,
   CardHeader,
-  Divider
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
   Delete as DeleteIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import { tenantService } from '../../services/tenantService';
 
 interface BusinessSettings {
   logoUrl?: string;
+  timezone?: string;
 }
 
 const BusinessSettings: React.FC = () => {
@@ -36,6 +42,19 @@ const BusinessSettings: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [timezone, setTimezone] = useState<string>('America/Denver');
+  const [savingTimezone, setSavingTimezone] = useState(false);
+
+  // Common US timezones
+  const timezones = [
+    { value: 'America/New_York', label: 'Eastern Time (ET)' },
+    { value: 'America/Chicago', label: 'Central Time (CT)' },
+    { value: 'America/Denver', label: 'Mountain Time (MT)' },
+    { value: 'America/Phoenix', label: 'Arizona (no DST)' },
+    { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+    { value: 'America/Anchorage', label: 'Alaska Time (AKT)' },
+    { value: 'Pacific/Honolulu', label: 'Hawaii Time (HT)' }
+  ];
 
   // Use dynamic API URL based on environment
   const getApiUrl = () => {
@@ -53,6 +72,8 @@ const BusinessSettings: React.FC = () => {
   const loadSettings = async () => {
     try {
       setLoading(true);
+      
+      // Load business settings (logo)
       const response = await fetch(`${API_URL}/api/business-settings`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
@@ -66,6 +87,10 @@ const BusinessSettings: React.FC = () => {
           setLogoPreview(data.logoUrl);
         }
       }
+      
+      // Load tenant timezone
+      const tenantTimezone = await tenantService.getCurrentTenantTimezone();
+      setTimezone(tenantTimezone);
     } catch (err) {
       console.error('Error loading settings:', err);
     } finally {
@@ -152,6 +177,38 @@ const BusinessSettings: React.FC = () => {
       setError(err.message || 'Failed to delete logo');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleTimezoneChange = async (newTimezone: string) => {
+    setSavingTimezone(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Update tenant timezone using the new endpoint
+      const response = await fetch(`${API_URL}/api/tenants/me/settings`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        body: JSON.stringify({ timezone: newTimezone })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update timezone');
+      }
+      
+      // Update local state and cache
+      setTimezone(newTimezone);
+      localStorage.setItem('tenant_timezone', newTimezone);
+      
+      setSuccess('Timezone updated successfully! Changes will apply immediately.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to update timezone');
+    } finally {
+      setSavingTimezone(false);
     }
   };
 
@@ -254,6 +311,45 @@ const BusinessSettings: React.FC = () => {
               No custom logo uploaded. The default Tailtown logo will be displayed.
             </Alert>
           )}
+        </CardContent>
+      </Card>
+
+      <Card sx={{ mt: 3 }}>
+        <CardHeader title="Regional Settings" />
+        <Divider />
+        <CardContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Set your business's local timezone. This affects how dates and times are displayed throughout the application, including dashboard appointments, kennel cards, and reports.
+          </Typography>
+
+          <FormControl fullWidth>
+            <InputLabel>Timezone</InputLabel>
+            <Select
+              value={timezone}
+              label="Timezone"
+              onChange={(e) => handleTimezoneChange(e.target.value)}
+              disabled={savingTimezone}
+            >
+              {timezones.map((tz) => (
+                <MenuItem key={tz.value} value={tz.value}>
+                  {tz.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {savingTimezone && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
+              <CircularProgress size={20} />
+              <Typography variant="body2" color="text.secondary">
+                Updating timezone...
+              </Typography>
+            </Box>
+          )}
+
+          <Alert severity="info" sx={{ mt: 2 }}>
+            Current timezone: <strong>{timezone}</strong>
+          </Alert>
         </CardContent>
       </Card>
     </Container>

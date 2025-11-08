@@ -337,11 +337,22 @@ export class GingrSyncService {
           }
         });
 
+        // Parse Gingr dates correctly - they come as ISO strings but represent local time
+        // We need to treat them as Mountain Time (UTC-7) and convert to UTC for storage
+        const parseGingrDate = (dateStr: string): Date => {
+          // Gingr sends dates like "2025-10-13T12:30:00" which represents Mountain Time
+          // We need to add the timezone offset to convert to UTC
+          const date = new Date(dateStr);
+          // Add 7 hours (Mountain Time offset) to get correct UTC time
+          date.setHours(date.getHours() + 7);
+          return date;
+        };
+
         const reservationData: any = {
           customerId: customer.id,
           petId: pet.id,
-          startDate: new Date(reservation.start_date),
-          endDate: new Date(reservation.end_date),
+          startDate: parseGingrDate(reservation.start_date),
+          endDate: parseGingrDate(reservation.end_date),
           status: reservation.cancelled_date ? 'CANCELLED' : 
                   reservation.check_out_date ? 'COMPLETED' :
                   reservation.check_in_date ? 'CHECKED_IN' :
@@ -420,13 +431,13 @@ export class GingrSyncService {
 
         const invoiceData: any = {
           customerId: customer.id,
-          invoiceNumber: invoice.invoice_number || `GINGR-${invoice.id}`,
-          invoiceDate: new Date(invoice.invoice_date * 1000),
-          dueDate: invoice.due_date ? new Date(invoice.due_date * 1000) : undefined,
-          subtotal: invoice.subtotal,
-          tax: invoice.tax,
-          total: invoice.total,
-          status: invoice.status ? invoice.status.toUpperCase() : 'DRAFT',
+          invoiceNumber: `GINGR-${invoice.id}`,
+          invoiceDate: new Date(parseInt(invoice.create_stamp) * 1000),
+          dueDate: new Date(parseInt(invoice.create_stamp) * 1000 + 30 * 24 * 60 * 60 * 1000),
+          subtotal: parseFloat(invoice.subtotal),
+          tax: parseFloat(invoice.tax_amount),
+          total: parseFloat(invoice.total),
+          status: 'PAID', // All imported invoices are completed transactions
           externalId: invoice.id
         };
 

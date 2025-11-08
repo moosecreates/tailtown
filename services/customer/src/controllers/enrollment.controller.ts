@@ -1,3 +1,4 @@
+import { TenantRequest } from '../middleware/tenant.middleware';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
@@ -10,11 +11,11 @@ const prisma = new PrismaClient();
  */
 
 // Enroll pet in class
-export const enrollInClass = async (req: Request, res: Response, next: NextFunction) => {
+export const enrollInClass = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { classId } = req.params;
     const { petId, customerId, amountPaid } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     if (!petId || !customerId) {
       return next(new AppError('Pet ID and Customer ID are required', 400));
@@ -95,10 +96,10 @@ export const enrollInClass = async (req: Request, res: Response, next: NextFunct
 };
 
 // Get enrollment by ID
-export const getEnrollmentById = async (req: Request, res: Response, next: NextFunction) => {
+export const getEnrollmentById = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const enrollment = await prisma.classEnrollment.findFirst({
       where: { id, tenantId },
@@ -134,10 +135,10 @@ export const getEnrollmentById = async (req: Request, res: Response, next: NextF
 };
 
 // Update enrollment
-export const updateEnrollment = async (req: Request, res: Response, next: NextFunction) => {
+export const updateEnrollment = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const updateData: any = {};
     const allowedFields = ['amountPaid', 'paymentStatus', 'status', 'notes'];
@@ -171,11 +172,11 @@ export const updateEnrollment = async (req: Request, res: Response, next: NextFu
 };
 
 // Drop from class
-export const dropFromClass = async (req: Request, res: Response, next: NextFunction) => {
+export const dropFromClass = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { reason } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const enrollment = await prisma.classEnrollment.findFirst({
       where: { id, tenantId },
@@ -231,11 +232,11 @@ export const dropFromClass = async (req: Request, res: Response, next: NextFunct
 };
 
 // Get customer's enrollments
-export const getCustomerEnrollments = async (req: Request, res: Response, next: NextFunction) => {
+export const getCustomerEnrollments = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { customerId } = req.params;
     const { status } = req.query;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const where: any = { tenantId, customerId };
     if (status) where.status = status;
@@ -270,10 +271,10 @@ export const getCustomerEnrollments = async (req: Request, res: Response, next: 
 };
 
 // Get pet's enrollment history
-export const getPetEnrollments = async (req: Request, res: Response, next: NextFunction) => {
+export const getPetEnrollments = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { petId } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const enrollments = await prisma.classEnrollment.findMany({
       where: { tenantId, petId },
@@ -306,10 +307,10 @@ export const getPetEnrollments = async (req: Request, res: Response, next: NextF
 };
 
 // Issue certificate
-export const issueCertificate = async (req: Request, res: Response, next: NextFunction) => {
+export const issueCertificate = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const enrollment = await prisma.classEnrollment.findFirst({
       where: { id, tenantId }
@@ -343,11 +344,11 @@ export const issueCertificate = async (req: Request, res: Response, next: NextFu
 };
 
 // Add to waitlist
-export const addToWaitlist = async (req: Request, res: Response, next: NextFunction) => {
+export const addToWaitlist = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { classId } = req.params;
     const { petId, customerId } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     if (!petId || !customerId) {
       return next(new AppError('Pet ID and Customer ID are required', 400));
@@ -399,10 +400,10 @@ export const addToWaitlist = async (req: Request, res: Response, next: NextFunct
 };
 
 // Remove from waitlist
-export const removeFromWaitlist = async (req: Request, res: Response, next: NextFunction) => {
+export const removeFromWaitlist = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const entry = await prisma.classWaitlist.findFirst({
       where: { id, tenantId }
@@ -430,10 +431,10 @@ export const removeFromWaitlist = async (req: Request, res: Response, next: Next
 };
 
 // Get class waitlist
-export const getClassWaitlist = async (req: Request, res: Response, next: NextFunction) => {
+export const getClassWaitlist = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { classId } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const waitlist = await prisma.classWaitlist.findMany({
       where: { classId, tenantId },

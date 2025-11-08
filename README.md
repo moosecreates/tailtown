@@ -4,22 +4,64 @@
 ![Frontend Tests](https://github.com/moosecreates/tailtown/workflows/Frontend%20Tests/badge.svg)
 
 **Status:** 🟢 **LIVE IN PRODUCTION**  
-**Production URL:** https://canicloud.com  
+**Production URL:** https://canicloud.com (multi-tenant subdomains)  
 **Version:** 1.0.0  
-**Last Updated:** November 5, 2025
+**Last Updated:** November 7, 2025
 
-A modern, full-featured management system for pet resorts, providing comprehensive tools for reservations, customer management, and pet care services.
+A modern, full-featured SaaS management system for pet resorts, providing comprehensive tools for reservations, customer management, and pet care services.
+
+## 🌐 Access the Application
+
+### For Users & Staff
+- **Production (Tailtown):** https://tailtown.canicloud.com
+- **Demo Site (BranGro):** https://brangro.canicloud.com
+
+### For Developers Only
+- **Local Development:** http://localhost:3000 (requires setup below)
+
+---
+
+## 📚 Documentation
+
+### For Developers (Quick Guides)
+- **[📖 Wiki Home](docs/HOME.md)** - Complete documentation hub
+- **[Quick Start](docs/human/QUICK-START.md)** - Get running in 10 minutes
+- **[Common Tasks](docs/human/COMMON-TASKS.md)** - How to add features, run tests, deploy
+- **[Best Practices](docs/human/BEST-PRACTICES.md)** - Code standards and patterns
+- **[Security](docs/human/SECURITY.md)** - Security features and how to use them
+- **[Roadmap](docs/human/ROADMAP.md)** - What's next for Tailtown
+
+### For Technical Leadership
+- **[Senior Dev Review](docs/SENIOR-DEV-REVIEW.md)** - ⭐ Architecture review & scaling roadmap (4/5 stars)
+- **[System Architecture](docs/CURRENT-SYSTEM-ARCHITECTURE.md)** - Complete architecture overview
+- **[Disaster Recovery](docs/operations/DISASTER-RECOVERY-PLAN.md)** - Backup & recovery procedures
+
+### For AI Assistants (Complete Context)
+- **[Security Implementation](docs/ai-context/security/)** - Complete security details
+- **[Testing](docs/ai-context/testing/)** - Test analysis and maintenance
+- **[Documentation Strategy](docs/DOCUMENTATION-STRATEGY.md)** - How we organize docs
+
+### Reference
+- **[Security Checklist](docs/SECURITY-CHECKLIST.md)** - Security verification
+- **[Development Best Practices](docs/DEVELOPMENT-BEST-PRACTICES.md)** - Code standards
 
 ---
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### For End Users
+**Just visit the production site** - no setup needed!
+- **Tailtown (Production):** https://tailtown.canicloud.com
+- **BranGro (Demo):** https://brangro.canicloud.com
+
+### For Developers (Local Setup)
+
+**Prerequisites:**
 - Node.js 18+ and npm
 - PostgreSQL 14+
 - Git
 
-### Installation
+**Installation:**
 ```bash
 # Clone the repository
 git clone https://github.com/moosecreates/tailtown.git
@@ -43,10 +85,12 @@ npm run start:services
 cd frontend && npm start
 ```
 
-### Access the Application
+**Local Development URLs:**
 - **Frontend:** http://localhost:3000
 - **Customer API:** http://localhost:4004
 - **Reservation API:** http://localhost:4003
+
+**See:** [Quick Start Guide](docs/human/QUICK-START.md) for detailed setup instructions
 
 ---
 
@@ -54,6 +98,7 @@ cd frontend && npm start
 
 ### Essential Reading
 - **[Documentation Index](DOCUMENTATION-INDEX.md)** - Master index of all documentation
+- **[Development Best Practices](docs/DEVELOPMENT-BEST-PRACTICES.md)** - ⭐ Common patterns & pitfalls
 - **[Developer Toolkit](DEVELOPER-TOOLKIT.md)** - Essential commands and tools
 - **[Deployment Guide](deployment/DEPLOYMENT-GUIDE.md)** - How to deploy to production
 - **[Product Roadmap](docs/ROADMAP.md)** - Feature roadmap and priorities
@@ -91,15 +136,24 @@ cd frontend && npm start
 - **Frontend:** React 18, TypeScript, Material-UI
 - **Backend:** Node.js, Express, TypeScript
 - **Database:** PostgreSQL with Prisma ORM
-- **Authentication:** JWT with bcrypt
-- **Deployment:** PM2, Nginx, Let's Encrypt SSL
+- **Authentication:** JWT with bcrypt, automatic token management
+- **Deployment:** PM2 (cluster mode), Nginx, Let's Encrypt SSL
+- **Testing:** Jest with 18+ test cases for critical middleware
 
 ### Services
 ```
-Frontend (Port 3000)           - React SPA
-Customer Service (Port 4004)   - Customer, pet, staff management
+Frontend (Port 3000)           - React SPA with JWT auth
+Customer Service (Port 4004)   - Customer, pet, staff, products, announcements
 Reservation Service (Port 4003) - Reservations, resources, scheduling
 ```
+
+### Multi-Tenant Architecture
+- Subdomain-based tenant detection (e.g., brangro.canicloud.com)
+- Complete data isolation per tenant
+- 13 controllers with proper tenant context
+- Middleware-based tenant extraction and validation
+
+For detailed architecture, see [CURRENT-SYSTEM-ARCHITECTURE.md](docs/CURRENT-SYSTEM-ARCHITECTURE.md)
 
 ---
 
@@ -122,9 +176,10 @@ npm run test:integration
 ```
 
 ### Test Coverage
-- **470+ automated tests**
+- **488+ automated tests** (18 new middleware tests added Nov 5)
 - **80%+ code coverage**
 - **Integration tests** for critical workflows
+- **Middleware tests** for tenant isolation and authentication
 
 ---
 
@@ -188,21 +243,32 @@ npm run type-check
 
 ## 📊 Production Status
 
-### Current Deployment (November 5, 2025)
-- **Tenant:** Brangro (brangro.canicloud.com)
-- **Customers:** 20
-- **Pets:** 20
-- **Reservations:** 10
-- **Staff:** 4
-- **Resources:** 15 suites, 5 runs
-- **Training Classes:** 3
+### Current Deployment (November 7, 2025)
+
+**Production Tenant**: Tailtown (https://tailtown.canicloud.com)
+- 🔴 **CRITICAL** - Your business, real data
+- Real customers, pets, and reservations
+- Daily operations and staff usage
+
+**Demo Tenant**: BranGro (https://brangro.canicloud.com)
+- 🟡 **DEMO** - Customer demos, mock data
+- 20 demo customers, 20 demo pets
+- 10 sample reservations, 4 staff accounts
+- 6 template POS products
+
+**Dev Tenant**: Dev (http://localhost:3000 - developers only)
+- 🟢 **DEVELOPMENT** - Safe to break
+- Local testing and experiments
 
 ### System Health
 - ✅ All services operational
 - ✅ Zero critical errors
-- ✅ SSL certificate valid
-- ✅ Database backups running
-- ✅ Monitoring active
+- ✅ SSL certificate valid (Let's Encrypt)
+- ✅ **Daily automated backups** (DigitalOcean)
+- ✅ PM2 cluster mode (2 instances per service)
+- ✅ Nginx reverse proxy with SSL
+
+For tenant strategy details, see [docs/TENANT-STRATEGY.md](docs/TENANT-STRATEGY.md)
 
 ---
 
@@ -240,11 +306,19 @@ Proprietary - All rights reserved
 
 ## 🎉 Recent Updates
 
-### November 5, 2025
-- ✅ Fixed phone number search in reservation modal
-- ✅ Fixed products API localhost URLs
-- ✅ Added SendGrid/Twilio to roadmap
-- ✅ Documentation cleanup and organization
+### November 7, 2025 - Documentation & Operations
+- ✅ **Senior Dev Review**: Comprehensive architecture review (4/5 stars, top 20% of startups)
+- ✅ **Backup Strategy**: Enabled DigitalOcean daily automated backups
+- ✅ **Disaster Recovery**: Updated recovery plan for production setup
+- ✅ **Documentation**: Added scaling roadmap and immediate action items
+
+### November 5, 2025 - Major Cleanup & Testing
+- ✅ **Code Cleanup**: Fixed 13 controllers (86+ functions) for proper tenant context
+- ✅ **Authentication**: Implemented proper JWT flow, removed 'default-user' fallback
+- ✅ **Testing**: Created comprehensive test suite (18 test cases)
+- ✅ **Bug Fixes**: Profile photo display, login API URLs, announcement persistence
+- ✅ **POS**: Added 5 template products for BranGro tenant
+- ✅ **Deployments**: 11 frontend + 5 backend deployments, all successful
 
 ### November 4, 2025
 - ✅ Production deployment to canicloud.com

@@ -47,7 +47,10 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4004';
+  // Use dynamic API URL based on environment
+  const API_URL = process.env.NODE_ENV === 'production' 
+    ? window.location.origin 
+    : (process.env.REACT_APP_API_URL || 'http://localhost:4004');
   const getAccessToken = () => localStorage.getItem('superAdminAccessToken');
   
   // Only show to super admins - check localStorage directly
@@ -179,12 +182,52 @@ const TenantStatusManager: React.FC<TenantStatusManagerProps> = ({ tenant, onSta
       );
 
       if (response.data.success) {
-        // Store impersonation token and session info
-        localStorage.setItem('impersonationToken', response.data.data.impersonationToken);
-        localStorage.setItem('impersonationSession', JSON.stringify(response.data.data.session));
+        const impersonationToken = response.data.data.impersonationToken;
+        const session = response.data.data.session;
         
-        // Redirect to main app (tenant context)
-        window.location.href = '/dashboard';
+        // Store impersonation token and session info
+        localStorage.setItem('impersonationToken', impersonationToken);
+        localStorage.setItem('impersonationSession', JSON.stringify(session));
+        
+        // CRITICAL: Set the impersonation token as BOTH access tokens so all auth checks pass
+        localStorage.setItem('accessToken', impersonationToken);
+        localStorage.setItem('token', impersonationToken); // For AuthContext
+        localStorage.setItem('tokenTimestamp', Date.now().toString()); // For AuthContext expiration check
+        
+        // CRITICAL: Set the tenant ID so API requests use the correct tenant
+        if (session.subdomain) {
+          localStorage.setItem('tailtown_tenant_id', session.subdomain);
+          localStorage.setItem('tenantId', session.subdomain);
+        }
+        
+        // CRITICAL: Create a temporary user object for AuthContext
+        // This allows the impersonation session to pass auth checks
+        const impersonatedUser = {
+          id: 'impersonated-super-admin',
+          email: session.superAdminEmail || 'super-admin',
+          firstName: 'Super',
+          lastName: 'Admin',
+          role: 'SUPER_ADMIN'
+        };
+        localStorage.setItem('user', JSON.stringify(impersonatedUser));
+        
+        // Clear ALL cached tenant-specific data to force fresh fetch
+        // Clear business/tenant data
+        localStorage.removeItem('businessLogo');
+        localStorage.removeItem('businessName');
+        localStorage.removeItem('businessSettings');
+        
+        // Clear any cached customer/pet data
+        localStorage.removeItem('customer');
+        localStorage.removeItem('customers');
+        localStorage.removeItem('pets');
+        
+        // Clear any cached staff data (except the impersonated user we just set)
+        localStorage.removeItem('staff');
+        
+        // Force complete page reload with cache busting to ensure fresh data
+        // Use replace to avoid back button issues
+        window.location.replace(`/dashboard?t=${Date.now()}`);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to start impersonation');

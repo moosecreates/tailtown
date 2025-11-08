@@ -25,6 +25,9 @@ router.post('/', (req, res) => tenantController.createTenant(req, res));
 // Update tenant
 router.put('/:id', (req, res) => tenantController.updateTenant(req, res));
 
+// Update current tenant's settings (timezone, etc.)
+router.patch('/me/settings', (req, res) => tenantController.updateCurrentTenantSettings(req, res));
+
 // Pause tenant
 router.post('/:id/pause', (req, res) => tenantController.pauseTenant(req, res));
 

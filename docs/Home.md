@@ -1,36 +1,52 @@
 # 🐾 Tailtown Pet Resort Management System
 
-**Version:** 1.0 (MVP)  
-**Status:** 🟢 **100% Complete - PRODUCTION READY**  
-**Last Updated:** November 1, 2025
+**Version:** 1.0  
+**Status:** 🟢 **LIVE IN PRODUCTION**  
+**Last Updated:** November 7, 2025  
+**Production URLs:**
+- **Tailtown (Production):** https://tailtown.canicloud.com
+- **BranGro (Demo):** https://brangro.canicloud.com
 
-Welcome to Tailtown - a modern, comprehensive pet resort management system built with React, Node.js, and PostgreSQL. This system manages boarding, daycare, grooming, training, and all aspects of pet resort operations.
+Welcome to Tailtown - a modern, comprehensive SaaS pet resort management system built with React, Node.js, and PostgreSQL. This system manages boarding, daycare, grooming, training, and all aspects of pet resort operations.
 
 ---
 
 ## 🚀 Quick Start
 
-### For New Users
-1. **[Quick Start Guide](QUICK-START.md)** - Get up and running in 5 minutes
-2. **[System Features Overview](SYSTEM-FEATURES-OVERVIEW.md)** - See what Tailtown can do
-3. **[MVP Readiness Analysis](MVP-READINESS-ANALYSIS.md)** - Current project status
-4. **[Service Management Guide](development/SERVICE-MANAGEMENT.md)** - Start/stop services and troubleshoot
+### 👤 For Developers (Human Guides)
+- **[Quick Start](human/QUICK-START.md)** - Get running in 10 minutes
+- **[Common Tasks](human/COMMON-TASKS.md)** - How to add features, run tests, deploy
+- **[Best Practices](human/BEST-PRACTICES.md)** - Code standards and patterns
+- **[Security](human/SECURITY.md)** - Security features and how to use them
+- **[Roadmap](human/ROADMAP.md)** - What's next for Tailtown
 
-### For Developers
-1. **[Development Guide](development/GUIDE.md)** - Setup and coding standards
-2. **[Testing Guide](TESTING-STRATEGY.md)** - 500+ tests and counting
-3. **[API Documentation](api/README.md)** - All endpoints documented
+### 🤖 For AI Assistants (Complete Context)
+- **[Security Implementation](ai-context/security/)** - Complete security details
+- **[Testing Documentation](ai-context/testing/)** - Test analysis and maintenance
+- **[Documentation Strategy](DOCUMENTATION-STRATEGY.md)** - How we organize docs
+- **[Documentation Guide](DOCUMENTATION-GUIDE.md)** - Quick decision tree
 
-### Admin Credentials
-- **Email:** admin@tailtown.com
-- **Password:** admin123
-- **⚠️ Change password after first login!**
+### 📚 Reference (For Everyone)
+- **[Security Checklist](SECURITY-CHECKLIST.md)** - Security verification
+- **[Development Best Practices](DEVELOPMENT-BEST-PRACTICES.md)** - Detailed code standards
+- **[System Features](SYSTEM-FEATURES-OVERVIEW.md)** - Complete feature list
+
+### 🌐 Access the Application
+
+**Production (End Users):**
+- **Tailtown:** https://tailtown.canicloud.com
+- **BranGro Demo:** https://brangro.canicloud.com
+
+**Local Development (Developers Only):**
+- Frontend: http://localhost:3000
+- Customer API: http://localhost:4004
+- Reservation API: http://localhost:4003
 
 ---
 
 ## 📊 Project Status
 
-### Current State (November 1, 2025)
+### Current State (November 7, 2025)
 - ✅ **MVP:** 100% Complete - PRODUCTION READY
 - ✅ **Security:** EXCELLENT (zero critical/high priority issues)
 - ✅ **Testing:** 500+ automated tests (80%+ coverage)
@@ -331,11 +347,13 @@ npm install
 npm run dev:all
 ```
 
-### Service Ports
-- Frontend: http://localhost:3000
-- Customer Service: http://localhost:4004
-- Reservation Service: http://localhost:4003
-- Database: localhost:5432
+### Local Development Ports (Developers Only)
+- **Frontend:** http://localhost:3000
+- **Customer Service:** http://localhost:4004
+- **Reservation Service:** http://localhost:4003
+- **Database:** localhost:5432
+
+**Note:** Production uses https://canicloud.com (multi-tenant subdomains)
 
 ### Useful Commands
 ```bash

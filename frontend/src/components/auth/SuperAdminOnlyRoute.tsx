@@ -15,17 +15,18 @@ interface SuperAdminOnlyRouteProps {
 
 const SuperAdminOnlyRoute: React.FC<SuperAdminOnlyRouteProps> = ({ children }) => {
   const superAdminToken = localStorage.getItem('superAdminAccessToken');
-  const regularToken = localStorage.getItem('token');
+  const impersonationSession = localStorage.getItem('impersonationSession');
+  const accessToken = localStorage.getItem('accessToken');
 
-  // If no super admin token, redirect to super admin login
-  if (!superAdminToken) {
-    // If they have a regular staff token, show an alert
-    if (regularToken) {
-      alert('This page requires Super Admin access. Please login as a Super Admin.');
-    }
-    // Force full redirect to ensure correct path
-    window.location.href = '/super-admin/login';
-    return null;
+  // Allow access if:
+  // 1. Has super admin token, OR
+  // 2. Has impersonation session (super admin impersonating a tenant)
+  const hasAccess = superAdminToken || (impersonationSession && accessToken);
+
+  // If no access, redirect to super admin login
+  if (!hasAccess) {
+    console.warn('No super admin access. Redirecting to super admin login.');
+    return <Navigate to="/super-admin/login" replace />;
   }
 
   // Render protected content

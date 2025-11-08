@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
+import { TenantRequest } from '../middleware/tenant.middleware';
 
 const prisma = new PrismaClient();
 
 // Get all invoices for a specific customer
-export const getCustomerInvoices = async (req: Request, res: Response, next: NextFunction) => {
+export const getCustomerInvoices = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { customerId } = req.params;
     
@@ -81,7 +82,7 @@ export const getInvoiceById = async (req: Request, res: Response, next: NextFunc
 };
 
 // Create a new invoice
-export const createInvoice = async (req: Request, res: Response, next: NextFunction) => {
+export const createInvoice = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { customerId, reservationId, dueDate, subtotal, taxRate, taxAmount, discount, total, notes, lineItems } = req.body;
     
@@ -99,11 +100,15 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const invoiceNumber = `INV-${dateStr}-${randomSuffix}`;
 
+    // Get tenant ID from middleware
+    const tenantId = req.tenantId!;
+
     // Start a transaction to ensure all related records are created
     const invoice = await prisma.$transaction(async (prisma) => {
       // Create the invoice
       const newInvoice = await prisma.invoice.create({
         data: {
+          tenantId,
           invoiceNumber,
           customerId,
           reservationId,
@@ -116,6 +121,7 @@ export const createInvoice = async (req: Request, res: Response, next: NextFunct
           notes,
           lineItems: {
             create: lineItems.map((item: any) => ({
+              tenantId,
               type: item.type || 'SERVICE',
               description: item.description,
               quantity: parseInt(item.quantity as any, 10),

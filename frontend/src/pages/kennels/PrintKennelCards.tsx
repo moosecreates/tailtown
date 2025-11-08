@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './PrintKennelCards.css';
 import { 
   Container, 
@@ -11,7 +11,6 @@ import {
   InputLabel, 
   Select, 
   MenuItem,
-  TextField,
   CircularProgress,
   Divider,
   Alert,
@@ -23,8 +22,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { Print as PrintIcon, FilterList as FilterIcon } from '@mui/icons-material';
 import KennelCard from '../../components/kennels/KennelCard';
 import { reservationService } from '../../services/reservationService';
-import { petService } from '../../services/petService';
-import { customerService } from '../../services/customerService';
+import { tenantService } from '../../services/tenantService';
 import { format } from 'date-fns';
 
 /**
@@ -52,6 +50,9 @@ const PrintKennelCards: React.FC = () => {
   // State for pet and customer data
   const [petData, setPetData] = useState<{[key: string]: any}>({});
   const [customerData, setCustomerData] = useState<{[key: string]: any}>({});
+  
+  // State for tenant timezone
+  const [tenantTimezone, setTenantTimezone] = useState<string>('America/Denver');
 
   // Load reservations when filters change (but not on initial mount)
   useEffect(() => {
@@ -81,8 +82,15 @@ const PrintKennelCards: React.FC = () => {
         
         const formattedDate = format(today, 'yyyy-MM-dd');
         
+        console.log(`Initial load: Loading kennel cards for check-in date: ${formattedDate}`);
+        
+        // Fetch tenant timezone from tenant settings
+        const timezone = await tenantService.getCurrentTenantTimezone();
+        setTenantTimezone(timezone);
+        console.log(`Using tenant timezone: ${timezone}`);
+        
         const response = await reservationService.getAllReservations(
-          1, 500, 'startDate', 'asc', '', formattedDate
+          1, 500, 'startDate', 'asc', '', undefined, formattedDate, timezone
         );
         
         let reservationsData: any[] = [];
@@ -99,10 +107,8 @@ const PrintKennelCards: React.FC = () => {
         setReservations(reservationsData);
         
         if (reservationsData.length > 0) {
-          await fetchAdditionalData(reservationsData);
-          setTimeout(() => {
-            filterReservations(reservationsData);
-          }, 100);
+          const extracted = fetchAdditionalData(reservationsData);
+          filterReservations(reservationsData, extracted.pets, extracted.customers);
         } else {
           setFilteredReservations([]);
         }
@@ -136,16 +142,20 @@ const PrintKennelCards: React.FC = () => {
       // Format date for API
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       
+      console.log(`Loading kennel cards for check-in date: ${formattedDate}`);
+      console.log(`Using tenant timezone: ${tenantTimezone}`);
       
-      // Fetch reservations for the selected date, regardless of status
-      // Use a larger limit to ensure we get all reservations
+      // Fetch reservations checking in on the selected date
+      // Use checkInDate parameter to get only dogs checking in on this specific day in tenant's timezone
       const response = await reservationService.getAllReservations(
         1,          // page
         500,        // limit - increased to get more reservations
         'startDate', // sortBy
         'asc',      // sortOrder
         selectedStatus === 'ALL' ? '' : selectedStatus, // If ALL, don't filter by status
-        formattedDate
+        undefined,  // date (not used when checkInDate is provided)
+        formattedDate, // checkInDate - filter for exact check-in date
+        tenantTimezone    // timezone - tenant's local timezone
       );
       
       // Ensure we have an array
@@ -170,13 +180,11 @@ const PrintKennelCards: React.FC = () => {
       
       setReservations(reservationsData);
       
-      // Fetch additional data for each reservation
-      await fetchAdditionalData(reservationsData);
+      // Extract pet and customer data from reservations
+      const extracted = fetchAdditionalData(reservationsData);
       
-      // Apply filters after setting reservations
-      setTimeout(() => {
-        filterReservations(reservationsData);
-      }, 100);
+      // Apply filters immediately with the extracted data
+      filterReservations(reservationsData, extracted.pets, extracted.customers);
       
     } catch (err: any) {
       console.error('Error loading reservations:', err);
@@ -185,47 +193,47 @@ const PrintKennelCards: React.FC = () => {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, selectedStatus]); // fetchAdditionalData and filterReservations are stable (useCallback below)
+  }, [selectedDate, selectedStatus, tenantTimezone]); // fetchAdditionalData and filterReservations are stable (useCallback below)
   
-  // Memoize the fetch function to prevent unnecessary re-calls
-  const fetchAdditionalData = useCallback(async (reservationsData: any[]) => {
+  // Extract pet and customer data from reservations (they're already included in the API response)
+  const fetchAdditionalData = useCallback((reservationsData: any[]) => {
     try {
-      // Create arrays of unique IDs to fetch
-      const petIds = Array.from(new Set(reservationsData.map(res => res.petId)));
-      const customerIds = Array.from(new Set(reservationsData.map(res => res.customerId)));
-      
-      // Fetch all pets data
+      // The reservation API already includes pet and customer data
+      // Extract them from the reservations instead of making separate API calls
       const petsTemp: {[key: string]: any} = {};
-      for (const petId of petIds) {
-        try {
-          const petResponse = await petService.getPetById(petId);
-          petsTemp[petId] = petResponse;
-        } catch (err) {
-          console.error(`Error fetching pet ${petId}:`, err);
-        }
-      }
-      setPetData(petsTemp);
-      
-      // Fetch all customers data
       const customersTemp: {[key: string]: any} = {};
-      for (const customerId of customerIds) {
-        try {
-          const customerResponse = await customerService.getCustomerById(customerId);
-          customersTemp[customerId] = customerResponse;
-        } catch (err) {
-          console.error(`Error fetching customer ${customerId}:`, err);
+      
+      reservationsData.forEach(reservation => {
+        // Extract pet data if included
+        if (reservation.pet && reservation.petId) {
+          petsTemp[reservation.petId] = reservation.pet;
         }
-      }
+        
+        // Extract customer data if included
+        if (reservation.customer && reservation.customerId) {
+          customersTemp[reservation.customerId] = reservation.customer;
+        }
+      });
+      
+      setPetData(petsTemp);
       setCustomerData(customersTemp);
       
+      console.log(`Extracted ${Object.keys(petsTemp).length} pets and ${Object.keys(customersTemp).length} customers from reservations`);
+      
+      // Return the extracted data so we can use it immediately
+      return { pets: petsTemp, customers: customersTemp };
+      
     } catch (err) {
-      console.error('Error fetching additional data:', err);
+      console.error('Error extracting additional data:', err);
+      return { pets: {}, customers: {} };
     }
   }, []);
   
   // Memoize the filter function to prevent excessive re-filtering
-  const filterReservations = useCallback((reservationsToFilter?: any[]) => {
+  const filterReservations = useCallback((reservationsToFilter?: any[], extractedPets?: any, extractedCustomers?: any) => {
     const reservationsData = reservationsToFilter || reservations;
+    const pets = extractedPets || petData;
+    const customers = extractedCustomers || customerData;
     
     // Ensure we have an array
     if (!Array.isArray(reservationsData)) {
@@ -234,36 +242,35 @@ const PrintKennelCards: React.FC = () => {
       return;
     }
     
-    // Log all reservations for debugging
+    console.log(`Filtering ${reservationsData.length} reservations with ${Object.keys(pets).length} pets and ${Object.keys(customers).length} customers`);
     
     // For kennel cards, we want to show all reservations that have pet and customer data
     // We'll be more lenient with resource requirements
     const filtered = reservationsData.filter(res => {
       // Check if reservation has pet and customer IDs
       if (!res.petId || !res.customerId) {
+        console.log(`Reservation ${res.id} missing petId or customerId`);
         return false;
       }
       
       // Check if we have the pet and customer data
-      if (!petData[res.petId]) {
+      if (!pets[res.petId]) {
+        console.log(`Reservation ${res.id} missing pet data for petId: ${res.petId}`);
         return false;
       }
       
-      if (!customerData[res.customerId]) {
+      if (!customers[res.customerId]) {
+        console.log(`Reservation ${res.id} missing customer data for customerId: ${res.customerId}`);
         return false;
       }
       
       // For kennel cards, we'll show all reservations even if they don't have a resource assigned
       // This ensures we print cards for all pets regardless of kennel assignment
       
-      // Log the reservation service type to help with debugging
-      const serviceType = res.serviceType || 'Unknown';
-      
       return true;
     });
     
-    if (filtered.length > 0) {
-    }
+    console.log(`Filtered to ${filtered.length} reservations`);
     setFilteredReservations(filtered);
   }, [reservations, petData, customerData]); // All data used in filtering
   
@@ -470,11 +477,9 @@ const PrintKennelCards: React.FC = () => {
               // Extract kennel number from resource attributes
               // Default to a placeholder if not found
               let kennelNumber: string | number = 0;
-              let resourceName = 'Unknown';
               let suiteType = 'STANDARD_SUITE';
               
               if (resource) {
-                resourceName = resource.name || 'Unknown';
                 
                 // Use the suite.type directly from the database, or fall back to attributes.suiteType, or default to STANDARD_SUITE
                 if (resource.attributes && resource.attributes.suiteType) {
@@ -491,8 +496,7 @@ const PrintKennelCards: React.FC = () => {
                   kennelNumber = resource.name;
                 }
               } else if (reservation.resourceId) {
-                // If we have resourceId but no resource object
-                resourceName = `Resource ${reservation.resourceId}`;
+                // If we have resourceId but no resource object, use default kennel number
                 kennelNumber = 1; // Default to 1 if we can't determine
               }
               
@@ -643,7 +647,7 @@ const PrintKennelCards: React.FC = () => {
                     petIconIds={petIconIds}
                     petType={pet.type || 'DOG'}
                     customNotes={pet.iconNotes || {}}
-                    petNotes={pet.notes}
+                    petNotes={pet.behaviorNotes || ''}
                     ownerName={`${customer.firstName} ${customer.lastName}`}
                     ownerPhone={customer.phone}
                     startDate={new Date(reservation.startDate)}

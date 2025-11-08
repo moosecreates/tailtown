@@ -26,21 +26,15 @@ import {
   Dashboard as DashboardIcon,
   People as PeopleIcon,
   Pets as PetsIcon,
-  EventNote as EventNoteIcon,
-  CalendarMonth as CalendarIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
   AccountCircle as AccountCircleIcon,
-  LocalOffer as ServicesIcon,
-  Inventory as ResourcesIcon,
   Hotel as SuitesIcon,
   ContentCut as GroomingIcon,
   FitnessCenter as TrainingIcon,
   Home as DaycareIcon,
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
-  Schedule as ScheduleIcon,
-  ShoppingCart as OrdersIcon,
   Print as PrintIcon,
   InsertChart as AnalyticsIcon,
   CreditCard as PaymentIcon,
@@ -65,6 +59,28 @@ interface NavItem {
   children?: NavItem[];
 }
 
+/**
+ * Safely construct profile photo URL with error handling
+ * @param profilePhoto - Relative path to profile photo
+ * @returns Full URL to profile photo or undefined if invalid
+ */
+const getProfilePhotoUrl = (profilePhoto: string | null | undefined): string | undefined => {
+  if (!profilePhoto) return undefined;
+  
+  try {
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? window.location.origin 
+      : (process.env.REACT_APP_API_URL || 'http://localhost:4004');
+    
+    // Ensure profilePhoto starts with /
+    const path = profilePhoto.startsWith('/') ? profilePhoto : `/${profilePhoto}`;
+    return `${baseUrl}${path}`;
+  } catch (error) {
+    console.error('Error constructing profile photo URL:', error);
+    return undefined;
+  }
+};
+
 const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   // 1. All hooks must be called unconditionally at the top level
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -72,20 +88,30 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   const [openSubMenu, setOpenSubMenu] = useState<string | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
-  // Initialize customLogo from localStorage to prevent flash
-  const [customLogo, setCustomLogo] = useState<string | null>(() => {
-    return localStorage.getItem('businessLogo');
-  });
+  // Don't initialize from cache - always fetch fresh to ensure correct tenant logo
+  const [customLogo, setCustomLogo] = useState<string | null>(null);
   const { user, logout, isLoading } = useAuth();
   const { openHelp } = useHelp();
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Load announcements on mount
+  // Load announcements and business settings on mount
   useEffect(() => {
     loadAnnouncements();
     loadBusinessSettings();
   }, []);
+
+  // Reload announcements when modal opens to catch any new announcements
+  useEffect(() => {
+    if (showAnnouncementModal) {
+      loadAnnouncements();
+    }
+  }, [showAnnouncementModal]);
+
+  // Reload announcements when navigating back from admin pages
+  useEffect(() => {
+    loadAnnouncements();
+  }, [location.pathname]);
 
   const loadAnnouncements = async () => {
     const data = await announcementService.getActiveAnnouncements();
@@ -102,10 +128,18 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
         return process.env.REACT_APP_API_URL || 'http://localhost:4004';
       };
       const API_URL = getApiUrl();
+      const tenantId = localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId');
+      const headers: Record<string, string> = {
+        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      };
+      
+      // Add tenant subdomain header if available (backend expects x-tenant-subdomain)
+      if (tenantId) {
+        headers['x-tenant-subdomain'] = tenantId;
+      }
+      
       const response = await fetch(`${API_URL}/api/business-settings`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
+        headers
       });
       
       if (response.ok) {
@@ -391,7 +425,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
               onClick={handleProfileMenuOpen}
             >
               <Avatar 
-                src={(user as any)?.profilePhoto || undefined}
+                src={getProfilePhotoUrl((user as any)?.profilePhoto)}
                 sx={{ 
                   bgcolor: 'secondary.main',
                   border: '2px solid white',

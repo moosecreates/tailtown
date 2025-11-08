@@ -1,14 +1,11 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { AuthRequest } from '../middleware/auth.middleware';
 
 const prisma = new PrismaClient();
 
-interface TenantRequest extends Request {
+interface TenantRequest extends AuthRequest {
   tenantId?: string;
-  user?: {
-    id: string;
-    email: string;
-  };
 }
 
 /**
@@ -18,12 +15,12 @@ interface TenantRequest extends Request {
 export const getActiveAnnouncements = async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = req.tenantId || 'dev';
-    // For now, use a default user ID if not authenticated
-    // TODO: Implement proper authentication
-    const userId = req.user?.id || 'default-user';
+    // Get user ID from authenticated session (if available)
+    const userId = req.user?.id;
     const now = new Date();
 
-    const announcements = await prisma.announcement.findMany({
+    // Build the query based on whether user is authenticated
+    const queryOptions: any = {
       where: {
         tenantId,
         isActive: true,
@@ -33,20 +30,26 @@ export const getActiveAnnouncements = async (req: TenantRequest, res: Response) 
           { endDate: { gte: now } }
         ]
       },
-      include: {
-        dismissals: userId ? {
-          where: { userId }
-        } : false
-      },
       orderBy: [
         { priority: 'desc' },
         { createdAt: 'desc' }
       ]
-    });
+    };
+
+    // Only include dismissals if user is authenticated
+    if (userId) {
+      queryOptions.include = {
+        dismissals: {
+          where: { userId }
+        }
+      };
+    }
+
+    const announcements = await prisma.announcement.findMany(queryOptions);
 
     // Filter out dismissed announcements for this user
     const undismissed = announcements.filter((a: any) => 
-      !userId || a.dismissals?.length === 0
+      !userId || !a.dismissals || a.dismissals.length === 0
     );
 
     res.json({
@@ -204,14 +207,21 @@ export const deleteAnnouncement = async (req: TenantRequest, res: Response) => {
 
 /**
  * Dismiss an announcement for the current user
+ * Requires authentication
  */
 export const dismissAnnouncement = async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
     const tenantId = req.tenantId || 'dev';
-    // For now, use a default user ID if not authenticated
-    // TODO: Implement proper authentication
-    const userId = req.user?.id || 'default-user';
+    const userId = req.user?.id;
+
+    // Require authentication for dismissals
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required to dismiss announcements'
+      });
+    }
 
     // Check if already dismissed
     const existing = await prisma.announcementDismissal.findUnique({

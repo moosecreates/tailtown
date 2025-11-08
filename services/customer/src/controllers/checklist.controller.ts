@@ -1,3 +1,4 @@
+import { TenantRequest } from '../middleware/tenant.middleware';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
@@ -5,10 +6,10 @@ import { AppError } from '../middleware/error.middleware';
 const prisma = new PrismaClient();
 
 // Get all templates
-export const getAllTemplates = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllTemplates = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { area, isActive } = req.query;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const where: any = { tenantId };
     if (area) where.area = area;
@@ -33,10 +34,10 @@ export const getAllTemplates = async (req: Request, res: Response, next: NextFun
 };
 
 // Get template by ID
-export const getTemplateById = async (req: Request, res: Response, next: NextFunction) => {
+export const getTemplateById = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const template = await prisma.checklistTemplate.findFirst({ 
       where: { id, tenantId } 
@@ -59,10 +60,10 @@ export const getTemplateById = async (req: Request, res: Response, next: NextFun
 };
 
 // Create template
-export const createTemplate = async (req: Request, res: Response, next: NextFunction) => {
+export const createTemplate = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { name, description, area, items, estimatedMinutes, requiredForCompletion } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     if (!name || !description || !area || !items) {
       return next(new AppError('Missing required fields', 400));
@@ -100,11 +101,11 @@ export const createTemplate = async (req: Request, res: Response, next: NextFunc
 };
 
 // Update template
-export const updateTemplate = async (req: Request, res: Response, next: NextFunction) => {
+export const updateTemplate = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { name, description, items, estimatedMinutes, isActive, requiredForCompletion } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     // Verify template belongs to tenant
     const existing = await prisma.checklistTemplate.findFirst({ where: { id, tenantId } });
@@ -139,10 +140,10 @@ export const updateTemplate = async (req: Request, res: Response, next: NextFunc
 };
 
 // Delete template
-export const deleteTemplate = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteTemplate = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     // Verify template belongs to tenant before deleting
     const existing = await prisma.checklistTemplate.findFirst({ where: { id, tenantId } });
@@ -158,7 +159,7 @@ export const deleteTemplate = async (req: Request, res: Response, next: NextFunc
 };
 
 // Start checklist (create instance)
-export const startChecklist = async (req: Request, res: Response, next: NextFunction) => {
+export const startChecklist = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const {
       templateId,
@@ -174,7 +175,7 @@ export const startChecklist = async (req: Request, res: Response, next: NextFunc
       return next(new AppError('Template ID is required', 400));
     }
     
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const template = await prisma.checklistTemplate.findFirst({ 
       where: { id: templateId, tenantId } 
@@ -224,10 +225,10 @@ export const startChecklist = async (req: Request, res: Response, next: NextFunc
 };
 
 // Get checklist instance
-export const getChecklistInstance = async (req: Request, res: Response, next: NextFunction) => {
+export const getChecklistInstance = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const instance = await prisma.checklistInstance.findFirst({
       where: { id, tenantId },
@@ -255,11 +256,11 @@ export const getChecklistInstance = async (req: Request, res: Response, next: Ne
 };
 
 // Update checklist item
-export const updateChecklistItem = async (req: Request, res: Response, next: NextFunction) => {
+export const updateChecklistItem = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { templateItemId, ...values } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const instance = await prisma.checklistInstance.findFirst({ 
       where: { id, tenantId } 
@@ -302,11 +303,11 @@ export const updateChecklistItem = async (req: Request, res: Response, next: Nex
 };
 
 // Complete checklist
-export const completeChecklist = async (req: Request, res: Response, next: NextFunction) => {
+export const completeChecklist = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { notes } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     // Verify instance belongs to tenant
     const existing = await prisma.checklistInstance.findFirst({ where: { id, tenantId } });
@@ -336,10 +337,10 @@ export const completeChecklist = async (req: Request, res: Response, next: NextF
 };
 
 // Get all instances
-export const getAllInstances = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllInstances = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { status, assignedToStaffId, reservationId } = req.query;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const where: any = { tenantId };
     if (status) where.status = status;
@@ -368,9 +369,9 @@ export const getAllInstances = async (req: Request, res: Response, next: NextFun
 };
 
 // Get checklist stats
-export const getChecklistStats = async (req: Request, res: Response, next: NextFunction) => {
+export const getChecklistStats = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const [total, completed, pending, inProgress] = await Promise.all([
       prisma.checklistInstance.count({ where: { tenantId } }),

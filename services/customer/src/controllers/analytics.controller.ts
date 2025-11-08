@@ -17,8 +17,7 @@ import financialService from '../services/financialService';
 export const getSalesByService = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { period = 'all', startDate, endDate } = req.query;
-    
-    console.log('Analytics: Getting sales by service with period:', period);
+    const tenantId = (req as any).tenantId || 'dev';
     
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
@@ -28,13 +27,13 @@ export const getSalesByService = async (req: Request, res: Response, next: NextF
     );
     
     // Get service revenue data from the financial service
-    const serviceRevenue = await financialService.getServiceRevenue(dateRange);
+    const serviceRevenue = await financialService.getServiceRevenue(dateRange, tenantId);
     
     // Calculate total revenue for services
     const totalRevenue = serviceRevenue.reduce((sum, service) => sum + service.revenue, 0);
     
     // Get total reservation count
-    const reservations = await financialService.getFinancialSummary(dateRange);
+    const reservations = await financialService.getFinancialSummary(dateRange, tenantId);
     
     res.status(200).json({
       status: 'success',
@@ -58,8 +57,7 @@ export const getSalesByService = async (req: Request, res: Response, next: NextF
 export const getSalesByAddOn = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { period = 'all', startDate, endDate } = req.query;
-    
-    console.log('Analytics: Getting sales by add-on with period:', period);
+    const tenantId = (req as any).tenantId || 'dev';
     
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
@@ -69,7 +67,7 @@ export const getSalesByAddOn = async (req: Request, res: Response, next: NextFun
     );
     
     // Get add-on revenue data from the financial service
-    const addOnRevenue = await financialService.getAddOnRevenue(dateRange);
+    const addOnRevenue = await financialService.getAddOnRevenue(dateRange, tenantId);
     
     // Calculate total revenue for add-ons
     const totalRevenue = addOnRevenue.reduce((sum, addOn) => sum + addOn.revenue, 0);
@@ -99,8 +97,7 @@ export const getSalesByAddOn = async (req: Request, res: Response, next: NextFun
 export const getCustomerValue = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { period = 'all', startDate, endDate } = req.query;
-    
-    console.log('Analytics: Getting customer value with period:', period);
+    const tenantId = (req as any).tenantId || 'dev';
     
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
@@ -110,7 +107,7 @@ export const getCustomerValue = async (req: Request, res: Response, next: NextFu
     );
     
     // Get customer revenue data from the financial service
-    const customerRevenue = await financialService.getCustomerRevenue(dateRange);
+    const customerRevenue = await financialService.getCustomerRevenue(dateRange, tenantId);
     
     res.status(200).json({
       status: 'success',
@@ -131,8 +128,7 @@ export const getCustomerValue = async (req: Request, res: Response, next: NextFu
 export const getDashboardSummary = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { period = 'all', startDate, endDate } = req.query;
-    
-    console.log('Analytics: Getting dashboard summary with period:', period);
+    const tenantId = (req as any).tenantId || 'dev';
     
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
@@ -142,10 +138,10 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
     );
     
     // Get financial summary from the financial service
-    const financialSummary = await financialService.getFinancialSummary(dateRange);
+    const financialSummary = await financialService.getFinancialSummary(dateRange, tenantId);
     
     // Get service revenue data (includes service counts)
-    const serviceRevenue = await financialService.getServiceRevenue(dateRange);
+    const serviceRevenue = await financialService.getServiceRevenue(dateRange, tenantId);
     
     // Convert service revenue to the format expected by the frontend
     const serviceData = serviceRevenue.map(service => ({
@@ -155,13 +151,13 @@ export const getDashboardSummary = async (req: Request, res: Response, next: Nex
     }));
     
     // Get add-on revenue data
-    const addOnData = await financialService.getAddOnRevenue(dateRange);
+    const addOnData = await financialService.getAddOnRevenue(dateRange, tenantId);
     
     // Calculate total add-on revenue
     const addOnRevenue = addOnData.reduce((sum, addOn) => sum + addOn.revenue, 0);
     
     // Get customer revenue data to get unique customer count 
-    const customerRevenue = await financialService.getCustomerRevenue(dateRange);
+    const customerRevenue = await financialService.getCustomerRevenue(dateRange, tenantId);
     
     res.status(200).json({
       status: 'success',
@@ -189,6 +185,7 @@ export const getCustomerReport = async (req: Request, res: Response, next: NextF
   try {
     const { customerId } = req.params;
     const { period = 'all', startDate, endDate } = req.query;
+    const tenantId = (req as any).tenantId || 'dev';
     
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
@@ -198,7 +195,7 @@ export const getCustomerReport = async (req: Request, res: Response, next: NextF
     );
     
     // Get customer revenue data from the financial service
-    const customersRevenue = await financialService.getCustomerRevenue(dateRange);
+    const customersRevenue = await financialService.getCustomerRevenue(dateRange, tenantId);
     
     // Find the specific customer
     const customerData = customersRevenue.find(customer => customer.id === customerId);

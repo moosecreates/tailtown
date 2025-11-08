@@ -21,6 +21,9 @@ import PaymentStep from './steps/PaymentStep';
 import { reservationService } from '../../services/reservationService';
 import { invoiceService, InvoiceLineItem } from '../../services/invoiceService';
 import { paymentService } from '../../services/paymentService';
+import { couponService } from '../../services/couponService';
+import { Coupon } from '../../types/coupon';
+import CouponInput from '../../components/coupons/CouponInput';
 
 interface AddOn {
   id: string;
@@ -51,7 +54,8 @@ const CheckoutPage: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [savePaymentInfo, setSavePaymentInfo] = useState(false);
-  const [completedServiceCategory, setCompletedServiceCategory] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
   
   // Use items from the shopping cart state
   const cartItems = state.items as CartItemWithAddOns[];
@@ -79,10 +83,13 @@ const CheckoutPage: React.FC = () => {
   
   // Calculate tax (using 7.44% tax rate as per standard)
   const taxRate = 0.0744;
-  const tax = subtotal * taxRate;
+  
+  // Apply coupon discount (before tax)
+  const discountedSubtotal = Math.max(0, subtotal - couponDiscount);
+  const discountedTax = discountedSubtotal * taxRate;
   
   // Calculate total
-  const total = subtotal + tax;
+  const total = discountedSubtotal + discountedTax;
   
   // Set initial payment amount when total changes
   useEffect(() => {
@@ -240,11 +247,11 @@ const CheckoutPage: React.FC = () => {
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Due in 7 days
         subtotal: subtotal,
         taxRate: taxRate,
-        taxAmount: tax,
-        discount: 0,
+        taxAmount: discountedTax,
+        discount: couponDiscount,
         total: total,
         status: 'DRAFT' as 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED' | 'REFUNDED',
-        notes: 'Reservation checkout payment',
+        notes: appliedCoupon ? `Reservation checkout payment - Coupon ${appliedCoupon.code} applied` : 'Reservation checkout payment',
         lineItems: invoiceLineItems
       };
       
@@ -269,7 +276,22 @@ const CheckoutPage: React.FC = () => {
           status: 'PAID' as 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED' | 'REFUNDED' 
         });
         
-        // Step 5: Update reservation status to CONFIRMED for existing reservations (grooming/training)
+        // Step 5: Record coupon redemption if coupon was applied
+        if (appliedCoupon && couponDiscount > 0) {
+          try {
+            await couponService.applyCoupon(
+              appliedCoupon.code,
+              firstItem.customerId!,
+              createdReservations[0]?.reservation?.id || '',
+              subtotal
+            );
+          } catch (error) {
+            console.error('Error recording coupon redemption:', error);
+            // Don't fail the checkout if coupon recording fails
+          }
+        }
+        
+        // Step 6: Update reservation status to CONFIRMED for existing reservations (grooming/training)
         for (const { reservation, isExistingReservation } of createdReservations) {
           if (isExistingReservation && reservation?.id) {
             try {
@@ -315,22 +337,6 @@ const CheckoutPage: React.FC = () => {
       // Process successful payment
       setSuccess(true);
       
-      // Store the service category before clearing cart (for navigation)
-      const hasGroomingService = cartItems.some((item: CartItemWithAddOns) => 
-        item.serviceCategory === 'GROOMING'
-      );
-      const hasTrainingService = cartItems.some((item: CartItemWithAddOns) => 
-        item.serviceCategory === 'TRAINING'
-      );
-      
-      if (hasGroomingService) {
-        setCompletedServiceCategory('GROOMING');
-      } else if (hasTrainingService) {
-        setCompletedServiceCategory('TRAINING');
-      } else {
-        setCompletedServiceCategory('OTHER');
-      }
-      
       // Clear the cart after successful payment
       clearCart();
       
@@ -366,14 +372,19 @@ const CheckoutPage: React.FC = () => {
   };
   
   const handleContinueShopping = () => {
-    // Navigate to appropriate calendar based on completed service category
-    if (completedServiceCategory === 'GROOMING') {
-      navigate('/calendar/grooming');
-    } else if (completedServiceCategory === 'TRAINING') {
-      navigate('/calendar/training');
-    } else {
-      navigate('/calendar');
-    }
+    // Try to go back to the previous page (the calendar we came from)
+    // This works better than trying to guess which calendar based on service type
+    navigate(-1);
+  };
+  
+  const handleCouponApplied = (coupon: Coupon, discountAmount: number) => {
+    setAppliedCoupon(coupon);
+    setCouponDiscount(discountAmount);
+  };
+  
+  const handleCouponRemoved = () => {
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
   };
   
   // If payment was successful, show success message
@@ -443,6 +454,46 @@ const CheckoutPage: React.FC = () => {
             
             {/* Use the new OrderSummary component */}
             <OrderSummary taxRate={taxRate} />
+            
+            {/* Show discount breakdown if coupon is applied */}
+            {appliedCoupon && couponDiscount > 0 && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
+                <Typography variant="body2" color="success.dark">
+                  <strong>Coupon Discount ({appliedCoupon.code}):</strong> -${couponDiscount.toFixed(2)}
+                </Typography>
+                <Typography variant="body2" color="success.dark">
+                  <strong>New Subtotal:</strong> ${discountedSubtotal.toFixed(2)}
+                </Typography>
+                <Typography variant="body2" color="success.dark">
+                  <strong>Tax ({(taxRate * 100).toFixed(2)}%):</strong> ${discountedTax.toFixed(2)}
+                </Typography>
+                <Divider sx={{ my: 1 }} />
+                <Typography variant="h6" color="success.dark">
+                  <strong>Total:</strong> ${total.toFixed(2)}
+                </Typography>
+              </Box>
+            )}
+          </Paper>
+        </Grid>
+      </Grid>
+      
+      {/* Coupon Code Section */}
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+            <Typography variant="h6" gutterBottom>
+              Promo Code
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            
+            <CouponInput
+              customerId={cartItems[0]?.customerId || ''}
+              subtotal={subtotal}
+              serviceIds={cartItems.map(item => item.serviceId).filter(Boolean) as string[]}
+              onCouponApplied={handleCouponApplied}
+              onCouponRemoved={handleCouponRemoved}
+              appliedCoupon={appliedCoupon || undefined}
+            />
           </Paper>
         </Grid>
       </Grid>

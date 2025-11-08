@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { tenantService, CreateTenantDto, UpdateTenantDto } from '../services/tenant.service';
 import { TenantStatus } from '@prisma/client';
+import { AuthRequest } from '../middleware/auth.middleware';
 
 export class TenantController {
   
@@ -171,6 +172,41 @@ export class TenantController {
       res.status(500).json({
         success: false,
         error: 'Failed to update tenant',
+        message: error.message,
+      });
+    }
+  }
+
+  /**
+   * PATCH /api/tenants/me/settings
+   * Update current tenant's settings (timezone, etc.)
+   */
+  async updateCurrentTenantSettings(req: AuthRequest, res: Response) {
+    try {
+      const tenantId = req.user?.tenantId;
+      
+      if (!tenantId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Unauthorized',
+          message: 'No tenant ID found in request',
+        });
+      }
+
+      const data: UpdateTenantDto = req.body;
+
+      const tenant = await tenantService.updateTenant(tenantId, data);
+
+      res.json({
+        success: true,
+        data: tenant,
+        message: 'Settings updated successfully',
+      });
+    } catch (error: any) {
+      console.error('Error updating tenant settings:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update settings',
         message: error.message,
       });
     }

@@ -97,7 +97,10 @@ const TenantManagement: React.FC = () => {
     planType: 'STARTER'
   });
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4004';
+  // Use dynamic API URL based on environment
+  const API_URL = process.env.NODE_ENV === 'production' 
+    ? window.location.origin 
+    : (process.env.REACT_APP_API_URL || 'http://localhost:4004');
 
   const loadTenants = React.useCallback(async () => {
     try {

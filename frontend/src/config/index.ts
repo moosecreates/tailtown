@@ -55,6 +55,19 @@ export const getTenantId = (): string | undefined => {
   return config.api.defaultTenantId;
 };
 
+// Helper function to get tenant timezone
+export const getTenantTimezone = (): string => {
+  try {
+    const timezone = localStorage.getItem('tenant_timezone');
+    if (timezone && timezone.trim()) return timezone.trim();
+  } catch (_) {
+    // Access to localStorage might fail in non-browser environments
+  }
+  
+  // Default to America/Denver (Mountain Time) if not set
+  return 'America/Denver';
+};
+
 // Helper function to format a date according to the configured format
 export const formatDate = (date: Date | string, format?: string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;

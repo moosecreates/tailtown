@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
+import { TenantRequest } from '../middleware/tenant.middleware';
 
 const prisma = new PrismaClient();
 
@@ -10,10 +11,10 @@ const prisma = new PrismaClient();
  */
 
 // Get all groomer appointments
-export const getAllGroomerAppointments = async (req: Request, res: Response, next: NextFunction) => {
+export const getAllGroomerAppointments = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { groomerId, status, startDate, endDate } = req.query;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const where: any = { tenantId };
     if (groomerId) where.groomerId = groomerId;
@@ -71,10 +72,10 @@ export const getAllGroomerAppointments = async (req: Request, res: Response, nex
 };
 
 // Get groomer appointment by ID
-export const getGroomerAppointmentById = async (req: Request, res: Response, next: NextFunction) => {
+export const getGroomerAppointmentById = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const appointment = await prisma.groomerAppointment.findFirst({
       where: { id, tenantId },
@@ -97,7 +98,7 @@ export const getGroomerAppointmentById = async (req: Request, res: Response, nex
 };
 
 // Create groomer appointment
-export const createGroomerAppointment = async (req: Request, res: Response, next: NextFunction) => {
+export const createGroomerAppointment = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const {
       reservationId,
@@ -110,7 +111,7 @@ export const createGroomerAppointment = async (req: Request, res: Response, next
       duration,
       notes
     } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     // Validate required fields
     if (!groomerId || !serviceId || !petId || !customerId || !scheduledDate || !scheduledTime) {
@@ -164,10 +165,10 @@ export const createGroomerAppointment = async (req: Request, res: Response, next
 };
 
 // Update groomer appointment
-export const updateGroomerAppointment = async (req: Request, res: Response, next: NextFunction) => {
+export const updateGroomerAppointment = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     // Verify appointment exists and belongs to tenant
     const existing = await prisma.groomerAppointment.findFirst({
@@ -209,11 +210,11 @@ export const updateGroomerAppointment = async (req: Request, res: Response, next
 };
 
 // Reassign appointment to different groomer
-export const reassignGroomerAppointment = async (req: Request, res: Response, next: NextFunction) => {
+export const reassignGroomerAppointment = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { newGroomerId, reason } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     if (!newGroomerId) {
       return next(new AppError('New groomer ID is required', 400));
@@ -264,10 +265,10 @@ export const reassignGroomerAppointment = async (req: Request, res: Response, ne
 };
 
 // Start appointment (mark as in progress)
-export const startGroomerAppointment = async (req: Request, res: Response, next: NextFunction) => {
+export const startGroomerAppointment = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const appointment = await prisma.groomerAppointment.update({
       where: { id },
@@ -290,11 +291,11 @@ export const startGroomerAppointment = async (req: Request, res: Response, next:
 };
 
 // Complete appointment
-export const completeGroomerAppointment = async (req: Request, res: Response, next: NextFunction) => {
+export const completeGroomerAppointment = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { notes } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const appointment = await prisma.groomerAppointment.update({
       where: { id },
@@ -318,11 +319,11 @@ export const completeGroomerAppointment = async (req: Request, res: Response, ne
 };
 
 // Cancel appointment
-export const cancelGroomerAppointment = async (req: Request, res: Response, next: NextFunction) => {
+export const cancelGroomerAppointment = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { reason } = req.body;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const existing = await prisma.groomerAppointment.findFirst({
       where: { id, tenantId }
@@ -347,10 +348,10 @@ export const cancelGroomerAppointment = async (req: Request, res: Response, next
 };
 
 // Delete appointment
-export const deleteGroomerAppointment = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteGroomerAppointment = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const existing = await prisma.groomerAppointment.findFirst({
       where: { id, tenantId }
@@ -369,11 +370,11 @@ export const deleteGroomerAppointment = async (req: Request, res: Response, next
 };
 
 // Get groomer's schedule for date range
-export const getGroomerSchedule = async (req: Request, res: Response, next: NextFunction) => {
+export const getGroomerSchedule = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { groomerId } = req.params;
     const { startDate, endDate } = req.query;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     if (!startDate || !endDate) {
       return next(new AppError('Start date and end date are required', 400));
@@ -435,10 +436,10 @@ export const getGroomerSchedule = async (req: Request, res: Response, next: Next
 };
 
 // Get available groomers for specific date/time
-export const getAvailableGroomers = async (req: Request, res: Response, next: NextFunction) => {
+export const getAvailableGroomers = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { date, time, duration, serviceId } = req.query;
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     if (!date || !time) {
       return next(new AppError('Date and time are required', 400));

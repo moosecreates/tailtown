@@ -14,13 +14,12 @@ import { logger } from '../../utils/logger';
 import { detectReservationConflicts } from '../../utils/reservation-conflicts';
 import { 
   ExtendedReservationWhereInput, 
-  ExtendedCustomerWhereInput,
-  ExtendedPetWhereInput,
   ExtendedResourceWhereInput,
   ExtendedReservationInclude,
   ExtendedServiceWhereInput
 } from '../../types/prisma-extensions';
 import { safeExecutePrismaQuery, prisma } from './utils/prisma-helpers';
+import { customerServiceClient } from '../../clients/customer-service.client';
 
 /**
  * Helper function to determine suite type based on service type
@@ -135,41 +134,23 @@ export const createReservation = catchAsync(async (req: TenantRequest, res: Resp
     throw AppError.validationError('Start date must be before end date');
   }
   
-  // Verify customer exists and belongs to tenant
-  await safeExecutePrismaQuery(
-    async () => {
-      return await prisma.customer.findFirstOrThrow({
-        where: {
-          id: customerId,
-          tenantId: tenantId
-          // organizationId removed as it's not in the schema
-        } as ExtendedCustomerWhereInput
-      });
-    },
-    null,
-    `Error verifying customer with ID ${customerId}`,
-    true // Enable throwError flag
-  );
+  // Verify customer exists and belongs to tenant via Customer Service API
+  try {
+    await customerServiceClient.verifyCustomer(customerId, tenantId);
+    logger.info(`Verified customer exists via API: ${customerId}`, { requestId });
+  } catch (error) {
+    logger.error(`Customer verification failed: ${customerId}`, { error, requestId });
+    throw error;
+  }
   
-  logger.info(`Verified customer exists: ${customerId}`, { requestId });
-  
-  // Verify pet exists and belongs to tenant
-  await safeExecutePrismaQuery(
-    async () => {
-      return await prisma.pet.findFirstOrThrow({
-        where: {
-          id: petId,
-          tenantId: tenantId
-          // organizationId removed as it's not in the schema
-        } as ExtendedPetWhereInput
-      });
-    },
-    null,
-    `Error verifying pet with ID ${petId}`,
-    true // Enable throwError flag
-  );
-  
-  logger.info(`Verified pet exists: ${petId}`, { requestId });
+  // Verify pet exists and belongs to tenant via Customer Service API
+  try {
+    await customerServiceClient.verifyPet(petId, tenantId);
+    logger.info(`Verified pet exists via API: ${petId}`, { requestId });
+  } catch (error) {
+    logger.error(`Pet verification failed: ${petId}`, { error, requestId });
+    throw error;
+  }
   
   // Determine suite type based on service type if not provided
   let determinedSuiteType = requestedSuiteType;

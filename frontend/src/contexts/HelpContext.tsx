@@ -3,9 +3,10 @@
  * Provides page-specific help content throughout the application
  */
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { PageHelpContent } from '../types/help';
 import HelpModal from '../components/help/HelpModal';
+import { allHelpContent } from '../content/help';
 
 interface HelpContextType {
   openHelp: (articleId?: string) => void;
@@ -43,6 +44,22 @@ export const HelpProvider: React.FC<HelpProviderProps> = ({ children }) => {
     setInitialArticleId(undefined);
   }, []);
 
+  // Combine page-specific content with all help content
+  const combinedContent = useMemo(() => {
+    if (pageContent) {
+      return pageContent;
+    }
+    
+    // If no page-specific content, show all help content
+    return {
+      pageId: 'all',
+      pageName: 'Help Center',
+      overview: 'Browse all help articles and guides to learn how to use Tailtown effectively.',
+      articles: allHelpContent.flatMap(content => content.articles),
+      tooltips: {}
+    };
+  }, [pageContent]);
+
   return (
     <HelpContext.Provider
       value={{
@@ -56,7 +73,7 @@ export const HelpProvider: React.FC<HelpProviderProps> = ({ children }) => {
       <HelpModal
         open={helpOpen}
         onClose={closeHelp}
-        pageContent={pageContent}
+        pageContent={combinedContent}
         initialArticleId={initialArticleId}
       />
     </HelpContext.Provider>

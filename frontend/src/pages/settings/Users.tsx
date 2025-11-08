@@ -393,7 +393,7 @@ const Users: React.FC = () => {
                 />
                 <Tab 
                   icon={<ScheduleIcon fontSize="small" />} 
-                  label="Scheduling" 
+                  label="Availability" 
                   id="staff-tab-1" 
                   aria-controls="staff-tabpanel-1" 
                   iconPosition="start"
@@ -666,7 +666,7 @@ const Users: React.FC = () => {
             )}
           </Box>
           
-          {/* Scheduling Tab */}
+          {/* Availability Tab */}
           {editingUser && (
             <Box
               role="tabpanel"

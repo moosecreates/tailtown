@@ -71,7 +71,9 @@ export const reservationService = {
     sortBy?: string,
     sortOrder: 'asc' | 'desc' = 'asc',
     status?: string,
-    date?: string
+    date?: string,
+    checkInDate?: string,
+    timezone?: string
   ): Promise<{ status: string; data: Reservation[]; totalPages: number; currentPage: number; results: number }> => {
     try {
       const response: AxiosResponse = await api.get('/api/reservations', {
@@ -81,7 +83,9 @@ export const reservationService = {
           sortBy,
           sortOrder,
           status,
-          date
+          date,
+          checkInDate,
+          timezone
         }
       });
       return response.data;
@@ -116,6 +120,9 @@ export const reservationService = {
       } else if (response.data?.data?.reservation) {
         // Alternative format
         reservationData = response.data.data.reservation;
+      } else if (response.data?.data?.reservations && Array.isArray(response.data.data.reservations)) {
+        // Nested reservations array format (from GET endpoint)
+        reservationData = response.data.data.reservations[0];
       } else if (response.data?.data && response.data.data.id) {
         // Data directly in data field
         reservationData = response.data.data;

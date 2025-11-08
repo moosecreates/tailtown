@@ -112,10 +112,12 @@ export function getDateRangeFilter(period: string, startDate?: string, endDate?:
 
 /**
  * Gets invoice data, consistently filtered by status and date range
+ * CRITICAL: Must include tenantId to ensure proper data isolation
  */
-export async function getInvoicesInRange(dateRange: DateRange) {
+export async function getInvoicesInRange(dateRange: DateRange, tenantId: string) {
   return prisma.invoice.findMany({
     where: {
+      tenantId,
       issueDate: dateRange,
       status: {
         notIn: INVALID_INVOICE_STATUSES
@@ -149,8 +151,8 @@ export async function getInvoicesInRange(dateRange: DateRange) {
 /**
  * Gets financial summary data for a date range
  */
-export async function getFinancialSummary(dateRange: DateRange): Promise<FinancialSummary> {
-  const invoices = await getInvoicesInRange(dateRange);
+export async function getFinancialSummary(dateRange: DateRange, tenantId: string): Promise<FinancialSummary> {
+  const invoices = await getInvoicesInRange(dateRange, tenantId);
   
   const totalRevenue = invoices.reduce((sum, inv) => sum + inv.total, 0);
   const paidInvoices = invoices.filter(inv => inv.status === 'PAID');
@@ -175,10 +177,12 @@ export async function getFinancialSummary(dateRange: DateRange): Promise<Financi
 /**
  * Gets revenue breakdown by service
  */
-export async function getServiceRevenue(dateRange: DateRange): Promise<ServiceRevenue[]> {
-  const invoices = await getInvoicesInRange(dateRange);
+export async function getServiceRevenue(dateRange: DateRange, tenantId: string): Promise<ServiceRevenue[]> {
+  const invoices = await getInvoicesInRange(dateRange, tenantId);
   
   const serviceMap = new Map<string, ServiceRevenue>();
+  let importedRevenue = 0;
+  let importedCount = 0;
   
   // Process invoices to extract service revenue
   for (const invoice of invoices) {
@@ -208,7 +212,23 @@ export async function getServiceRevenue(dateRange: DateRange): Promise<ServiceRe
       data.count += 1;
       data.revenue += serviceRevenue;
       serviceMap.set(service.id, data);
+    } else {
+      // Invoice without reservation - likely imported from external system
+      // Add to "Historical Services" category
+      importedRevenue += invoice.total;
+      importedCount += 1;
     }
+  }
+  
+  // Add imported services as a separate category if there's any
+  if (importedRevenue > 0) {
+    serviceMap.set('imported-services', {
+      id: 'imported-services',
+      name: 'Historical Services (Imported)',
+      count: importedCount,
+      revenue: importedRevenue,
+      percentageOfTotal: 0
+    });
   }
   
   // Convert map to array
@@ -231,8 +251,8 @@ export async function getServiceRevenue(dateRange: DateRange): Promise<ServiceRe
 /**
  * Gets revenue breakdown by add-on
  */
-export async function getAddOnRevenue(dateRange: DateRange): Promise<AddOnRevenue[]> {
-  const invoices = await getInvoicesInRange(dateRange);
+export async function getAddOnRevenue(dateRange: DateRange, tenantId: string): Promise<AddOnRevenue[]> {
+  const invoices = await getInvoicesInRange(dateRange, tenantId);
   
   const addOnMap = new Map<string, AddOnRevenue>();
   
@@ -280,8 +300,8 @@ export async function getAddOnRevenue(dateRange: DateRange): Promise<AddOnRevenu
 /**
  * Gets revenue breakdown by customer
  */
-export async function getCustomerRevenue(dateRange: DateRange): Promise<CustomerRevenue[]> {
-  const invoices = await getInvoicesInRange(dateRange);
+export async function getCustomerRevenue(dateRange: DateRange, tenantId: string): Promise<CustomerRevenue[]> {
+  const invoices = await getInvoicesInRange(dateRange, tenantId);
   
   // Group invoices by customer
   const customerMap = new Map<string, {
@@ -415,8 +435,8 @@ export async function getCustomerRevenue(dateRange: DateRange): Promise<Customer
 /**
  * Gets daily revenue for a date range
  */
-export async function getDailyRevenue(dateRange: DateRange): Promise<{date: string; revenue: number}[]> {
-  const invoices = await getInvoicesInRange(dateRange);
+export async function getDailyRevenue(dateRange: DateRange, tenantId: string): Promise<{date: string; revenue: number}[]> {
+  const invoices = await getInvoicesInRange(dateRange, tenantId);
   
   // Group invoices by date
   const dailyRevenueMap = new Map<string, number>();

@@ -140,3 +140,34 @@ export const requireTenantAccess = (req: AuthRequest, res: Response, next: NextF
 
   next();
 };
+
+/**
+ * Optional authentication middleware
+ * Extracts user info from JWT if present, but doesn't require it
+ * Useful for endpoints that work with or without authentication
+ */
+export const optionalAuth = (req: AuthRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers['authorization'] as string;
+
+  // Check for Bearer token
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    
+    try {
+      // Verify and decode JWT token
+      const decoded = verifyToken(token);
+      req.user = {
+        id: decoded.id,
+        email: decoded.email,
+        role: decoded.role as 'SUPER_ADMIN' | 'TENANT_ADMIN' | 'MANAGER' | 'STAFF',
+        tenantId: decoded.tenantId,
+      };
+    } catch (error) {
+      // Token invalid or expired - continue without user context
+      // Don't throw error, just proceed without authentication
+    }
+  }
+
+  // Continue regardless of authentication status
+  next();
+};

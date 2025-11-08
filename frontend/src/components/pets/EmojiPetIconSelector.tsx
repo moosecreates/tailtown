@@ -5,35 +5,77 @@ import {
   Grid,
   Chip,
   Paper,
+  Tooltip,
+  Divider,
 } from '@mui/material';
+import { ALL_PET_ICONS, getIconsByCategory } from '../../constants/petIcons';
 
 interface EmojiPetIconSelectorProps {
   selectedIcons: string[];
   onChange: (selectedIcons: string[]) => void;
 }
 
-// Available emoji icons for pets
-const AVAILABLE_EMOJIS = [
-  '😊', '😟', '⚡', '😌', '🎾', '💊', '🥗', '👴', '🤧', '⭐',
-  '🔄', '🆕', '🎓', '😰', '🍖', '🏃', '❤️', '🐕', '🐈', '🎯',
-  '🦴', '🎈', '🌟', '💤', '🏥', '💉', '🩺', '🦷', '👁️', '👂',
-  '🐾', '🎀', '🧸', '🎪', '🏆', '🥇', '🎁', '🌈', '☀️', '🌙'
-];
-
 /**
- * Simple emoji selector for pet icons
- * Works with emoji strings directly (not icon IDs)
+ * Pet icon selector with organized categories and descriptions
+ * Uses the proper icon system from constants/petIcons.ts
  */
 const EmojiPetIconSelector: React.FC<EmojiPetIconSelectorProps> = ({ 
   selectedIcons, 
   onChange 
 }) => {
-  const handleIconToggle = (emoji: string) => {
-    if (selectedIcons.includes(emoji)) {
-      onChange(selectedIcons.filter(e => e !== emoji));
+  const handleIconToggle = (iconId: string) => {
+    if (selectedIcons.includes(iconId)) {
+      onChange(selectedIcons.filter(id => id !== iconId));
     } else {
-      onChange([...selectedIcons, emoji]);
+      onChange([...selectedIcons, iconId]);
     }
+  };
+
+  // Get icons by category
+  const groupIcons = getIconsByCategory('group');
+  const sizeIcons = getIconsByCategory('size');
+  const behaviorIcons = getIconsByCategory('behavior');
+  const medicalIcons = getIconsByCategory('medical');
+  const handlingIcons = getIconsByCategory('handling');
+  const flagIcons = getIconsByCategory('flag');
+
+  const renderIconCategory = (title: string, icons: typeof groupIcons) => {
+    if (icons.length === 0) return null;
+    
+    return (
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+          {title}
+        </Typography>
+        <Grid container spacing={1}>
+          {icons.map((icon) => {
+            const isSelected = selectedIcons.includes(icon.id);
+            return (
+              <Grid item key={icon.id}>
+                <Tooltip title={`${icon.label}: ${icon.description}`} arrow>
+                  <Chip
+                    label={icon.icon}
+                    onClick={() => handleIconToggle(icon.id)}
+                    color={isSelected ? "primary" : "default"}
+                    variant={isSelected ? "filled" : "outlined"}
+                    sx={{
+                      fontSize: '1.5rem',
+                      minWidth: '48px',
+                      height: '48px',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        transform: 'scale(1.1)',
+                        transition: 'transform 0.2s'
+                      }
+                    }}
+                  />
+                </Tooltip>
+              </Grid>
+            );
+          })}
+        </Grid>
+      </Box>
+    );
   };
 
   return (
@@ -42,7 +84,7 @@ const EmojiPetIconSelector: React.FC<EmojiPetIconSelectorProps> = ({
         Pet Icons
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Select emoji icons that apply to this pet. Click to add or remove.
+        Select icons that apply to this pet. Hover over icons to see descriptions.
       </Typography>
 
       {/* Selected Icons Display */}
@@ -52,48 +94,33 @@ const EmojiPetIconSelector: React.FC<EmojiPetIconSelectorProps> = ({
             Selected ({selectedIcons.length}):
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {selectedIcons.map((emoji, index) => (
-              <Chip
-                key={`selected-${emoji}-${index}`}
-                label={emoji}
-                onDelete={() => handleIconToggle(emoji)}
-                color="primary"
-                sx={{ fontSize: '1.2rem' }}
-              />
-            ))}
+            {selectedIcons.map((iconId) => {
+              const icon = ALL_PET_ICONS.find(i => i.id === iconId);
+              if (!icon) return null;
+              return (
+                <Tooltip key={iconId} title={icon.label} arrow>
+                  <Chip
+                    label={icon.icon}
+                    onDelete={() => handleIconToggle(iconId)}
+                    color="primary"
+                    sx={{ fontSize: '1.2rem' }}
+                  />
+                </Tooltip>
+              );
+            })}
           </Box>
         </Box>
       )}
 
-      {/* Available Icons Grid */}
-      <Typography variant="subtitle2" gutterBottom>
-        Available Icons:
-      </Typography>
-      <Grid container spacing={1}>
-        {AVAILABLE_EMOJIS.map((emoji) => {
-          const isSelected = selectedIcons.includes(emoji);
-          return (
-            <Grid item key={emoji}>
-              <Chip
-                label={emoji}
-                onClick={() => handleIconToggle(emoji)}
-                color={isSelected ? "primary" : "default"}
-                variant={isSelected ? "filled" : "outlined"}
-                sx={{
-                  fontSize: '1.5rem',
-                  minWidth: '48px',
-                  height: '48px',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    transform: 'scale(1.1)',
-                    transition: 'transform 0.2s'
-                  }
-                }}
-              />
-            </Grid>
-          );
-        })}
-      </Grid>
+      <Divider sx={{ my: 2 }} />
+
+      {/* Available Icons by Category */}
+      {renderIconCategory('Group Compatibility', groupIcons)}
+      {renderIconCategory('Size', sizeIcons)}
+      {renderIconCategory('Behavioral Alerts', behaviorIcons)}
+      {renderIconCategory('Medical', medicalIcons)}
+      {renderIconCategory('Handling Requirements', handlingIcons)}
+      {renderIconCategory('Custom Flags', flagIcons)}
     </Paper>
   );
 };

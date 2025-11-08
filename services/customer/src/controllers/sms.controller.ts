@@ -1,3 +1,4 @@
+import { TenantRequest } from '../middleware/tenant.middleware';
 import { Request, Response } from 'express';
 import { smsService } from '../services/sms.service';
 import { prisma } from '../config/prisma';
@@ -14,7 +15,7 @@ export class SMSController {
    * GET /api/sms/config
    * Check Twilio configuration status
    */
-  async getConfig(req: Request, res: Response) {
+  async getConfig(req: TenantRequest, res: Response) {
     try {
       const isConfigured = smsService.isConfigured();
       
@@ -40,7 +41,7 @@ export class SMSController {
    * POST /api/sms/test
    * Send a test SMS message
    */
-  async sendTestSMS(req: Request, res: Response) {
+  async sendTestSMS(req: TenantRequest, res: Response) {
     try {
       const { phoneNumber, message } = req.body;
 
@@ -73,10 +74,10 @@ export class SMSController {
    * POST /api/sms/reservation-reminder/:reservationId
    * Send appointment reminder for a reservation
    */
-  async sendReservationReminder(req: Request, res: Response) {
+  async sendReservationReminder(req: TenantRequest, res: Response) {
     try {
       const { reservationId } = req.params;
-      const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+      const tenantId = req.tenantId || 'dev' || 'dev';
 
       // Fetch reservation with customer and pet details
       const reservation = await prisma.reservation.findFirst({
@@ -136,10 +137,10 @@ export class SMSController {
    * POST /api/sms/reservation-confirmation/:reservationId
    * Send reservation confirmation SMS
    */
-  async sendReservationConfirmation(req: Request, res: Response) {
+  async sendReservationConfirmation(req: TenantRequest, res: Response) {
     try {
       const { reservationId } = req.params;
-      const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+      const tenantId = req.tenantId || 'dev' || 'dev';
 
       const reservation = await prisma.reservation.findFirst({
         where: {
@@ -199,10 +200,10 @@ export class SMSController {
    * POST /api/sms/welcome/:customerId
    * Send welcome message to new customer
    */
-  async sendWelcomeMessage(req: Request, res: Response) {
+  async sendWelcomeMessage(req: TenantRequest, res: Response) {
     try {
       const { customerId } = req.params;
-      const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+      const tenantId = req.tenantId || 'dev' || 'dev';
 
       const customer = await prisma.customer.findFirst({
         where: {
@@ -252,10 +253,10 @@ export class SMSController {
    * POST /api/sms/marketing
    * Send marketing message to customers
    */
-  async sendMarketingMessage(req: Request, res: Response) {
+  async sendMarketingMessage(req: TenantRequest, res: Response) {
     try {
       const { customerIds, message } = req.body;
-      const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+      const tenantId = req.tenantId || 'dev' || 'dev';
 
       if (!customerIds || !Array.isArray(customerIds) || customerIds.length === 0) {
         return res.status(400).json({
@@ -329,10 +330,10 @@ export class SMSController {
    * POST /api/sms/check-in/:reservationId
    * Send check-in notification
    */
-  async sendCheckInNotification(req: Request, res: Response) {
+  async sendCheckInNotification(req: TenantRequest, res: Response) {
     try {
       const { reservationId } = req.params;
-      const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+      const tenantId = req.tenantId || 'dev' || 'dev';
 
       const reservation = await prisma.reservation.findFirst({
         where: {
@@ -385,10 +386,10 @@ export class SMSController {
    * POST /api/sms/check-out/:reservationId
    * Send check-out notification
    */
-  async sendCheckOutNotification(req: Request, res: Response) {
+  async sendCheckOutNotification(req: TenantRequest, res: Response) {
     try {
       const { reservationId } = req.params;
-      const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+      const tenantId = req.tenantId || 'dev' || 'dev';
 
       const reservation = await prisma.reservation.findFirst({
         where: {

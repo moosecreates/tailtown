@@ -43,11 +43,10 @@ const SuperAdminLogin: React.FC = () => {
 
     try {
       await login(email, password);
-      // Redirect to super admin dashboard
-      navigate('/super-admin/dashboard');
+      // Force full page reload to ensure all tokens are properly set
+      window.location.href = '/super-admin/dashboard';
     } catch (err: any) {
       setError(err.message || 'Login failed. Please check your credentials.');
-    } finally {
       setLoading(false);
     }
   };

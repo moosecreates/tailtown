@@ -1,3 +1,4 @@
+import { TenantRequest } from '../middleware/tenant.middleware';
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import path from 'path';
@@ -6,9 +7,9 @@ import fs from 'fs/promises';
 const prisma = new PrismaClient();
 
 // Get all custom icons for tenant
-export const getAllCustomIcons = async (req: Request, res: Response) => {
+export const getAllCustomIcons = async (req: TenantRequest, res: Response) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev' || 'dev';
     
     const icons = await prisma.customIcon.findMany({
       where: {
@@ -35,10 +36,10 @@ export const getAllCustomIcons = async (req: Request, res: Response) => {
 };
 
 // Get single custom icon
-export const getCustomIconById = async (req: Request, res: Response) => {
+export const getCustomIconById = async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev' || 'dev';
     
     const icon = await prisma.customIcon.findFirst({
       where: {
@@ -68,9 +69,9 @@ export const getCustomIconById = async (req: Request, res: Response) => {
 };
 
 // Create new custom icon
-export const createCustomIcon = async (req: Request, res: Response) => {
+export const createCustomIcon = async (req: TenantRequest, res: Response) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev' || 'dev';
     const { name, label, description, category } = req.body;
     const file = req.file;
     
@@ -133,10 +134,10 @@ export const createCustomIcon = async (req: Request, res: Response) => {
 };
 
 // Update custom icon
-export const updateCustomIcon = async (req: Request, res: Response) => {
+export const updateCustomIcon = async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev' || 'dev';
     const { name, label, description, category, displayOrder } = req.body;
     const file = req.file;
     
@@ -198,10 +199,10 @@ export const updateCustomIcon = async (req: Request, res: Response) => {
 };
 
 // Delete custom icon
-export const deleteCustomIcon = async (req: Request, res: Response) => {
+export const deleteCustomIcon = async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev' || 'dev';
     
     // Check if icon exists
     const existing = await prisma.customIcon.findFirst({

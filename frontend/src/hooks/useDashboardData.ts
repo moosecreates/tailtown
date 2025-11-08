@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { reservationService } from '../services/reservationService';
 import { logger } from '../utils/logger';
+import { getTenantTimezone } from '../config';
 
 interface DashboardMetrics {
   inCount: number | null;
@@ -80,6 +81,19 @@ export const useDashboardData = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // Always default to today
 
   /**
+   * Convert UTC date to local date string in tenant's timezone
+   * This ensures dates are compared in the business's local time, not UTC
+   */
+  const getLocalDateString = useCallback((utcDateString: string): string => {
+    const date = new Date(utcDateString);
+    const timezone = getTenantTimezone();
+    
+    // Format date in tenant's timezone
+    const localDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+    return `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')}`;
+  }, []);
+
+  /**
    * Filter reservations based on check-in or check-out status
    * 
    * Performs client-side filtering for instant updates without API calls.
@@ -91,39 +105,35 @@ export const useDashboardData = () => {
   const filterReservations = useCallback((filter: 'in' | 'out' | 'all', reservations?: any[]) => {
     const reservationsToFilter = reservations || allReservations;
     
-    // Use selected date for filtering
+    // Use selected date for filtering (in local timezone)
     const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
     
     let filtered = reservationsToFilter;
     
     if (filter === 'in') {
-      // Show only check-ins (reservations starting on selected date)
+      // Show only check-ins (reservations starting on selected date in local timezone)
       filtered = reservationsToFilter.filter((res: any) => {
-        const startDate = new Date(res.startDate);
-        const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
+        const startDateStr = getLocalDateString(res.startDate);
         return startDateStr === formattedDate;
       });
     } else if (filter === 'out') {
-      // Show only check-outs (reservations ending on selected date)
+      // Show only check-outs (reservations ending on selected date in local timezone)
       filtered = reservationsToFilter.filter((res: any) => {
-        const endDate = new Date(res.endDate);
-        const endDateStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}`;
+        const endDateStr = getLocalDateString(res.endDate);
         return endDateStr === formattedDate;
       });
     } else if (filter === 'all') {
-      // Show both check-ins AND check-outs for selected date
+      // Show both check-ins AND check-outs for selected date in local timezone
       filtered = reservationsToFilter.filter((res: any) => {
-        const startDate = new Date(res.startDate);
-        const endDate = new Date(res.endDate);
-        const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
-        const endDateStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}`;
+        const startDateStr = getLocalDateString(res.startDate);
+        const endDateStr = getLocalDateString(res.endDate);
         return startDateStr === formattedDate || endDateStr === formattedDate;
       });
     }
     
     setFilteredReservations(filtered);
     setAppointmentFilter(filter);
-  }, [allReservations, selectedDate]);
+  }, [allReservations, selectedDate, getLocalDateString]);
 
   /**
    * Load all dashboard data
@@ -159,24 +169,20 @@ export const useDashboardData = () => {
       
       console.log('[Dashboard] Extracted reservations:', reservations.length, 'reservations');
 
-      // Calculate metrics
+      // Calculate metrics using local timezone dates
       const checkIns = reservations.filter((res: any) => {
-        const startDate = new Date(res.startDate);
-        const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
+        const startDateStr = getLocalDateString(res.startDate);
         return startDateStr === formattedDate;
       }).length;
 
       const checkOuts = reservations.filter((res: any) => {
-        const endDate = new Date(res.endDate);
-        const endDateStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}`;
+        const endDateStr = getLocalDateString(res.endDate);
         return endDateStr === formattedDate;
       }).length;
 
       const overnight = reservations.filter((res: any) => {
-        const startDate = new Date(res.startDate);
-        const endDate = new Date(res.endDate);
-        const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
-        const endDateStr = `${endDate.getUTCFullYear()}-${String(endDate.getUTCMonth() + 1).padStart(2, '0')}-${String(endDate.getUTCDate()).padStart(2, '0')}`;
+        const startDateStr = getLocalDateString(res.startDate);
+        const endDateStr = getLocalDateString(res.endDate);
         return startDateStr < formattedDate && endDateStr >= formattedDate;
       }).length;
 
@@ -195,10 +201,9 @@ export const useDashboardData = () => {
 
       setAllReservations(reservations);
       
-      // Apply initial filter (check-ins by default to show today's appointments)
+      // Apply initial filter (check-ins by default to show today's appointments in local timezone)
       const checkInsToday = reservations.filter((res: any) => {
-        const startDate = new Date(res.startDate);
-        const startDateStr = `${startDate.getUTCFullYear()}-${String(startDate.getUTCMonth() + 1).padStart(2, '0')}-${String(startDate.getUTCDate()).padStart(2, '0')}`;
+        const startDateStr = getLocalDateString(res.startDate);
         return startDateStr === formattedDate;
       });
       setFilteredReservations(checkInsToday);
@@ -209,7 +214,7 @@ export const useDashboardData = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedDate]); // Reload when date changes
+  }, [selectedDate, getLocalDateString]); // Reload when date changes
 
   // Load data on mount and when date changes
   useEffect(() => {

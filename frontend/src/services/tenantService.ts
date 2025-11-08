@@ -138,7 +138,39 @@ class TenantService {
     const response = await axios.get(`${API_URL}/api/tenants/subdomain/${subdomain}`, {
       headers: getAuthHeaders()
     });
-    return response.data.data;
+    const tenant = response.data.data;
+    
+    // Store timezone in localStorage for easy access
+    if (tenant && tenant.timezone) {
+      try {
+        localStorage.setItem('tenant_timezone', tenant.timezone);
+      } catch (error) {
+        console.warn('Could not store tenant timezone in localStorage:', error);
+      }
+    }
+    
+    return tenant;
+  }
+
+  /**
+   * Get current tenant's timezone
+   */
+  async getCurrentTenantTimezone(): Promise<string> {
+    try {
+      // Try to get from localStorage first
+      const cachedTimezone = localStorage.getItem('tenant_timezone');
+      if (cachedTimezone) {
+        return cachedTimezone;
+      }
+
+      // If not in cache, fetch from API
+      const subdomain = window.location.hostname.split('.')[0];
+      const tenant = await this.getTenantBySubdomain(subdomain);
+      return tenant.timezone || 'America/Denver';
+    } catch (error) {
+      console.warn('Could not fetch tenant timezone, using default:', error);
+      return 'America/Denver';
+    }
   }
 
   /**

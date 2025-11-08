@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { TenantRequest } from '../middleware/tenant.middleware';
+import { getCache, setCache, getCacheKey, deleteCachePattern } from '../utils/redis';
 
 const prisma = new PrismaClient();
 
@@ -7,11 +9,31 @@ const prisma = new PrismaClient();
 // PRODUCT CRUD
 // ============================================
 
-// Get all products
-export const getAllProducts = async (req: Request, res: Response) => {
+/**
+ * Get all products for the current tenant
+ * Supports filtering by category, active status, and search term
+ * @param req - TenantRequest with tenant context from middleware
+ * @param res - Express response
+ * @returns List of products with category information
+ */
+export const getAllProducts = async (req: TenantRequest, res: Response) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev';
     const { categoryId, isActive, search } = req.query;
+    
+    // Generate cache key based on query parameters
+    const cacheKeySuffix = `${categoryId || 'all'}:${isActive || 'all'}:${search || 'none'}`;
+    const cacheKey = getCacheKey(tenantId, 'products', cacheKeySuffix);
+    
+    // Try to get from cache first
+    const cachedProducts = await getCache<any[]>(cacheKey);
+    if (cachedProducts) {
+      return res.json({
+        status: 'success',
+        data: cachedProducts,
+        cached: true
+      });
+    }
     
     const where: any = { tenantId };
     
@@ -41,9 +63,13 @@ export const getAllProducts = async (req: Request, res: Response) => {
       ]
     });
     
+    // Cache the results for 5 minutes
+    await setCache(cacheKey, products, 300);
+    
     res.json({
       status: 'success',
-      data: products
+      data: products,
+      cached: false
     });
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -55,10 +81,10 @@ export const getAllProducts = async (req: Request, res: Response) => {
 };
 
 // Get single product
-export const getProductById = async (req: Request, res: Response) => {
+export const getProductById = async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev';
     
     const product = await prisma.product.findFirst({
       where: { id, tenantId },
@@ -97,9 +123,9 @@ export const getProductById = async (req: Request, res: Response) => {
 };
 
 // Create product
-export const createProduct = async (req: Request, res: Response) => {
+export const createProduct = async (req: TenantRequest, res: Response) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev';
     const {
       sku,
       name,
@@ -199,6 +225,9 @@ export const createProduct = async (req: Request, res: Response) => {
       });
     }
     
+    // Invalidate products cache for this tenant
+    await deleteCachePattern(`${tenantId}:products:*`);
+    
     res.status(201).json({
       status: 'success',
       data: product
@@ -213,10 +242,10 @@ export const createProduct = async (req: Request, res: Response) => {
 };
 
 // Update product
-export const updateProduct = async (req: Request, res: Response) => {
+export const updateProduct = async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev';
     
     // Check if product exists
     const existing = await prisma.product.findFirst({
@@ -320,10 +349,10 @@ export const updateProduct = async (req: Request, res: Response) => {
 };
 
 // Delete product
-export const deleteProduct = async (req: Request, res: Response) => {
+export const deleteProduct = async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev';
     
     const existing = await prisma.product.findFirst({
       where: { id, tenantId }
@@ -358,10 +387,10 @@ export const deleteProduct = async (req: Request, res: Response) => {
 // ============================================
 
 // Adjust inventory
-export const adjustInventory = async (req: Request, res: Response) => {
+export const adjustInventory = async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev';
     const { quantity, changeType, reason, reference, performedBy } = req.body;
     
     if (!quantity || !changeType) {
@@ -434,10 +463,10 @@ export const adjustInventory = async (req: Request, res: Response) => {
 };
 
 // Get inventory logs
-export const getInventoryLogs = async (req: Request, res: Response) => {
+export const getInventoryLogs = async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev';
     
     const logs = await prisma.inventoryLog.findMany({
       where: {
@@ -462,9 +491,9 @@ export const getInventoryLogs = async (req: Request, res: Response) => {
 };
 
 // Get low stock products
-export const getLowStockProducts = async (req: Request, res: Response) => {
+export const getLowStockProducts = async (req: TenantRequest, res: Response) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev';
     
     // Get all products with inventory tracking
     const allProducts = await prisma.product.findMany({
@@ -503,9 +532,9 @@ export const getLowStockProducts = async (req: Request, res: Response) => {
 // ============================================
 
 // Get all categories
-export const getAllCategories = async (req: Request, res: Response) => {
+export const getAllCategories = async (req: TenantRequest, res: Response) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev';
     
     const categories = await prisma.productCategory.findMany({
       where: {
@@ -534,9 +563,9 @@ export const getAllCategories = async (req: Request, res: Response) => {
 };
 
 // Create category
-export const createCategory = async (req: Request, res: Response) => {
+export const createCategory = async (req: TenantRequest, res: Response) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.tenantId || 'dev';
     const { name, description, displayOrder } = req.body;
     
     if (!name) {

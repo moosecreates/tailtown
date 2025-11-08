@@ -6,6 +6,7 @@ import {
   updateStaff,
   deleteStaff,
   loginStaff,
+  refreshAccessToken,
   requestPasswordReset,
   resetPassword,
   // Staff availability endpoints
@@ -35,23 +36,56 @@ import {
 } from '../controllers/staff.controller';
 import { loginRateLimiter, passwordResetRateLimiter } from '../middleware/rateLimiter.middleware';
 import { uploadProfilePhoto as uploadMiddleware } from '../middleware/upload.middleware';
+import { validateBody } from '../middleware/validation.middleware';
+import { 
+  staffLoginSchema, 
+  requestPasswordResetSchema, 
+  resetPasswordSchema,
+  refreshTokenSchema 
+} from '../validators/staff.validators';
 
 const router = Router();
 
 // IMPORTANT: Specific routes must come BEFORE generic :id routes!
 
 // Authentication routes (no :id parameter)
-// POST login (with rate limiting)
-router.post('/login', loginRateLimiter, loginStaff);
+// POST login (with rate limiting and validation to prevent brute force attacks)
+router.post('/login', loginRateLimiter, validateBody(staffLoginSchema), loginStaff);
 
-// POST request password reset (with rate limiting)
-router.post('/request-reset', passwordResetRateLimiter, requestPasswordReset);
+// POST refresh token (with validation, no rate limiting needed as tokens are already time-limited)
+router.post('/refresh', validateBody(refreshTokenSchema), refreshAccessToken);
 
-// POST reset password
-router.post('/reset-password', resetPassword);
+// POST request password reset (with rate limiting and validation)
+router.post('/request-reset', passwordResetRateLimiter, validateBody(requestPasswordResetSchema), requestPasswordReset);
+
+// POST reset password (with validation)
+router.post('/reset-password', validateBody(resetPasswordSchema), resetPassword);
 
 // Profile photo routes (must be before /:id routes!)
-router.post('/:id/photo', uploadMiddleware, uploadProfilePhoto);
+// Add error handling for multer errors
+router.post('/:id/photo', (req, res, next) => {
+  uploadMiddleware(req, res, (err: any) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({
+          status: 'error',
+          message: 'File too large. Maximum size is 10MB. Please compress your image and try again.',
+        });
+      }
+      if (err.message) {
+        return res.status(400).json({
+          status: 'error',
+          message: err.message,
+        });
+      }
+      return res.status(500).json({
+        status: 'error',
+        message: 'Error uploading file',
+      });
+    }
+    next();
+  });
+}, uploadProfilePhoto);
 router.delete('/:id/photo', deleteProfilePhoto);
 
 // GET all staff members

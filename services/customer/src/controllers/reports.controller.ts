@@ -1,3 +1,4 @@
+import { TenantRequest } from '../middleware/tenant.middleware';
 /**
  * Reports Controller
  * Handles all reporting endpoints
@@ -45,9 +46,9 @@ import {
 /**
  * GET /api/reports/sales/daily
  */
-export const getDailySales = async (req: Request, res: Response, next: NextFunction) => {
+export const getDailySales = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { date } = req.query;
     
     if (!date) {
@@ -80,9 +81,9 @@ export const getDailySales = async (req: Request, res: Response, next: NextFunct
 /**
  * GET /api/reports/sales/weekly
  */
-export const getWeeklySales = async (req: Request, res: Response, next: NextFunction) => {
+export const getWeeklySales = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -115,9 +116,9 @@ export const getWeeklySales = async (req: Request, res: Response, next: NextFunc
 /**
  * GET /api/reports/sales/monthly
  */
-export const getMonthlySales = async (req: Request, res: Response, next: NextFunction) => {
+export const getMonthlySales = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { year, month } = req.query;
     
     if (!year || !month) {
@@ -154,9 +155,9 @@ export const getMonthlySales = async (req: Request, res: Response, next: NextFun
 /**
  * GET /api/reports/sales/ytd
  */
-export const getYTDSales = async (req: Request, res: Response, next: NextFunction) => {
+export const getYTDSales = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { year } = req.query;
     
     if (!year) {
@@ -189,9 +190,9 @@ export const getYTDSales = async (req: Request, res: Response, next: NextFunctio
 /**
  * GET /api/reports/sales/top-customers
  */
-export const getTopCustomersReport = async (req: Request, res: Response, next: NextFunction) => {
+export const getTopCustomersReport = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { startDate, endDate, limit = '10' } = req.query;
     
     if (!startDate || !endDate) {
@@ -231,9 +232,9 @@ export const getTopCustomersReport = async (req: Request, res: Response, next: N
 /**
  * GET /api/reports/tax/monthly
  */
-export const getMonthlyTax = async (req: Request, res: Response, next: NextFunction) => {
+export const getMonthlyTax = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { year, month } = req.query;
     
     if (!year || !month) {
@@ -270,9 +271,9 @@ export const getMonthlyTax = async (req: Request, res: Response, next: NextFunct
 /**
  * GET /api/reports/tax/quarterly
  */
-export const getQuarterlyTax = async (req: Request, res: Response, next: NextFunction) => {
+export const getQuarterlyTax = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { year, quarter } = req.query;
     
     if (!year || !quarter) {
@@ -309,9 +310,9 @@ export const getQuarterlyTax = async (req: Request, res: Response, next: NextFun
 /**
  * GET /api/reports/tax/annual
  */
-export const getAnnualTax = async (req: Request, res: Response, next: NextFunction) => {
+export const getAnnualTax = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { year } = req.query;
     
     if (!year) {
@@ -344,9 +345,9 @@ export const getAnnualTax = async (req: Request, res: Response, next: NextFuncti
 /**
  * GET /api/reports/tax/breakdown
  */
-export const getTaxBreakdownReport = async (req: Request, res: Response, next: NextFunction) => {
+export const getTaxBreakdownReport = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -385,9 +386,9 @@ export const getTaxBreakdownReport = async (req: Request, res: Response, next: N
 /**
  * GET /api/reports/financial/revenue
  */
-export const getRevenue = async (req: Request, res: Response, next: NextFunction) => {
+export const getRevenue = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -418,9 +419,9 @@ export const getRevenue = async (req: Request, res: Response, next: NextFunction
 /**
  * GET /api/reports/financial/profit-loss
  */
-export const getProfitLoss = async (req: Request, res: Response, next: NextFunction) => {
+export const getProfitLoss = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -452,9 +453,9 @@ export const getProfitLoss = async (req: Request, res: Response, next: NextFunct
 /**
  * GET /api/reports/financial/outstanding
  */
-export const getOutstanding = async (req: Request, res: Response, next: NextFunction) => {
+export const getOutstanding = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const report = await getOutstandingBalances(tenantId);
     
@@ -483,9 +484,9 @@ export const getOutstanding = async (req: Request, res: Response, next: NextFunc
 /**
  * GET /api/reports/financial/refunds
  */
-export const getRefunds = async (req: Request, res: Response, next: NextFunction) => {
+export const getRefunds = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -523,9 +524,9 @@ export const getRefunds = async (req: Request, res: Response, next: NextFunction
 /**
  * GET /api/reports/customers/acquisition
  */
-export const getCustomerAcquisition = async (req: Request, res: Response, next: NextFunction) => {
+export const getCustomerAcquisition = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -559,9 +560,9 @@ export const getCustomerAcquisition = async (req: Request, res: Response, next: 
 /**
  * GET /api/reports/customers/retention
  */
-export const getCustomerRetention = async (req: Request, res: Response, next: NextFunction) => {
+export const getCustomerRetention = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -595,9 +596,9 @@ export const getCustomerRetention = async (req: Request, res: Response, next: Ne
 /**
  * GET /api/reports/customers/lifetime-value
  */
-export const getCustomerLifetimeValue = async (req: Request, res: Response, next: NextFunction) => {
+export const getCustomerLifetimeValue = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const limit = parseInt(req.query.limit as string) || 50;
     
     const report = await getCustomerLifetimeValueReport(tenantId, limit);
@@ -629,9 +630,9 @@ export const getCustomerLifetimeValue = async (req: Request, res: Response, next
 /**
  * GET /api/reports/customers/demographics
  */
-export const getCustomerDemographics = async (req: Request, res: Response, next: NextFunction) => {
+export const getCustomerDemographics = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     
     const report = await getCustomerDemographicsReport(tenantId);
     
@@ -659,9 +660,9 @@ export const getCustomerDemographics = async (req: Request, res: Response, next:
 /**
  * GET /api/reports/customers/inactive
  */
-export const getInactiveCustomers = async (req: Request, res: Response, next: NextFunction) => {
+export const getInactiveCustomers = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const days = parseInt(req.query.days as string) || 90;
     
     const report = await getInactiveCustomersReport(tenantId, days);
@@ -693,9 +694,9 @@ export const getInactiveCustomers = async (req: Request, res: Response, next: Ne
 /**
  * GET /api/reports/operations/staff
  */
-export const getStaffPerformance = async (req: Request, res: Response, next: NextFunction) => {
+export const getStaffPerformance = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -731,9 +732,9 @@ export const getStaffPerformance = async (req: Request, res: Response, next: Nex
 /**
  * GET /api/reports/operations/resources
  */
-export const getResourceUtilization = async (req: Request, res: Response, next: NextFunction) => {
+export const getResourceUtilization = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -769,9 +770,9 @@ export const getResourceUtilization = async (req: Request, res: Response, next: 
 /**
  * GET /api/reports/operations/bookings
  */
-export const getBookingPatterns = async (req: Request, res: Response, next: NextFunction) => {
+export const getBookingPatterns = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -805,9 +806,9 @@ export const getBookingPatterns = async (req: Request, res: Response, next: Next
 /**
  * GET /api/reports/operations/capacity
  */
-export const getCapacityAnalysis = async (req: Request, res: Response, next: NextFunction) => {
+export const getCapacityAnalysis = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string;
+    const tenantId = req.tenantId || 'dev';
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {

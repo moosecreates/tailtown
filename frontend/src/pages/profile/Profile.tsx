@@ -89,6 +89,28 @@ const Profile = () => {
     phone: '',
   });
 
+  /**
+   * Safely construct profile photo URL with error handling
+   * @param profilePhoto - Relative path to profile photo
+   * @returns Full URL to profile photo or undefined if invalid
+   */
+  const getProfilePhotoUrl = (profilePhoto: string | null | undefined): string | undefined => {
+    if (!profilePhoto) return undefined;
+    
+    try {
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? window.location.origin 
+        : (process.env.REACT_APP_API_URL || 'http://localhost:4004');
+      
+      // Ensure profilePhoto starts with /
+      const path = profilePhoto.startsWith('/') ? profilePhoto : `/${profilePhoto}`;
+      return `${baseUrl}${path}`;
+    } catch (error) {
+      console.error('Error constructing profile photo URL:', error);
+      return undefined;
+    }
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -106,9 +128,10 @@ const Profile = () => {
             phone: freshData.phone || '',
           });
           
-          // Set profile photo if exists
+          // Set profile photo if exists - construct full URL
           if (freshData.profilePhoto) {
-            setProfilePhoto(freshData.profilePhoto);
+            const fullPhotoUrl = getProfilePhotoUrl(freshData.profilePhoto);
+            setProfilePhoto(fullPhotoUrl || null);
           }
           
           // Update user context with fresh data
@@ -215,15 +238,16 @@ const Profile = () => {
         },
       });
       
-      const photoUrl = response.data.data?.profilePhoto || response.data.profilePhoto;
-      setProfilePhoto(photoUrl);
+      const photoPath = response.data.data?.profilePhoto || response.data.profilePhoto;
+      const fullPhotoUrl = getProfilePhotoUrl(photoPath);
+      setProfilePhoto(fullPhotoUrl || null);
       setPhotoPreview(null);
       setPhotoFile(null);
       setProfileSuccess('Profile photo updated successfully!');
       
-      // Update user context
+      // Update user context with the relative path (backend format)
       if (updateUser) {
-        updateUser({ profilePhoto: photoUrl });
+        updateUser({ profilePhoto: photoPath });
       }
     } catch (error: any) {
       console.error('Photo upload error:', error);

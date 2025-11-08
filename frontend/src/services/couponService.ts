@@ -31,7 +31,13 @@ export const couponService = {
     limit?: number;
   }): Promise<{ data: Coupon[]; totalPages: number; currentPage: number }> => {
     const response = await customerApi.get('/api/coupons', { params });
-    return response.data;
+    // API returns { status, results, totalPages, currentPage, data }
+    // We need to return { data, totalPages, currentPage }
+    return {
+      data: response.data.data || [],
+      totalPages: response.data.totalPages || 1,
+      currentPage: response.data.currentPage || 1
+    };
   },
 
   /**
@@ -47,7 +53,8 @@ export const couponService = {
    */
   getCouponByCode: async (code: string): Promise<Coupon> => {
     const response = await customerApi.get(`/api/coupons/code/${code}`);
-    return response.data;
+    // API returns { status, data: coupon }
+    return response.data.data || response.data;
   },
 
   /**
