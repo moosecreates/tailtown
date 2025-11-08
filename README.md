@@ -4,11 +4,20 @@
 ![Frontend Tests](https://github.com/moosecreates/tailtown/workflows/Frontend%20Tests/badge.svg)
 
 **Status:** 🟢 **LIVE IN PRODUCTION**  
-**Production URL:** https://canicloud.com  
+**Production URL:** https://canicloud.com (multi-tenant subdomains)  
 **Version:** 1.0.0  
-**Last Updated:** November 5, 2025
+**Last Updated:** November 7, 2025
 
-A modern, full-featured management system for pet resorts, providing comprehensive tools for reservations, customer management, and pet care services.
+A modern, full-featured SaaS management system for pet resorts, providing comprehensive tools for reservations, customer management, and pet care services.
+
+## 🌐 Access the Application
+
+### For Users & Staff
+- **Production (Tailtown):** https://tailtown.canicloud.com
+- **Demo Site (BranGro):** https://brangro.canicloud.com
+
+### For Developers Only
+- **Local Development:** http://localhost:3000 (requires setup below)
 
 ---
 
@@ -21,6 +30,11 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 - **[Best Practices](docs/human/BEST-PRACTICES.md)** - Code standards and patterns
 - **[Security](docs/human/SECURITY.md)** - Security features and how to use them
 - **[Roadmap](docs/human/ROADMAP.md)** - What's next for Tailtown
+
+### For Technical Leadership
+- **[Senior Dev Review](docs/SENIOR-DEV-REVIEW.md)** - ⭐ Architecture review & scaling roadmap (4/5 stars)
+- **[System Architecture](docs/CURRENT-SYSTEM-ARCHITECTURE.md)** - Complete architecture overview
+- **[Disaster Recovery](docs/operations/DISASTER-RECOVERY-PLAN.md)** - Backup & recovery procedures
 
 ### For AI Assistants (Complete Context)
 - **[Security Implementation](docs/ai-context/security/)** - Complete security details
@@ -35,12 +49,19 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### For End Users
+**Just visit the production site** - no setup needed!
+- **Tailtown (Production):** https://tailtown.canicloud.com
+- **BranGro (Demo):** https://brangro.canicloud.com
+
+### For Developers (Local Setup)
+
+**Prerequisites:**
 - Node.js 18+ and npm
 - PostgreSQL 14+
 - Git
 
-### Installation
+**Installation:**
 ```bash
 # Clone the repository
 git clone https://github.com/moosecreates/tailtown.git
@@ -64,10 +85,12 @@ npm run start:services
 cd frontend && npm start
 ```
 
-### Access the Application
+**Local Development URLs:**
 - **Frontend:** http://localhost:3000
 - **Customer API:** http://localhost:4004
 - **Reservation API:** http://localhost:4003
+
+**See:** [Quick Start Guide](docs/human/QUICK-START.md) for detailed setup instructions
 
 ---
 
@@ -220,29 +243,30 @@ npm run type-check
 
 ## 📊 Production Status
 
-### Current Deployment (November 5, 2025)
+### Current Deployment (November 7, 2025)
 
-**Production Tenant**: Tailtown (tailtown.canicloud.com)
+**Production Tenant**: Tailtown (https://tailtown.canicloud.com)
 - 🔴 **CRITICAL** - Your business, real data
 - Real customers, pets, and reservations
 - Daily operations and staff usage
 
-**Demo Tenant**: BranGro (brangro.canicloud.com)
+**Demo Tenant**: BranGro (https://brangro.canicloud.com)
 - 🟡 **DEMO** - Customer demos, mock data
 - 20 demo customers, 20 demo pets
 - 10 sample reservations, 4 staff accounts
 - 6 template POS products
 
-**Dev Tenant**: Dev (dev.canicloud.com / localhost)
+**Dev Tenant**: Dev (http://localhost:3000 - developers only)
 - 🟢 **DEVELOPMENT** - Safe to break
 - Local testing and experiments
 
 ### System Health
 - ✅ All services operational
 - ✅ Zero critical errors
-- ✅ SSL certificate valid
-- ✅ Database backups running
-- ✅ Monitoring active
+- ✅ SSL certificate valid (Let's Encrypt)
+- ✅ **Daily automated backups** (DigitalOcean)
+- ✅ PM2 cluster mode (2 instances per service)
+- ✅ Nginx reverse proxy with SSL
 
 For tenant strategy details, see [docs/TENANT-STRATEGY.md](docs/TENANT-STRATEGY.md)
 
@@ -282,6 +306,12 @@ Proprietary - All rights reserved
 
 ## 🎉 Recent Updates
 
+### November 7, 2025 - Documentation & Operations
+- ✅ **Senior Dev Review**: Comprehensive architecture review (4/5 stars, top 20% of startups)
+- ✅ **Backup Strategy**: Enabled DigitalOcean daily automated backups
+- ✅ **Disaster Recovery**: Updated recovery plan for production setup
+- ✅ **Documentation**: Added scaling roadmap and immediate action items
+
 ### November 5, 2025 - Major Cleanup & Testing
 - ✅ **Code Cleanup**: Fixed 13 controllers (86+ functions) for proper tenant context
 - ✅ **Authentication**: Implemented proper JWT flow, removed 'default-user' fallback
@@ -289,7 +319,6 @@ Proprietary - All rights reserved
 - ✅ **Bug Fixes**: Profile photo display, login API URLs, announcement persistence
 - ✅ **POS**: Added 5 template products for BranGro tenant
 - ✅ **Deployments**: 11 frontend + 5 backend deployments, all successful
-- ✅ **Documentation**: Updated architecture diagrams and system docs
 
 ### November 4, 2025
 - ✅ Production deployment to canicloud.com
