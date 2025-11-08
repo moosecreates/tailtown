@@ -24,13 +24,31 @@ export function createService(options: {
   app.use(compression());
   
   // Rate limiting to prevent abuse
+  // Per-tenant rate limiting: each tenant gets their own quota
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // Limit each IP to 1000 requests per windowMs
-    message: 'Too many requests from this IP, please try again later.',
+    max: 1000, // Limit each tenant to 1000 requests per windowMs
+    message: 'Too many requests from your organization, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
+    // Key by tenantId to enforce per-tenant limits
+    keyGenerator: (req: any) => {
+      // Use tenantId if available (set by tenant middleware), otherwise fall back to IP
+      return req.tenantId || req.ip;
+    },
     skip: (req) => req.path === '/health',
+    // Custom handler for better error messages
+    handler: (req: any, res: any) => {
+      res.status(429).json({
+        success: false,
+        error: {
+          type: 'RATE_LIMIT_ERROR',
+          message: 'Rate limit exceeded for your organization',
+          tenantId: req.tenantId,
+          retryAfter: res.getHeader('Retry-After')
+        }
+      });
+    },
   });
   
   app.use('/api/', limiter);

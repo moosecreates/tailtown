@@ -46,3 +46,33 @@ export const apiRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+/**
+ * Per-tenant API rate limiter
+ * Prevents one tenant from consuming all API quota
+ * Each tenant gets their own rate limit bucket
+ */
+export const perTenantRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Limit each tenant to 1000 requests per windowMs
+  message: {
+    status: 'error',
+    message: 'Your organization has exceeded the rate limit. Please try again later or contact support for a higher limit.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Key by tenantId instead of IP
+  keyGenerator: (req: any) => {
+    // Use tenantId from request (set by tenant middleware)
+    return req.tenantId || req.ip; // Fallback to IP if no tenantId
+  },
+  // Custom handler for rate limit exceeded
+  handler: (req: any, res: any) => {
+    res.status(429).json({
+      status: 'error',
+      message: 'Rate limit exceeded for your organization',
+      tenantId: req.tenantId,
+      retryAfter: res.getHeader('Retry-After')
+    });
+  },
+});
