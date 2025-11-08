@@ -30,7 +30,7 @@ jobs:
         run: npm run test:coverage -- --watchAll=false
       
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           files: ./frontend/coverage/lcov.info
           flags: frontend
@@ -95,7 +95,7 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/reservation
       
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           files: ./services/reservation-service/coverage/lcov.info
           flags: backend
