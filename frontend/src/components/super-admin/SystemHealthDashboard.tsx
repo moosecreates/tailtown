@@ -92,7 +92,7 @@ const SystemHealthDashboard: React.FC = () => {
   const fetchHealthMetrics = async () => {
     try {
       setError(null);
-      const response = await api.get('/system/health');
+      const response = await api.get('/api/system/health');
       setHealth(response.data);
       setLastUpdate(new Date());
     } catch (err: any) {
