@@ -2,6 +2,8 @@
 
 **Security Score:** 95/100 ⭐⭐⭐⭐⭐
 
+**Note:** All curl examples in this document use `localhost` for **local testing only**. Production uses `https://canicloud.com`
+
 ---
 
 ## ✅ What's Protected
@@ -130,7 +132,7 @@ When adding a new endpoint:
 
 ---
 
-## 🚨 Common Issues
+## Common Issues
 
 **"Too many requests" error:**
 - Rate limit hit

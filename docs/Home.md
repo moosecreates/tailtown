@@ -3,9 +3,11 @@
 **Version:** 1.0  
 **Status:** 🟢 **LIVE IN PRODUCTION**  
 **Last Updated:** November 7, 2025  
-**Production URL:** https://canicloud.com
+**Production URLs:**
+- **Tailtown (Production):** https://tailtown.canicloud.com
+- **BranGro (Demo):** https://brangro.canicloud.com
 
-Welcome to Tailtown - a modern, comprehensive pet resort management system built with React, Node.js, and PostgreSQL. This system manages boarding, daycare, grooming, training, and all aspects of pet resort operations.
+Welcome to Tailtown - a modern, comprehensive SaaS pet resort management system built with React, Node.js, and PostgreSQL. This system manages boarding, daycare, grooming, training, and all aspects of pet resort operations.
 
 ---
 
@@ -29,16 +31,22 @@ Welcome to Tailtown - a modern, comprehensive pet resort management system built
 - **[Development Best Practices](DEVELOPMENT-BEST-PRACTICES.md)** - Detailed code standards
 - **[System Features](SYSTEM-FEATURES-OVERVIEW.md)** - Complete feature list
 
-### 🔑 Admin Credentials
-- **Email:** admin@tailtown.com
-- **Password:** admin123
-- **⚠️ Change password after first login!**
+### 🌐 Access the Application
+
+**Production (End Users):**
+- **Tailtown:** https://tailtown.canicloud.com
+- **BranGro Demo:** https://brangro.canicloud.com
+
+**Local Development (Developers Only):**
+- Frontend: http://localhost:3000
+- Customer API: http://localhost:4004
+- Reservation API: http://localhost:4003
 
 ---
 
 ## 📊 Project Status
 
-### Current State (November 1, 2025)
+### Current State (November 7, 2025)
 - ✅ **MVP:** 100% Complete - PRODUCTION READY
 - ✅ **Security:** EXCELLENT (zero critical/high priority issues)
 - ✅ **Testing:** 500+ automated tests (80%+ coverage)
@@ -339,11 +347,13 @@ npm install
 npm run dev:all
 ```
 
-### Service Ports
-- Frontend: http://localhost:3000
-- Customer Service: http://localhost:4004
-- Reservation Service: http://localhost:4003
-- Database: localhost:5432
+### Local Development Ports (Developers Only)
+- **Frontend:** http://localhost:3000
+- **Customer Service:** http://localhost:4004
+- **Reservation Service:** http://localhost:4003
+- **Database:** localhost:5432
+
+**Note:** Production uses https://canicloud.com (multi-tenant subdomains)
 
 ### Useful Commands
 ```bash

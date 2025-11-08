@@ -4,6 +4,8 @@
 **Session:** Implementation Session 1  
 **Status:** 3 Critical Features Complete ✅
 
+**Note:** All curl test examples in this document use `localhost` for **local testing only**. Production uses `https://canicloud.com`
+
 ---
 
 ## ✅ COMPLETED FEATURES

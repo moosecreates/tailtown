@@ -4,7 +4,19 @@
 
 ---
 
-## 🚀 Get Running
+## 🌐 For End Users (No Setup Required!)
+
+**Just visit the production site:**
+- **Tailtown (Production):** https://tailtown.canicloud.com
+- **BranGro (Demo):** https://brangro.canicloud.com
+
+No installation needed! 🎉
+
+---
+
+## 💻 For Developers (Local Development Setup)
+
+### 🚀 Get Running
 
 ### 1. Clone and Install
 ```bash
@@ -46,10 +58,12 @@ cd frontend
 npm start
 ```
 
-### 5. Verify It Works
-- Frontend: http://localhost:3000
-- Customer API: http://localhost:4004/health
-- Reservation API: http://localhost:4003/health
+### 5. Verify Local Development Works
+- **Frontend:** http://localhost:3000
+- **Customer API:** http://localhost:4004/health
+- **Reservation API:** http://localhost:4003/health
+
+**Note:** These are LOCAL development URLs. Production uses https://canicloud.com
 
 ---
 

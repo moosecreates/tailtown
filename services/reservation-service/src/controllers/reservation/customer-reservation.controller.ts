@@ -11,10 +11,10 @@ import { catchAsync } from '../../middleware/catchAsync';
 import { logger } from '../../utils/logger';
 import { 
   ExtendedReservationWhereInput,
-  ExtendedCustomerWhereInput,
   ExtendedReservationInclude
 } from '../../types/prisma-extensions';
 import { safeExecutePrismaQuery, prisma } from './utils/prisma-helpers';
+import { customerServiceClient } from '../../clients/customer-service.client';
 
 /**
  * Get all reservations for a specific customer
@@ -51,21 +51,14 @@ export const getCustomerReservations = catchAsync(async (req: Request, res: Resp
     throw AppError.validationError('Customer ID is required');
   }
   
-  // Verify customer exists and belongs to tenant
-  await safeExecutePrismaQuery(
-    async () => {
-      return await prisma.customer.findFirst({
-        where: {
-          id: customerId
-          // organizationId removed as it's not in the schema
-        } as ExtendedCustomerWhereInput,
-        select: { id: true }
-      });
-    },
-    null,
-    `Error verifying customer with ID ${customerId}`,
-    true // Enable throwError flag
-  );
+  // Verify customer exists and belongs to tenant via Customer Service API
+  try {
+    await customerServiceClient.verifyCustomer(customerId, tenantId);
+    logger.info(`Verified customer exists via API: ${customerId}`, { requestId });
+  } catch (error) {
+    logger.error(`Customer verification failed: ${customerId}`, { error, requestId });
+    throw error;
+  }
   
   // Parse pagination parameters with validation
   let page = 1;

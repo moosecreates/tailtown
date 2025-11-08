@@ -1,9 +1,13 @@
 # Tailtown API Documentation
 
 **Version:** 1.0.0  
-**Last Updated:** November 5, 2025  
-**Base URL (Production):** https://canicloud.com/api  
-**Base URL (Development):** http://localhost:4004/api
+**Last Updated:** November 7, 2025  
+**Base URL (Production):** https://canicloud.com/api (multi-tenant subdomains)  
+**Base URL (Local Development):** http://localhost:4004/api (developers only)
+
+**Production Examples:**
+- Tailtown: `https://tailtown.canicloud.com/api`
+- BranGro: `https://brangro.canicloud.com/api`
 
 ---
 
@@ -485,5 +489,7 @@ For API support or questions:
 
 ---
 
-**Last Updated:** November 5, 2025  
+**Last Updated:** November 7, 2025  
 **API Version:** 1.0.0
+
+**Note:** All curl examples in this document use production URLs. For local development, replace `https://canicloud.com` with `http://localhost:4004`.
