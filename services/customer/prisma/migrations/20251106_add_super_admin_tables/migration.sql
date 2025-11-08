@@ -1,3 +1,26 @@
+-- CreateTable: super_admins (must be created first for foreign keys)
+CREATE TABLE IF NOT EXISTS "super_admins" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password_hash" TEXT NOT NULL,
+    "first_name" TEXT,
+    "last_name" TEXT,
+    "role" TEXT NOT NULL DEFAULT 'SUPER_ADMIN',
+    "is_active" BOOLEAN NOT NULL DEFAULT true,
+    "require_2fa" BOOLEAN NOT NULL DEFAULT false,
+    "last_login" TIMESTAMP(3),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "super_admins_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex for super_admins
+CREATE UNIQUE INDEX IF NOT EXISTS "super_admins_email_key" ON "super_admins"("email");
+CREATE INDEX IF NOT EXISTS "idx_super_admins_email" ON "super_admins"("email");
+CREATE INDEX IF NOT EXISTS "idx_super_admins_active" ON "super_admins"("is_active");
+CREATE INDEX IF NOT EXISTS "idx_super_admins_role" ON "super_admins"("role");
+
 -- CreateTable: audit_logs
 CREATE TABLE IF NOT EXISTS "audit_logs" (
     "id" TEXT NOT NULL,
