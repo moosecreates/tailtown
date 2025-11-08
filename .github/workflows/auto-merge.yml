@@ -10,13 +10,13 @@ on:
 
 jobs:
   automerge:
-    # Auto-merge if:
-    # 1. PR has 'automerge' label, OR
-    # 2. PR is from docs/* or chore/* branch and all checks pass
+    # Auto-merge ALL PRs when checks pass, UNLESS:
+    # - PR has 'do-not-merge' label
+    # - PR is marked as draft
+    # - PR is from external contributor (fork)
     if: |
-      github.event.label.name == 'automerge' ||
-      (startsWith(github.head_ref, 'docs/') && github.event.pull_request.draft == false) ||
-      (startsWith(github.head_ref, 'chore/') && github.event.pull_request.draft == false)
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: write

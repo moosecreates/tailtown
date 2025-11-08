@@ -6,30 +6,26 @@ The Tailtown repository has automated PR merging configured to streamline the de
 
 ## How It Works
 
-### Automatic Auto-Merge (No Action Required)
+### ✨ Fully Automatic (Zero Manual Work!)
 
-PRs from these branch patterns are **automatically merged** when all checks pass:
+**ALL pull requests automatically merge** when checks pass. No labels needed!
 
+This includes:
 - `docs/*` - Documentation changes
-- `chore/*` - Maintenance tasks (dependency updates, config changes, etc.)
+- `chore/*` - Maintenance tasks
+- `feat/*` - New features
+- `fix/*` - Bug fixes
+- `refactor/*` - Code refactoring
+- `test/*` - Test changes
+- Any other branch name
 
-**Example branches that auto-merge:**
-- `docs/update-roadmap`
-- `docs/senior-dev-review-roadmap`
-- `chore/update-dependencies`
-- `chore/fix-eslint-config`
-
-### Manual Auto-Merge (Label Required)
-
-For other branches (features, fixes, etc.), you can enable auto-merge by:
-
-1. Adding the `automerge` label to your PR
-2. All checks must pass
-3. PR will automatically merge
+**Requirements:**
+- ✅ All checks must pass
+- ✅ No merge conflicts
+- ✅ Not marked as draft
+- ✅ No `do-not-merge` label
 
 ### Preventing Auto-Merge
-
-To prevent a PR from auto-merging (even if it matches the patterns above):
 
 1. Add the `do-not-merge` label
 2. Or mark the PR as a **Draft**
@@ -50,7 +46,7 @@ The auto-merge workflow runs when:
 - **Commit Message**: Uses PR title
 - **Branch Deletion**: Automatically deletes branch after merge
 - **Retries**: 6 attempts with 10-second delays
-- **Required Approvals**: 0 (for docs/chore branches)
+- **Required Approvals**: 0 (fully automated)
 
 ## Examples
 
@@ -73,26 +69,23 @@ gh pr create --title "docs: update API documentation" --body "Updated API docs"
 # ✅ PR will automatically merge when checks pass (no action needed!)
 ```
 
-### Example 2: Feature Branch (Manual Label)
+### Example 2: Feature Branch (Also Auto!)
 
 ```bash
 # Create branch
-git checkout -b feature/new-widget
+git checkout -b feat/new-widget
 
 # Make changes
 git add src/
 git commit -m "feat: add new widget"
 
 # Push
-git push origin feature/new-widget
+git push origin feat/new-widget
 
 # Create PR
 gh pr create --title "feat: add new widget" --body "Adds new widget component"
 
-# Add automerge label
-gh pr edit --add-label automerge
-
-# ✅ PR will automatically merge when checks pass
+# ✅ PR will automatically merge when checks pass (no label needed!)
 ```
 
 ### Example 3: Prevent Auto-Merge

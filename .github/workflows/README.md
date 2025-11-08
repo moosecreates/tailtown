@@ -35,22 +35,21 @@ This directory contains automated workflows for continuous integration and deplo
 **Required Secrets**:
 - `DEPLOY_SSH_KEY` - SSH private key for server access
 
-### 3. Auto-Merge PRs (`auto-merge.yml`) ⭐ NEW
+### 3. Auto-Merge PRs (`auto-merge.yml`) ⭐ FULLY AUTOMATED
 **Triggers**: PR opened, updated, labeled, or checks complete
 
 **What it does**:
-- **Automatically merges** PRs from `docs/*` and `chore/*` branches when checks pass
-- Merges PRs with `automerge` label when checks pass
+- **Automatically merges ALL PRs** when checks pass (no labels needed!)
 - Respects `do-not-merge` label and draft status
 - Uses squash merge and deletes branch after merge
+- Blocks external contributor PRs (security)
 
 **Duration**: Instant (after checks complete)
 
 **How to use**:
-- `docs/*` branches: Auto-merge automatically
-- `chore/*` branches: Auto-merge automatically  
-- Other branches: Add `automerge` label
-- Prevent: Add `do-not-merge` label or mark as draft
+- ✨ **Do nothing!** All PRs auto-merge when checks pass
+- To prevent: Add `do-not-merge` label or mark as draft
+- Works for: `feat/*`, `fix/*`, `docs/*`, `chore/*`, any branch!
 
 See [Auto-Merge Guide](../../docs/AUTO-MERGE-GUIDE.md) for details.
 
