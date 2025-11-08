@@ -36,23 +36,30 @@ import {
 } from '../controllers/staff.controller';
 import { loginRateLimiter, passwordResetRateLimiter } from '../middleware/rateLimiter.middleware';
 import { uploadProfilePhoto as uploadMiddleware } from '../middleware/upload.middleware';
+import { validateBody } from '../middleware/validation.middleware';
+import { 
+  staffLoginSchema, 
+  requestPasswordResetSchema, 
+  resetPasswordSchema,
+  refreshTokenSchema 
+} from '../validators/staff.validators';
 
 const router = Router();
 
 // IMPORTANT: Specific routes must come BEFORE generic :id routes!
 
 // Authentication routes (no :id parameter)
-// POST login (with rate limiting to prevent brute force attacks)
-router.post('/login', loginRateLimiter, loginStaff);
+// POST login (with rate limiting and validation to prevent brute force attacks)
+router.post('/login', loginRateLimiter, validateBody(staffLoginSchema), loginStaff);
 
-// POST refresh token (no rate limiting needed as tokens are already time-limited)
-router.post('/refresh', refreshAccessToken);
+// POST refresh token (with validation, no rate limiting needed as tokens are already time-limited)
+router.post('/refresh', validateBody(refreshTokenSchema), refreshAccessToken);
 
-// POST request password reset (with rate limiting)
-router.post('/request-reset', passwordResetRateLimiter, requestPasswordReset);
+// POST request password reset (with rate limiting and validation)
+router.post('/request-reset', passwordResetRateLimiter, validateBody(requestPasswordResetSchema), requestPasswordReset);
 
-// POST reset password
-router.post('/reset-password', resetPassword);
+// POST reset password (with validation)
+router.post('/reset-password', validateBody(resetPasswordSchema), resetPassword);
 
 // Profile photo routes (must be before /:id routes!)
 // Add error handling for multer errors
