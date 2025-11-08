@@ -6,7 +6,7 @@ import reservationRoutes from './routes/reservation.routes';
 import resourceRoutes from './routes/resourceRoutes';
 import errorTrackingRoutes from './routes/error-tracking.routes';
 import checkInRoutes from './routes/check-in.routes';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './config/prisma';
 
 // Create and configure the reservation service
 const app = createService({
@@ -29,9 +29,6 @@ app.use('/api', checkInRoutes); // Check-in routes include multiple prefixes
 
 // Register error handlers (must be last)
 app.registerErrorHandlers();
-
-// Initialize Prisma client
-const prisma = new PrismaClient();
 
 // Start the service
 const PORT = process.env.PORT || 4003; // Updated to use port 4003 for reservation service
