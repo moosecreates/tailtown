@@ -337,6 +337,8 @@ Total: 18 test cases
 
 ### Nginx Configuration
 
+**Note:** The `localhost` references below are **server-side** configuration on the production server. Nginx proxies external requests (https://canicloud.com) to internal services running on localhost ports.
+
 ```nginx
 server {
     listen 443 ssl http2;
@@ -346,6 +348,8 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/canicloud.com/privkey.pem;
     
     # Frontend (static files)
+    # External: https://brangro.canicloud.com
+    # Internal: http://localhost:3000 (on server)
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -356,6 +360,8 @@ server {
     }
     
     # Backend APIs
+    # External: https://brangro.canicloud.com/api
+    # Internal: http://localhost:4004 (on server)
     location /api/ {
         proxy_pass http://localhost:4004;
         proxy_http_version 1.1;
