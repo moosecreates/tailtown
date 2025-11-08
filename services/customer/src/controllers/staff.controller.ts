@@ -4,7 +4,7 @@ import { PrismaClient, Prisma } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 import bcrypt from 'bcrypt';
 import { validatePasswordOrThrow } from '../utils/passwordValidator';
-import { generateToken } from '../utils/jwt';
+import { generateToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
 import fs from 'fs';
 import path from 'path';
 
@@ -353,30 +353,70 @@ export const loginStaff = async (
       return next(new AppError('Invalid credentials or inactive account', 401));
     }
     
+    // Check if account is locked
+    if ((staff as any).lockedUntil && new Date((staff as any).lockedUntil) > new Date()) {
+      return res.status(423).json({
+        status: 'error',
+        message: 'Account is locked due to too many failed login attempts. Please try again later.',
+        code: 'ACCOUNT_LOCKED',
+        lockedUntil: (staff as any).lockedUntil
+      });
+    }
+    
     // DEVELOPMENT MODE: Bypass password verification for testing
     const isDev = process.env.NODE_ENV !== 'production';
     const isPasswordCorrect = isDev ? true : await bcrypt.compare(password, (staff as any).password);
     
     if (!isPasswordCorrect) {
+      // Increment failed login attempts
+      const failedAttempts = ((staff as any).failedLoginAttempts || 0) + 1;
+      const updates: any = {
+        failedLoginAttempts: failedAttempts,
+        lastFailedLogin: new Date()
+      };
+      
+      // Lock account after 5 failed attempts (15 minutes lockout)
+      if (failedAttempts >= 5) {
+        updates.lockedUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+      }
+      
+      await prisma.staff.update({
+        where: { id: staff.id },
+        data: updates
+      });
+      
       return next(new AppError('Invalid credentials', 401));
     }
     
-    // Update last login time
+    // Update last login time and reset failed attempts on successful login
     await prisma.staff.update({
       where: { id: staff.id },
       data: { 
-        // Explicitly cast the data object to any to bypass type checking
-        // since we've added fields to the schema that aren't yet recognized by the Prisma client
-        lastLogin: new Date() 
+        lastLogin: new Date(),
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+        lastFailedLogin: null
       } as any
     });
     
-    // Generate JWT token
-    const token = generateToken({
+    // Generate JWT access token
+    const accessToken = generateToken({
       id: staff.id,
       email: staff.email,
       role: staff.role,
       tenantId
+    });
+    
+    // Generate refresh token
+    const refreshToken = generateRefreshToken({ id: staff.id });
+    
+    // Store refresh token in database
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        staffId: staff.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+      }
     });
     
     // Create a new object without sensitive fields
@@ -400,7 +440,8 @@ export const loginStaff = async (
     res.status(200).json({
       status: 'success',
       data: staffData,
-      accessToken: token
+      token: accessToken,
+      refreshToken: refreshToken
     });
   } catch (error) {
     next(error);
@@ -1393,6 +1434,78 @@ export const deleteProfilePhoto = async (
       status: 'success',
       message: 'Profile photo deleted successfully',
       data: updatedStaff,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Refresh access token using refresh token
+export const refreshAccessToken = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
+      return next(new AppError('Refresh token is required', 400));
+    }
+    
+    // Verify refresh token
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(refreshToken);
+    } catch (error) {
+      return next(new AppError('Invalid or expired refresh token', 401));
+    }
+    
+    // Check if refresh token exists in database and is not revoked
+    const storedToken = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
+      include: { staff: true }
+    });
+    
+    if (!storedToken || storedToken.isRevoked || storedToken.expiresAt < new Date()) {
+      return next(new AppError('Invalid or expired refresh token', 401));
+    }
+    
+    // Check if staff is still active
+    if (!storedToken.staff.isActive) {
+      return next(new AppError('Account is inactive', 401));
+    }
+    
+    // Revoke old refresh token (token rotation)
+    await prisma.refreshToken.update({
+      where: { id: storedToken.id },
+      data: { isRevoked: true }
+    });
+    
+    // Generate new access token
+    const newAccessToken = generateToken({
+      id: storedToken.staff.id,
+      email: storedToken.staff.email,
+      role: storedToken.staff.role,
+      tenantId: storedToken.staff.tenantId
+    });
+    
+    // Generate new refresh token
+    const newRefreshToken = generateRefreshToken({ id: storedToken.staff.id });
+    
+    // Store new refresh token
+    await prisma.refreshToken.create({
+      data: {
+        token: newRefreshToken,
+        staffId: storedToken.staff.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+      }
+    });
+    
+    res.status(200).json({
+      status: 'success',
+      token: newAccessToken,
+      refreshToken: newRefreshToken
     });
   } catch (error) {
     next(error);
