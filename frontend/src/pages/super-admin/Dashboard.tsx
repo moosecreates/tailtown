@@ -19,7 +19,8 @@ import {
 import {
   Logout as LogoutIcon,
   Business as TenantIcon,
-  Assessment as StatsIcon
+  Assessment as StatsIcon,
+  Monitor as MonitoringIcon
 } from '@mui/icons-material';
 import { useSuperAdmin } from '../../contexts/SuperAdminContext';
 import SystemHealthDashboard from '../../components/super-admin/SystemHealthDashboard';
@@ -56,7 +57,7 @@ const SuperAdminDashboard: React.FC = () => {
 
       {/* Quick Stats */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -79,7 +80,7 @@ const SuperAdminDashboard: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -102,6 +103,35 @@ const SuperAdminDashboard: React.FC = () => {
                 }}
               >
                 View Analytics
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <MonitoringIcon sx={{ fontSize: 40, color: 'info.main', mr: 2 }} />
+                <Box>
+                  <Typography variant="h6">System Monitoring</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Real-time performance metrics
+                  </Typography>
+                </Box>
+              </Box>
+              <Button
+                variant="contained"
+                color="info"
+                fullWidth
+                onClick={() => {
+                  const monitoringUrl = process.env.NODE_ENV === 'production' 
+                    ? 'http://129.212.178.244:4004/monitoring/dashboard'
+                    : 'http://localhost:4004/monitoring/dashboard';
+                  window.open(monitoringUrl, '_blank');
+                }}
+              >
+                View Dashboard
               </Button>
             </CardContent>
           </Card>
