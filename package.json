@@ -46,6 +46,7 @@
     "setup:shell": "./scripts/setup-shell-integration.sh",
     "backup:now": "./scripts/backup-now.sh",
     "backup:list": "ls -lh backups/",
+    "test:notifications": "node scripts/test-notifications.js",
     "test": "lerna run test",
     "test:all": "./scripts/test-runner.sh all",
     "test:quick": "./scripts/test-runner.sh quick",
