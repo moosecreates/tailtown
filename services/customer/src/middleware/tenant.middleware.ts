@@ -51,6 +51,11 @@ export const extractTenantContext = async (
       subdomain = req.headers['x-tenant-subdomain'] as string;
     }
 
+    // Method 2b: Check X-Tenant-ID header (for impersonation)
+    if (!subdomain && req.headers['x-tenant-id']) {
+      subdomain = req.headers['x-tenant-id'] as string;
+    }
+
     // Method 3: Development - Check query parameter
     if (!subdomain && req.query.subdomain) {
       subdomain = req.query.subdomain as string;
