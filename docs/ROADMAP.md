@@ -407,7 +407,90 @@ if (featureFlags.isEnabled('new-checkout', tenantId)) {
 - Validation at each step
 - Configuration preview
 
-### 3. 🔧 Service Module Toggles (Grooming, Training, POS)
+### 3. 📊 System Health Dashboard for Super Admin
+**Priority**: HIGH | **Effort**: 3 days | **Status**: Not Started
+
+**Why**: Provide real-time visibility into system health without needing command-line tools or external monitoring services.
+
+**Current State:**
+- Basic `/health` endpoint (just returns "up")
+- CLI health check script (not user-friendly)
+- No visibility into system metrics
+
+**Features to Add:**
+- **Enhanced Health API Endpoint**
+  - Service status (customer, reservation, frontend)
+  - Database connection status
+  - Redis cache status
+  - Memory usage
+  - CPU usage
+  - Uptime
+  - Error rates (from Sentry)
+  - Response times
+  - Active connections
+
+- **User-Friendly Dashboard**
+  - Real-time status cards
+  - Color-coded health indicators (green/yellow/red)
+  - Service uptime charts
+  - Error rate graphs
+  - Performance metrics
+  - Auto-refresh every 30 seconds
+  - Alert notifications for issues
+
+- **Metrics to Display:**
+  - ✅ Service Status (up/down)
+  - ✅ Response Times (avg, p95, p99)
+  - ✅ Error Rates (last hour, last 24h)
+  - ✅ Database Queries/sec
+  - ✅ Cache Hit Rate
+  - ✅ Memory Usage
+  - ✅ CPU Usage
+  - ✅ Active Tenants
+  - ✅ Recent Errors (last 10)
+
+**Benefits:**
+- Proactive issue detection
+- No need for external monitoring tools initially
+- Quick troubleshooting
+- Better system visibility
+- Reduced downtime
+- Professional monitoring without $100/month cost
+
+**Implementation:**
+```typescript
+// New endpoint: GET /api/system/health
+{
+  status: "healthy",
+  services: {
+    customer: { status: "up", responseTime: 45, uptime: 86400 },
+    reservation: { status: "up", responseTime: 32, uptime: 86400 },
+    frontend: { status: "up", responseTime: 12, uptime: 86400 }
+  },
+  database: {
+    status: "connected",
+    queriesPerSecond: 45,
+    activeConnections: 12
+  },
+  cache: {
+    status: "connected",
+    hitRate: 0.85,
+    memoryUsage: "45MB"
+  },
+  system: {
+    memory: { used: "512MB", total: "2GB", percentage: 25 },
+    cpu: { usage: 15, cores: 2 },
+    uptime: 86400
+  },
+  errors: {
+    lastHour: 3,
+    last24Hours: 12,
+    recentErrors: [...]
+  }
+}
+```
+
+### 4. 🔧 Service Module Toggles (Grooming, Training, POS)
 **Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started
 
 **Why**: Allow customers to enable/disable major service modules based on their business needs, reducing UI complexity and improving performance.
