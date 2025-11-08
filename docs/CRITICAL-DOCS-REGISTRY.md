@@ -8,7 +8,7 @@
 
 | Document | Last Updated | Last Reviewed | Next Review | Trigger |
 |----------|--------------|---------------|-------------|---------|
-| DISASTER-RECOVERY-PLAN.md | 2025-11-07 | 2025-11-07 | 2026-02-07 | Multi-tenancy + security features |
+| DISASTER-RECOVERY-PLAN.md | 2025-11-07 | 2025-11-07 | 2026-02-07 | DigitalOcean backups enabled |
 | CURRENT-SYSTEM-ARCHITECTURE.md | 2025-11-01 | 2025-11-01 | 2026-02-01 | Service updates |
 | SECURITY-CHECKLIST.md | 2025-11-07 | 2025-11-07 | 2026-02-07 | Security implementation |
 | DEVELOPMENT-BEST-PRACTICES.md | 2025-11-07 | 2025-11-07 | 2026-02-07 | Best practices added |
