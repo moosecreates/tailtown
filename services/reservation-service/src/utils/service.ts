@@ -33,8 +33,8 @@ export function createService(options: {
     legacyHeaders: false,
     // Key by tenantId to enforce per-tenant limits
     keyGenerator: (req: any) => {
-      // Use tenantId if available (set by tenant middleware), otherwise fall back to IP
-      return req.tenantId || req.ip;
+      // Use tenantId if available, otherwise use default (handles IPv6)
+      return req.tenantId;
     },
     skip: (req) => req.path === '/health',
     // Custom handler for better error messages

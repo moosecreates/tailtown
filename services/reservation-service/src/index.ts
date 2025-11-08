@@ -7,6 +7,9 @@ import resourceRoutes from './routes/resourceRoutes';
 import errorTrackingRoutes from './routes/error-tracking.routes';
 import checkInRoutes from './routes/check-in.routes';
 import { prisma } from './config/prisma';
+import { monitoring } from './utils/monitoring';
+import { auditMiddleware } from './utils/auditLog';
+import monitoringRoutes from './routes/monitoring.routes';
 
 // Create and configure the reservation service
 const app = createService({
@@ -20,6 +23,13 @@ app.use(tenantMiddleware({
   // In production, this would validate against a tenant service
   validateTenant: async (tenantId) => true
 }));
+
+// Monitoring and audit logging (after tenant context is available)
+app.use(monitoring.requestTracker());
+app.use(auditMiddleware());
+
+// Monitoring routes (accessible without authentication for health checks)
+app.use('/monitoring', monitoringRoutes);
 
 // Register routes
 app.use('/api/reservations', reservationRoutes);

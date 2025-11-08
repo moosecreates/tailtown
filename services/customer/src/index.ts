@@ -61,6 +61,9 @@ import { extractTenantContext, requireTenant } from './middleware/tenant.middlew
 import { enforceHTTPS, securityHeaders, sanitizeInput } from './middleware/security.middleware';
 import { authenticate, requireTenantAdmin, optionalAuth } from './middleware/auth.middleware';
 import { requireJsonContentType } from './middleware/content-type.middleware';
+import { monitoring } from './utils/monitoring';
+import { auditMiddleware } from './utils/auditLog';
+import monitoringRoutes from './routes/monitoring.routes';
 
 // Load environment variables
 dotenv.config();
@@ -157,8 +160,8 @@ const limiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   // Key by tenantId to enforce per-tenant limits
   keyGenerator: (req: any) => {
-    // Use tenantId if available (set by tenant middleware), otherwise fall back to IP
-    return req.tenantId || req.ip;
+    // Use tenantId if available, otherwise use default (handles IPv6)
+    return req.tenantId;
   },
   // Skip rate limiting for health checks
   skip: (req) => req.path === '/health',
@@ -357,6 +360,13 @@ app.use('/api/tenants', tenantRoutes);
 // Apply tenant context middleware to all other routes
 // This extracts the subdomain and attaches tenant info to the request
 app.use('/api', extractTenantContext);
+
+// Monitoring and audit logging (after tenant context is available)
+app.use(monitoring.requestTracker());
+app.use(auditMiddleware());
+
+// Monitoring routes (accessible without authentication for health checks)
+app.use('/monitoring', monitoringRoutes);
 
 // ============================================
 // ADMIN-ONLY ROUTES (require admin role)
