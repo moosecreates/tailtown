@@ -145,13 +145,20 @@ Ensure the following documentation is up-to-date and aligned:
 
 ## Backup Procedures
 
-### Database Backup
-- **Automated daily backups** of PostgreSQL database
-- **Backup rotation:** 7 daily, 4 weekly, 12 monthly
-- **Backup verification test:** Monthly
-- **CRITICAL:** Ensure backups include all tenant data
+### DigitalOcean Droplet Backups (Primary)
+- **Automated daily backups** enabled in DigitalOcean
+- **Entire server** backed up (database, code, configuration)
+- **Retention:** Last 4 backups (rolling)
+- **Location:** DigitalOcean managed storage
+- **Restore:** One-click from DigitalOcean dashboard
 - **CRITICAL:** Test restore procedure quarterly
-- **Backup location:** [Specify backup storage location]
+
+### Database Backup (Additional - Optional)
+- **Manual backups** available via `/scripts/database/backup-database.sh`
+- **Use for:** Point-in-time recovery, migration, testing
+- **Backup rotation:** 7 daily, 4 weekly, 12 monthly (if configured)
+- **CRITICAL:** Ensure backups include all tenant data
+- **Backup location:** Local or DigitalOcean Spaces (if configured)
 
 ### Code and Configuration Backup
 - Regular commits to version control system (GitHub)
@@ -169,15 +176,16 @@ Ensure the following documentation is up-to-date and aligned:
 
 - **Development environment:** 2 hours
 - **Staging environment:** 4 hours
-- **Production environment:** 8 hours (critical)
-- **Database restore:** 2 hours
+- **Production environment (DigitalOcean restore):** 1-2 hours
+- **Database restore (from droplet backup):** 30 minutes
 - **Full system verification:** 2 hours
 
 ## Recovery Point Objectives (RPO)
 
-- **Database:** 24 hours (daily backups)
-- **Code:** Real-time (git)
-- **Configuration:** 24 hours
+- **Full server (DigitalOcean):** 24 hours (daily backups)
+- **Database:** 24 hours (included in droplet backup)
+- **Code:** Real-time (GitHub)
+- **Configuration:** 24 hours (included in droplet backup)
 
 ## Multi-Tenant Recovery Considerations
 
@@ -232,9 +240,34 @@ Ensure the following documentation is up-to-date and aligned:
 - [Prisma Migrations](https://www.prisma.io/docs/concepts/components/prisma-migrate)
 - [Node.js Best Practices](https://nodejs.org/en/docs/guides/nodejs-docker-webapp/)
 
+## Quick Recovery from DigitalOcean Backup
+
+### Option 1: Restore Entire Droplet (Fastest)
+1. **Log into DigitalOcean dashboard**
+2. **Go to your droplet** → Backups tab
+3. **Select backup** to restore from
+4. **Click "Restore from this backup"**
+5. **Wait 5-15 minutes** for restore to complete
+6. **Verify services** are running:
+   ```bash
+   ssh root@your-droplet-ip
+   pm2 status
+   systemctl status postgresql
+   ```
+
+### Option 2: Create New Droplet from Backup
+1. **Go to Create → Droplets**
+2. **Choose an image** → Backups tab
+3. **Select your backup**
+4. **Create droplet**
+5. **Update DNS** to point to new droplet IP
+6. **Update environment variables** if needed
+
+---
+
 ## Quick Recovery Commands
 
-### Clone and Setup
+### Clone and Setup (Manual Recovery)
 ```bash
 # 1. Clone repository
 git clone https://github.com/moosecreates/tailtown.git
