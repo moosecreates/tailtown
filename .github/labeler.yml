@@ -1,0 +1,48 @@
+frontend:
+  - frontend/**/*
+
+backend:
+  - services/**/*
+
+customer-service:
+  - services/customer/**/*
+
+reservation-service:
+  - services/reservation-service/**/*
+
+docs:
+  - docs/**/*
+  - "*.md"
+  - "**/*.md"
+
+tests:
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
+  - "**/*.spec.ts"
+  - "**/__tests__/**/*"
+
+dependencies:
+  - package.json
+  - package-lock.json
+  - "**/package.json"
+  - "**/package-lock.json"
+
+github-actions:
+  - .github/workflows/**/*
+
+config:
+  - "*.config.js"
+  - "*.config.ts"
+  - ".*.yml"
+  - ".*.yaml"
+  - ".*.json"
+
+database:
+  - "**/prisma/**/*"
+  - "**/migrations/**/*"
+
+security:
+  - "**/middleware/auth*"
+  - "**/middleware/security*"
+  - "**/*security*"
+  - "**/*auth*"
