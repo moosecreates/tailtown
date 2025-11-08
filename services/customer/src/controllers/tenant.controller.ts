@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { tenantService, CreateTenantDto, UpdateTenantDto } from '../services/tenant.service';
 import { TenantStatus } from '@prisma/client';
+import { AuthRequest } from '../middleware/auth.middleware';
 
 export class TenantController {
   
@@ -180,7 +181,7 @@ export class TenantController {
    * PATCH /api/tenants/me/settings
    * Update current tenant's settings (timezone, etc.)
    */
-  async updateCurrentTenantSettings(req: Request, res: Response) {
+  async updateCurrentTenantSettings(req: AuthRequest, res: Response) {
     try {
       const tenantId = req.user?.tenantId;
       
