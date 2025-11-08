@@ -47,6 +47,17 @@ jest.mock('../../utils/orderNumber', () => ({
   generateOrderNumber: jest.fn().mockReturnValue('ORD-12345'),
 }));
 
+// Mock the customer service client
+jest.mock('../../clients/customer-service.client', () => ({
+  customerServiceClient: {
+    verifyCustomer: jest.fn(),
+    verifyPet: jest.fn(),
+    getCustomer: jest.fn(),
+    getPet: jest.fn(),
+    healthCheck: jest.fn(),
+  },
+}));
+
 // Create a mock AppError class
 class MockAppError extends Error {
   statusCode: number;
@@ -67,6 +78,9 @@ jest.mock('../../utils/service', () => {
     safeExecutePrismaQuery: jest.fn().mockImplementation((fn) => fn()),
   };
 });
+
+// Import the customer service client mock
+import { customerServiceClient } from '../../clients/customer-service.client';
 
 // Import the controller functions after mocking dependencies
 import {
@@ -285,19 +299,9 @@ describe('Reservation Controller', () => {
   
   describe('createReservation', () => {
     it('should create a reservation successfully', async () => {
-      // Mock customer, pet, and resource existence
-      (prisma.customer.findFirst as jest.Mock).mockResolvedValue({
-        id: 'customer-1',
-        name: 'Test Customer',
-        tenantId: 'tenant-1',
-      });
-      
-      (prisma.pet.findFirst as jest.Mock).mockResolvedValue({
-        id: 'pet-1',
-        name: 'Test Pet',
-        customerId: 'customer-1',
-        tenantId: 'tenant-1',
-      });
+      // Mock customer and pet verification via Customer Service API
+      (customerServiceClient.verifyCustomer as jest.Mock).mockResolvedValue(true);
+      (customerServiceClient.verifyPet as jest.Mock).mockResolvedValue(true);
       
       (prisma.resource.findFirst as jest.Mock).mockResolvedValue({
         id: 'resource-1',
@@ -359,13 +363,9 @@ describe('Reservation Controller', () => {
     });
     
     it('should return error when customer not found', async () => {
-      // Mock customer not found
-      (prisma.customer.findFirst as jest.Mock).mockResolvedValue(null);
-      
-      // Mock AppError constructor to capture when it's called
-      const AppErrorMock = jest.requireMock('../../utils/service').AppError;
-      const mockAppErrorInstance = new MockAppError('Customer not found', 404);
-      AppErrorMock.mockReturnValueOnce(mockAppErrorInstance);
+      // Mock customer verification failure via Customer Service API
+      const notFoundError = new MockAppError('Customer with ID customer-1 not found', 404);
+      (customerServiceClient.verifyCustomer as jest.Mock).mockRejectedValue(notFoundError);
       
       await createReservation(
         mockRequest as Request,
@@ -373,30 +373,14 @@ describe('Reservation Controller', () => {
         mockNext
       );
       
-      // Verify AppError was created with correct message and status
-      expect(AppErrorMock).toHaveBeenCalledWith(
-        expect.stringContaining('Customer not found'),
-        404
-      );
-      
-      // Verify next was called with our mocked error
-      expect(mockNext).toHaveBeenCalled();
+      // Verify next was called with error
+      expect(mockNext).toHaveBeenCalledWith(expect.any(MockAppError));
     });
     
     it('should return error when there are conflicts', async () => {
-      // Mock customer, pet, and resource existence
-      (prisma.customer.findFirst as jest.Mock).mockResolvedValue({
-        id: 'customer-1',
-        name: 'Test Customer',
-        tenantId: 'tenant-1',
-      });
-      
-      (prisma.pet.findFirst as jest.Mock).mockResolvedValue({
-        id: 'pet-1',
-        name: 'Test Pet',
-        customerId: 'customer-1',
-        tenantId: 'tenant-1',
-      });
+      // Mock customer and pet verification via Customer Service API
+      (customerServiceClient.verifyCustomer as jest.Mock).mockResolvedValue(true);
+      (customerServiceClient.verifyPet as jest.Mock).mockResolvedValue(true);
       
       (prisma.resource.findFirst as jest.Mock).mockResolvedValue({
         id: 'resource-1',
@@ -448,18 +432,9 @@ describe('Reservation Controller', () => {
       });
       
       // Mock customer, pet, and resource existence
-      (prisma.customer.findFirst as jest.Mock).mockResolvedValue({
-        id: 'customer-1',
-        name: 'Test Customer',
-        tenantId: 'tenant-1',
-      });
-      
-      (prisma.pet.findFirst as jest.Mock).mockResolvedValue({
-        id: 'pet-1',
-        name: 'Test Pet',
-        customerId: 'customer-1',
-        tenantId: 'tenant-1',
-      });
+      // Mock customer and pet verification via Customer Service API
+      (customerServiceClient.verifyCustomer as jest.Mock).mockResolvedValue(true);
+      (customerServiceClient.verifyPet as jest.Mock).mockResolvedValue(true);
       
       (prisma.resource.findFirst as jest.Mock).mockResolvedValue({
         id: 'resource-1',
