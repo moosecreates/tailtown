@@ -22,6 +22,7 @@ import {
   Assessment as StatsIcon
 } from '@mui/icons-material';
 import { useSuperAdmin } from '../../contexts/SuperAdminContext';
+import SystemHealthDashboard from '../../components/super-admin/SystemHealthDashboard';
 
 const SuperAdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -126,6 +127,11 @@ const SuperAdminDashboard: React.FC = () => {
           </Box>
         </CardContent>
       </Card>
+
+      {/* System Health Dashboard */}
+      <Box sx={{ mt: 4 }}>
+        <SystemHealthDashboard />
+      </Box>
 
       {/* System Status Notice */}
       <Box sx={{ mt: 4, p: 3, bgcolor: 'success.light', borderRadius: 1 }}>
