@@ -17,6 +17,7 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 ### For Developers (Quick Guides)
 - **[Quick Start](docs/human/QUICK-START.md)** - Get running in 10 minutes
 - **[Common Tasks](docs/human/COMMON-TASKS.md)** - How to add features, run tests, deploy
+- **[Best Practices](docs/human/BEST-PRACTICES.md)** - Code standards and patterns
 - **[Security](docs/human/SECURITY.md)** - Security features and how to use them
 
 ### For AI Assistants (Complete Context)
