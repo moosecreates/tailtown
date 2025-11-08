@@ -12,13 +12,12 @@ import { logger } from '../../utils/logger';
 import { detectReservationConflicts } from '../../utils/reservation-conflicts';
 import { 
   ExtendedReservationWhereInput, 
-  ExtendedCustomerWhereInput,
-  ExtendedPetWhereInput,
   ExtendedResourceWhereInput,
   ExtendedReservationInclude,
   ExtendedServiceWhereInput
 } from '../../types/prisma-extensions';
 import { safeExecutePrismaQuery, prisma } from './utils/prisma-helpers';
+import { customerServiceClient } from '../../clients/customer-service.client';
 
 /**
  * Helper function to determine suite type based on service type
@@ -141,22 +140,15 @@ export const updateReservation = catchAsync(async (
       throw AppError.validationError('Valid customer ID is required');
     }
     
-    // Verify customer exists and belongs to tenant
-    await safeExecutePrismaQuery(
-      async () => {
-        return await prisma.customer.findFirst({
-          where: {
-            id: customerId,
-            tenantId: tenantId
-          } as ExtendedCustomerWhereInput
-        });
-      },
-      null,
-      `Error verifying customer with ID ${customerId}`,
-      true // Enable throwError flag
-    );
-    
-    updateData.customerId = customerId;
+    // Verify customer exists and belongs to tenant via Customer Service API
+    try {
+      await customerServiceClient.verifyCustomer(customerId, tenantId);
+      logger.info(`Verified customer exists via API: ${customerId}`, { requestId });
+      updateData.customerId = customerId;
+    } catch (error) {
+      logger.error(`Customer verification failed: ${customerId}`, { error, requestId });
+      throw error;
+    }
   }
   
   // Validate petId if provided
@@ -166,22 +158,15 @@ export const updateReservation = catchAsync(async (
       throw AppError.validationError('Valid pet ID is required');
     }
     
-    // Verify pet exists and belongs to tenant
-    await safeExecutePrismaQuery(
-      async () => {
-        return await prisma.pet.findFirst({
-          where: {
-            id: petId,
-            tenantId: tenantId
-          } as ExtendedPetWhereInput
-        });
-      },
-      null,
-      `Error verifying pet with ID ${petId}`,
-      true // Enable throwError flag
-    );
-    
-    updateData.petId = petId;
+    // Verify pet exists and belongs to tenant via Customer Service API
+    try {
+      await customerServiceClient.verifyPet(petId, tenantId);
+      logger.info(`Verified pet exists via API: ${petId}`, { requestId });
+      updateData.petId = petId;
+    } catch (error) {
+      logger.error(`Pet verification failed: ${petId}`, { error, requestId });
+      throw error;
+    }
   }
   
   // Validate serviceId if provided
