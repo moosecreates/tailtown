@@ -220,7 +220,28 @@ TWILIO_PHONE_NUMBER=+1xxxxxxxxxx
 - Reduced confusion from outdated docs
 - Professional, maintainable documentation system
 
-### 5. 🏠 Multi-Pet Room Check-in Testing
+### 5. 🏠 Multi-Tenancy Testing
+**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started
+
+**Why**: Ensure complete data isolation and proper tenant context across all features.
+
+**Testing Required**:
+- Data isolation verification (no cross-tenant data leaks)
+- Tenant context in all API endpoints
+- Subdomain routing and detection
+- Multi-tenant database queries
+- Tenant-specific configurations
+- Performance with multiple active tenants
+- Tenant onboarding flow
+- Tenant admin capabilities
+
+**Benefits**:
+- Confidence in SaaS architecture
+- Data security and privacy
+- Scalability validation
+- Production-ready multi-tenancy
+
+### 6. 🏠 Multi-Pet Room Check-in Testing
 **Priority**: HIGH | **Effort**: 2-3 days | **Status**: Not Started
 
 **Why**: Need to verify multiple pets can be checked into the same room for order placement and check-in workflows.
@@ -272,23 +293,28 @@ TWILIO_PHONE_NUMBER=+1xxxxxxxxxx
 - Automated reminders working
 - Staff alerts functioning
 
-### 9. 📅 Employee Scheduling Streamlining
-**Priority**: HIGH | **Effort**: 2 weeks | **Status**: Not Started
+### 9. 📅 Employee Scheduling Improvements
+**Priority**: HIGH | **Effort**: 2-3 weeks | **Status**: Not Started
 
 **Requirements**:
 - Simplify scheduling interface
 - Drag-and-drop schedule builder
-- Shift templates
+- Shift templates and recurring schedules
 - Availability management
-- Conflict detection
+- Conflict detection and warnings
+- Time-off requests integration
 - Schedule export/print
 - Mobile-friendly scheduling
+- Labor cost tracking
+- Shift swap requests
+- Overtime alerts
 
 **Benefits**:
 - Faster schedule creation
 - Reduced scheduling errors
 - Better staff satisfaction
 - Time savings
+- Labor cost optimization
 
 ### 10. 🎨 Dashboard Customization Per User
 **Priority**: MEDIUM | **Effort**: 2 weeks | **Status**: Not Started
@@ -306,6 +332,201 @@ TWILIO_PHONE_NUMBER=+1xxxxxxxxxx
 - Improved productivity
 - Better information access
 - User satisfaction
+
+### 11. 💳 SaaS Billing System
+**Priority**: HIGH | **Effort**: 3-4 weeks | **Status**: Not Started
+
+**Why**: Enable subscription-based revenue model for multi-tenant SaaS platform.
+
+**Requirements**:
+- Stripe integration for payment processing
+- Subscription plan management (Starter, Professional, Enterprise)
+- Usage-based billing (per pet, per user, per location)
+- Automated invoicing and receipts
+- Payment method management
+- Billing portal for customers
+- Trial period management
+- Proration for plan changes
+- Failed payment handling and retry logic
+- Dunning management (overdue accounts)
+- Revenue recognition and reporting
+- Tax calculation (Stripe Tax)
+- Multi-currency support
+
+**Features**:
+- Monthly/annual billing cycles
+- Volume discounts
+- Add-on services (SMS credits, storage, integrations)
+- Referral credits
+- Coupon codes for promotions
+- Billing analytics dashboard
+
+**Benefits**:
+- Recurring revenue stream
+- Automated billing reduces manual work
+- Professional payment experience
+- Scalable pricing model
+- Financial reporting and forecasting
+
+### 12. 🎁 Packages & Punch Cards
+**Priority**: MEDIUM | **Effort**: 2-3 weeks | **Status**: Not Started
+
+**Why**: Enable bulk discount programs to increase customer loyalty and prepaid revenue.
+
+**Requirements**:
+- Package creation (e.g., "10 Daycare Days for $200")
+- Punch card system with usage tracking
+- Bulk discount configuration
+- Expiration date management
+- Partial usage and refunds
+- Package transfer between pets
+- Auto-apply at checkout
+- Package balance display
+- Purchase history and analytics
+- Gift package options
+
+**Package Types**:
+- Daycare packages (10, 20, 30 days)
+- Boarding packages (nights)
+- Grooming packages (sessions)
+- Training class bundles
+- Mixed service packages
+
+**Benefits**:
+- Increased customer commitment
+- Prepaid revenue boost
+- Higher customer lifetime value
+- Reduced price sensitivity
+- Competitive advantage
+
+### 13. 🌐 Website Integration Testing
+**Priority**: MEDIUM | **Effort**: 1-2 weeks | **Status**: Not Started
+
+**Why**: Ensure seamless integration between marketing website and application.
+
+**Testing Required**:
+- Booking widget integration
+- Customer portal SSO
+- API endpoint testing
+- Webhook reliability
+- Form submissions
+- Payment processing
+- Email notifications
+- Mobile responsiveness
+- Load testing
+- Security testing (CORS, CSP)
+
+**Integration Points**:
+- Online booking form
+- Customer login/registration
+- Service catalog display
+- Pricing display
+- Contact forms
+- Newsletter signup
+- Social media links
+- Analytics tracking
+
+**Benefits**:
+- Seamless customer experience
+- Reduced support tickets
+- Higher conversion rates
+- Professional brand image
+
+### 14. 🤖 Integrated AI Chatbot / Help System
+**Priority**: LOW | **Effort**: 3-4 weeks | **Status**: Not Started
+
+**Why**: Provide 24/7 customer support and reduce staff workload.
+
+**Features**:
+- AI-powered chatbot for common questions
+- Knowledge base integration
+- Booking assistance
+- FAQ automation
+- Multi-language support
+- Escalation to human support
+- Chat history and analytics
+- Context-aware responses
+- Integration with customer data
+
+**Use Cases**:
+- "What are your hours?"
+- "How much does boarding cost?"
+- "Can I book a grooming appointment?"
+- "What vaccines do you require?"
+- "How do I update my pet's information?"
+
+**Technology Options**:
+- OpenAI GPT-4 integration
+- Custom trained model
+- Dialogflow / Rasa
+- Intercom / Drift integration
+
+**Benefits**:
+- 24/7 customer support
+- Reduced staff workload
+- Faster response times
+- Improved customer satisfaction
+- Scalable support system
+
+### 15. 🏗️ Service Architecture Optimization
+**Priority**: MEDIUM | **Effort**: 2-3 weeks | **Status**: Not Started
+
+**Why**: Break up services for easier feature upselling and independent scaling.
+
+**Proposed Architecture**:
+```
+Current: 2 services (Customer, Reservation)
+Future: 6+ services
+
+Core Services:
+- Customer Service (customers, pets, staff)
+- Reservation Service (bookings, check-in/out)
+
+New Services:
+- Billing Service (invoices, payments, subscriptions)
+- Communication Service (email, SMS, notifications)
+- Reporting Service (analytics, dashboards, exports)
+- Integration Service (webhooks, APIs, third-party)
+- Scheduling Service (employee schedules, shifts)
+- Inventory Service (products, stock, POS)
+```
+
+**Benefits for Upselling**:
+- Premium Communication Package ($29/mo)
+  - Unlimited SMS
+  - Email campaigns
+  - Automated reminders
+  
+- Advanced Reporting Package ($49/mo)
+  - Custom reports
+  - Data export
+  - Business intelligence
+  
+- Integration Package ($79/mo)
+  - API access
+  - Webhook events
+  - Third-party integrations
+  
+- Enterprise Features ($199/mo)
+  - Multi-location support
+  - Advanced scheduling
+  - Custom branding
+
+**Technical Benefits**:
+- Independent scaling
+- Easier feature flags
+- Cleaner codebase
+- Better testing isolation
+- Flexible deployment
+
+**Implementation Plan**:
+1. Extract Billing Service (1 week)
+2. Extract Communication Service (1 week)
+3. Extract Reporting Service (3-4 days)
+4. Extract Integration Service (3-4 days)
+5. Update API gateway and routing
+6. Implement feature flags per service
+7. Create pricing tiers and upsell UI
 
 ---
 
