@@ -2,23 +2,38 @@ name: Auto-merge PRs
 
 on:
   pull_request:
-    types: [labeled]
+    types: [labeled, opened, synchronize, reopened]
+  pull_request_review:
+    types: [submitted]
+  check_suite:
+    types: [completed]
 
 jobs:
   automerge:
-    if: github.event.label.name == 'automerge'
+    # Auto-merge ALL PRs when checks pass, UNLESS:
+    # - PR has 'do-not-merge' label
+    # - PR is marked as draft
+    # - PR is from external contributor (fork)
+    if: |
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
+      checks: read
     
     steps:
       - name: Auto-merge PR
         uses: pascalgn/automerge-action@v0.15.6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MERGE_LABELS: "automerge"
+          MERGE_LABELS: "automerge,!do-not-merge"
           MERGE_METHOD: "squash"
           MERGE_COMMIT_MESSAGE: "pull-request-title"
           MERGE_RETRIES: 6
           MERGE_RETRY_SLEEP: 10000
+          MERGE_REQUIRED_APPROVALS: 0
+          MERGE_DELETE_BRANCH: true
+          UPDATE_LABELS: ""
+          UPDATE_METHOD: "rebase"

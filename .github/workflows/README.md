@@ -35,7 +35,25 @@ This directory contains automated workflows for continuous integration and deplo
 **Required Secrets**:
 - `DEPLOY_SSH_KEY` - SSH private key for server access
 
-### 3. Pull Request Checks (`pr-checks.yml`)
+### 3. Auto-Merge PRs (`auto-merge.yml`) ⭐ FULLY AUTOMATED
+**Triggers**: PR opened, updated, labeled, or checks complete
+
+**What it does**:
+- **Automatically merges ALL PRs** when checks pass (no labels needed!)
+- Respects `do-not-merge` label and draft status
+- Uses squash merge and deletes branch after merge
+- Blocks external contributor PRs (security)
+
+**Duration**: Instant (after checks complete)
+
+**How to use**:
+- ✨ **Do nothing!** All PRs auto-merge when checks pass
+- To prevent: Add `do-not-merge` label or mark as draft
+- Works for: `feat/*`, `fix/*`, `docs/*`, `chore/*`, any branch!
+
+See [Auto-Merge Guide](../../docs/AUTO-MERGE-GUIDE.md) for details.
+
+### 4. Pull Request Checks (`pr-checks.yml`)
 **Triggers**: Pull Request opened, synchronized, or reopened
 
 **What it does**:
