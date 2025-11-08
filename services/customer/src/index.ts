@@ -429,6 +429,13 @@ app.use(errorHandler);
 
 // Start the server only if not in test mode
 if (process.env.NODE_ENV !== 'test') {
+  // Initialize Redis cache
+  import('./utils/redis').then(({ initRedis }) => {
+    initRedis().catch((error) => {
+      console.error('Failed to initialize Redis, continuing without cache:', error);
+    });
+  });
+
   app.listen(PORT, () => {
     console.log(`Customer service running on port ${PORT}`);
   });
