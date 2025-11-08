@@ -26,6 +26,7 @@ export const enforceHTTPS = (req: Request, res: Response, next: NextFunction) =>
 
 /**
  * Middleware to add security headers
+ * Implements defense-in-depth security headers following OWASP recommendations
  */
 export const securityHeaders = (req: Request, res: Response, next: NextFunction) => {
   // Strict Transport Security - force HTTPS for 1 year
@@ -37,14 +38,22 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
   // Prevent MIME type sniffing
   res.setHeader('X-Content-Type-Options', 'nosniff');
   
-  // Enable XSS filter
+  // Enable XSS filter (legacy browsers)
   res.setHeader('X-XSS-Protection', '1; mode=block');
   
-  // Referrer policy
+  // Referrer policy - don't leak sensitive URLs
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   
-  // Permissions policy
-  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  // Permissions policy - disable unnecessary browser features
+  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(), usb=()');
+  
+  // Cross-Origin policies
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+  
+  // Remove server identification
+  res.removeHeader('X-Powered-By');
   
   next();
 };

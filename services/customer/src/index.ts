@@ -60,6 +60,7 @@ import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 import { enforceHTTPS, securityHeaders, sanitizeInput } from './middleware/security.middleware';
 import { authenticate, requireTenantAdmin, optionalAuth } from './middleware/auth.middleware';
+import { requireJsonContentType } from './middleware/content-type.middleware';
 
 // Load environment variables
 dotenv.config();
@@ -171,9 +172,29 @@ const authLimiter = rateLimit({
 // Apply to auth routes (if they exist)
 app.use('/api/auth/login', authLimiter);
 
-// Request body parsing middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Request body parsing middleware with security limits
+// 10mb limit for JSON payloads (prevents DoS attacks)
+// Most API requests should be under 1mb; 10mb allows for reasonable file uploads
+app.use(express.json({ 
+  limit: '10mb',
+  strict: true, // Only accept arrays and objects
+  verify: (req, res, buf, encoding) => {
+    // Verify content length doesn't exceed limit
+    if (buf.length > 10 * 1024 * 1024) {
+      throw new Error('Request entity too large');
+    }
+  }
+}));
+
+// URL-encoded data limit (for form submissions)
+app.use(express.urlencoded({ 
+  limit: '10mb', 
+  extended: true,
+  parameterLimit: 10000 // Limit number of parameters to prevent parameter pollution
+}));
+
+// Security: Enforce JSON content-type for API endpoints
+app.use('/api/', requireJsonContentType);
 
 // Security: Sanitize user input
 app.use(sanitizeInput);
