@@ -185,9 +185,9 @@ const SystemHealthDashboard: React.FC = () => {
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Chip
-            icon={getStatusIcon(health.status)}
-            label={health.status.toUpperCase()}
-            color={getStatusColor(health.status)}
+            icon={getStatusIcon(health.status || 'healthy')}
+            label={(health.status || 'healthy').toUpperCase()}
+            color={getStatusColor(health.status || 'healthy')}
             size="medium"
           />
           <Tooltip title="Refresh">
