@@ -157,8 +157,8 @@ const limiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   // Key by tenantId to enforce per-tenant limits
   keyGenerator: (req: any) => {
-    // Use tenantId if available (set by tenant middleware), otherwise fall back to IP
-    return req.tenantId || req.ip;
+    // Use tenantId if available, otherwise use default (handles IPv6)
+    return req.tenantId;
   },
   // Skip rate limiting for health checks
   skip: (req) => req.path === '/health',
