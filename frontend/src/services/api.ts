@@ -115,7 +115,11 @@ customerApi.interceptors.request.use(
     if (tenantId) {
       config.headers = { ...(config.headers || {}), 'x-tenant-id': tenantId } as any;
     } else {
-      console.warn('Tenant ID not set; requests may be rejected by the server');
+      // Skip warning for system/super-admin endpoints that don't require tenant ID
+      const isSystemEndpoint = config.url?.includes('/system/') || config.url?.includes('/super-admin/');
+      if (!isSystemEndpoint) {
+        console.warn('Tenant ID not set; requests may be rejected by the server');
+      }
     }
     
     if (accessToken) {
@@ -155,7 +159,11 @@ reservationApi.interceptors.request.use(
     if (tenantId) {
       config.headers = { ...(config.headers || {}), 'x-tenant-id': tenantId } as any;
     } else {
-      console.warn('Tenant ID not set; requests may be rejected by the server');
+      // Skip warning for system/super-admin endpoints that don't require tenant ID
+      const isSystemEndpoint = config.url?.includes('/system/') || config.url?.includes('/super-admin/');
+      if (!isSystemEndpoint) {
+        console.warn('Tenant ID not set; requests may be rejected by the server');
+      }
     }
     
     if (accessToken) {
