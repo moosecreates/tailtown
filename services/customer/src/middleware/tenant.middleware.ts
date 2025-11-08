@@ -61,10 +61,14 @@ export const extractTenantContext = async (
       subdomain = req.query.subdomain as string;
     }
 
-    // Method 4: Development - Default to 'dev' tenant
+    // Method 4: Fail if no tenant context found
     if (!subdomain) {
-      subdomain = 'dev';
-      console.log('[Tenant Middleware] No subdomain found, defaulting to "dev" tenant');
+      console.error('[Tenant Middleware] No tenant context found in request');
+      return res.status(400).json({
+        success: false,
+        error: 'Tenant required',
+        message: 'No tenant context found. Please access via subdomain or provide tenant ID.',
+      });
     }
 
     // Look up tenant by subdomain
