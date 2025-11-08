@@ -113,6 +113,13 @@ const Settings: React.FC = () => {
           stats: 'Active Templates: 0'
         },
         {
+          title: 'Vaccine Requirements',
+          description: 'Configure required vaccines per pet type and service, track compliance and expirations',
+          icon: <VaccineIcon sx={{ fontSize: 40, color: 'error.main' }} />,
+          path: '/admin/vaccine-requirements',
+          stats: 'Active Requirements: 8'
+        },
+        {
           title: 'Groomer Appointments',
           description: 'Manage grooming appointments, schedules, and groomer assignments',
           icon: <GroomingIcon sx={{ fontSize: 40, color: 'secondary.main' }} />,
@@ -168,7 +175,7 @@ const Settings: React.FC = () => {
     {
       id: 'products-sales',
       title: 'Products & Sales',
-      subtitle: 'Inventory, POS, and health requirements',
+      subtitle: 'Inventory and point-of-sale',
       icon: <SalesIcon sx={{ fontSize: 28, color: 'success.main' }} />,
       color: 'success.main',
       sections: [
@@ -178,13 +185,6 @@ const Settings: React.FC = () => {
           icon: <ProductsIcon sx={{ fontSize: 40, color: 'success.main' }} />,
           path: '/products',
           stats: 'Products: 0'
-        },
-        {
-          title: 'Vaccine Requirements',
-          description: 'Configure required vaccines per pet type and service, track compliance and expirations',
-          icon: <VaccineIcon sx={{ fontSize: 40, color: 'error.main' }} />,
-          path: '/admin/vaccine-requirements',
-          stats: 'Active Requirements: 8'
         }
       ]
     },
