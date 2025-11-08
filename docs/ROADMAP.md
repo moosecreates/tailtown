@@ -109,31 +109,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 
 ### 🔴 CRITICAL - From Senior Dev Review (November 7, 2025)
 
-#### 1. ✅ Redis Caching Implementation (COMPLETE - Nov 7, 2025)
-**Priority**: CRITICAL | **Effort**: 1 day | **Status**: ✅ COMPLETE
-- ✅ Redis infrastructure configured
-- ✅ 10-50x performance improvement achieved
-- ✅ Caching for frequently accessed data
-- ✅ Cache invalidation strategies
-- **Result**: Dramatic performance boost
-
-#### 2. ✅ Sentry Error Tracking (COMPLETE - Nov 7, 2025)
-**Priority**: CRITICAL | **Effort**: 4 hours | **Status**: ✅ COMPLETE
-- ✅ Sentry configured for both services
-- ✅ Error tracking and monitoring
-- ✅ Performance monitoring
-- ✅ Release tracking
-- **Result**: Full observability into production errors
-
-#### 3. ✅ Service-to-Service API Communication (COMPLETE - Nov 7, 2025)
-**Priority**: CRITICAL | **Effort**: 2 days | **Status**: ✅ COMPLETE
-- ✅ Replaced direct database calls with HTTP APIs
-- ✅ Retry logic with exponential backoff
-- ✅ Proper service boundaries established
-- ✅ Services can now scale independently
-- **Result**: True microservices architecture
-
-#### 4. Per-Tenant Rate Limiting
+#### 1. Per-Tenant Rate Limiting
 **Priority**: HIGH | **Effort**: 4 hours | **Status**: Not Started
 - Current: Global rate limit (1000 req/15min)
 - Needed: Per-tenant rate limiting
@@ -147,7 +123,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
   });
   ```
 
-#### 5. Connection Pooling Configuration
+#### 2. Connection Pooling Configuration
 **Priority**: HIGH | **Effort**: 2 hours | **Status**: Not Started
 - Configure Prisma connection pooling
 - Or implement PgBouncer for better connection management
@@ -163,7 +139,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
   });
   ```
 
-#### 6. Load Testing
+#### 3. Load Testing
 **Priority**: HIGH | **Effort**: 1 day | **Status**: Not Started
 - Use k6 or Artillery for load testing
 - Simulate 100+ concurrent users
@@ -171,7 +147,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 - Measure response times under load
 - Find breaking points
 
-#### 7. Increase Test Coverage
+#### 4. Increase Test Coverage
 **Priority**: HIGH | **Effort**: 2 weeks | **Status**: Not Started
 - Current: 500+ tests but limited coverage
 - Target: 60%+ overall, 90%+ for critical paths
@@ -184,7 +160,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 
 ### 🟡 MEDIUM PRIORITY - Scaling Preparation
 
-#### 8. API Gateway Implementation
+#### 5. API Gateway Implementation
 **Priority**: MEDIUM | **Effort**: 1 week | **Status**: Not Started
 - Implement Kong or Tyk API Gateway
 - Centralized rate limiting per tenant
@@ -193,7 +169,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 - Better security and monitoring
 - **Timeline**: Before 100+ tenants
 
-#### 9. Message Queue for Async Operations
+#### 6. Message Queue for Async Operations
 **Priority**: MEDIUM | **Effort**: 1 week | **Status**: Not Started
 - Implement BullMQ, RabbitMQ, or AWS SQS
 - Queue email sending (don't block requests)
@@ -202,7 +178,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 - Queue data exports
 - **Timeline**: When >100 async operations/day
 
-#### 10. Staging Environment
+#### 7. Staging Environment
 **Priority**: MEDIUM | **Effort**: 3 days | **Status**: Not Started
 - Current: Dev → Production
 - Needed: Dev → Staging → Production
@@ -211,7 +187,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 - Run all tests before production deploy
 - Require approval before production
 
-#### 11. Audit Logging
+#### 8. Audit Logging
 **Priority**: MEDIUM | **Effort**: 1 week | **Status**: Not Started
 - Log all sensitive operations
 - Track who did what when
@@ -229,7 +205,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
   });
   ```
 
-#### 12. Secrets Management
+#### 9. Secrets Management
 **Priority**: MEDIUM | **Effort**: 1 day | **Status**: Not Started
 - Move JWT secrets from environment variables
 - Use AWS Secrets Manager or HashiCorp Vault
@@ -239,7 +215,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 
 ### 🟢 FUTURE - Architecture Refactoring
 
-#### 13. Database per Service (Phase 3: 1,000-10,000 tenants)
+#### 10. Database per Service (Phase 3: 1,000-10,000 tenants)
 **Priority**: LOW | **Effort**: 4 weeks | **Status**: Not Started
 - Current: Shared database (bottleneck at scale)
 - Needed: Separate databases for customer and reservation services
@@ -248,7 +224,7 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 - **Critical Issue**: Services currently query each other's tables directly
 - **Timeline**: Before 1,000 tenants
 
-#### 14. Split Monolithic Services (Phase 3)
+#### 11. Split Monolithic Services (Phase 3)
 **Priority**: LOW | **Effort**: 6 weeks | **Status**: Not Started
 - Split customer service into domain services:
   - customer-service (just customers & pets)
@@ -258,14 +234,14 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
   - notification-service (SMS & email)
 - **Timeline**: At 1,000+ tenants
 
-#### 15. Database Partitioning (Phase 3)
+#### 12. Database Partitioning (Phase 3)
 **Priority**: LOW | **Effort**: 2 weeks | **Status**: Not Started
 - Partition tables by tenant_id
 - Faster queries (only scan relevant partition)
 - Can move large tenants to separate databases
 - **Timeline**: At 10,000+ tenants
 
-#### 16. Read Replicas (Phase 2-3)
+#### 13. Read Replicas (Phase 2-3)
 **Priority**: LOW | **Effort**: 1 week | **Status**: Not Started
 - Add read replicas for database
 - Route read-heavy queries to replicas
