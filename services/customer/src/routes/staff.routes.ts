@@ -6,6 +6,7 @@ import {
   updateStaff,
   deleteStaff,
   loginStaff,
+  refreshAccessToken,
   requestPasswordReset,
   resetPassword,
   // Staff availability endpoints
@@ -41,8 +42,11 @@ const router = Router();
 // IMPORTANT: Specific routes must come BEFORE generic :id routes!
 
 // Authentication routes (no :id parameter)
-// POST login (rate limiting temporarily disabled for development)
-router.post('/login', loginStaff);
+// POST login (with rate limiting to prevent brute force attacks)
+router.post('/login', loginRateLimiter, loginStaff);
+
+// POST refresh token (no rate limiting needed as tokens are already time-limited)
+router.post('/refresh', refreshAccessToken);
 
 // POST request password reset (with rate limiting)
 router.post('/request-reset', passwordResetRateLimiter, requestPasswordReset);
