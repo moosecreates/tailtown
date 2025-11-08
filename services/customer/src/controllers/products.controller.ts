@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { TenantRequest } from '../middleware/tenant.middleware';
+import { getCache, setCache, getCacheKey, deleteCachePattern } from '../utils/redis';
 
 const prisma = new PrismaClient();
 
@@ -19,6 +20,20 @@ export const getAllProducts = async (req: TenantRequest, res: Response) => {
   try {
     const tenantId = req.tenantId || 'dev';
     const { categoryId, isActive, search } = req.query;
+    
+    // Generate cache key based on query parameters
+    const cacheKeySuffix = `${categoryId || 'all'}:${isActive || 'all'}:${search || 'none'}`;
+    const cacheKey = getCacheKey(tenantId, 'products', cacheKeySuffix);
+    
+    // Try to get from cache first
+    const cachedProducts = await getCache<any[]>(cacheKey);
+    if (cachedProducts) {
+      return res.json({
+        status: 'success',
+        data: cachedProducts,
+        cached: true
+      });
+    }
     
     const where: any = { tenantId };
     
@@ -48,9 +63,13 @@ export const getAllProducts = async (req: TenantRequest, res: Response) => {
       ]
     });
     
+    // Cache the results for 5 minutes
+    await setCache(cacheKey, products, 300);
+    
     res.json({
       status: 'success',
-      data: products
+      data: products,
+      cached: false
     });
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -205,6 +224,9 @@ export const createProduct = async (req: TenantRequest, res: Response) => {
         }
       });
     }
+    
+    // Invalidate products cache for this tenant
+    await deleteCachePattern(`${tenantId}:products:*`);
     
     res.status(201).json({
       status: 'success',
