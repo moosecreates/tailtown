@@ -429,6 +429,11 @@ app.use(errorHandler);
 
 // Start the server only if not in test mode
 if (process.env.NODE_ENV !== 'test') {
+  // Initialize Sentry error tracking
+  import('./utils/sentry').then(({ initSentry }) => {
+    initSentry();
+  });
+
   // Initialize Redis cache
   import('./utils/redis').then(({ initRedis }) => {
     initRedis().catch((error) => {
