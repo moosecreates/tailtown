@@ -12,6 +12,24 @@ A modern, full-featured management system for pet resorts, providing comprehensi
 
 ---
 
+## 📚 Documentation
+
+### For Developers (Quick Guides)
+- **[Quick Start](docs/human/QUICK-START.md)** - Get running in 10 minutes
+- **[Common Tasks](docs/human/COMMON-TASKS.md)** - How to add features, run tests, deploy
+- **[Security](docs/human/SECURITY.md)** - Security features and how to use them
+
+### For AI Assistants (Complete Context)
+- **[Security Implementation](docs/ai-context/security/)** - Complete security details
+- **[Testing](docs/ai-context/testing/)** - Test analysis and maintenance
+- **[Documentation Strategy](docs/DOCUMENTATION-STRATEGY.md)** - How we organize docs
+
+### Reference
+- **[Security Checklist](docs/SECURITY-CHECKLIST.md)** - Security verification
+- **[Development Best Practices](docs/DEVELOPMENT-BEST-PRACTICES.md)** - Code standards
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites
