@@ -1,6 +1,6 @@
 # Tailtown Unified Roadmap
 
-**Last Updated**: November 7, 2025 - 11:02 PM PST
+**Last Updated**: November 8, 2025 - 11:38 PM MST
 
 This document provides a prioritized roadmap for the Tailtown Pet Resort Management System, organized by business value and urgency.
 
@@ -106,6 +106,102 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 ---
 
 ## 🎯 HIGH PRIORITY - Post-Launch
+
+### 🔴 CRITICAL - From November 8, 2025 Session
+
+#### 1. Audit Remaining Controllers for 'dev' Fallbacks
+**Priority**: HIGH | **Effort**: 4 hours | **Status**: Not Started
+- Search all controllers for `|| 'dev'` patterns
+- Remove insecure tenant fallbacks
+- Ensure all operations require proper tenant context
+- Add tests to prevent regressions
+- **Why**: Security vulnerability - silent tenant switching can leak data
+- **Files to Check**:
+  - All customer-service controllers
+  - All reservation-service controllers
+  - Any middleware with tenant logic
+
+#### 2. Update Clone Script to Include Reservations
+**Priority**: HIGH | **Effort**: 2 hours | **Status**: Not Started
+- Add reservations to `scripts/clone-tenant-data.js`
+- Currently copies: customers, pets, staff, services, resources, products
+- Missing: reservations, invoices, payments
+- **Why**: Complete tenant cloning for demos and testing
+- **Implementation**: Add reservation copying with proper UUID conversion
+
+#### 3. Add Tenant Isolation Tests
+**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started
+- Create comprehensive tenant isolation test suite
+- Test middleware UUID conversion
+- Test controller tenant filtering
+- Verify no cross-tenant data leakage
+- Add to CI/CD pipeline
+- **Why**: Prevent tenant isolation bugs from reaching production
+- **Coverage Needed**:
+  - Middleware tests (subdomain → UUID)
+  - Controller tests (tenant filtering)
+  - Integration tests (end-to-end isolation)
+
+### 🟡 MEDIUM PRIORITY - Developer Experience
+
+#### 4. Improve Error Messages with Tenant Context
+**Priority**: MEDIUM | **Effort**: 3 days | **Status**: Not Started
+- Add tenant ID to all error logs
+- Show helpful messages when tenant not found
+- Explain what's needed when tenant header missing
+- Improve debugging experience
+- **Why**: Faster troubleshooting and better developer experience
+
+#### 5. Create Tenant Seeding Script
+**Priority**: MEDIUM | **Effort**: 1 week | **Status**: Not Started
+- Script to create new tenant with sample data
+- Include: customers, pets, services, resources, products, reservations
+- Useful for demos and testing
+- **Why**: Quick demo tenant creation without manual data entry
+- **Implementation**: Combine existing scripts into unified seeding tool
+
+#### 6. Document Nginx Configuration Patterns
+**Priority**: MEDIUM | **Effort**: 2 days | **Status**: Not Started
+- Create guide for Nginx header passthrough
+- Document wildcard subdomain setup
+- Add SSL certificate renewal process
+- Include troubleshooting guide
+- **Why**: Easier deployment and maintenance
+
+### 🟢 LOW PRIORITY - Future Enhancements
+
+#### 7. Blue-Green Deployments
+**Priority**: LOW | **Effort**: 1 week | **Status**: Not Started
+- Even safer than current pm2 reload strategy
+- Allows instant rollback
+- Zero risk of downtime
+- **Why**: Enterprise-grade deployment safety
+- **Timeline**: When zero-downtime isn't enough
+
+#### 8. Deployment Rollback Automation
+**Priority**: LOW | **Effort**: 3 days | **Status**: Not Started
+- Script to rollback to previous version
+- Keep last N deployments available
+- One-command rollback
+- **Why**: Quick recovery from bad deployments
+
+#### 9. Tenant Analytics Dashboard
+**Priority**: LOW | **Effort**: 2 weeks | **Status**: Not Started
+- Show tenant usage metrics
+- Track API calls per tenant
+- Monitor tenant health
+- Resource usage by tenant
+- **Why**: Better system visibility and capacity planning
+
+#### 10. Optimize Prisma Queries with Indexes
+**Priority**: LOW | **Effort**: 1 week | **Status**: Not Started
+- Add indexes for common tenant queries
+- Review N+1 query issues
+- Add query performance monitoring
+- Optimize slow queries
+- **Why**: Better performance at scale
+
+---
 
 ### 🔴 CRITICAL - From Senior Dev Review (November 7, 2025)
 
