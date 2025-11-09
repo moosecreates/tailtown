@@ -31,7 +31,7 @@ export default function ChecklistView() {
   const loadChecklist = React.useCallback(async () => {
     try {
       const response = await fetch(`/api/checklists/instances/${checklistId}`, {
-        headers: { 'x-tenant-id': 'dev' }
+        headers: { 'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev') }
       });
       const data = await response.json();
       setChecklist(data.data);
@@ -55,7 +55,7 @@ export default function ChecklistView() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': 'dev'
+          'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev')
         },
         body: JSON.stringify({
           templateItemId: item.templateItemId,
@@ -93,7 +93,7 @@ export default function ChecklistView() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': 'dev'
+          'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev')
         },
         body: JSON.stringify({
           notes: ''

@@ -819,7 +819,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
       const response = await fetch(`${getApiUrl()}/api/reservations/${initialData.id}`, {
         method: 'DELETE',
         headers: {
-          'x-tenant-id': 'dev',
+          'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev'),
         },
       });
       
