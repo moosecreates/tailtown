@@ -133,9 +133,10 @@ const Products: React.FC = () => {
   const loadProducts = async () => {
     try {
       const apiUrl = getApiUrl();
+      const tenantId = localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev';
       const response = await fetch(`${apiUrl}/api/products`, {
         headers: {
-          'x-tenant-id': 'dev'
+          'x-tenant-id': tenantId
         }
       });
       const data = await response.json();
@@ -150,9 +151,10 @@ const Products: React.FC = () => {
   const loadCategories = async () => {
     try {
       const apiUrl = getApiUrl();
+      const tenantId = localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev';
       const response = await fetch(`${apiUrl}/api/products/categories`, {
         headers: {
-          'x-tenant-id': 'dev'
+          'x-tenant-id': tenantId
         }
       });
       const data = await response.json();
@@ -258,7 +260,7 @@ const Products: React.FC = () => {
         method: editingProduct ? 'PUT' : 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'x-tenant-id': 'dev'
+          'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev')
         },
         body: JSON.stringify({
           ...formData,
@@ -298,7 +300,7 @@ const Products: React.FC = () => {
       const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/products/${id}`, {
         method: 'DELETE',
-        headers: { 'x-tenant-id': 'dev' }
+        headers: { 'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev') }
       });
 
       if (!response.ok) throw new Error('Failed to delete product');
@@ -359,7 +361,7 @@ const Products: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': 'dev'
+          'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev')
         },
         body: JSON.stringify({
           quantity: parseInt(inventoryAdjustment.quantity),

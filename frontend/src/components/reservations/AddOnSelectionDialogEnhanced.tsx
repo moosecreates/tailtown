@@ -124,7 +124,7 @@ const AddOnSelectionDialogEnhanced: React.FC<AddOnSelectionDialogEnhancedProps> 
       setLoadingProducts(true);
       const apiUrl = process.env.NODE_ENV === 'production' ? window.location.origin : (process.env.REACT_APP_API_URL || 'http://localhost:4004');
       const response = await fetch(`${apiUrl}/api/products?isActive=true&isService=false`, {
-        headers: { 'x-tenant-id': 'dev' }
+        headers: { 'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev') }
       });
       
       if (!response.ok) throw new Error('Failed to load products');

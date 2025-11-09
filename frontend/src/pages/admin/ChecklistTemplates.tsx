@@ -82,7 +82,7 @@ export default function ChecklistTemplates() {
     try {
       const apiUrl = process.env.REACT_APP_API_URL || '';
       const response = await fetch(`${apiUrl}/api/checklists/templates`, {
-        headers: { 'x-tenant-id': 'dev' }
+        headers: { 'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev') }
       });
       const data = await response.json();
       setTemplates(data.data || []);
@@ -117,7 +117,7 @@ export default function ChecklistTemplates() {
       const apiUrl = process.env.REACT_APP_API_URL || '';
       await fetch(`${apiUrl}/api/checklists/templates/${id}`, {
         method: 'DELETE',
-        headers: { 'x-tenant-id': 'dev' }
+        headers: { 'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev') }
       });
       loadTemplates();
     } catch (error) {
@@ -150,7 +150,7 @@ export default function ChecklistTemplates() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'x-tenant-id': 'dev'
+          'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev')
         },
         body: JSON.stringify(currentTemplate)
       });

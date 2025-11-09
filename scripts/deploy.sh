@@ -81,7 +81,7 @@ fi
 
 # Pull latest code
 log "Pulling latest code from git..."
-git pull origin sept25-stable || error "Git pull failed"
+git pull origin main || error "Git pull failed"
 
 # Install dependencies
 log "Installing dependencies..."
@@ -132,21 +132,30 @@ npm run build || error "Frontend build failed"
 
 cd "$PROJECT_ROOT"
 
-# Stop services
-log "Stopping services..."
-pm2 stop all || true
+# Zero-downtime deployment for frontend
+log "Deploying frontend (zero-downtime)..."
+cd "$PROJECT_ROOT/frontend"
+if [ -d "build-new" ]; then
+    rm -rf build-new
+fi
+mv build build-new 2>/dev/null || true
+# Build is already done, just need to swap
+if [ -d "build-old" ]; then
+    mv build-old build
+fi
+mv build build-old 2>/dev/null || true
+mv build-new build
+rm -rf build-old
+log "  ✓ Frontend deployed (no downtime)"
 
-# Copy frontend build to web directory
-log "Deploying frontend..."
-sudo rm -rf /var/www/tailtown/frontend
-sudo mkdir -p /var/www/tailtown/frontend
-sudo cp -r frontend/build/* /var/www/tailtown/frontend/
-sudo chown -R www-data:www-data /var/www/tailtown/frontend
+cd "$PROJECT_ROOT"
 
-# Start services with PM2
-log "Starting services..."
-pm2 start ecosystem.config.js --env production
+# Zero-downtime reload for backend services
+log "Reloading backend services (zero-downtime)..."
+pm2 reload customer-service --update-env || pm2 start ecosystem.config.js --only customer-service
+pm2 reload reservation-service --update-env || pm2 start ecosystem.config.js --only reservation-service
 pm2 save
+log "  ✓ Backend services reloaded (no downtime)"
 
 # Reload Nginx
 log "Reloading Nginx..."

@@ -51,15 +51,24 @@ export const extractTenantContext = async (
       subdomain = req.headers['x-tenant-subdomain'] as string;
     }
 
+    // Method 2b: Check X-Tenant-ID header (for impersonation)
+    if (!subdomain && req.headers['x-tenant-id']) {
+      subdomain = req.headers['x-tenant-id'] as string;
+    }
+
     // Method 3: Development - Check query parameter
     if (!subdomain && req.query.subdomain) {
       subdomain = req.query.subdomain as string;
     }
 
-    // Method 4: Development - Default to 'dev' tenant
+    // Method 4: Fail if no tenant context found
     if (!subdomain) {
-      subdomain = 'dev';
-      console.log('[Tenant Middleware] No subdomain found, defaulting to "dev" tenant');
+      console.error('[Tenant Middleware] No tenant context found in request');
+      return res.status(400).json({
+        success: false,
+        error: 'Tenant required',
+        message: 'No tenant context found. Please access via subdomain or provide tenant ID.',
+      });
     }
 
     // Look up tenant by subdomain
@@ -93,8 +102,8 @@ export const extractTenantContext = async (
     }
 
     // Attach tenant info to request
-    // Use subdomain as tenantId for backward compatibility with existing data
-    req.tenantId = tenant.subdomain;
+    // Use UUID as tenantId (proper tenant isolation)
+    req.tenantId = tenant.id;
     req.tenant = {
       id: tenant.id,
       subdomain: tenant.subdomain,
