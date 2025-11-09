@@ -40,11 +40,17 @@ export const requireJsonContentType = (
     });
   }
   
+  // Allow multipart/form-data for file uploads
+  const contentTypeLower = contentType.toLowerCase();
+  if (contentTypeLower.includes('multipart/form-data')) {
+    return next();
+  }
+  
   // Check if content-type is application/json (allow charset parameter)
-  if (!contentType.toLowerCase().includes('application/json')) {
+  if (!contentTypeLower.includes('application/json')) {
     return res.status(415).json({
       status: 'error',
-      message: 'Unsupported Media Type. Expected application/json',
+      message: 'Unsupported Media Type. Expected application/json or multipart/form-data',
       code: 'UNSUPPORTED_MEDIA_TYPE',
       received: contentType
     });
