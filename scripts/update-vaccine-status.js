@@ -69,21 +69,27 @@ async function updateVaccineStatus(tenantSubdomain, percentCurrent = 90) {
                       pet.type === 'CAT' ? CAT_VACCINES : 
                       ['Rabies']; // Default for other types
 
-      // Create vaccination status
+      // Create vaccination status and expirations with correct logic
       const vaccinationStatus = {};
-      vaccines.forEach(vaccine => {
-        vaccinationStatus[vaccine] = isCurrent ? 'current' : 'expired';
-      });
-
-      // Create vaccine expirations
       const vaccineExpirations = {};
+      
       vaccines.forEach(vaccine => {
         if (isCurrent) {
-          // Current vaccines get future expiration dates
+          // Future date = current status
           vaccineExpirations[vaccine] = getRandomFutureDate(3, 18);
+          vaccinationStatus[vaccine] = 'current';
         } else {
-          // Expired vaccines get past dates
-          vaccineExpirations[vaccine] = getRandomPastDate(1, 12);
+          // Randomly assign expired or pending
+          const isPending = Math.random() > 0.5;
+          if (isPending) {
+            // No date = pending status
+            vaccinationStatus[vaccine] = 'pending';
+            // Don't set expiration date for pending
+          } else {
+            // Past date = expired status
+            vaccineExpirations[vaccine] = getRandomPastDate(1, 12);
+            vaccinationStatus[vaccine] = 'expired';
+          }
         }
       });
 
