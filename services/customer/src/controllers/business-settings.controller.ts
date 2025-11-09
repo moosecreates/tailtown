@@ -56,14 +56,14 @@ export const uploadMiddleware = upload.single('logo');
  */
 export const getBusinessSettings = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
 
     if (!tenantId) {
       return next(new AppError('Tenant ID not found', 400));
     }
 
     const tenant = await prisma.tenant.findUnique({
-      where: { subdomain: tenantId },
+      where: { id: tenantId },
       select: {
         id: true,
         businessName: true,
@@ -89,7 +89,7 @@ export const getBusinessSettings = async (req: Request, res: Response, next: Nex
  */
 export const uploadLogo = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
 
     if (!tenantId) {
       return next(new AppError('Tenant ID not found', 400));
@@ -101,7 +101,7 @@ export const uploadLogo = async (req: Request, res: Response, next: NextFunction
 
     // Get the old logo URL to delete it
     const tenant = await prisma.tenant.findUnique({
-      where: { subdomain: tenantId },
+      where: { id: tenantId },
       select: { logoUrl: true }
     });
 
@@ -121,7 +121,7 @@ export const uploadLogo = async (req: Request, res: Response, next: NextFunction
 
     // Update tenant with new logo URL
     await prisma.tenant.update({
-      where: { subdomain: tenantId },
+      where: { id: tenantId },
       data: { logoUrl }
     });
 
@@ -140,14 +140,14 @@ export const uploadLogo = async (req: Request, res: Response, next: NextFunction
  */
 export const deleteLogo = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
 
     if (!tenantId) {
       return next(new AppError('Tenant ID not found', 400));
     }
 
     const tenant = await prisma.tenant.findUnique({
-      where: { subdomain: tenantId },
+      where: { id: tenantId },
       select: { logoUrl: true }
     });
 
@@ -168,7 +168,7 @@ export const deleteLogo = async (req: Request, res: Response, next: NextFunction
 
     // Remove logo URL from tenant
     await prisma.tenant.update({
-      where: { subdomain: tenantId },
+      where: { id: tenantId },
       data: { logoUrl: null }
     });
 
