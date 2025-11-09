@@ -20,9 +20,9 @@ interface VaccineExpirations {
 }
 
 interface VaccinationStatusProps {
-  vaccinationStatus: { [key: string]: VaccineInfo } | undefined;
+  vaccinationStatus: { [key: string]: VaccineInfo | string } | undefined;
   vaccineExpirations: VaccineExpirations | undefined;
-  onVaccinationStatusChange: (key: string, value: VaccineInfo) => void;
+  onVaccinationStatusChange: (key: string, value: VaccineInfo | string) => void;
   onVaccineExpirationChange: (key: string, value: string) => void;
 }
 
@@ -60,18 +60,24 @@ export const VaccinationStatus: React.FC<VaccinationStatusProps> = ({
           <FormControl fullWidth>
             <InputLabel>Status</InputLabel>
             <Select
-              value={(vaccinationStatus && vaccinationStatus[vaccineType]?.status) || 'PENDING'}
+              value={(() => {
+                if (!vaccinationStatus || !vaccinationStatus[vaccineType]) return 'pending';
+                const value = vaccinationStatus[vaccineType];
+                // Handle both string format and object format
+                if (typeof value === 'string') {
+                  return value.toLowerCase();
+                }
+                return value.status?.toLowerCase() || 'pending';
+              })()}
               label="Status"
-              onChange={(e) =>
-                onVaccinationStatusChange(vaccineType, {
-                  ...(vaccinationStatus?.[vaccineType] || {}),
-                  status: e.target.value as 'CURRENT' | 'EXPIRED' | 'PENDING',
-                })
-              }
+              onChange={(e) => {
+                // Save as lowercase string for consistency with backend
+                onVaccinationStatusChange(vaccineType, e.target.value);
+              }}
             >
-              <MenuItem value="CURRENT">Current</MenuItem>
-              <MenuItem value="EXPIRED">Expired</MenuItem>
-              <MenuItem value="PENDING">Pending</MenuItem>
+              <MenuItem value="current">Current</MenuItem>
+              <MenuItem value="expired">Expired</MenuItem>
+              <MenuItem value="pending">Pending</MenuItem>
             </Select>
           </FormControl>
           <TextField
