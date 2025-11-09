@@ -849,7 +849,7 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
                     vaccinationStatus: {
                       ...(prev.vaccinationStatus || {}),
                       [lowercaseKey]: value
-                    }
+                    } as Record<string, string | { status: 'CURRENT' | 'EXPIRED' | 'PENDING'; lastGiven?: string; notes?: string; }>
                   }));
                 }}
                 onVaccineExpirationChange={(key, value) => {
