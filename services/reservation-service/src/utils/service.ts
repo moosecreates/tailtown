@@ -146,6 +146,7 @@ export function createService(options: {
 /**
  * Middleware to validate tenant ID in requests
  * This ensures proper multi-tenant isolation
+ * Converts subdomain to UUID if needed
  */
 export function tenantMiddleware(options: {
   required: boolean;
@@ -153,11 +154,11 @@ export function tenantMiddleware(options: {
 }) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Get tenant ID from header
-      const tenantId = req.headers['x-tenant-id'] as string;
+      // Get tenant ID or subdomain from header
+      const tenantIdOrSubdomain = req.headers['x-tenant-id'] as string;
       
       // Check if tenant ID is required but missing
-      if (options.required && !tenantId) {
+      if (options.required && !tenantIdOrSubdomain) {
         return res.status(401).json({
           success: false,
           error: {
@@ -167,23 +168,52 @@ export function tenantMiddleware(options: {
         });
       }
       
-      // If tenant ID is provided, validate it if a validation function is provided
-      if (tenantId && options.validateTenant) {
-        const isValid = await options.validateTenant(tenantId);
-        if (!isValid) {
-          return res.status(403).json({
-            success: false,
-            error: {
-              type: 'FORBIDDEN_ERROR',
-              message: 'Invalid tenant ID'
-            }
+      let finalTenantId = tenantIdOrSubdomain;
+      
+      // If tenant ID is provided, check if it's a UUID or subdomain
+      if (tenantIdOrSubdomain) {
+        // Check if it's a UUID
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(tenantIdOrSubdomain);
+        
+        if (!isUUID) {
+          // It's a subdomain, need to convert to UUID
+          const { prisma } = require('../config/prisma');
+          const tenant = await prisma.tenant.findUnique({
+            where: { subdomain: tenantIdOrSubdomain },
+            select: { id: true }
           });
+          
+          if (!tenant) {
+            return res.status(404).json({
+              success: false,
+              error: {
+                type: 'NOT_FOUND_ERROR',
+                message: `Tenant not found for subdomain: ${tenantIdOrSubdomain}`
+              }
+            });
+          }
+          
+          finalTenantId = tenant.id;
+        }
+        
+        // Validate tenant if validation function is provided
+        if (options.validateTenant) {
+          const isValid = await options.validateTenant(finalTenantId);
+          if (!isValid) {
+            return res.status(403).json({
+              success: false,
+              error: {
+                type: 'FORBIDDEN_ERROR',
+                message: 'Invalid tenant ID'
+              }
+            });
+          }
         }
       }
       
-      // Add tenant ID to request
-      if (tenantId) {
-        (req as any).tenantId = tenantId;
+      // Add UUID tenant ID to request
+      if (finalTenantId) {
+        (req as any).tenantId = finalTenantId;
       }
       
       next();
