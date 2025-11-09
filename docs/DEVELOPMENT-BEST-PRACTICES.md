@@ -2,7 +2,7 @@
 
 **Purpose**: Quick reference guide for common patterns, pitfalls, and best practices when developing Tailtown features.
 
-**Last Updated**: November 6, 2025
+**Last Updated**: November 8, 2025
 
 ---
 
@@ -103,6 +103,73 @@ const customers = await prisma.customer.findMany({
 - Tenant table itself
 - System-wide settings
 - Super admin operations (with explicit checks)
+
+---
+
+### Tenant ID Storage: UUID vs Subdomain (CRITICAL!)
+
+**❌ WRONG - Using subdomain as tenantId:**
+```typescript
+const customer = await prisma.customer.create({
+  data: {
+    tenantId: tenant.subdomain,  // 'rainy' - WRONG!
+    name: 'John Doe'
+  }
+});
+```
+
+**✅ CORRECT - Always use UUID:**
+```typescript
+const customer = await prisma.customer.create({
+  data: {
+    tenantId: tenant.id,  // '06d09e08-fe1f-4feb-89f8-c3b619026ba9' - CORRECT!
+    name: 'John Doe'
+  }
+});
+```
+
+**Why**: 
+- UUIDs are immutable - subdomains can change
+- UUIDs prevent naming conflicts
+- Consistent with database schema design
+- Middleware now converts subdomain → UUID automatically
+
+**Middleware Behavior** (Nov 8, 2025):
+```typescript
+// Frontend sends: x-tenant-id: 'rainy'
+// Middleware converts to: req.tenantId = '06d09e08-fe1f-4feb-89f8-c3b619026ba9'
+// All queries use UUID automatically
+```
+
+**Migration Note**: Old data may have subdomain strings - clone scripts handle both for backward compatibility.
+
+---
+
+### Frontend Tenant ID: Never Hardcode 'dev'
+
+**❌ WRONG - Hardcoded tenant:**
+```typescript
+const response = await fetch('/api/products', {
+  headers: { 'x-tenant-id': 'dev' }  // WRONG - always shows dev data!
+});
+```
+
+**✅ CORRECT - Use localStorage:**
+```typescript
+const tenantId = localStorage.getItem('tailtown_tenant_id') 
+  || localStorage.getItem('tenantId') 
+  || 'dev';
+const response = await fetch('/api/products', {
+  headers: { 'x-tenant-id': tenantId }
+});
+```
+
+**Why**: Hardcoded 'dev' breaks:
+- Tenant impersonation
+- Multi-tenant testing
+- Production tenant access
+
+**Rule**: NEVER hardcode tenant IDs in frontend code. Always read from localStorage.
 
 ---
 
@@ -398,7 +465,7 @@ npm run type-check
 npm run lint
 ```
 
-### Deployment
+### Deployment (Zero-Downtime)
 ```bash
 # Build for production
 NODE_ENV=production npm run build
@@ -406,14 +473,25 @@ NODE_ENV=production npm run build
 # Verify build
 npm run verify-build
 
-# Deploy frontend
-cd frontend && npm run build && [deploy script]
+# Deploy with zero downtime (Nov 8, 2025)
+ssh root@129.212.178.244
+cd /opt/tailtown
+./scripts/deploy.sh
 
-# Restart services
-pm2 restart all
-pm2 restart customer-service
-pm2 restart frontend
+# Or use PM2 reload (keeps services running)
+pm2 reload customer-service --update-env
+pm2 reload reservation-service --update-env
+
+# ❌ DON'T USE pm2 restart (causes downtime)
+# pm2 restart all  # WRONG - drops connections!
 ```
+
+**Zero-Downtime Deployment**:
+- Uses `pm2 reload` instead of `pm2 restart`
+- Keeps at least one instance running during updates
+- Atomic frontend directory swaps
+- Automatic via GitHub Actions on merge to main
+- See `/DEPLOYMENT.md` for full details
 
 ### Database
 ```bash
@@ -561,4 +639,12 @@ const reservation = {
 
 **Questions?** Check the related documentation or ask the team.
 
-**Last Updated**: November 6, 2025 - 9:53 PM MST
+**Last Updated**: November 8, 2025 - 10:53 PM MST
+
+## 📝 Recent Updates
+
+### November 8, 2025
+- Added UUID vs Subdomain tenant ID pattern (CRITICAL)
+- Added frontend tenant ID localStorage pattern
+- Updated deployment to zero-downtime using pm2 reload
+- Added Nginx header passthrough requirements
