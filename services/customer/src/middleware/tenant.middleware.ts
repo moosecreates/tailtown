@@ -102,8 +102,8 @@ export const extractTenantContext = async (
     }
 
     // Attach tenant info to request
-    // Use subdomain as tenantId for backward compatibility with existing data
-    req.tenantId = tenant.subdomain;
+    // Use UUID as tenantId (proper tenant isolation)
+    req.tenantId = tenant.id;
     req.tenant = {
       id: tenant.id,
       subdomain: tenant.subdomain,
