@@ -133,9 +133,10 @@ const Products: React.FC = () => {
   const loadProducts = async () => {
     try {
       const apiUrl = getApiUrl();
+      const tenantId = localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev';
       const response = await fetch(`${apiUrl}/api/products`, {
         headers: {
-          'x-tenant-id': 'dev'
+          'x-tenant-id': tenantId
         }
       });
       const data = await response.json();
@@ -150,9 +151,10 @@ const Products: React.FC = () => {
   const loadCategories = async () => {
     try {
       const apiUrl = getApiUrl();
+      const tenantId = localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev';
       const response = await fetch(`${apiUrl}/api/products/categories`, {
         headers: {
-          'x-tenant-id': 'dev'
+          'x-tenant-id': tenantId
         }
       });
       const data = await response.json();
