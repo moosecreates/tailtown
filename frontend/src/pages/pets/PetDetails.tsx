@@ -849,8 +849,8 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
                     vaccinationStatus: {
                       ...(prev.vaccinationStatus || {}),
                       [lowercaseKey]: value
-                    }
-                  } as any));
+                    } as Record<string, string | { status: 'CURRENT' | 'EXPIRED' | 'PENDING'; lastGiven?: string; notes?: string; }>
+                  }));
                 }}
                 onVaccineExpirationChange={(key, value) => {
                   // Map back to lowercase when saving
