@@ -56,6 +56,7 @@ import messageTemplatesRoutes from './routes/messageTemplates.routes';
 import announcementRoutes from './routes/announcement.routes';
 import superAdminRoutes from './routes/super-admin.routes';
 import businessSettingsRoutes from './routes/business-settings.routes';
+import { systemRoutes } from './routes/system.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
 import { enforceHTTPS, securityHeaders, sanitizeInput } from './middleware/security.middleware';
@@ -357,6 +358,9 @@ app.use('/api/super-admin', superAdminRoutes);
 // Tenant management routes (no tenant context required - for super admins)
 app.use('/api/tenants', tenantRoutes);
 
+// System Routes (health monitoring, metrics - no tenant context required)
+app.use('/api/system', systemRoutes);
+
 // Apply tenant context middleware to all other routes
 // This extracts the subdomain and attaches tenant info to the request
 app.use('/api', extractTenantContext);
@@ -429,9 +433,6 @@ app.use('/api', requireTenant, optionalAuth, announcementRoutes);
 // Business Settings Routes (admin only)
 app.use('/api/business-settings', requireTenant, authenticate, requireTenantAdmin, businessSettingsRoutes);
 
-// System Routes (health monitoring, metrics)
-import { systemRoutes } from './routes/system.routes';
-app.use('/api/system', systemRoutes);
 
 // Serve uploaded icons statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
