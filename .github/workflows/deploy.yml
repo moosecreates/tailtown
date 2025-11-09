@@ -68,12 +68,12 @@ jobs:
         # Upload deployment package
         scp -i ~/.ssh/deploy_key deploy.tar.gz $SERVER_USER@$SERVER_HOST:/tmp/
         
-        # Deploy on server
+        # Deploy on server using zero-downtime script
         ssh -i ~/.ssh/deploy_key $SERVER_USER@$SERVER_HOST << 'EOF'
           cd /opt/tailtown
           
           # Backup current deployment
-          tar -czf backup-$(date +%Y%m%d_%H%M%S).tar.gz frontend/build services/customer/dist services/reservation-service/dist
+          tar -czf backup-$(date +%Y%m%d_%H%M%S).tar.gz frontend/build services/customer/dist services/reservation-service/dist 2>/dev/null || true
           
           # Extract new deployment
           tar -xzf /tmp/deploy.tar.gz -C /tmp/
@@ -83,13 +83,15 @@ jobs:
           cp -r /tmp/deploy/customer/* services/customer/dist/
           cp -r /tmp/deploy/reservation/* services/reservation-service/dist/
           
-          # Restart services
-          pm2 restart customer-service || true
-          pm2 restart reservation-service || true
-          pm2 restart frontend || true
+          # Zero-downtime reload (instead of restart)
+          pm2 reload customer-service --update-env || pm2 start ecosystem.config.js --only customer-service
+          pm2 reload reservation-service --update-env || pm2 start ecosystem.config.js --only reservation-service
+          pm2 save
           
           # Cleanup
           rm -rf /tmp/deploy /tmp/deploy.tar.gz
+          
+          echo "✅ Zero-downtime deployment complete"
         EOF
     
     - name: Verify deployment
