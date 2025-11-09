@@ -317,7 +317,7 @@ const CheckoutPage: React.FC = () => {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'x-tenant-id': 'dev'
+                  'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev')
                 },
                 body: JSON.stringify({
                   quantity: -product.quantity, // Negative to deduct

@@ -72,7 +72,7 @@ export const createApiClient = (
           console.warn('No tenant ID found; using default "dev" tenant');
           config.headers = { 
             ...(config.headers || {}), 
-            'x-tenant-id': 'dev' 
+            'x-tenant-id': (localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId') || 'dev') 
           } as any;
         } else {
           console.warn('Tenant ID not set; requests may be rejected by the server');
