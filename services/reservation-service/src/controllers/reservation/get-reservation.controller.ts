@@ -38,9 +38,7 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
   logger.info(`Processing get all reservations request`, { requestId, query: req.query });
   
   // Get tenant ID from request - added by tenant middleware
-  // In development mode, use a default tenant ID if not provided
-  const isDev = process.env.NODE_ENV === 'development';
-  const tenantId = req.tenantId || (isDev ? 'dev' : undefined);
+  const tenantId = (req as any).tenantId;
   if (!tenantId) {
     logger.warn(`Missing tenant ID in request`, { requestId });
     throw AppError.authorizationError('Tenant ID is required');
@@ -375,9 +373,7 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
   logger.info(`Processing get reservation by ID request for ID: ${req.params.id}`, { requestId });
   
   // Get tenant ID from request - added by tenant middleware
-  // In development mode, use a default tenant ID if not provided
-  const isDev = process.env.NODE_ENV === 'development';
-  const tenantId = req.tenantId || (isDev ? 'dev-tenant-001' : undefined);
+  const tenantId = (req as any).tenantId;
   if (!tenantId) {
     logger.warn(`Missing tenant ID in request`, { requestId });
     throw AppError.authorizationError('Tenant ID is required');
