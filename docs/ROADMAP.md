@@ -205,17 +205,18 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 
 ### 🔴 CRITICAL - From Senior Dev Review (November 7, 2025)
 
-#### 1. Per-Tenant Rate Limiting
-**Priority**: HIGH | **Effort**: 4 hours | **Status**: Not Started
-- Current: Global rate limit (1000 req/15min)
-- Needed: Per-tenant rate limiting
-- Prevents one tenant from consuming all quota
+#### 1. ✅ Per-Tenant Rate Limiting (COMPLETE)
+**Priority**: HIGH | **Effort**: 4 hours | **Status**: ✅ COMPLETE
+- ✅ Implemented: Rate limiter uses `req.tenantId` as key
+- ✅ Each tenant gets 1000 req/15min quota
+- ✅ Prevents one tenant from consuming all quota
+- **Location**: `services/customer/src/index.ts` line 162
 - **Implementation**:
   ```typescript
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 1000,
-    keyGenerator: (req) => req.tenantId, // Per tenant!
+    keyGenerator: (req: any) => req.tenantId, // Per tenant!
   });
   ```
 
