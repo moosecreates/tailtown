@@ -18,7 +18,7 @@
     "@testing-library/react": "^14.2.1",
     "@testing-library/user-event": "^14.5.2",
     "@types/jest": "^30.0.0",
-    "@types/node": "^20.11.28",
+    "@types/node": "^24.10.0",
     "@types/react": "18.2.64",
     "@types/react-datepicker": "^7.0.0",
     "@types/react-dom": "18.2.21",
