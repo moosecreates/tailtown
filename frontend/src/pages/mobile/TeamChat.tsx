@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { MobileHeader } from '../../components/mobile/MobileHeader';
 
-export const TeamChat: React.FC = () => {
+const TeamChat: React.FC = () => {
   return (
     <Box>
       <MobileHeader title="Team Chat" showNotifications />
@@ -14,3 +14,5 @@ export const TeamChat: React.FC = () => {
     </Box>
   );
 };
+
+export default TeamChat;

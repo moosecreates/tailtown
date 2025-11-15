@@ -21,7 +21,7 @@ import {
 } from '@mui/icons-material';
 import { MobileHeader } from '../../components/mobile/MobileHeader';
 
-export const MobileDashboard: React.FC = () => {
+const MobileDashboard: React.FC = () => {
   // TODO: Replace with actual data from API
   const stats = {
     petsInFacility: 24,
@@ -194,3 +194,5 @@ export const MobileDashboard: React.FC = () => {
     </Box>
   );
 };
+
+export default MobileDashboard;

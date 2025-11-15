@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { MobileHeader } from '../../components/mobile/MobileHeader';
 
-export const Profile: React.FC = () => {
+const Profile: React.FC = () => {
   return (
     <Box>
       <MobileHeader title="Profile" showNotifications />
@@ -14,3 +14,5 @@ export const Profile: React.FC = () => {
     </Box>
   );
 };
+
+export default Profile;

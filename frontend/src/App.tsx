@@ -11,6 +11,7 @@ import AccessibilityFix from './components/AccessibilityFix';
 import ScrollFix from './components/ScrollFix';
 import ApiTester from './components/debug/ApiTester';
 import PageLoader from './components/common/PageLoader';
+import './styles/mobile.css'; // Mobile-specific styles
 
 // Layouts - Lazy loaded for code splitting
 const MainLayout = lazy(() => import('./components/layouts/MainLayout'));
@@ -126,6 +127,13 @@ const ClassEnrollments = lazy(() => import('./pages/training/ClassEnrollments'))
 
 // Public Booking Portal
 const BookingPortal = lazy(() => import('./pages/booking/BookingPortal'));
+
+// Mobile Pages
+const MobileDashboard = lazy(() => import('./pages/mobile/MobileDashboard'));
+const Checklists = lazy(() => import('./pages/mobile/Checklists'));
+const TeamChat = lazy(() => import('./pages/mobile/TeamChat'));
+const MySchedule = lazy(() => import('./pages/mobile/MySchedule'));
+const MobileProfile = lazy(() => import('./pages/mobile/Profile'));
 
 // Custom event and utility components
 
@@ -265,6 +273,14 @@ const AppRoutes = () => {
         {/* Debug routes */}
         <Route path="/debug/api" element={<ApiTester />} />
       </Route>
+
+      {/* Mobile Routes - No MainLayout wrapper */}
+      <Route path="/mobile/dashboard" element={isAuthenticated ? <MobileDashboard /> : <Navigate to="/login" />} />
+      <Route path="/mobile/checklists" element={isAuthenticated ? <Checklists /> : <Navigate to="/login" />} />
+      <Route path="/mobile/chat" element={isAuthenticated ? <TeamChat /> : <Navigate to="/login" />} />
+      <Route path="/mobile/schedule" element={isAuthenticated ? <MySchedule /> : <Navigate to="/login" />} />
+      <Route path="/mobile/profile" element={isAuthenticated ? <MobileProfile /> : <Navigate to="/login" />} />
+      <Route path="/mobile" element={isAuthenticated ? <Navigate to="/mobile/dashboard" /> : <Navigate to="/login" />} />
 
       {/* 404 Route */}
       <Route path="*" element={<NotFound />} />

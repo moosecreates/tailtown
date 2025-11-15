@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { MobileHeader } from '../../components/mobile/MobileHeader';
 
-export const Checklists: React.FC = () => {
+const Checklists: React.FC = () => {
   return (
     <Box>
       <MobileHeader title="Checklists" showNotifications />
@@ -14,3 +14,5 @@ export const Checklists: React.FC = () => {
     </Box>
   );
 };
+
+export default Checklists;

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { MobileHeader } from '../../components/mobile/MobileHeader';
 
-export const MySchedule: React.FC = () => {
+const MySchedule: React.FC = () => {
   return (
     <Box>
       <MobileHeader title="My Schedule" showNotifications />
@@ -14,3 +14,5 @@ export const MySchedule: React.FC = () => {
     </Box>
   );
 };
+
+export default MySchedule;
