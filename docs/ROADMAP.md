@@ -946,6 +946,13 @@ model Tenant {
 - Permission levels and user roles
 - Recent checkouts tracking
 
+### Staff & Operations
+- Mobile-friendly employee portal or app with role-specific views (groomers, front desk, kennel techs)
+- Shift trading workflow with manager approval integrated into staff scheduling/calendar
+- Incident reports in pet history with structured fields and guarantee that incident/behavior notes follow the dog across visits
+- Labor reporting (hours vs. revenue, labor % by day/service, overtime visibility)
+- Kennel configuration based on size categories rather than legacy "type" labels (update UI terminology and data model)
+
 ### Advanced Features
 - Pet health monitoring and alerts
 - AI-powered service recommendations

@@ -8,12 +8,13 @@ import { generateToken, generateRefreshToken, verifyRefreshToken } from '../util
 import fs from 'fs';
 import path from 'path';
 
-// Extend the Express Request type to include user information
+// Extend the Express Request type to include user information and tenant context
 interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     role?: string;
   };
+  tenantId?: string;
 }
 
 const prisma = new PrismaClient();
@@ -1042,6 +1043,48 @@ export const getAvailableStaff = async (
 
 // Staff Schedule Management
 
+// Helper to detect overlapping schedules for a staff member on a given day
+const hasScheduleConflict = async (
+  tenantId: string | undefined,
+  staffId: string,
+  date: Date,
+  startTime: string,
+  endTime: string,
+  excludeScheduleId?: string
+): Promise<boolean> => {
+  // Normalize to the calendar day for date-based filtering
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const where: any = {
+    staffId,
+    date: {
+      gte: startOfDay,
+      lte: endOfDay
+    },
+    // Time overlap: existing.endTime > new.startTime AND existing.startTime < new.endTime
+    endTime: {
+      gt: startTime
+    },
+    startTime: {
+      lt: endTime
+    }
+  };
+
+  if (tenantId) {
+    where.tenantId = tenantId;
+  }
+
+  if (excludeScheduleId) {
+    where.id = { not: excludeScheduleId };
+  }
+
+  const conflict = await prisma.staffSchedule.findFirst({ where });
+  return !!conflict;
+};
+
 // Get all schedules for a specific staff member
 export const getStaffSchedules = async (
   req: Request,
@@ -1175,12 +1218,27 @@ export const createStaffSchedule = async (
     if (!staff) {
       return next(new AppError('Staff not found', 404));
     }
+
+    const scheduleDate = new Date(date);
+
+    // Prevent overlapping schedules for the same staff member on the same day
+    const conflict = await hasScheduleConflict(
+      req.tenantId,
+      staffId,
+      scheduleDate,
+      startTime,
+      endTime
+    );
+
+    if (conflict) {
+      return next(new AppError('This staff member already has a shift during this time', 400));
+    }
     
     // Create the schedule
     const newSchedule = await prisma.staffSchedule.create({
       data: {
         staffId,
-        date: new Date(date),
+        date: scheduleDate,
         startTime,
         endTime,
         status: status || 'SCHEDULED',
@@ -1216,12 +1274,30 @@ export const updateStaffSchedule = async (
     if (!schedule) {
       return next(new AppError('Schedule not found', 404));
     }
+
+    const newDate = date ? new Date(date) : schedule.date;
+    const newStartTime = startTime || schedule.startTime;
+    const newEndTime = endTime || schedule.endTime;
+
+    // Prevent overlapping schedules for the same staff member on the same day (excluding this schedule itself)
+    const conflict = await hasScheduleConflict(
+      req.tenantId,
+      schedule.staffId,
+      newDate,
+      newStartTime,
+      newEndTime,
+      schedule.id
+    );
+
+    if (conflict) {
+      return next(new AppError('This staff member already has a shift during this time', 400));
+    }
     
     // Update the schedule
     const updatedSchedule = await prisma.staffSchedule.update({
       where: { id: scheduleId },
       data: {
-        date: date ? new Date(date) : undefined,
+        date: date ? newDate : undefined,
         startTime,
         endTime,
         status,
@@ -1284,19 +1360,38 @@ export const bulkCreateSchedules = async (
     }
     
     // Process each schedule
-    const createdSchedules = await Promise.all(
-      schedules.map(async (schedule) => {
+    const createdSchedules = await prisma.$transaction(async (tx) => {
+      const results: any[] = [];
+
+      for (const schedule of schedules) {
         const { staffId, date, startTime, endTime, status, notes, location, role } = schedule;
-        
-        // Validate required fields
+
         if (!staffId || !date || !startTime || !endTime) {
-          throw new Error('StaffId, date, start time, and end time are required for each schedule');
+          throw new AppError('Each schedule must include staffId, date, startTime, and endTime', 400);
         }
-        
-        return prisma.staffSchedule.create({
+
+        const scheduleDate = new Date(date);
+
+        // Check for schedule conflicts before inserting
+        const conflict = await hasScheduleConflict(
+          req.tenantId,
+          staffId,
+          scheduleDate,
+          startTime,
+          endTime
+        );
+
+        if (conflict) {
+          throw new AppError(
+            `Staff member already has a shift during ${startTime}–${endTime} on this date`,
+            400
+          );
+        }
+
+        const newSchedule = await tx.staffSchedule.create({
           data: {
             staffId,
-            date: new Date(date),
+            date: scheduleDate,
             startTime,
             endTime,
             status: status || 'SCHEDULED',
@@ -1306,8 +1401,12 @@ export const bulkCreateSchedules = async (
             createdById: req.user?.id
           }
         });
-      })
-    );
+
+        results.push(newSchedule);
+      }
+
+      return results;
+    });
     
     res.status(201).json({
       status: 'success',
