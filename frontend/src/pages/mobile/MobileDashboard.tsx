@@ -22,6 +22,7 @@ import {
   ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
 import { MobileHeader } from '../../components/mobile/MobileHeader';
+import { BottomNav } from '../../components/mobile/BottomNav';
 import mobileService, { DashboardData } from '../../services/mobileService';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -94,7 +95,7 @@ const MobileDashboard: React.FC = () => {
         userName={user?.firstName || 'Staff'}
       />
 
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: 2, pb: 10 }}>
         {/* Pets in Facility - Compact Info */}
         <Box sx={{ mb: 2, px: 1, py: 1, bgcolor: 'background.paper', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -217,6 +218,11 @@ const MobileDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </Box>
+
+      <BottomNav 
+        unreadMessages={dashboardData?.unreadMessages || 0}
+        pendingTasks={pendingTasks.length}
+      />
     </Box>
   );
 };

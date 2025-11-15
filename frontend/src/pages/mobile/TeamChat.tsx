@@ -23,6 +23,7 @@ import {
   ArrowBack as BackIcon,
 } from '@mui/icons-material';
 import { MobileHeader } from '../../components/mobile/MobileHeader';
+import { BottomNav } from '../../components/mobile/BottomNav';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface Message {
@@ -382,5 +383,7 @@ const TeamChat: React.FC = () => {
     </Box>
   );
 };
+
+      <BottomNav />
 
 export default TeamChat;

@@ -26,6 +26,7 @@ import {
   Add as AddIcon,
 } from '@mui/icons-material';
 import { MobileHeader } from '../../components/mobile/MobileHeader';
+import { BottomNav } from '../../components/mobile/BottomNav';
 import mobileService, { PendingTask } from '../../services/mobileService';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -157,7 +158,7 @@ const Checklists: React.FC = () => {
     <Box sx={{ pb: 8 }}>
       <MobileHeader title="Checklists" showNotifications />
       
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: 2, pb: 10 }}>
         {checklists.length === 0 ? (
           <Card elevation={1}>
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
@@ -290,5 +291,7 @@ const Checklists: React.FC = () => {
     </Box>
   );
 };
+
+      <BottomNav />
 
 export default Checklists;

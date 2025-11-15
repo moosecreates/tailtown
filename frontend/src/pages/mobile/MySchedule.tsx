@@ -23,6 +23,7 @@ import {
   ChevronRight as NextIcon,
 } from '@mui/icons-material';
 import { MobileHeader } from '../../components/mobile/MobileHeader';
+import { BottomNav } from '../../components/mobile/BottomNav';
 import mobileService, { TodaySchedule } from '../../services/mobileService';
 
 const MySchedule: React.FC = () => {
@@ -196,7 +197,7 @@ const MySchedule: React.FC = () => {
       </Card>
 
       {/* Schedule List */}
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: 2, pb: 10 }}>
         {schedule.length === 0 ? (
           <Card elevation={1}>
             <CardContent sx={{ textAlign: 'center', py: 4 }}>
@@ -265,5 +266,7 @@ const MySchedule: React.FC = () => {
     </Box>
   );
 };
+
+      <BottomNav />
 
 export default MySchedule;
