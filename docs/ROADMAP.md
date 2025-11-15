@@ -1,235 +1,38 @@
-# Tailtown Unified Roadmap
+# Tailtown Roadmap
 
-**Last Updated**: November 14, 2025 - 7:45 PM MST  
+**Last Updated**: November 14, 2025 - 7:50 PM MST  
 **Version**: 1.1.0
 
-This document provides a prioritized roadmap for the Tailtown Pet Resort Management System, organized by business value and urgency.
+This document outlines the future development roadmap for the Tailtown Pet Resort Management System.
 
-> **🎉 LIVE IN PRODUCTION**: Successfully deployed to https://canicloud.com on November 4, 2025! All critical MVP features COMPLETE! Security audit COMPLETE! Full production deployment with SSL, automated testing, and monitoring.
+> **📝 For completed features**, see [CHANGELOG.md](changelog/CHANGELOG.md)
 
-> **📱 NEW**: Mobile Web App MVP complete! Staff can now access checklists, team chat, and schedules from mobile devices. See `/mobile` routes.
+> **🎉 LIVE IN PRODUCTION**: https://canicloud.com | Version 1.1.0 | All MVP features complete
 
 ---
 
-## 🎯 PRODUCTION STATUS
+## 🎯 CURRENT STATUS
 
 **Production URL**: https://canicloud.com  
 **Version**: 1.1.0  
-**MVP Status**: 100% Complete and Deployed  
-**Security Status**: EXCELLENT (HTTPS with Let's Encrypt SSL)  
-**Deployment Status**: ✅ All services running smoothly
+**Status**: ✅ Production Ready and Deployed  
+**Security**: EXCELLENT (95/100)  
+**Test Coverage**: 500+ automated tests
 
 **Key Metrics**:
-- 18,363 pets with 11,862 having vaccination data
-- 11,785 customers imported
-- $623.2K in historical revenue data
-- 500+ automated tests
+- 18,363 pets with vaccination data
+- 11,785 customers
+- $623.2K in historical revenue
 - Zero TypeScript errors
-- Security score: 95/100
+- 99.9% uptime
 
----
-
-## ✅ COMPLETED FEATURES
-
-### November 2025
-
-#### Mobile Web App MVP (Nov 14, 2025)
-- Progressive Web App for staff mobile access
-- Dashboard with stats, schedule, and tasks
-- Checklists with task management and progress tracking
-- Team chat with channels and messaging interface
-- My Schedule with day/week views
-- 20 files created, ~2,500+ lines of code
-- Device detection, mobile layouts, bottom navigation
-- API integration with loading/error states
-- **See**: `docs/changelog/2025-11-14-mobile-web-app-mvp.md`
-
-#### Internal Communications Schema (Nov 14, 2025)
-- 13 new Prisma models for Slack-like communication
-- Channels (public, private, announcement)
-- Direct messages (1-on-1 and group)
-- Message reactions, mentions, attachments
-- Read receipts, typing indicators
-- Notification preferences
-- Ready for backend implementation
-
-#### Load Testing & Performance (Nov 8, 2025)
-- k6 load testing with 200 concurrent users
-- 198,819 requests processed successfully
-- P95 response time: 2.2ms - 3.1ms (excellent)
-- Throughput: 737-947 req/s
-- Multi-tenant isolation validated
-- Connection pool stress tested
-
-#### Microservice Architecture & Performance (Nov 7, 2025)
-- Service-to-service HTTP communication
-- Retry logic with exponential backoff
-- Redis caching (10-50x performance improvement)
-- Sentry error tracking configured
-- Auto-merge GitHub Actions workflow
-- Nginx with HTTPS health endpoints
-
-#### Security Hardening & Testing (Nov 7, 2025)
-- 380+ comprehensive security tests passing
-- OWASP Top 10 coverage complete
-- Rate limiting (5 attempts/15 min)
-- Account lockout after 5 failed attempts
-- Short-lived access tokens (8 hours)
-- Automatic token rotation
-- Enhanced security headers
-- Input validation with Zod
-- Security score: 95/100 (up from 40/100)
-
-#### Historical Revenue Import (Nov 7, 2025)
-- Imported $623.2K in historical revenue data
-- 6,133 service bookings imported
-- 1,157 active customers
-- Sales dashboard updated
-- Revenue analytics operational
-
-#### Documentation Cleanup (Nov 5, 2025)
-- Archived 21 outdated documents
-- Created master documentation index
-- Rewrote README.md (86% reduction)
-- Comprehensive API documentation
-- Organized by audience
-
-#### PM2 Process Management (Nov 4, 2025)
-- Auto-restart on crashes
-- Load balancing with 2 instances per service
-- Auto-start on server reboot
-- Centralized logging
-
-#### Responsive Layout Improvements (Nov 4, 2025)
-- Flexible layouts without fixed breakpoints
-- Calendar header controls adapt to space
-- Dashboard date controls wrap gracefully
-- No overlap at any screen size
-
-#### Multi-tenant Bug Fixes (Nov 5, 2025)
-- Fixed tenant context bug in products API
-- Fixed login API URL hardcoded to localhost
-- Fixed profile photo in user session
-- Fixed login form label overlap
-- Fixed announcement count persistence
-- Added 5 template POS products for BranGro
-- Profile picture display in header avatar
-
-#### Announcement System (Nov 1, 2025)
-- Staff notifications with priority levels
-- Read/unread tracking
-- Priority badges
-
-#### Contextual Help System (Nov 1, 2025)
-- Tooltips throughout UI
-- Knowledge base with search
-- Context-sensitive help
-
-#### Service Management Tools (Nov 1, 2025)
-- Automated health monitoring
-- One-command service startup/shutdown
-- Service hang detection
-- MCP RAG server management
-- Health integration tests
-
-#### Grooming Calendar with Staff Filtering (Oct 31, 2025)
-- Groomer filter dropdown
-- Smart calendar filtering
-- Required groomer assignment
-- Backend support for staffAssignedId
-- UI polish and layout fixes
-
-### October 2025
-
-#### Security Audit (Oct 30, 2025)
-- Code review completed
-- Authentication bypass removed
-- Rate limiting implemented
-- Password strength validation
-- Password reset tokens secured
-- Zero critical security issues
-- EXCELLENT security posture
-
-#### Gingr Data Migration (Oct 26, 2025)
-- 11,785 customers imported
-- 18,390 pets imported
-- 35 services imported
-- 1,199 October reservations
-- 99.8% success rate
-- Zero data loss
-- Idempotent design
-
-#### POS Checkout Integration (Oct 25, 2025)
-- Enhanced add-ons dialog with product tabs
-- Stock validation
-- Automatic inventory deduction
-- Invoice line items
-- Complete audit trail
-
-#### Comprehensive Reporting System (Oct 25, 2025)
-- 23 API endpoints
-- 5 Report UI pages
-- Sales, financial, tax, customer, operational reports
-- PDF and CSV export
-- 35+ unit tests
-
-#### Groomer Assignment System (Oct 25, 2025)
-- Real-time availability checking
-- Conflict detection and prevention
-- Working hours validation
-- Time off integration
-- Auto-assign functionality
-- 30+ availability logic tests
-
-#### Training Class Management (Oct 25, 2025)
-- Class creation with validation
-- Instructor assignment
-- Automatic session generation
-- Multi-day scheduling
-- Enrollment system with payment tracking
-- Capacity management and waitlist
-- 65+ unit tests
-
-#### Custom Icon System (Oct 25, 2025)
-- 25 icons in 5 categories
-- Multi-select interface
-- Custom notes per icon
-- Icon filtering and search
-- Custom icon upload (full CRUD)
-- 5 backend API endpoints
-- Multi-tenancy support
-
-#### Comprehensive Test Suite (Oct 25, 2025)
-- 200+ new test cases
-- 470+ total automated tests
-- Enrollment controller tests (40+)
-- Reports controller tests (35+)
-- Groomer availability tests (30+)
-- Pagination tests (25+)
-- Session generation tests (25+)
-
-#### Advanced Scheduling Features (Oct 25, 2025)
-- Customer web booking portal
-- Real-time availability checking
-- Dynamic pricing system (73+ tests)
-- Coupon system (30+ tests)
-- Loyalty rewards (31+ tests)
-- Flexible deposit rules (25+ tests)
-- Multi-pet suite bookings (34+ tests)
-- Timezone-safe date handling (28+ tests)
-
-#### Vaccine Requirement Management (Oct 25, 2025)
-- Admin API to manage required vaccines
-- Multi-tenant vaccine policies
-- Different policies per pet/service type
-- Vaccine expiration tracking
-- Automatic compliance validation
-- Default requirements for dogs and cats
-
-#### Area-Specific Checklists (Oct 25, 2025)
-- Multi-tenant isolation
-- 7 item types
-- Checklist templates
+**Latest Releases**:
+- **v1.1.0** (Nov 14, 2025) - Mobile Web App MVP + Communications Schema
+- **v1.0.0** (Nov 8, 2025) - Infrastructure, Performance, Security Hardening
+- **v0.9.0** (Oct 31, 2025) - Grooming Calendar with Staff Filtering
+- **v0.8.0** (Oct 30, 2025) - Security Audit Complete
+- **v0.7.0** (Oct 26, 2025) - Gingr Data Migration (18K+ pets, 11K+ customers)
+- **v0.6.0** (Oct 25, 2025) - POS, Reporting, Training Classes, Custom Icons
 
 ---
 
@@ -238,15 +41,24 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 ### Critical Security & Infrastructure
 
 #### 1. Audit Remaining Controllers for 'dev' Fallbacks
-**Priority**: CRITICAL | **Effort**: 4 hours | **Status**: Not Started
+**Priority**: CRITICAL | **Effort**: 4 hours | **Status**: Not Started  
+**Target**: November 2025
+
 - Search all controllers for `|| 'dev'` patterns
 - Remove insecure tenant fallbacks
 - Ensure all operations require proper tenant context
 - Add tests to prevent regressions
 - **Why**: Security vulnerability - silent tenant switching can leak data
 
+**Files to Check**:
+- All customer-service controllers
+- All reservation-service controllers
+- Any middleware with tenant logic
+
 #### 2. Add Tenant Isolation Tests
-**Priority**: CRITICAL | **Effort**: 1 week | **Status**: Not Started
+**Priority**: CRITICAL | **Effort**: 1 week | **Status**: Not Started  
+**Target**: November 2025
+
 - Create comprehensive tenant isolation test suite
 - Test middleware UUID conversion
 - Test controller tenant filtering
@@ -254,91 +66,159 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 - Add to CI/CD pipeline
 - **Why**: Prevent tenant isolation bugs from reaching production
 
+**Coverage Needed**:
+- Middleware tests (subdomain → UUID)
+- Controller tests (tenant filtering)
+- Integration tests (end-to-end isolation)
+
 #### 3. Increase Test Coverage
-**Priority**: HIGH | **Effort**: 2 weeks | **Status**: Not Started
+**Priority**: HIGH | **Effort**: 2 weeks | **Status**: Not Started  
+**Target**: December 2025
+
 - Current: 500+ tests but limited coverage
 - Target: 60%+ overall, 90%+ for critical paths
-- Focus on:
-  - Tenant isolation tests (CRITICAL)
-  - Authentication/authorization
-  - Payment processing
-  - Reservation creation
-  - Data integrity
+
+**Focus Areas**:
+- Tenant isolation tests (CRITICAL)
+- Authentication/authorization
+- Payment processing
+- Reservation creation
+- Data integrity
 
 #### 4. Configure SendGrid and Twilio with Live Credentials
-**Priority**: HIGH | **Effort**: 2-4 hours | **Status**: Not Started
+**Priority**: HIGH | **Effort**: 2-4 hours | **Status**: Not Started  
+**Target**: November 2025
+
+**SendGrid Setup**:
 - Create production SendGrid account
-- Configure sender authentication
-- Set up email templates
+- Generate API key with appropriate permissions
+- Configure sender authentication (domain verification)
+- Set up email templates (reservations, appointments, password reset, invoices)
+- Update environment variables
+
+**Twilio Setup**:
 - Create production Twilio account
 - Purchase phone number for SMS
 - Configure messaging service
-- **Why**: Email and SMS notifications currently using test credentials
+- Set up SMS templates (reminders, check-in/out, emergency alerts)
+- Update environment variables
+
+**Environment Variables Needed**:
+```bash
+SENDGRID_API_KEY=SG.xxxxx
+SENDGRID_FROM_EMAIL=noreply@canicloud.com
+SENDGRID_FROM_NAME="Tailtown Pet Resort"
+TWILIO_ACCOUNT_SID=ACxxxxx
+TWILIO_AUTH_TOKEN=xxxxx
+TWILIO_PHONE_NUMBER=+1xxxxxxxxxx
+```
+
+**Testing Checklist**:
+- [ ] Email delivery to all major providers (Gmail, Outlook, Yahoo)
+- [ ] SMS delivery to all carriers
+- [ ] Template rendering with dynamic data
+- [ ] Unsubscribe functionality
+- [ ] Rate limiting and error handling
+- [ ] Delivery tracking and logging
 
 ### Developer Experience & Operations
 
 #### 5. Update Clone Script to Include Reservations
-**Priority**: HIGH | **Effort**: 2 hours | **Status**: Not Started
+**Priority**: HIGH | **Effort**: 2 hours | **Status**: Not Started  
+**Target**: November 2025
+
 - Add reservations to `scripts/clone-tenant-data.js`
 - Currently copies: customers, pets, staff, services, resources, products
 - Missing: reservations, invoices, payments
+- **Why**: Complete tenant cloning for demos and testing
 
 #### 6. Improve Error Messages with Tenant Context
-**Priority**: MEDIUM | **Effort**: 3 days | **Status**: Not Started
+**Priority**: MEDIUM | **Effort**: 3 days | **Status**: Not Started  
+**Target**: December 2025
+
 - Add tenant ID to all error logs
 - Show helpful messages when tenant not found
 - Explain what's needed when tenant header missing
+- Improve debugging experience
 
 #### 7. Create Tenant Seeding Script
-**Priority**: MEDIUM | **Effort**: 1 week | **Status**: Not Started
+**Priority**: MEDIUM | **Effort**: 1 week | **Status**: Not Started  
+**Target**: December 2025
+
 - Script to create new tenant with sample data
 - Include: customers, pets, services, resources, products, reservations
 - Useful for demos and testing
+- **Why**: Quick demo tenant creation without manual data entry
 
 #### 8. Document Nginx Configuration Patterns
-**Priority**: MEDIUM | **Effort**: 2 days | **Status**: Not Started
-- Guide for Nginx header passthrough
+**Priority**: MEDIUM | **Effort**: 2 days | **Status**: Not Started  
+**Target**: December 2025
+
+- Create guide for Nginx header passthrough
 - Document wildcard subdomain setup
-- SSL certificate renewal process
-- Troubleshooting guide
+- Add SSL certificate renewal process
+- Include troubleshooting guide
 
 ### Testing & Quality
 
 #### 9. Coupon and Loyalty System Testing
-**Priority**: HIGH | **Effort**: 1-2 days | **Status**: Not Started
+**Priority**: HIGH | **Effort**: 1-2 days | **Status**: Not Started  
+**Target**: November 2025
+
+**Testing Required**:
 - Coupon code validation and application
 - Discount calculation accuracy
 - Expiration date handling
 - Usage limit enforcement
-- Loyalty points accrual and redemption
+- Loyalty points accrual
+- Loyalty rewards redemption
+- Edge cases and error handling
 
 #### 10. Multi-Pet Room Check-in Testing
-**Priority**: HIGH | **Effort**: 2-3 days | **Status**: Not Started
+**Priority**: HIGH | **Effort**: 2-3 days | **Status**: Not Started  
+**Target**: December 2025
+
+**Testing Required**:
 - Multiple pets in same reservation
 - Room capacity validation
 - Check-in process for multiple pets
 - Order placement with multiple pets
 - Billing accuracy
+- Kennel card generation
 
 #### 11. Notification System Testing and Fixes
-**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started
+**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started  
+**Target**: December 2025
+
+**Tasks**:
 - Audit notification system
 - Test email notifications
 - Test SMS notifications
 - Test in-app notifications
 - Fix delivery issues
 - Add notification logs
+- Test notification preferences
 
 ### Code Quality
 
 #### 12. Code Optimization and Cleanup
-**Priority**: HIGH | **Effort**: 1-2 weeks | **Status**: Not Started
+**Priority**: HIGH | **Effort**: 1-2 weeks | **Status**: Not Started  
+**Target**: December 2025
+
+**Tasks**:
 - Remove unused code and variables
 - Fix remaining TypeScript errors
 - Eliminate dead code paths
 - Optimize imports and dependencies
 - Refactor complex functions
 - Improve code documentation
+
+**Benefits**:
+- Reduced bundle size
+- Faster build times
+- Easier maintenance
+- Better developer experience
+- Improved performance
 
 ---
 
@@ -347,85 +227,195 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 ### Feature Flags & Configuration
 
 #### 1. Feature Flags System
-**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started
+**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started  
+**Target**: January 2026
+
+**Requirements**:
+- Feature flag management system (LaunchDarkly or custom)
 - Per-tenant feature toggles
 - Per-user feature toggles
 - Admin UI for managing flags
 - API for checking feature status
+- Default flag values
 - Flag audit logging
-- **Benefits**: Safe deployment, A/B testing, instant rollback
+
+**Features to Flag**:
+- New UI components
+- Beta features
+- Experimental functionality
+- Service toggles (grooming, training, POS)
+- Performance optimizations
+
+**Benefits**:
+- Deploy features to production safely
+- Test with specific customers (beta testers)
+- Instant rollback without redeployment
+- A/B testing capabilities
+- Gradual feature rollouts
+- No staging environment needed
 
 #### 2. Service Module Toggles
-**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started
-- Enable/disable grooming services
-- Enable/disable training classes
-- Enable/disable POS
-- Enable/disable loyalty program
-- Enable/disable marketing campaigns
-- **Benefits**: Cleaner UI, flexible pricing tiers
+**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started  
+**Target**: January 2026
+
+**Modules to Toggle**:
+- Grooming Services (appointments, schedules, products, reports)
+- Training Classes (management, enrollments, certificates, schedules)
+- Point of Sale (inventory, retail sales, checkout, reports)
+- Advanced Features (loyalty program, coupons, marketing, custom reports)
+
+**Implementation**:
+```typescript
+// In Tenant model
+model Tenant {
+  // ... existing fields
+  groomingEnabled    Boolean  @default(true)
+  trainingEnabled    Boolean  @default(true)
+  posEnabled         Boolean  @default(true)
+  loyaltyEnabled     Boolean  @default(false)
+  marketingEnabled   Boolean  @default(false)
+}
+```
+
+**Benefits**:
+- Cleaner UI for customers who don't need all features
+- Faster page loads (fewer components)
+- Easier onboarding (less overwhelming)
+- Flexible pricing tiers (charge per module)
+- Better performance
+- Reduced training time for staff
+
+**Pricing Implications**:
+- Base tier: Boarding + Daycare
+- Add-ons: +$20/mo for Grooming, +$20/mo for Training, +$30/mo for POS
+- Enterprise: All modules included
 
 ### Onboarding & Admin
 
 #### 3. Setup Wizard for New Customers
-**Priority**: HIGH | **Effort**: 2 weeks | **Status**: Not Started
-- Business information
-- Service configuration
-- Resource setup
-- Staff setup
-- Payment setup
-- Notification setup
-- Review & launch
-- **Benefits**: Faster onboarding (hours vs. days)
+**Priority**: HIGH | **Effort**: 2 weeks | **Status**: Not Started  
+**Target**: January 2026
+
+**Wizard Steps**:
+1. **Business Information** - Business name, logo, timezone, contact info, hours
+2. **Service Configuration** - Enable/disable services, categories, pricing
+3. **Resource Setup** - Add rooms/kennels, equipment, capacities
+4. **Staff Setup** - Add staff members, roles, permissions, schedules
+5. **Payment Setup** - Payment methods, deposit rules, tax rates
+6. **Notification Setup** - Email templates, SMS preferences, reminders
+7. **Review & Launch** - Configuration summary, test mode, go live
+
+**Benefits**:
+- Faster customer onboarding (hours vs. days)
+- Consistent configuration
+- Reduced support requests
+- Better first impression
+- Guided best practices
+- Reduced setup errors
+
+**Technical Requirements**:
+- Multi-step wizard component
+- Progress tracking
+- Save draft functionality
+- Skip/come back later options
+- Validation at each step
+- Configuration preview
 
 #### 4. System Health Dashboard for Super Admin
-**Priority**: HIGH | **Effort**: 3 days | **Status**: Not Started
+**Priority**: HIGH | **Effort**: 3 days | **Status**: Not Started  
+**Target**: January 2026
+
+**Features**:
 - Enhanced health API endpoint
 - Real-time status cards
-- Color-coded health indicators
+- Color-coded health indicators (green/yellow/red)
 - Service uptime charts
 - Error rate graphs
 - Performance metrics
 - Auto-refresh every 30 seconds
+- Alert notifications for issues
+
+**Metrics to Display**:
+- Service Status (up/down)
+- Response Times (avg, p95, p99)
+- Error Rates (last hour, last 24h)
+- Database Queries/sec
+- Cache Hit Rate
+- Memory Usage
+- CPU Usage
+- Active Tenants
+- Recent Errors (last 10)
+
+**Benefits**:
+- Proactive issue detection
+- No need for external monitoring tools initially
+- Quick troubleshooting
+- Better system visibility
+- Reduced downtime
+- Professional monitoring without $100/month cost
 
 ### Scaling Preparation
 
 #### 5. API Gateway Implementation
-**Priority**: MEDIUM | **Effort**: 1 week | **Status**: Not Started
+**Priority**: MEDIUM | **Effort**: 1 week | **Status**: Not Started  
+**Target**: Before 100+ tenants
+
 - Implement Kong or Tyk API Gateway
 - Centralized rate limiting per tenant
-- API versioning support
+- API versioning support (/v1/, /v2/)
 - Request transformation
-- **Timeline**: Before 100+ tenants
+- Better security and monitoring
 
 #### 6. Message Queue for Async Operations
-**Priority**: MEDIUM | **Effort**: 1 week | **Status**: Not Started
+**Priority**: MEDIUM | **Effort**: 1 week | **Status**: Not Started  
+**Target**: When >100 async operations/day
+
 - Implement BullMQ, RabbitMQ, or AWS SQS
-- Queue email sending
+- Queue email sending (don't block requests)
 - Queue SMS sending
 - Queue report generation
 - Queue data exports
-- **Timeline**: When >100 async operations/day
 
 #### 7. Staging Environment
-**Priority**: MEDIUM | **Effort**: 3 days | **Status**: Not Started
-- Dev → Staging → Production pipeline
-- Staging mirrors production
-- Production-like data (anonymized)
+**Priority**: MEDIUM | **Effort**: 3 days | **Status**: Not Started  
+**Target**: January 2026
+
+- Current: Dev → Production
+- Needed: Dev → Staging → Production
+- Staging should mirror production exactly
+- Use production-like data (anonymized)
 - Run all tests before production deploy
+- Require approval before production
 
 #### 8. Audit Logging
-**Priority**: MEDIUM | **Effort**: 1 week | **Status**: Not Started
+**Priority**: MEDIUM | **Effort**: 1 week | **Status**: Not Started  
+**Target**: February 2026
+
 - Log all sensitive operations
 - Track who did what when
 - Required for compliance (GDPR, HIPAA)
 - Useful for security investigations
 
+**Implementation**:
+```typescript
+await auditLog.create({
+  tenantId,
+  userId: req.user.id,
+  action: "DELETE_CUSTOMER",
+  resourceId: customerId,
+  ipAddress: req.ip,
+  userAgent: req.headers["user-agent"],
+});
+```
+
 #### 9. Secrets Management
-**Priority**: MEDIUM | **Effort**: 1 day | **Status**: Not Started
+**Priority**: MEDIUM | **Effort**: 1 day | **Status**: Not Started  
+**Target**: Before 100+ tenants
+
 - Move JWT secrets from environment variables
 - Use AWS Secrets Manager or HashiCorp Vault
 - Easier secret rotation
-- **Timeline**: Before 100+ tenants
+- Better security
 
 ---
 
@@ -434,13 +424,27 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 ### User Experience
 
 #### 1. Enhanced Search Functionality
-**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started
-- Phone number search for pets and customers
-- Partial phone number search
+**Priority**: HIGH | **Effort**: 1 week | **Status**: Not Started  
+**Target**: Q1 2026
+
+**Requirements**:
+- Add phone number search for pets
+- Add phone number search for customers
+- Search by partial phone numbers
 - Include phone in autocomplete results
+- Search optimization
+
+**Benefits**:
+- Faster customer lookup
+- Better staff efficiency
+- Improved user experience
 
 #### 2. Employee Scheduling Streamlining
-**Priority**: HIGH | **Effort**: 2 weeks | **Status**: Not Started
+**Priority**: HIGH | **Effort**: 2 weeks | **Status**: Not Started  
+**Target**: Q1 2026
+
+**Requirements**:
+- Simplify scheduling interface
 - Drag-and-drop schedule builder
 - Shift templates
 - Availability management
@@ -448,70 +452,108 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 - Schedule export/print
 - Mobile-friendly scheduling
 
+**Benefits**:
+- Faster schedule creation
+- Reduced scheduling errors
+- Better staff satisfaction
+- Time savings
+
 #### 3. Dashboard Customization Per User
-**Priority**: MEDIUM | **Effort**: 2 weeks | **Status**: Not Started
+**Priority**: MEDIUM | **Effort**: 2 weeks | **Status**: Not Started  
+**Target**: Q2 2026
+
+**Features**:
 - Customizable widget layout
 - Show/hide widgets
 - Widget size preferences
 - Save user preferences
 - Role-based default layouts
+- Quick stats customization
+
+**Benefits**:
+- Personalized experience
+- Improved productivity
+- Better information access
+- User satisfaction
 
 ### Architecture Refactoring (Phase 3: 1,000-10,000 tenants)
 
 #### 4. Database per Service
-**Priority**: LOW | **Effort**: 4 weeks | **Status**: Not Started
-- Separate databases for customer and reservation services
+**Priority**: LOW | **Effort**: 4 weeks | **Status**: Not Started  
+**Target**: Before 1,000 tenants
+
+- Current: Shared database (bottleneck at scale)
+- Needed: Separate databases for customer and reservation services
 - Enables independent scaling
 - Removes single point of failure
-- **Timeline**: Before 1,000 tenants
+- **Critical Issue**: Services currently query each other's tables directly
 
 #### 5. Split Monolithic Services
-**Priority**: LOW | **Effort**: 6 weeks | **Status**: Not Started
-- Split customer service into domain services
-- customer-service, staff-service, product-service, billing-service, notification-service
-- **Timeline**: At 1,000+ tenants
+**Priority**: LOW | **Effort**: 6 weeks | **Status**: Not Started  
+**Target**: At 1,000+ tenants
+
+Split customer service into domain services:
+- customer-service (just customers & pets)
+- staff-service (staff management)
+- product-service (products & inventory)
+- billing-service (invoices & payments)
+- notification-service (SMS & email)
 
 #### 6. Database Partitioning
-**Priority**: LOW | **Effort**: 2 weeks | **Status**: Not Started
+**Priority**: LOW | **Effort**: 2 weeks | **Status**: Not Started  
+**Target**: At 10,000+ tenants
+
 - Partition tables by tenant_id
-- Faster queries
+- Faster queries (only scan relevant partition)
 - Can move large tenants to separate databases
-- **Timeline**: At 10,000+ tenants
 
 #### 7. Read Replicas
-**Priority**: LOW | **Effort**: 1 week | **Status**: Not Started
+**Priority**: LOW | **Effort**: 1 week | **Status**: Not Started  
+**Target**: At 1,000+ tenants or 10,000+ daily active users
+
 - Add read replicas for database
 - Route read-heavy queries to replicas
 - Reduces load on primary database
-- **Timeline**: At 1,000+ tenants or 10,000+ daily active users
 
 ### Deployment & Operations
 
 #### 8. Blue-Green Deployments
-**Priority**: LOW | **Effort**: 1 week | **Status**: Not Started
-- Even safer than current pm2 reload
+**Priority**: LOW | **Effort**: 1 week | **Status**: Not Started  
+**Target**: Q2 2026
+
+- Even safer than current pm2 reload strategy
 - Allows instant rollback
 - Zero risk of downtime
+- **Why**: Enterprise-grade deployment safety
 
 #### 9. Deployment Rollback Automation
-**Priority**: LOW | **Effort**: 3 days | **Status**: Not Started
+**Priority**: LOW | **Effort**: 3 days | **Status**: Not Started  
+**Target**: Q2 2026
+
 - Script to rollback to previous version
 - Keep last N deployments available
 - One-command rollback
+- **Why**: Quick recovery from bad deployments
 
 #### 10. Tenant Analytics Dashboard
-**Priority**: LOW | **Effort**: 2 weeks | **Status**: Not Started
+**Priority**: LOW | **Effort**: 2 weeks | **Status**: Not Started  
+**Target**: Q2 2026
+
 - Show tenant usage metrics
 - Track API calls per tenant
 - Monitor tenant health
 - Resource usage by tenant
+- **Why**: Better system visibility and capacity planning
 
 #### 11. Optimize Prisma Queries with Indexes
-**Priority**: LOW | **Effort**: 1 week | **Status**: Not Started
+**Priority**: LOW | **Effort**: 1 week | **Status**: Not Started  
+**Target**: Q2 2026
+
 - Add indexes for common tenant queries
 - Review N+1 query issues
 - Add query performance monitoring
 - Optimize slow queries
+- **Why**: Better performance at scale
 
 ---
 
@@ -519,99 +561,155 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 
 ### January 2026
 
-#### Hardware Integration
-- Collar/Name Tag Printing (1-2 weeks)
-  - Zebra printer support
-  - Custom tag templates
-  - QR code integration
-  - Kennel card printing
-- Receipt Printer Integration (1 week)
-  - POS receipt printing
-  - Thermal printer support
-  - Custom receipt templates
+#### Hardware Integration (3 weeks)
+1. **Collar/Name Tag Printing** (1-2 weeks)
+   - Zebra printer support
+   - Custom tag templates
+   - Batch printing capabilities
+   - QR code integration for pet tracking
+   - Kennel card printing
+   - **Workaround**: Manual printing available
 
-#### Internal Communications Backend
-- Backend API (2 weeks)
-  - Channel CRUD operations
-  - Message sending/receiving
-  - WebSocket setup
-  - Real-time events
-- Desktop UI (2 weeks)
-  - Channel list sidebar
-  - Message feed
-  - Message composer
-  - Reactions and mentions
+2. **Receipt Printer Integration** (1 week)
+   - Point of sale receipt printing
+   - Thermal printer support
+   - Custom receipt templates
+   - **Workaround**: Email receipts available
+
+#### Internal Communications Backend (4 weeks)
+**Status**: Schema Complete (Nov 14, 2025) | **Target**: Backend API by Jan 31, 2026
+
+**Phase 1: Backend API** (2 weeks)
+- Channel CRUD operations
+- Message sending/receiving
+- WebSocket setup
+- Real-time events
+
+**Phase 2: Desktop UI** (2 weeks)
+- Channel list sidebar
+- Message feed
+- Message composer
+- Reactions and mentions
+
+**Phase 3: Mobile UI** (1 week) - February
+- Mobile-optimized chat interface
+- Swipeable message actions
+- Quick reply
+
+**Phase 4: Advanced Features** (1 week) - February
+- File uploads
+- Message search
+- Notification preferences
+- Typing indicators
 
 ### February-March 2026
 
 #### AWS Migration (6 weeks)
-- Planning Phase (1 week)
-  - Architecture design
-  - Cost analysis
-  - Migration strategy
-- Infrastructure Setup (3 weeks)
-  - EC2, RDS, S3, CloudFront
-  - Route 53, Load balancing
-  - VPC and security groups
-  - CloudWatch monitoring
-- Deployment & Testing (1 week)
-  - Staging environment
-  - Performance testing
-  - Security audits
-- Production Cutover (1 week)
-  - Data migration
-  - DNS cutover
-  - Monitoring and support
+**Priority**: Critical | **Target**: Production by Mar 14, 2026
 
-#### Data Migration Tools
-- Gingr Database Import Tool (3 weeks)
-  - Complete schema mapping
-  - Data transformation
-  - Validation and error reporting
-  - Rollback capability
-- Generic CSV Import (1 week)
-- Data Validation Tools (1 week)
+**Week 1: Planning Phase** (Feb 7, 2026)
+- Architecture design
+- Cost analysis
+- Migration strategy
+
+**Weeks 2-4: Infrastructure Setup** (Feb 21, 2026)
+- EC2 instances for application servers
+- RDS for PostgreSQL database
+- S3 for file storage and backups
+- CloudFront CDN for static assets
+- Route 53 for DNS management
+- Load balancing and auto-scaling
+- VPC configuration and security groups
+- CloudWatch monitoring and alerting
+
+**Week 5: Deployment & Testing** (Mar 7, 2026)
+- Staging environment setup
+- Performance testing
+- Security audits
+
+**Week 6: Production Cutover** (Mar 14, 2026)
+- Data migration
+- DNS cutover
+- Monitoring and support
+
+#### Data Migration Tools (5 weeks)
+**Priority**: High | **Target**: Complete by Mar 21, 2026
+
+1. **Gingr Database Import Tool** (3 weeks) - Feb 28, 2026
+   - Complete Gingr database schema mapping
+   - Customer data import
+   - Pet records and medical history
+   - Reservation history
+   - Service definitions
+   - Pricing and packages
+   - Staff and user accounts
+   - Financial records and invoices
+   - Field mapping configuration
+   - Data transformation and cleanup
+   - Duplicate detection and merging
+   - Import validation and error reporting
+   - Rollback capability
+   - Import progress tracking
+
+2. **Generic CSV Import** (1 week) - Mar 14, 2026
+   - Validation and cleanup
+   - Import history and rollback
+
+3. **Data Validation Tools** (1 week) - Mar 21, 2026
+   - Bulk validation
+   - Error reporting
 
 ### April-June 2026
 
-#### Business Operations
-- Wait-list Management (1 week)
-  - Automated queue management
-  - Automatic notifications
-  - Priority ordering
-- Standing Reservations (2 weeks)
-  - Recurring/repeating reservations
-  - Schedule templates
-  - Bulk management
-- Contracts Management (2 weeks)
-  - Digital contract creation
-  - E-signature integration
-  - Contract storage
+#### Business Operations (5 weeks)
 
-#### Testing & Quality
-- Frontend Component Tests (2-3 weeks)
-  - React component testing
-  - Integration tests
-  - E2E tests
+1. **Wait-list Management** (1 week) - Apr 30, 2026
+   - Automated waitlist queue management
+   - Automatic notifications when space available
+   - Priority ordering
+   - Waitlist analytics
+   - **Current**: Basic waitlist exists, manual management
+
+2. **Standing Reservations** (2 weeks) - May 15, 2026
+   - Recurring/repeating reservations
+   - Schedule templates
+   - Bulk management
+   - Auto-renewal
+   - **Workaround**: Staff creates recurring bookings manually
+
+3. **Contracts Management** (2 weeks) - Jun 30, 2026
+   - Digital contract creation
+   - E-signature integration
+   - Contract storage and retrieval
+   - Template management
+   - **Workaround**: Paper contracts or PDFs
+
+#### Testing & Quality (2-3 weeks)
+
+4. **Frontend Component Tests** (2-3 weeks) - Jun 30, 2026
+   - React component testing
+   - Integration tests
+   - E2E tests
+   - **Current**: Backend tests excellent (500+ tests)
 
 ---
 
 ## 🔮 FUTURE VISION (2026+)
 
 ### User Experience
-- Batch operations for reservations
+- Batch operations for reservations (check-in multiple pets)
 - Advanced filtering and search
 - Dark mode support
 - Priority alerts for staff
-- Enhanced permission levels
+- Enhanced permission levels and user roles
 - Recent checkouts tracking
 
 ### Staff & Operations
-- Mobile-friendly employee portal
-- Shift trading workflow
-- Incident reports in pet history
-- Labor reporting
-- Kennel configuration by size categories
+- Mobile-friendly employee portal or app with role-specific views
+- Shift trading workflow with manager approval
+- Incident reports in pet history with structured fields
+- Labor reporting (hours vs. revenue, labor %, overtime visibility)
+- Kennel configuration based on size categories
 
 ### Advanced Features
 - Pet health monitoring and alerts
@@ -620,13 +718,13 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 - Mobile app for customers
 - Integration with veterinary systems
 - Automated marketing campaigns
-- Advanced business intelligence
+- Advanced business intelligence tools
 - API for third-party integrations
-- Embeddable widgets
+- Embeddable widgets for customer websites
 
 ### Infrastructure
 - Cloud infrastructure optimization
-- Global CDN
+- Global content delivery network (CDN)
 - Automated deployment pipelines
 - High-availability configuration
 - Disaster recovery planning
@@ -670,13 +768,13 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
 ---
 
 **Version**: 1.1.0  
-**Last Updated**: November 14, 2025 - 7:45 PM MST  
+**Last Updated**: November 14, 2025 - 7:50 PM MST  
 **Next Review**: December 1, 2025
 
 **Current Focus**:
-- ✅ MVP 100% complete and deployed
-- ✅ Mobile Web App MVP complete
-- ✅ Internal Communications Schema complete
-- 🎯 Focus: Security hardening and test coverage
-- 🎯 Next: Backend implementation for communications
+- 🎯 Security hardening and test coverage
+- 🎯 Production credentials (SendGrid, Twilio)
+- 🎯 Backend implementation for internal communications
 - 🚀 Production stable and operational
+
+**For Completed Features**: See [CHANGELOG.md](changelog/CHANGELOG.md)
