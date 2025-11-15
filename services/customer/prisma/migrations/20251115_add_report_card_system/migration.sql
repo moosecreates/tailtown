@@ -23,14 +23,14 @@ END $$;
 
 -- Create report_cards table
 CREATE TABLE IF NOT EXISTS report_cards (
-  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id                    TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   "tenantId"            TEXT NOT NULL,
   
   -- Relationships
-  "petId"               UUID NOT NULL,
-  "customerId"          UUID NOT NULL,
-  "reservationId"       UUID,
-  "createdByStaffId"    UUID NOT NULL,
+  "petId"               TEXT NOT NULL,
+  "customerId"          TEXT NOT NULL,
+  "reservationId"       TEXT,
+  "createdByStaffId"    TEXT NOT NULL,
   
   -- Report Details
   "reportDate"          TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -89,8 +89,8 @@ CREATE TABLE IF NOT EXISTS report_cards (
 
 -- Create report_card_photos table
 CREATE TABLE IF NOT EXISTS report_card_photos (
-  id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  "reportCardId"        UUID NOT NULL,
+  id                    TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
+  "reportCardId"        TEXT NOT NULL,
   
   -- Photo Details
   url                   TEXT NOT NULL,
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS report_card_photos (
   "order"               INTEGER NOT NULL DEFAULT 0,
   
   -- Metadata
-  "uploadedByStaffId"   UUID,
+  "uploadedByStaffId"   TEXT,
   "fileSize"            INTEGER,
   width                 INTEGER,
   height                INTEGER,
