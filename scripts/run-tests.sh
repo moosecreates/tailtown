@@ -5,6 +5,17 @@
 
 set -e  # Exit on error
 
+# Load nvm if available (for npm)
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+# Ensure npm is available
+if ! command -v npm &> /dev/null; then
+    echo "❌ npm not found in PATH"
+    echo "Please ensure Node.js and npm are installed"
+    exit 1
+fi
+
 echo "🧪 Running Tailtown Test Suite"
 echo "================================"
 echo ""
