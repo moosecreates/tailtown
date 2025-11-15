@@ -14,7 +14,7 @@ const prisma = new PrismaClient();
  */
 export const getAllCheckIns = async (req: Request, res: Response) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
     const { petId, reservationId, startDate, endDate } = req.query;
 
     const where: any = { tenantId };
@@ -100,7 +100,7 @@ export const getAllCheckIns = async (req: Request, res: Response) => {
 export const getCheckInById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
 
     const checkIn = await prisma.checkIn.findFirst({
       where: { id, tenantId },
@@ -163,7 +163,7 @@ export const getCheckInById = async (req: Request, res: Response) => {
  */
 export const createCheckIn = async (req: Request, res: Response) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
     const {
       petId,
       customerId,
@@ -262,7 +262,7 @@ export const createCheckIn = async (req: Request, res: Response) => {
 export const updateCheckIn = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
     const {
       checkInNotes,
       checkOutNotes,
@@ -335,7 +335,7 @@ export const updateCheckIn = async (req: Request, res: Response) => {
 export const addMedication = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
     const medicationData = req.body;
 
     // Verify check-in exists and belongs to tenant
@@ -387,7 +387,7 @@ export const addMedication = async (req: Request, res: Response) => {
 export const updateMedication = async (req: Request, res: Response) => {
   try {
     const { checkInId, medicationId } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
     const medicationData = req.body;
 
     // Verify check-in exists and belongs to tenant

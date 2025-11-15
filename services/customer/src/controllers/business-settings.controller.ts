@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
     }
   },
   filename: (req, file, cb) => {
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
     const ext = path.extname(file.originalname);
     cb(null, `logo-${tenantId}-${Date.now()}${ext}`);
   }

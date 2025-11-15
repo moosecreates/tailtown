@@ -14,7 +14,7 @@ const prisma = new PrismaClient();
  */
 export const getAllTemplates = async (req: Request, res: Response) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
     const { active } = req.query;
 
     const where: any = { tenantId };
@@ -58,7 +58,7 @@ export const getAllTemplates = async (req: Request, res: Response) => {
 export const getTemplateById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
 
     const template = await prisma.checkInTemplate.findFirst({
       where: { id, tenantId },
@@ -100,7 +100,7 @@ export const getTemplateById = async (req: Request, res: Response) => {
  */
 export const getDefaultTemplate = async (req: Request, res: Response) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
 
     const template = await prisma.checkInTemplate.findFirst({
       where: { 
@@ -146,7 +146,7 @@ export const getDefaultTemplate = async (req: Request, res: Response) => {
  */
 export const createTemplate = async (req: Request, res: Response) => {
   try {
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
     const { name, description, isDefault, sections } = req.body;
 
     // If this is set as default, unset other defaults
@@ -215,7 +215,7 @@ export const createTemplate = async (req: Request, res: Response) => {
 export const updateTemplate = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
     const { name, description, isActive, isDefault, sections } = req.body;
 
     console.log('=== UPDATE TEMPLATE REQUEST ===');
@@ -357,7 +357,7 @@ export const updateTemplate = async (req: Request, res: Response) => {
 export const deleteTemplate = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
 
     // Verify template exists and belongs to tenant
     const existing = await prisma.checkInTemplate.findFirst({
@@ -407,7 +407,7 @@ export const deleteTemplate = async (req: Request, res: Response) => {
 export const cloneTemplate = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.headers['x-tenant-id'] as string || 'dev';
+    const tenantId = req.headers['x-tenant-id'] as string;
     const { name } = req.body;
 
     // Get the template to clone

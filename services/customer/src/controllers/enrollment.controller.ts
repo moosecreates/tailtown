@@ -15,7 +15,7 @@ export const enrollInClass = async (req: TenantRequest, res: Response, next: Nex
   try {
     const { classId } = req.params;
     const { petId, customerId, amountPaid } = req.body;
-    const tenantId = req.tenantId || 'dev';
+    const tenantId = req.tenantId;
     
     if (!petId || !customerId) {
       return next(new AppError('Pet ID and Customer ID are required', 400));
@@ -99,7 +99,7 @@ export const enrollInClass = async (req: TenantRequest, res: Response, next: Nex
 export const getEnrollmentById = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.tenantId || 'dev';
+    const tenantId = req.tenantId;
     
     const enrollment = await prisma.classEnrollment.findFirst({
       where: { id, tenantId },
@@ -138,7 +138,7 @@ export const getEnrollmentById = async (req: TenantRequest, res: Response, next:
 export const updateEnrollment = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.tenantId || 'dev';
+    const tenantId = req.tenantId;
     
     const updateData: any = {};
     const allowedFields = ['amountPaid', 'paymentStatus', 'status', 'notes'];
@@ -176,7 +176,7 @@ export const dropFromClass = async (req: TenantRequest, res: Response, next: Nex
   try {
     const { id } = req.params;
     const { reason } = req.body;
-    const tenantId = req.tenantId || 'dev';
+    const tenantId = req.tenantId;
     
     const enrollment = await prisma.classEnrollment.findFirst({
       where: { id, tenantId },
@@ -236,7 +236,7 @@ export const getCustomerEnrollments = async (req: TenantRequest, res: Response, 
   try {
     const { customerId } = req.params;
     const { status } = req.query;
-    const tenantId = req.tenantId || 'dev';
+    const tenantId = req.tenantId;
     
     const where: any = { tenantId, customerId };
     if (status) where.status = status;
@@ -274,7 +274,7 @@ export const getCustomerEnrollments = async (req: TenantRequest, res: Response, 
 export const getPetEnrollments = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { petId } = req.params;
-    const tenantId = req.tenantId || 'dev';
+    const tenantId = req.tenantId;
     
     const enrollments = await prisma.classEnrollment.findMany({
       where: { tenantId, petId },
@@ -310,7 +310,7 @@ export const getPetEnrollments = async (req: TenantRequest, res: Response, next:
 export const issueCertificate = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.tenantId || 'dev';
+    const tenantId = req.tenantId;
     
     const enrollment = await prisma.classEnrollment.findFirst({
       where: { id, tenantId }
@@ -348,7 +348,7 @@ export const addToWaitlist = async (req: TenantRequest, res: Response, next: Nex
   try {
     const { classId } = req.params;
     const { petId, customerId } = req.body;
-    const tenantId = req.tenantId || 'dev';
+    const tenantId = req.tenantId;
     
     if (!petId || !customerId) {
       return next(new AppError('Pet ID and Customer ID are required', 400));
@@ -403,7 +403,7 @@ export const addToWaitlist = async (req: TenantRequest, res: Response, next: Nex
 export const removeFromWaitlist = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.tenantId || 'dev';
+    const tenantId = req.tenantId;
     
     const entry = await prisma.classWaitlist.findFirst({
       where: { id, tenantId }
@@ -434,7 +434,7 @@ export const removeFromWaitlist = async (req: TenantRequest, res: Response, next
 export const getClassWaitlist = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { classId } = req.params;
-    const tenantId = req.tenantId || 'dev';
+    const tenantId = req.tenantId;
     
     const waitlist = await prisma.classWaitlist.findMany({
       where: { classId, tenantId },

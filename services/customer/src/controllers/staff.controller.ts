@@ -36,7 +36,7 @@ export const getAllStaff = async (
     
     // Build where condition
     const where: any = {
-      tenantId: (req as any).tenantId || 'dev' // Filter by tenant
+      tenantId: (req as any).tenantId // Filter by tenant
     };
     if (isActive !== undefined) {
       where.isActive = isActive;
@@ -152,7 +152,7 @@ export const createStaff = async (
 ) => {
   try {
     const staffData = req.body;
-    const tenantId = (req.tenantId || 'dev') || 'dev';
+    const tenantId = (req.tenantId);
     
     // Check if email already exists
     const existingStaff = await prisma.staff.findUnique({
@@ -237,7 +237,7 @@ export const updateStaff = async (
     
     // If updating email, check if it's already in use by another staff in the same tenant
     if (staffData.email) {
-      const tenantId = (req as any).tenantId || 'dev';
+      const tenantId = (req as any).tenantId;
       const emailInUse = await prisma.staff.findFirst({
         where: {
           email: staffData.email,
@@ -339,7 +339,7 @@ export const loginStaff = async (
 ) => {
   try {
     const { email, password } = req.body;
-    const tenantId = (req.tenantId || 'dev') || 'dev';
+    const tenantId = (req.tenantId);
     
     if (!email || !password) {
       return next(new AppError('Please provide email and password', 400));
