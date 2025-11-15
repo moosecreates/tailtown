@@ -56,6 +56,7 @@ import messageTemplatesRoutes from './routes/messageTemplates.routes';
 import announcementRoutes from './routes/announcement.routes';
 import superAdminRoutes from './routes/super-admin.routes';
 import businessSettingsRoutes from './routes/business-settings.routes';
+import messagingRoutes from './routes/messaging.routes';
 import { systemRoutes } from './routes/system.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { extractTenantContext, requireTenant } from './middleware/tenant.middleware';
@@ -433,6 +434,8 @@ app.use('/api', requireTenant, optionalAuth, announcementRoutes);
 // Business Settings Routes (admin only)
 app.use('/api/business-settings', requireTenant, authenticate, requireTenantAdmin, businessSettingsRoutes);
 
+// Messaging Routes (staff only, authenticated)
+app.use('/api/messaging', requireTenant, messagingRoutes);
 
 // Serve uploaded icons statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
