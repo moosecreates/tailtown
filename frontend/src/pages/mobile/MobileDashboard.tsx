@@ -4,7 +4,6 @@ import {
   Card,
   CardContent,
   Typography,
-  Grid,
   Chip,
   Avatar,
   List,
@@ -94,55 +93,40 @@ const MobileDashboard: React.FC = () => {
       />
 
       <Box sx={{ p: 2 }}>
-        {/* Quick Stats */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12}>
-            <Card elevation={1}>
-              <CardContent sx={{ textAlign: 'center', py: 2 }}>
-                <Avatar
-                  sx={{
-                    bgcolor: 'primary.light',
-                    width: 56,
-                    height: 56,
-                    mx: 'auto',
-                    mb: 1,
-                  }}
-                >
-                  <PetIcon fontSize="large" />
-                </Avatar>
-                <Typography variant="h4" fontWeight="bold">
-                  {stats.petsInFacility}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Pets in Facility Today
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
+        {/* Pets in Facility - Compact Info */}
+        <Box sx={{ mb: 2, px: 1, py: 1, bgcolor: 'background.paper', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <PetIcon fontSize="small" color="action" />
+            <Typography variant="body2" color="text.secondary">
+              Pets in Facility
+            </Typography>
+          </Box>
+          <Typography variant="body2" fontWeight="bold">
+            {stats.petsInFacility}
+          </Typography>
+        </Box>
 
-          <Grid item xs={12}>
-            <Card elevation={1}>
-              <CardContent sx={{ py: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <TaskIcon sx={{ mr: 1, color: 'warning.main' }} />
-                  <Typography variant="subtitle2" fontWeight="bold">
-                    Tasks Progress
-                  </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Typography variant="h6">
-                    {stats.tasksCompleted}/{stats.totalTasks}
-                  </Typography>
-                  <Chip
-                    label={`${Math.round((stats.tasksCompleted / stats.totalTasks) * 100)}%`}
-                    size="small"
-                    color="warning"
-                  />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+        {/* Tasks Progress */}
+        <Card elevation={1} sx={{ mb: 3 }}>
+          <CardContent sx={{ py: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+              <TaskIcon sx={{ mr: 1, color: 'warning.main' }} />
+              <Typography variant="subtitle2" fontWeight="bold">
+                Tasks Progress
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography variant="h6">
+                {stats.tasksCompleted}/{stats.totalTasks}
+              </Typography>
+              <Chip
+                label={`${Math.round((stats.tasksCompleted / stats.totalTasks) * 100)}%`}
+                size="small"
+                color="warning"
+              />
+            </Box>
+          </CardContent>
+        </Card>
 
         {/* Today's Schedule */}
         <Card elevation={1} sx={{ mb: 3 }}>
