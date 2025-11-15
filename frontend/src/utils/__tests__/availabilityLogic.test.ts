@@ -253,10 +253,11 @@ describe('Availability Checking Algorithm', () => {
 
       const total = calculateBookingPrice(booking);
 
-      // Daycare: 4 hours, should charge partial day rate
-      // Note: May calculate as 1 night or 0 nights depending on time calculation
-      expect(total.nights).toBeLessThanOrEqual(1);
-      expect(total.hours).toBeGreaterThanOrEqual(4);
+      // Daycare: 4 hours same-day booking
+      // Business Rule: Same-day bookings round up to 1 night for billing
+      // But daycare should also track hours for scheduling
+      expect(total.nights).toBe(1); // Math.ceil of same-day = 1
+      expect(total.hours).toBe(4); // Actual hours for daycare scheduling
     });
   });
 
