@@ -291,8 +291,8 @@ describe('Availability Checking Algorithm', () => {
     });
 
     it('should enforce minimum stay requirement', () => {
-      const checkIn = new Date('2025-10-24');
-      const checkOut = new Date('2025-10-24'); // Same day
+      const checkIn = new Date('2026-10-24');
+      const checkOut = new Date('2026-10-24'); // Same day
 
       const validation = validateBookingDates(checkIn, checkOut, {
         minimumNights: 1
