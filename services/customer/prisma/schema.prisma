@@ -1214,6 +1214,7 @@ model TrainingClass {
   instructor      Staff           @relation("InstructorClasses", fields: [instructorId], references: [id], onDelete: Cascade)
   sessions        ClassSession[]
   enrollments     ClassEnrollment[]
+  classWaitlist   ClassWaitlist[]
   waitlistEntries WaitlistEntry[]
   
   @@index([tenantId, startDate], map: "training_class_tenant_start_idx")
@@ -2052,7 +2053,7 @@ model WaitlistEntry {
   resource                  Resource?             @relation(fields: [resourceId], references: [id], onDelete: SetNull)
   groomer                   Staff?                @relation("GroomerWaitlist", fields: [groomerId], references: [id], onDelete: SetNull)
   trainingClass             TrainingClass?        @relation(fields: [classId], references: [id], onDelete: SetNull)
-  convertedReservation      Reservation?          @relation(fields: [convertedToReservationId], references: [id], onDelete: SetNull)
+  convertedReservation      Reservation?          @relation("ConvertedReservation", fields: [convertedToReservationId], references: [id], onDelete: SetNull)
   notifications             WaitlistNotification[]
   
   @@index([tenantId, status], map: "idx_waitlist_tenant_status")
