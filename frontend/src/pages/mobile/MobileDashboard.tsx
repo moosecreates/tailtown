@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box,
   Card,
@@ -12,6 +12,8 @@ import {
   ListItemText,
   ListItemAvatar,
   Divider,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   CheckCircle as TaskIcon,
@@ -20,34 +22,75 @@ import {
   Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { MobileHeader } from '../../components/mobile/MobileHeader';
+import mobileService, { DashboardData } from '../../services/mobileService';
+import { useAuth } from '../../contexts/AuthContext';
 
 const MobileDashboard: React.FC = () => {
-  // TODO: Replace with actual data from API
-  const stats = {
-    petsInFacility: 24,
-    staffOnDuty: 6,
-    tasksCompleted: 8,
-    totalTasks: 12,
+  const { user } = useAuth();
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const data = await mobileService.getDashboardData();
+      setDashboardData(data);
+    } catch (err) {
+      setError('Failed to load dashboard data');
+      console.error('Dashboard error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const todaySchedule = [
-    { time: '08:00 AM', title: 'Morning Shift', location: 'Main Building' },
-    { time: '12:00 PM', title: 'Lunch Break', location: '' },
-    { time: '01:00 PM', title: 'Afternoon Shift', location: 'Main Building' },
-  ];
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
-  const pendingTasks = [
-    { id: 1, title: 'Opening Checklist', completed: 8, total: 10 },
-    { id: 2, title: 'Medication Round', completed: 0, total: 5 },
-  ];
+  const handleRefresh = () => {
+    fetchDashboardData();
+  };
+
+  if (loading && !dashboardData) {
+    return (
+      <Box>
+        <MobileHeader title="Dashboard" showNotifications userName={user?.firstName} />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <CircularProgress />
+        </Box>
+      </Box>
+    );
+  }
+
+  if (error && !dashboardData) {
+    return (
+      <Box>
+        <MobileHeader title="Dashboard" showNotifications userName={user?.firstName} />
+        <Box sx={{ p: 2 }}>
+          <Alert severity="error" action={
+            <Chip label="Retry" size="small" onClick={handleRefresh} />
+          }>
+            {error}
+          </Alert>
+        </Box>
+      </Box>
+    );
+  }
+
+  const stats = dashboardData?.stats || { petsInFacility: 0, staffOnDuty: 0, tasksCompleted: 0, totalTasks: 0 };
+  const todaySchedule = dashboardData?.todaySchedule || [];
+  const pendingTasks = dashboardData?.pendingTasks || [];
 
   return (
     <Box>
       <MobileHeader
         title="Dashboard"
         showNotifications
-        notificationCount={3}
-        userName="Staff Member"
+        notificationCount={dashboardData?.unreadMessages || 0}
+        userName={user?.firstName || 'Staff'}
       />
 
       <Box sx={{ p: 2 }}>
