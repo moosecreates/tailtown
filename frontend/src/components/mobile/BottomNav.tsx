@@ -11,7 +11,6 @@ import {
   CheckCircle as ChecklistIcon,
   Chat as ChatIcon,
   CalendarMonth as ScheduleIcon,
-  Person as ProfileIcon,
 } from '@mui/icons-material';
 
 interface BottomNavProps {
@@ -32,7 +31,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     if (path.includes('/mobile/checklists')) return 1;
     if (path.includes('/mobile/chat')) return 2;
     if (path.includes('/mobile/schedule')) return 3;
-    if (path.includes('/mobile/profile')) return 4;
     return 0; // dashboard
   };
 
@@ -42,7 +40,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({
       '/mobile/checklists',
       '/mobile/chat',
       '/mobile/schedule',
-      '/mobile/profile',
     ];
     navigate(routes[newValue]);
   };
@@ -102,10 +99,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         <BottomNavigationAction
           label="Schedule"
           icon={<ScheduleIcon />}
-        />
-        <BottomNavigationAction
-          label="Profile"
-          icon={<ProfileIcon />}
         />
       </BottomNavigation>
     </Paper>
