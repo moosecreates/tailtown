@@ -16,7 +16,7 @@ import { logger } from '../../utils/logger';
  * POST /api/reservations/:id/add-ons
  */
 export const addAddOnsToReservation = catchAsync(async (req: TenantRequest, res: Response) => {
-  const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+  const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
   const reservationId = req.params.id;
   const { addOns } = req.body;
 

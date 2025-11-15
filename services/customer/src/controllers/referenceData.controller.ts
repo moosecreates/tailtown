@@ -67,7 +67,7 @@ export const getVeterinarians = async (
   next: NextFunction
 ) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
 
     // Get unique veterinarians from pets table
     const vets = await prisma.$queryRaw`
@@ -133,7 +133,7 @@ export const getPetTemperaments = async (
 ) => {
   try {
     const { petId } = req.params;
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
 
     // Get the pet's idealPlayGroup
     const pet = await prisma.pet.findFirst({
@@ -166,7 +166,7 @@ export const updatePetTemperaments = async (
   try {
     const { petId } = req.params;
     const { temperaments } = req.body;
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
 
     // Update the pet's idealPlayGroup (take first temperament if multiple)
     const idealPlayGroup = temperaments && temperaments.length > 0 ? temperaments[0] : null;

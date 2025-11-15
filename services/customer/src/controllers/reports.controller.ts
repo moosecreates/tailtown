@@ -48,7 +48,7 @@ import {
  */
 export const getDailySales = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { date } = req.query;
     
     if (!date) {
@@ -83,7 +83,7 @@ export const getDailySales = async (req: TenantRequest, res: Response, next: Nex
  */
 export const getWeeklySales = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -118,7 +118,7 @@ export const getWeeklySales = async (req: TenantRequest, res: Response, next: Ne
  */
 export const getMonthlySales = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { year, month } = req.query;
     
     if (!year || !month) {
@@ -157,7 +157,7 @@ export const getMonthlySales = async (req: TenantRequest, res: Response, next: N
  */
 export const getYTDSales = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { year } = req.query;
     
     if (!year) {
@@ -192,7 +192,7 @@ export const getYTDSales = async (req: TenantRequest, res: Response, next: NextF
  */
 export const getTopCustomersReport = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { startDate, endDate, limit = '10' } = req.query;
     
     if (!startDate || !endDate) {
@@ -234,7 +234,7 @@ export const getTopCustomersReport = async (req: TenantRequest, res: Response, n
  */
 export const getMonthlyTax = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { year, month } = req.query;
     
     if (!year || !month) {
@@ -273,7 +273,7 @@ export const getMonthlyTax = async (req: TenantRequest, res: Response, next: Nex
  */
 export const getQuarterlyTax = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { year, quarter } = req.query;
     
     if (!year || !quarter) {
@@ -312,7 +312,7 @@ export const getQuarterlyTax = async (req: TenantRequest, res: Response, next: N
  */
 export const getAnnualTax = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { year } = req.query;
     
     if (!year) {
@@ -347,7 +347,7 @@ export const getAnnualTax = async (req: TenantRequest, res: Response, next: Next
  */
 export const getTaxBreakdownReport = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -388,7 +388,7 @@ export const getTaxBreakdownReport = async (req: TenantRequest, res: Response, n
  */
 export const getRevenue = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -421,7 +421,7 @@ export const getRevenue = async (req: TenantRequest, res: Response, next: NextFu
  */
 export const getProfitLoss = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -455,7 +455,7 @@ export const getProfitLoss = async (req: TenantRequest, res: Response, next: Nex
  */
 export const getOutstanding = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     
     const report = await getOutstandingBalances(tenantId);
     
@@ -486,7 +486,7 @@ export const getOutstanding = async (req: TenantRequest, res: Response, next: Ne
  */
 export const getRefunds = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -526,7 +526,7 @@ export const getRefunds = async (req: TenantRequest, res: Response, next: NextFu
  */
 export const getCustomerAcquisition = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -562,7 +562,7 @@ export const getCustomerAcquisition = async (req: TenantRequest, res: Response, 
  */
 export const getCustomerRetention = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -598,7 +598,7 @@ export const getCustomerRetention = async (req: TenantRequest, res: Response, ne
  */
 export const getCustomerLifetimeValue = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const limit = parseInt(req.query.limit as string) || 50;
     
     const report = await getCustomerLifetimeValueReport(tenantId, limit);
@@ -632,7 +632,7 @@ export const getCustomerLifetimeValue = async (req: TenantRequest, res: Response
  */
 export const getCustomerDemographics = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     
     const report = await getCustomerDemographicsReport(tenantId);
     
@@ -662,7 +662,7 @@ export const getCustomerDemographics = async (req: TenantRequest, res: Response,
  */
 export const getInactiveCustomers = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const days = parseInt(req.query.days as string) || 90;
     
     const report = await getInactiveCustomersReport(tenantId, days);
@@ -696,7 +696,7 @@ export const getInactiveCustomers = async (req: TenantRequest, res: Response, ne
  */
 export const getStaffPerformance = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -734,7 +734,7 @@ export const getStaffPerformance = async (req: TenantRequest, res: Response, nex
  */
 export const getResourceUtilization = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -772,7 +772,7 @@ export const getResourceUtilization = async (req: TenantRequest, res: Response, 
  */
 export const getBookingPatterns = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
@@ -808,7 +808,7 @@ export const getBookingPatterns = async (req: TenantRequest, res: Response, next
  */
 export const getCapacityAnalysis = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
+    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
     const { startDate, endDate } = req.query;
     
     if (!startDate || !endDate) {
