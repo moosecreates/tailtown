@@ -48,6 +48,7 @@ model Customer {
   classEnrollments    ClassEnrollment[]    @relation("CustomerClassEnrollments")
   classWaitlist       ClassWaitlist[]      @relation("CustomerClassWaitlist")
   waitlistEntries     WaitlistEntry[]
+  reportCards         ReportCard[]
 
   @@index([firstName, lastName], map: "customers_name_search_idx")
   @@index([email], map: "customers_email_search_idx")
@@ -103,6 +104,7 @@ model Pet {
   sessionAttendance   SessionAttendance[]  @relation("PetSessionAttendance")
   classWaitlist       ClassWaitlist[]      @relation("PetClassWaitlist")
   waitlistEntries     WaitlistEntry[]
+  reportCards         ReportCard[]
 
   @@index([customerId], map: "pets_customer_id_idx")
   @@index([isActive, type], map: "pets_active_type_idx")
@@ -150,6 +152,7 @@ model Reservation {
   service            Service            @relation(fields: [serviceId], references: [id])
   staffAssigned      Staff?             @relation(fields: [staffAssignedId], references: [id])
   waitlistConversions WaitlistEntry[]   @relation("ConvertedReservation")
+  reportCards        ReportCard[]
 
   @@index([startDate, endDate], map: "reservations_date_range_idx")
   @@index([status, startDate], map: "reservations_status_date_idx")
@@ -322,6 +325,8 @@ model Staff {
   typingIndicators     TypingIndicator[]
   communicationPrefs   CommunicationNotificationPreference?
   groomerWaitlist      WaitlistEntry[]      @relation("GroomerWaitlist")
+  createdReportCards   ReportCard[]         @relation("StaffCreatedReportCards")
+  uploadedPhotos       ReportCardPhoto[]    @relation("StaffUploadedPhotos")
 
   @@unique([tenantId, email], map: "staff_tenant_email_unique")
   @@index([tenantId, isActive], map: "staff_tenant_active_idx")
@@ -2184,4 +2189,131 @@ enum WaitlistAction {
   DECLINED        // Customer declined the spot
   EXPIRED         // Notification expired
   NO_RESPONSE     // No response from customer
+}
+
+// ============================================================================
+// REPORT CARD SYSTEM
+// ============================================================================
+
+model ReportCard {
+  id                String                    @id @default(uuid())
+  tenantId          String
+  
+  // Relationships
+  petId             String
+  pet               Pet                       @relation(fields: [petId], references: [id])
+  customerId        String
+  customer          Customer                  @relation(fields: [customerId], references: [id])
+  reservationId     String?
+  reservation       Reservation?              @relation(fields: [reservationId], references: [id])
+  createdByStaffId  String
+  createdByStaff    Staff                     @relation("StaffCreatedReportCards", fields: [createdByStaffId], references: [id])
+  
+  // Report Details
+  reportDate        DateTime                  @default(now())
+  serviceType       ReportCardServiceType
+  templateType      ReportCardTemplate?
+  
+  // Content
+  title             String?
+  summary           String?
+  
+  // Activity Ratings (1-5 scale)
+  moodRating        Int?
+  energyRating      Int?
+  appetiteRating    Int?
+  socialRating      Int?
+  
+  // Activity Details
+  activities        String[]                  @default([])
+  mealsEaten        String[]                  @default([])
+  bathroomBreaks    Int?
+  medicationGiven   Boolean                   @default(false)
+  medicationNotes   String?
+  
+  // Behavioral Notes
+  behaviorNotes     String?
+  highlights        String[]                  @default([])
+  concerns          String[]                  @default([])
+  
+  // Photos
+  photos            ReportCardPhoto[]
+  photoCount        Int                       @default(0)
+  
+  // Delivery
+  status            ReportCardStatus          @default(DRAFT)
+  sentAt            DateTime?
+  sentViaEmail      Boolean                   @default(false)
+  sentViaSMS        Boolean                   @default(false)
+  emailDeliveredAt  DateTime?
+  smsDeliveredAt    DateTime?
+  viewedAt          DateTime?
+  viewCount         Int                       @default(0)
+  
+  // Metadata
+  isTemplate        Boolean                   @default(false)
+  tags              String[]                  @default([])
+  notes             String?
+  
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  
+  @@index([tenantId, reportDate])
+  @@index([petId, reportDate])
+  @@index([customerId, reportDate])
+  @@index([reservationId])
+  @@index([status])
+  @@index([createdByStaffId])
+  @@map("report_cards")
+}
+
+model ReportCardPhoto {
+  id                String        @id @default(uuid())
+  reportCardId      String
+  reportCard        ReportCard    @relation(fields: [reportCardId], references: [id], onDelete: Cascade)
+  
+  // Photo Details
+  url               String
+  thumbnailUrl      String?
+  caption           String?
+  order             Int           @default(0)
+  
+  // Metadata
+  uploadedByStaffId String?
+  uploadedByStaff   Staff?        @relation("StaffUploadedPhotos", fields: [uploadedByStaffId], references: [id])
+  fileSize          Int?
+  width             Int?
+  height            Int?
+  mimeType          String?
+  
+  createdAt         DateTime      @default(now())
+  
+  @@index([reportCardId, order])
+  @@map("report_card_photos")
+}
+
+enum ReportCardServiceType {
+  BOARDING
+  DAYCARE
+  GROOMING
+  TRAINING
+  GENERAL
+}
+
+enum ReportCardTemplate {
+  DAYCARE_DAILY
+  BOARDING_DAILY
+  BOARDING_CHECKOUT
+  GROOMING_COMPLETE
+  TRAINING_SESSION
+  CUSTOM
+}
+
+enum ReportCardStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  SENT
+  VIEWED
+  ARCHIVED
 }
