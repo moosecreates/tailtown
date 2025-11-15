@@ -1,0 +1,198 @@
+// Waitlist Feature Schema
+// Add this to the main schema.prisma file
+
+// ============================================================================
+// WAITLIST SYSTEM
+// ============================================================================
+
+// Waitlist entry for fully booked services
+model WaitlistEntry {
+  id                        String                @id @default(uuid())
+  tenantId                  String                @default("dev")
+  customerId                String
+  petId                     String
+  serviceType               WaitlistServiceType
+  
+  // Date/Time
+  requestedStartDate        DateTime
+  requestedEndDate          DateTime?             // For boarding/daycare
+  requestedTime             String?               // For grooming (HH:MM format)
+  flexibleDates             Boolean               @default(false)
+  dateFlexibilityDays       Int?                  // ±N days
+  
+  // Service Details
+  serviceId                 String?               // Specific service
+  resourceId                String?               // Specific suite/room
+  groomerId                 String?               // Specific groomer
+  classId                   String?               // Specific training class
+  
+  // Preferences (JSON)
+  preferences               String                @default("{}")  // JSON: suiteType, groomerPreference, timePreference
+  
+  // Status & Priority
+  status                    WaitlistStatus        @default(ACTIVE)
+  priority                  BigInt                // Timestamp-based (earlier = lower number = higher priority)
+  position                  Int                   // Current position in queue
+  
+  // Metadata
+  notes                     String?               // Staff notes
+  customerNotes             String?               // Customer notes/requirements
+  notificationsSent         Int                   @default(0)
+  lastNotifiedAt            DateTime?
+  
+  // Conversion
+  convertedToReservationId  String?
+  convertedAt               DateTime?
+  
+  // Expiration
+  expiresAt                 DateTime?             // Auto-expire after N days
+  
+  // Timestamps
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime              @updatedAt
+  
+  // Relations
+  customer                  Customer              @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  pet                       Pet                   @relation(fields: [petId], references: [id], onDelete: Cascade)
+  service                   Service?              @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  resource                  Resource?             @relation(fields: [resourceId], references: [id], onDelete: SetNull)
+  groomer                   Staff?                @relation("GroomerWaitlist", fields: [groomerId], references: [id], onDelete: SetNull)
+  trainingClass             TrainingClass?        @relation(fields: [classId], references: [id], onDelete: SetNull)
+  convertedReservation      Reservation?          @relation(fields: [convertedToReservationId], references: [id], onDelete: SetNull)
+  notifications             WaitlistNotification[]
+  
+  @@index([tenantId, status], map: "idx_waitlist_tenant_status")
+  @@index([tenantId, serviceType, status], map: "idx_waitlist_service_status")
+  @@index([tenantId, requestedStartDate], map: "idx_waitlist_start_date")
+  @@index([priority], map: "idx_waitlist_priority")
+  @@index([position], map: "idx_waitlist_position")
+  @@index([expiresAt], map: "idx_waitlist_expires")
+  @@index([customerId], map: "idx_waitlist_customer")
+  @@map("waitlist_entries")
+}
+
+// Notifications sent for waitlist entries
+model WaitlistNotification {
+  id                  String                      @id @default(uuid())
+  waitlistEntryId     String
+  notificationType    WaitlistNotificationType
+  recipientType       WaitlistRecipientType
+  recipientId         String                      // Staff ID or Customer ID
+  channel             NotificationChannel
+  status              NotificationStatus          @default(PENDING)
+  
+  // Message
+  subject             String?
+  message             String
+  
+  // Metadata
+  sentAt              DateTime?
+  readAt              DateTime?
+  actionTaken         WaitlistAction?
+  actionTakenAt       DateTime?
+  errorMessage        String?
+  
+  // Expiration (for spot available notifications)
+  expiresAt           DateTime?
+  
+  // Timestamps
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+  
+  // Relations
+  waitlistEntry       WaitlistEntry               @relation(fields: [waitlistEntryId], references: [id], onDelete: Cascade)
+  
+  @@index([waitlistEntryId], map: "idx_waitlist_notif_entry")
+  @@index([recipientId, status], map: "idx_waitlist_notif_recipient")
+  @@index([status, sentAt], map: "idx_waitlist_notif_status")
+  @@index([expiresAt], map: "idx_waitlist_notif_expires")
+  @@map("waitlist_notifications")
+}
+
+// Waitlist configuration per tenant
+model WaitlistConfig {
+  id                                String    @id @default(uuid())
+  tenantId                          String    @unique
+  
+  // Feature flags
+  enabled                           Boolean   @default(true)
+  boardingEnabled                   Boolean   @default(true)
+  daycareEnabled                    Boolean   @default(true)
+  groomingEnabled                   Boolean   @default(true)
+  trainingEnabled                   Boolean   @default(true)
+  
+  // Expiration settings
+  entryExpirationDays               Int       @default(30)
+  notificationExpirationHours       Int       @default(24)
+  
+  // Notification settings
+  maxNotificationsPerAvailability   Int       @default(3)
+  autoNotifyOnCancellation          Boolean   @default(true)
+  customerNotificationChannels      String[]  @default(["SMS", "EMAIL"])
+  staffNotificationChannels         String[]  @default(["IN_APP", "EMAIL"])
+  
+  // Flexible dates
+  flexibleDatesEnabled              Boolean   @default(true)
+  maxFlexibilityDays                Int       @default(7)
+  
+  // Priority algorithm
+  useLoyaltyBonus                   Boolean   @default(false)
+  useFlexibilityBonus               Boolean   @default(true)
+  
+  // Timestamps
+  createdAt                         DateTime  @default(now())
+  updatedAt                         DateTime  @updatedAt
+  
+  @@map("waitlist_config")
+}
+
+// Enums for waitlist
+
+enum WaitlistServiceType {
+  BOARDING
+  DAYCARE
+  GROOMING
+  TRAINING
+}
+
+enum WaitlistStatus {
+  ACTIVE          // Waiting for availability
+  NOTIFIED        // Customer notified of availability
+  CONVERTED       // Converted to reservation
+  EXPIRED         // Entry expired
+  CANCELLED       // Cancelled by customer or staff
+}
+
+enum WaitlistNotificationType {
+  SPOT_AVAILABLE      // Spot opened up
+  POSITION_UPDATE     // Moved up in queue
+  EXPIRING_SOON       // Entry expiring soon
+  CONVERTED           // Successfully converted to reservation
+  CANCELLED           // Entry cancelled
+}
+
+enum WaitlistRecipientType {
+  STAFF
+  CUSTOMER
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  IN_APP
+  PUSH
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  READ
+}
+
+enum WaitlistAction {
+  BOOKED          // Customer booked the spot
+  DECLINED        // Customer declined the spot
+  EXPIRED         // Notification expired
+  NO_RESPONSE     // No response from customer
+}
