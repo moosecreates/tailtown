@@ -18,8 +18,8 @@ import {
 import {
   CheckCircle as TaskIcon,
   Pets as PetIcon,
-  People as StaffIcon,
   Schedule as ScheduleIcon,
+  ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
 import { MobileHeader } from '../../components/mobile/MobileHeader';
 import mobileService, { DashboardData } from '../../services/mobileService';
@@ -80,7 +80,7 @@ const MobileDashboard: React.FC = () => {
     );
   }
 
-  const stats = dashboardData?.stats || { petsInFacility: 0, staffOnDuty: 0, tasksCompleted: 0, totalTasks: 0 };
+  const stats = dashboardData?.stats || { petsInFacility: 0, tasksCompleted: 0, totalTasks: 0 };
   const todaySchedule = dashboardData?.todaySchedule || [];
   const pendingTasks = dashboardData?.pendingTasks || [];
 
@@ -96,49 +96,25 @@ const MobileDashboard: React.FC = () => {
       <Box sx={{ p: 2 }}>
         {/* Quick Stats */}
         <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={6}>
+          <Grid item xs={12}>
             <Card elevation={1}>
               <CardContent sx={{ textAlign: 'center', py: 2 }}>
                 <Avatar
                   sx={{
                     bgcolor: 'primary.light',
-                    width: 48,
-                    height: 48,
+                    width: 56,
+                    height: 56,
                     mx: 'auto',
                     mb: 1,
                   }}
                 >
-                  <PetIcon />
+                  <PetIcon fontSize="large" />
                 </Avatar>
-                <Typography variant="h5" fontWeight="bold">
+                <Typography variant="h4" fontWeight="bold">
                   {stats.petsInFacility}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Pets in Facility
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={6}>
-            <Card elevation={1}>
-              <CardContent sx={{ textAlign: 'center', py: 2 }}>
-                <Avatar
-                  sx={{
-                    bgcolor: 'success.light',
-                    width: 48,
-                    height: 48,
-                    mx: 'auto',
-                    mb: 1,
-                  }}
-                >
-                  <StaffIcon />
-                </Avatar>
-                <Typography variant="h5" fontWeight="bold">
-                  {stats.staffOnDuty}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Staff on Duty
+                <Typography variant="body2" color="text.secondary">
+                  Pets in Facility Today
                 </Typography>
               </CardContent>
             </Card>
@@ -177,26 +153,37 @@ const MobileDashboard: React.FC = () => {
                 Today's Schedule
               </Typography>
             </Box>
-            <List disablePadding>
-              {todaySchedule.map((item, index) => (
-                <React.Fragment key={index}>
-                  <ListItem disablePadding sx={{ py: 1 }}>
-                    <ListItemAvatar>
-                      <Avatar sx={{ width: 32, height: 32, fontSize: '0.75rem', bgcolor: 'primary.main' }}>
-                        {item.time.split(':')[0]}
-                      </Avatar>
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary={item.title}
-                      secondary={item.location}
-                      primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
-                      secondaryTypographyProps={{ variant: 'caption' }}
-                    />
-                  </ListItem>
-                  {index < todaySchedule.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
-            </List>
+            {todaySchedule.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                No scheduled shifts today
+              </Typography>
+            ) : (
+              <List disablePadding>
+                {todaySchedule.map((item, index) => (
+                  <React.Fragment key={index}>
+                    <ListItem 
+                      disablePadding 
+                      sx={{ py: 1, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                      onClick={() => window.location.href = '/mobile/schedule'}
+                    >
+                      <ListItemAvatar>
+                        <Avatar sx={{ width: 32, height: 32, fontSize: '0.75rem', bgcolor: 'primary.main' }}>
+                          {item.time.split(':')[0]}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={item.title}
+                        secondary={item.location}
+                        primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
+                        secondaryTypographyProps={{ variant: 'caption' }}
+                      />
+                      <ChevronRightIcon fontSize="small" color="action" />
+                    </ListItem>
+                    {index < todaySchedule.length - 1 && <Divider />}
+                  </React.Fragment>
+                ))}
+              </List>
+            )}
           </CardContent>
         </Card>
 
@@ -209,28 +196,38 @@ const MobileDashboard: React.FC = () => {
                 Pending Tasks
               </Typography>
             </Box>
-            <List disablePadding>
-              {pendingTasks.map((task, index) => (
-                <React.Fragment key={task.id}>
-                  <ListItem disablePadding sx={{ py: 1 }}>
-                    <ListItemText
-                      primary={task.title}
-                      secondary={`${task.completed}/${task.total} completed`}
-                      primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
-                      secondaryTypographyProps={{ variant: 'caption' }}
-                    />
-                    <Chip
-                      label="View"
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                      sx={{ ml: 1 }}
-                    />
-                  </ListItem>
-                  {index < pendingTasks.length - 1 && <Divider />}
-                </React.Fragment>
-              ))}
-            </List>
+            {pendingTasks.length === 0 ? (
+              <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                No pending tasks
+              </Typography>
+            ) : (
+              <List disablePadding>
+                {pendingTasks.map((task, index) => (
+                  <React.Fragment key={task.id}>
+                    <ListItem 
+                      disablePadding 
+                      sx={{ py: 1, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
+                      onClick={() => window.location.href = '/mobile/checklists'}
+                    >
+                      <ListItemText
+                        primary={task.title}
+                        secondary={`${task.completed}/${task.total} completed`}
+                        primaryTypographyProps={{ variant: 'body2', fontWeight: 500 }}
+                        secondaryTypographyProps={{ variant: 'caption' }}
+                      />
+                      <Chip
+                        label="View"
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                        sx={{ ml: 1 }}
+                      />
+                    </ListItem>
+                    {index < pendingTasks.length - 1 && <Divider />}
+                  </React.Fragment>
+                ))}
+              </List>
+            )}
           </CardContent>
         </Card>
       </Box>

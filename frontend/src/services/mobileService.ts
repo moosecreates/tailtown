@@ -2,7 +2,6 @@ import api from './api';
 
 export interface DashboardStats {
   petsInFacility: number;
-  staffOnDuty: number;
   tasksCompleted: number;
   totalTasks: number;
 }
@@ -122,7 +121,6 @@ class MobileService {
   private getMockStats(): DashboardStats {
     return {
       petsInFacility: 24,
-      staffOnDuty: 6,
       tasksCompleted: 8,
       totalTasks: 12,
     };
