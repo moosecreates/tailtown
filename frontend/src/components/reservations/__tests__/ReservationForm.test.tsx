@@ -135,7 +135,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
       data: mockCustomers
     });
 
-    mockPetService.getPetsByCustomer = jest.fn().mockResolvedValue({
+    mockPetService.getPetsByCustomer.mockResolvedValue({
       status: 'success',
       data: mockPets
     });
