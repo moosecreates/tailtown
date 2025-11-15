@@ -1080,11 +1080,116 @@ model Tenant {
 14. **Advanced Features** - Health monitoring, AI recommendations, customer feedback, mobile app
 15. **Infrastructure** - Cloud optimization, CDN, automated deployment, disaster recovery
 
-**Total Estimated Effort**: ~18 weeks remaining (4 weeks completed)
+**Technical Approach**:
+- Feature-based folder structure
+- Mobile/desktop component separation
+- Shared business logic (hooks, APIs)
+- TanStack Query for data fetching
+- WebSocket for real-time features
+
+**Benefits**:
+- Staff can complete tasks from mobile devices
+- Faster incident reporting with photos
+- Better team coordination
+- Reduced paper checklists
+- Real-time communication
 
 ---
 
-## 🎯 High Priority (November-December 2025)
+### 2. 💬 Internal Communications System (Slack-like)
+**Priority**: HIGH | **Effort**: 4-6 weeks | **Status**: ✅ SCHEMA COMPLETE | **Target**: January 2026
+
+**Database Schema**: ✅ COMPLETE (November 14, 2025)
+- 13 new models for comprehensive team communication
+- Full Slack-like feature set
+- Optimized indexes for performance
+- Ready for implementation
+
+**Core Features**:
+
+**Channels**:
+- Public channels (anyone can join)
+- Private channels (invite-only)
+- Announcement channels (read-only for staff)
+- Default channels (auto-join: #general, #announcements, #shift-handoff)
+- Channel archiving
+- Custom icons and colors
+
+**Direct Messages**:
+- 1-on-1 conversations
+- Group DMs
+- Optional conversation names
+
+**Messaging Features**:
+- Text, markdown, and code formatting
+- Threaded replies (in channels)
+- Edit and delete messages
+- Pin important messages
+- Emoji reactions (👍 🎉 ❤️)
+- @mentions (@username, @channel, @here)
+- File attachments (images, PDFs, documents)
+- Read receipts
+- Typing indicators
+
+**Notifications**:
+- Desktop notifications
+- Mobile notifications
+- Email notifications (optional)
+- Per-channel notification settings
+- Mute channels/conversations
+- Do Not Disturb schedule
+
+**Use Cases**:
+- `#general` - Team discussion
+- `#announcements` - Company-wide announcements
+- `#shift-handoff` - Shift change communications
+- `#maintenance` - Facility issues
+- `#grooming-team` - Department channels
+- Direct messages for 1-on-1 communication
+
+**Technical Implementation**:
+- WebSocket for real-time messaging
+- Optimized database queries with pagination
+- Message caching (5 min TTL)
+- Typing indicator cleanup (auto-expire)
+- Tenant isolation for security
+
+**Benefits**:
+- Replace scattered communication (text, email, verbal)
+- Centralized team communication
+- Searchable message history
+- Better shift handoffs
+- Faster incident response
+- Reduced miscommunication
+
+**Implementation Phases**:
+
+**Phase 1: Backend API (2 weeks)**
+- Channel CRUD operations
+- Message sending/receiving
+- WebSocket setup
+- Real-time events
+
+**Phase 2: Desktop UI (2 weeks)**
+- Channel list sidebar
+- Message feed
+- Message composer
+- Reactions and mentions
+
+**Phase 3: Mobile UI (1 week)**
+- Mobile-optimized chat interface
+- Swipeable message actions
+- Quick reply
+
+**Phase 4: Advanced Features (1 week)**
+- File uploads
+- Message search
+- Notification preferences
+- Typing indicators
+
+---
+
+## 🚀 2025 Q4 - High Priority (November-December 2025)
 
 ### Revenue Features
 1. **✅ Retail Items & POS System - COMPLETE (Oct 25, 2025)**
