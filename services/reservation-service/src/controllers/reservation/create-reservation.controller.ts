@@ -50,7 +50,7 @@ export const createReservation = catchAsync(async (req: TenantRequest, res: Resp
   logger.info(`Processing create reservation request`, { requestId });
   
   // Get tenant ID from request - added by tenant middleware
-  const tenantId = req.tenantId;
+  const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
   
   if (!tenantId) {
     logger.warn(`Missing tenant ID in request`, { requestId });

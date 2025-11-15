@@ -25,7 +25,7 @@ export const getAllProducts = async (req: TenantRequest, res: Response) => {
         message: 'No tenant context found'
       });
     }
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     const { categoryId, isActive, search } = req.query;
     
     // Generate cache key based on query parameters
@@ -98,7 +98,7 @@ export const getProductById = async (req: TenantRequest, res: Response) => {
         message: 'No tenant context found'
       });
     }
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     const product = await prisma.product.findFirst({
       where: { id, tenantId },
@@ -146,7 +146,7 @@ export const createProduct = async (req: TenantRequest, res: Response) => {
         message: 'No tenant context found'
       });
     }
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     const {
       sku,
       name,
@@ -273,7 +273,7 @@ export const updateProduct = async (req: TenantRequest, res: Response) => {
         message: 'No tenant context found'
       });
     }
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     // Check if product exists
     const existing = await prisma.product.findFirst({
@@ -387,7 +387,7 @@ export const deleteProduct = async (req: TenantRequest, res: Response) => {
         message: 'No tenant context found'
       });
     }
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     const existing = await prisma.product.findFirst({
       where: { id, tenantId }
@@ -432,7 +432,7 @@ export const adjustInventory = async (req: TenantRequest, res: Response) => {
         message: 'No tenant context found'
       });
     }
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     const { quantity, changeType, reason, reference, performedBy } = req.body;
     
     if (!quantity || !changeType) {
@@ -515,7 +515,7 @@ export const getInventoryLogs = async (req: TenantRequest, res: Response) => {
         message: 'No tenant context found'
       });
     }
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     const logs = await prisma.inventoryLog.findMany({
       where: {
@@ -549,7 +549,7 @@ export const getLowStockProducts = async (req: TenantRequest, res: Response) => 
         message: 'No tenant context found'
       });
     }
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     // Get all products with inventory tracking
     const allProducts = await prisma.product.findMany({
@@ -597,7 +597,7 @@ export const getAllCategories = async (req: TenantRequest, res: Response) => {
         message: 'No tenant context found'
       });
     }
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     const categories = await prisma.productCategory.findMany({
       where: {
@@ -635,7 +635,7 @@ export const createCategory = async (req: TenantRequest, res: Response) => {
         message: 'No tenant context found'
       });
     }
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     const { name, description, displayOrder } = req.body;
     
     if (!name) {

@@ -15,7 +15,7 @@ const prisma = new PrismaClient();
 export const getAllTrainingClasses = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { status, category, level, instructorId, isActive } = req.query;
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     const where: any = { tenantId };
     if (status) where.status = status;
@@ -56,7 +56,7 @@ export const getAllTrainingClasses = async (req: TenantRequest, res: Response, n
 export const getTrainingClassById = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     const trainingClass = await prisma.trainingClass.findFirst({
       where: { id, tenantId },
@@ -131,7 +131,7 @@ export const createTrainingClass = async (req: TenantRequest, res: Response, nex
       prerequisites,
       notes
     } = req.body;
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     // Validate required fields
     if (!name || !level || !category || !maxCapacity || 
@@ -241,7 +241,7 @@ async function generateClassSessions(
 export const updateTrainingClass = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     // Verify class exists
     const existing = await prisma.trainingClass.findFirst({
@@ -289,7 +289,7 @@ export const updateTrainingClass = async (req: TenantRequest, res: Response, nex
 export const deleteTrainingClass = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     const existing = await prisma.trainingClass.findFirst({
       where: { id, tenantId },
@@ -321,7 +321,7 @@ export const duplicateTrainingClass = async (req: TenantRequest, res: Response, 
   try {
     const { id } = req.params;
     const { startDate } = req.body;
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     if (!startDate) {
       return next(new AppError('Start date is required', 400));
@@ -388,7 +388,7 @@ export const duplicateTrainingClass = async (req: TenantRequest, res: Response, 
 export const getClassSessions = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { classId } = req.params;
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     const sessions = await prisma.classSession.findMany({
       where: {
@@ -413,7 +413,7 @@ export const getClassSessions = async (req: TenantRequest, res: Response, next: 
 export const updateClassSession = async (req: TenantRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     
     const updateData: any = {};
     const allowedFields = ['topic', 'objectives', 'materials', 'homework', 'status', 'notes'];

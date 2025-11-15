@@ -88,7 +88,7 @@ async function safeExecutePrismaQuery<T>(
  * Updated to use standardized error handling pattern
  */
 export const getAllResources = catchAsync(async (req: TenantRequest, res: Response) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -205,7 +205,7 @@ export const getAllResources = catchAsync(async (req: TenantRequest, res: Respon
  */
 export const getResourceById = catchAsync(async (req: TenantRequest, res: Response) => {
   const { id } = req.params;
-  const tenantId = req.tenantId;
+  const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -249,7 +249,7 @@ export const getResourceById = catchAsync(async (req: TenantRequest, res: Respon
  * Updated to use standardized error handling pattern
  */
 export const createResource = catchAsync(async (req: TenantRequest, res: Response) => {
-  const tenantId = req.tenantId;
+  const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -309,7 +309,7 @@ export const createResource = catchAsync(async (req: TenantRequest, res: Respons
  */
 export const updateResource = catchAsync(async (req: TenantRequest, res: Response) => {
   const { id } = req.params;
-  const tenantId = req.tenantId;
+  const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -392,7 +392,7 @@ export const updateResource = catchAsync(async (req: TenantRequest, res: Respons
  */
 export const deleteResource = catchAsync(async (req: TenantRequest, res: Response) => {
   const { id } = req.params;
-  const tenantId = req.tenantId;
+  const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }
@@ -472,7 +472,7 @@ export const deleteResource = catchAsync(async (req: TenantRequest, res: Respons
  */
 export const getResourceAvailability = catchAsync(async (req: TenantRequest, res: Response) => {
   const { id } = req.params;
-  const tenantId = req.tenantId;
+  const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
   if (!tenantId) {
     throw AppError.authorizationError('Tenant ID is required');
   }

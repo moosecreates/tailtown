@@ -36,7 +36,7 @@ export const checkResourceAvailability = async (
 ) => {
   try {
     // Get tenant ID from request - added by tenant middleware (required)
-    const tenantId = req.tenantId;
+    const tenantId = req.tenantId || (process.env.NODE_ENV === 'production' ? undefined : 'dev');
     if (!tenantId) {
       return next(AppError.authorizationError('Tenant ID is required'));
     }
