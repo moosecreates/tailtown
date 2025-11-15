@@ -1,10 +1,12 @@
 # Tailtown Unified Roadmap
 
-**Last Updated**: November 8, 2025 - 11:38 PM MST
+**Last Updated**: November 14, 2025 - 7:40 PM MST
 
 This document provides a prioritized roadmap for the Tailtown Pet Resort Management System, organized by business value and urgency.
 
 > **🎉 LIVE IN PRODUCTION**: Successfully deployed to https://canicloud.com on November 4, 2025! All critical MVP features COMPLETE! Security audit COMPLETE! Full production deployment with SSL, automated testing, and monitoring. 18,363 pets with 11,862 having vaccination data. Zero TypeScript errors. All services healthy and operational!
+
+> **📱 NEW**: Mobile Web App MVP complete! Staff can now access checklists, team chat, and schedules from mobile devices. See `/mobile` routes.
 
 ---
 
@@ -102,6 +104,24 @@ This document provides a prioritized roadmap for the Tailtown Pet Resort Managem
   - 1,157 active customers
   - Sales dashboard updated with accurate financial data
   - Revenue analytics and reporting operational
+- ✅ **Mobile Web App MVP** (Nov 14, 2025)
+  - Progressive Web App for staff mobile access
+  - Dashboard with stats, schedule, and tasks
+  - Checklists with task management and progress tracking
+  - Team chat with channels and messaging interface
+  - My Schedule with day/week views
+  - 20 files created, ~2,500+ lines of code
+  - Device detection, mobile layouts, bottom navigation
+  - API integration with loading/error states
+  - See: `docs/changelog/2025-11-14-mobile-web-app-mvp.md`
+- ✅ **Internal Communications Schema** (Nov 14, 2025)
+  - 13 new Prisma models for Slack-like communication
+  - Channels (public, private, announcement)
+  - Direct messages (1-on-1 and group)
+  - Message reactions, mentions, attachments
+  - Read receipts, typing indicators
+  - Notification preferences
+  - Ready for backend implementation
 
 ---
 
