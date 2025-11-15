@@ -12,7 +12,7 @@ export const getAllTemplates = async (
   next: NextFunction
 ) => {
   try {
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
     const { type, category, isActive } = req.query;
 
     const where: any = { tenantId };
@@ -46,7 +46,7 @@ export const getTemplateById = async (
   next: NextFunction
 ) => {
   try {
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
     const { id } = req.params;
 
     const template = await prisma.messageTemplate.findFirst({
@@ -79,7 +79,7 @@ export const createTemplate = async (
   next: NextFunction
 ) => {
   try {
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
     const { name, type, category, subject, body, variables } = req.body;
 
     // Validate required fields
@@ -152,7 +152,7 @@ export const updateTemplate = async (
   next: NextFunction
 ) => {
   try {
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
     const { id } = req.params;
     const { name, type, category, subject, body, variables, isActive } = req.body;
 
@@ -216,7 +216,7 @@ export const deleteTemplate = async (
   next: NextFunction
 ) => {
   try {
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
     const { id } = req.params;
 
     // Check if template exists
@@ -254,7 +254,7 @@ export const duplicateTemplate = async (
   next: NextFunction
 ) => {
   try {
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
     const { id } = req.params;
 
     // Get original template

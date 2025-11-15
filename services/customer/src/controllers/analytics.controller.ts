@@ -17,7 +17,7 @@ import financialService from '../services/financialService';
 export const getSalesByService = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { period = 'all', startDate, endDate } = req.query;
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
     
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
@@ -57,7 +57,7 @@ export const getSalesByService = async (req: Request, res: Response, next: NextF
 export const getSalesByAddOn = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { period = 'all', startDate, endDate } = req.query;
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
     
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
@@ -97,7 +97,7 @@ export const getSalesByAddOn = async (req: Request, res: Response, next: NextFun
 export const getCustomerValue = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { period = 'all', startDate, endDate } = req.query;
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
     
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
@@ -128,7 +128,7 @@ export const getCustomerValue = async (req: Request, res: Response, next: NextFu
 export const getDashboardSummary = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { period = 'all', startDate, endDate } = req.query;
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
     
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(
@@ -185,7 +185,7 @@ export const getCustomerReport = async (req: Request, res: Response, next: NextF
   try {
     const { customerId } = req.params;
     const { period = 'all', startDate, endDate } = req.query;
-    const tenantId = (req as any).tenantId || 'dev';
+    const tenantId = (req as any).tenantId;
     
     // Get date range filter using the shared method
     const dateRange = financialService.getDateRangeFilter(

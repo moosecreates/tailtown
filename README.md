@@ -5,10 +5,12 @@
 
 **Status:** 🟢 **LIVE IN PRODUCTION**  
 **Production URL:** https://canicloud.com (multi-tenant subdomains)  
-**Version:** 1.0.0  
-**Last Updated:** November 7, 2025
+**Version:** 1.1.0  
+**Last Updated:** November 14, 2025
 
 A modern, full-featured SaaS management system for pet resorts, providing comprehensive tools for reservations, customer management, and pet care services.
+
+**🆕 NEW**: Mobile Web App now available! Staff can access checklists, team chat, and schedules from mobile devices at `/mobile` routes.
 
 ## 🌐 Access the Application
 
@@ -127,6 +129,26 @@ cd frontend && npm start
 - **Email & SMS Notifications** - Automated customer communications
 - **Customer Portal** - Online booking and account management
 - **Loyalty & Coupons** - Rewards and promotional campaigns
+
+### 🆕 In Development (Q4 2025 - Q1 2026)
+- **📱 Mobile Web App (PWA)** - Mobile-optimized staff portal
+  - Daily checklists with photo upload
+  - Pet health notes with camera integration
+  - Real-time team communication
+  - Personal schedule viewing
+  - Quick pet lookup
+  - Works on iOS, Android, tablets
+  - Installable as PWA (no app store needed)
+  
+- **💬 Internal Communications (Slack-like)** - Team collaboration platform
+  - Public and private channels
+  - Direct messages (1-on-1 and group)
+  - Threaded replies and reactions
+  - File attachments and @mentions
+  - Read receipts and typing indicators
+  - Customizable notifications
+  - Real-time WebSocket messaging
+  - **Status**: Database schema complete ✅
 
 ---
 

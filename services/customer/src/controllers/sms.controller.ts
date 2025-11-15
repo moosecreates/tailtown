@@ -77,7 +77,7 @@ export class SMSController {
   async sendReservationReminder(req: TenantRequest, res: Response) {
     try {
       const { reservationId } = req.params;
-      const tenantId = req.tenantId || 'dev' || 'dev';
+      const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
 
       // Fetch reservation with customer and pet details
       const reservation = await prisma.reservation.findFirst({
@@ -140,7 +140,7 @@ export class SMSController {
   async sendReservationConfirmation(req: TenantRequest, res: Response) {
     try {
       const { reservationId } = req.params;
-      const tenantId = req.tenantId || 'dev' || 'dev';
+      const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
 
       const reservation = await prisma.reservation.findFirst({
         where: {
@@ -203,7 +203,7 @@ export class SMSController {
   async sendWelcomeMessage(req: TenantRequest, res: Response) {
     try {
       const { customerId } = req.params;
-      const tenantId = req.tenantId || 'dev' || 'dev';
+      const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
 
       const customer = await prisma.customer.findFirst({
         where: {
@@ -256,7 +256,7 @@ export class SMSController {
   async sendMarketingMessage(req: TenantRequest, res: Response) {
     try {
       const { customerIds, message } = req.body;
-      const tenantId = req.tenantId || 'dev' || 'dev';
+      const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
 
       if (!customerIds || !Array.isArray(customerIds) || customerIds.length === 0) {
         return res.status(400).json({
@@ -333,7 +333,7 @@ export class SMSController {
   async sendCheckInNotification(req: TenantRequest, res: Response) {
     try {
       const { reservationId } = req.params;
-      const tenantId = req.tenantId || 'dev' || 'dev';
+      const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
 
       const reservation = await prisma.reservation.findFirst({
         where: {
@@ -389,7 +389,7 @@ export class SMSController {
   async sendCheckOutNotification(req: TenantRequest, res: Response) {
     try {
       const { reservationId } = req.params;
-      const tenantId = req.tenantId || 'dev' || 'dev';
+      const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
 
       const reservation = await prisma.reservation.findFirst({
         where: {
