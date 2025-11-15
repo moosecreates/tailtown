@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -26,6 +27,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const MobileDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +150,7 @@ const MobileDashboard: React.FC = () => {
                     <ListItem 
                       disablePadding 
                       sx={{ py: 1, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
-                      onClick={() => window.location.href = '/mobile/schedule'}
+                      onClick={() => navigate('/mobile/schedule')}
                     >
                       <ListItemAvatar>
                         <Avatar sx={{ width: 32, height: 32, fontSize: '0.75rem', bgcolor: 'primary.main' }}>
@@ -191,7 +193,7 @@ const MobileDashboard: React.FC = () => {
                     <ListItem 
                       disablePadding 
                       sx={{ py: 1, cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' } }}
-                      onClick={() => window.location.href = '/mobile/checklists'}
+                      onClick={() => navigate('/mobile/checklists')}
                     >
                       <ListItemText
                         primary={task.title}
