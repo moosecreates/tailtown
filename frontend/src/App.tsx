@@ -137,7 +137,7 @@ const Checklists = lazy(() => import('./pages/mobile/Checklists'));
 const TeamChat = lazy(() => import('./pages/mobile/TeamChat'));
 const MySchedule = lazy(() => import('./pages/mobile/MySchedule'));
 const MobileProfile = lazy(() => import('./pages/mobile/Profile'));
-const MobileReportCards = lazy(() => import('./pages/mobile/ReportCards'));
+const MobileReportCards = lazy(() => import('./pages/mobile/MobileReportCards'));
 
 // Custom event and utility components
 
