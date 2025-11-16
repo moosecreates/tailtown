@@ -10,7 +10,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { AppError } from '../middleware/errorHandler';
+import AppError from '../utils/appError';
 
 const prisma = new PrismaClient();
 
@@ -568,7 +568,7 @@ async function updateWaitlistPositions(tenantId: string, serviceType: string) {
   const entries = await prisma.waitlistEntry.findMany({
     where: {
       tenantId,
-      serviceType,
+      serviceType: serviceType as any,
       status: 'ACTIVE'
     },
     orderBy: {

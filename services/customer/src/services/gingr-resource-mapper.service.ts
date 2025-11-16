@@ -119,7 +119,7 @@ export async function findOrCreateResource(
   
   // Check cache first
   if (resourceCache[normalizedName]) {
-    return { id: resourceCache[normalizedName], name: normalizedName };
+    return { id: resourceCache[normalizedName] as string, name: normalizedName } as { id: string; name: string };
   }
   
   try {
@@ -129,7 +129,7 @@ export async function findOrCreateResource(
       { headers: { 'x-tenant-id': 'dev' } }
     );
     
-    const searchData = await searchResponse.json();
+    const searchData = await searchResponse.json() as any;
     const resources = searchData.data?.resources || [];
     
     // Look for exact match
@@ -168,7 +168,7 @@ export async function findOrCreateResource(
       throw new Error(`Failed to create resource: ${errorText}`);
     }
     
-    const newResource = await createResponse.json();
+    const newResource = await createResponse.json() as any;
     resourceCache[normalizedName] = newResource.id;
     
     console.log(`[Resource Mapper] ✅ Created resource: ${normalizedName} (${newResource.id})`);
