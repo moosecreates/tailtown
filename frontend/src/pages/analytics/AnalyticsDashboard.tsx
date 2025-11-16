@@ -502,8 +502,8 @@ const AnalyticsDashboard = () => {
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={({ percent }: { percent: number }) => 
-                              percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''
+                            label={({ percent }: { percent?: number }) => 
+                              percent && percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : ''
                             }
                             outerRadius={window.innerWidth < 600 ? 60 : 80}
                             fill="#8884d8"
