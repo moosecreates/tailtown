@@ -27,21 +27,11 @@ jobs:
         cd ../services/customer && npm ci
         cd ../reservation-service && npm ci
     
-    - name: Generate Prisma clients
-      run: |
-        cd services/customer
-        rm -rf node_modules/.prisma node_modules/@prisma/client
-        npx prisma generate
-        cd ../reservation-service
-        rm -rf node_modules/.prisma node_modules/@prisma/client
-        npx prisma generate
-    
     - name: Build frontend
       env:
         REACT_APP_TENANT_ID: dev
         REACT_APP_API_URL: http://129.212.178.244:4004
         REACT_APP_RESERVATION_API_URL: http://129.212.178.244:4003
-        DISABLE_ESLINT_PLUGIN: true
       run: |
         cd frontend
         npm run build
@@ -59,12 +49,8 @@ jobs:
         cp -r frontend/build deploy/frontend
         cp -r services/customer/dist deploy/customer
         cp -r services/customer/prisma deploy/customer/
-        mkdir -p deploy/customer/node_modules/@prisma
-        cp -r services/customer/node_modules/@prisma/client deploy/customer/node_modules/@prisma/
         cp -r services/reservation-service/dist deploy/reservation
         cp -r services/reservation-service/prisma deploy/reservation/
-        mkdir -p deploy/reservation/node_modules/@prisma
-        cp -r services/reservation-service/node_modules/@prisma/client deploy/reservation/node_modules/@prisma/
         tar -czf deploy.tar.gz deploy/
     
     - name: Deploy to Digital Ocean
@@ -97,53 +83,10 @@ jobs:
           cp -r /tmp/deploy/customer/* services/customer/dist/
           cp -r /tmp/deploy/reservation/* services/reservation-service/dist/
           
-          # Run database migrations with error checking
-          echo "Running customer service migrations..."
-          cd services/customer
-          # First, try to resolve any failed migrations
-          echo "Attempting to resolve failed migration..."
-          npx prisma migrate resolve --rolled-back 20251023144036_add_check_in_system || echo "Migration resolve failed or not needed"
-          if npx prisma migrate deploy; then
-            echo "✅ Customer migrations successful"
-          else
-            echo "❌ Customer migrations failed"
-            exit 1
-          fi
-          cd ../..
-          
-          echo "Running reservation service migrations..."
-          cd services/reservation-service
-          # Resolve the same failed migration in reservation service
-          # Use --applied because QuestionType already exists (migration partially applied)
-          echo "Attempting to resolve failed migration..."
-          npx prisma migrate resolve --applied 20251023144036_add_check_in_system || echo "Migration resolve failed or not needed"
-          if npx prisma migrate deploy; then
-            echo "✅ Reservation migrations successful"
-          else
-            echo "❌ Reservation migrations failed"
-            exit 1
-          fi
-          cd ../..
-          
-          # Regenerate Prisma clients on server using deployed schema
-          echo "Regenerating Prisma clients on server..."
-          cd services/customer
-          # Use the Prisma CLI that's already installed, just regenerate the client
-          # This uses the deployed schema.prisma and the existing @prisma/client package
-          npx --yes prisma@4.16.2 generate --schema=./prisma/schema.prisma || echo "Customer Prisma generation had issues"
-          cd ../reservation-service
-          npx --yes prisma@4.16.2 generate --schema=./prisma/schema.prisma || echo "Reservation Prisma generation had issues"
-          cd ../..
-          
-          # Full restart after migrations and Prisma client update
-          echo "Restarting services with fresh Prisma clients..."
-          # Delete and restart to ensure no caching
-          pm2 delete customer-service || true
-          pm2 delete reservation-service || true
-          pm2 start ecosystem.config.js --only customer-service
-          pm2 start ecosystem.config.js --only reservation-service
+          # Zero-downtime reload (instead of restart)
+          pm2 reload customer-service --update-env || pm2 start ecosystem.config.js --only customer-service
+          pm2 reload reservation-service --update-env || pm2 start ecosystem.config.js --only reservation-service
           pm2 save
-          echo "✅ Services restarted"
           
           # Cleanup
           rm -rf /tmp/deploy /tmp/deploy.tar.gz
