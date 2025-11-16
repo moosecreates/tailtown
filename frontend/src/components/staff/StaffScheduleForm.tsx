@@ -57,6 +57,7 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
     if (schedule) {
@@ -197,11 +198,17 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
   };
   
   const handleSubmit = async () => {
-    if (!validateForm()) {
+    if (!validateForm() || isSaving) {
       return;
     }
     
-    onSave(formData as StaffSchedule);
+    setIsSaving(true);
+    try {
+      onSave(formData as StaffSchedule);
+    } finally {
+      // Reset after a short delay to prevent immediate re-submission
+      setTimeout(() => setIsSaving(false), 1000);
+    }
   };
   
   return (
@@ -346,11 +353,16 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
         </LocalizationProvider>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="primary">
+        <Button onClick={onClose} color="primary" disabled={isSaving}>
           Cancel
         </Button>
-        <Button onClick={handleSubmit} color="primary" variant="contained">
-          {isEditing ? 'Update' : 'Save'}
+        <Button 
+          onClick={handleSubmit} 
+          color="primary" 
+          variant="contained"
+          disabled={isSaving}
+        >
+          {isSaving ? 'Saving...' : (isEditing ? 'Update' : 'Save')}
         </Button>
       </DialogActions>
     </Dialog>
