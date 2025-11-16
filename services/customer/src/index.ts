@@ -466,6 +466,20 @@ app.get('/ping', (req, res) => {
   });
 });
 
+// Debug endpoint to see what headers we're receiving
+app.get('/debug-headers', (req, res) => {
+  res.status(200).json({
+    hostname: req.hostname,
+    headers: req.headers,
+    url: req.url,
+    originalUrl: req.originalUrl,
+    protocol: req.protocol,
+    secure: req.secure,
+    ip: req.ip,
+    ips: req.ips
+  });
+});
+
 // Health check endpoint with database connectivity test
 app.get('/health', async (req, res) => {
   const health: any = {
