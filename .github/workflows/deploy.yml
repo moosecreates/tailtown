@@ -127,18 +127,23 @@ jobs:
           
           # Copy generated Prisma clients from CI build to server
           echo "Copying Prisma clients from CI build..."
-          # The Prisma clients were already generated in CI and are in the deployment package
-          # We just need to extract them from the build artifacts
+          # Remove parent node_modules/@prisma to force services to use their own
+          rm -rf node_modules/@prisma
+          
+          # Copy fresh Prisma clients to each service
           cd services/customer
-          # Prisma client is in node_modules/@prisma/client in CI, copy it if it exists in deploy
           if [ -d "/tmp/deploy/customer/node_modules/@prisma/client" ]; then
             rm -rf node_modules/@prisma/client
+            mkdir -p node_modules/@prisma
             cp -r /tmp/deploy/customer/node_modules/@prisma/client node_modules/@prisma/
+            echo "✅ Customer service Prisma client updated"
           fi
           cd ../reservation-service
           if [ -d "/tmp/deploy/reservation/node_modules/@prisma/client" ]; then
             rm -rf node_modules/@prisma/client
+            mkdir -p node_modules/@prisma
             cp -r /tmp/deploy/reservation/node_modules/@prisma/client node_modules/@prisma/
+            echo "✅ Reservation service Prisma client updated"
           fi
           cd ../..
           
