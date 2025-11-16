@@ -93,9 +93,9 @@ jobs:
           cd services/customer && npx prisma migrate deploy && cd ../..
           cd services/reservation-service && npx prisma migrate deploy && cd ../..
           
-          # Zero-downtime reload (instead of restart)
-          pm2 reload customer-service --update-env || pm2 start ecosystem.config.js --only customer-service
-          pm2 reload reservation-service --update-env || pm2 start ecosystem.config.js --only reservation-service
+          # Full restart after migrations (required for Prisma client to reinitialize)
+          pm2 restart customer-service --update-env || pm2 start ecosystem.config.js --only customer-service
+          pm2 restart reservation-service --update-env || pm2 start ecosystem.config.js --only reservation-service
           pm2 save
           
           # Cleanup
