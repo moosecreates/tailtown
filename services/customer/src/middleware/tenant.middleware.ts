@@ -123,12 +123,14 @@ export const extractTenantContext = async (
     console.log(`[Tenant Middleware] Tenant context set: ${tenant.businessName} (${tenant.subdomain})`);
     
     next();
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Tenant Middleware] Error:', error);
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
       message: 'Failed to resolve tenant context',
+      errorMessage: error.message,
+      errorStack: process.env.NODE_ENV === 'production' ? undefined : error.stack
     });
   }
 };
