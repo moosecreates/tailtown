@@ -9,6 +9,7 @@ import {
 import {
   Home as HomeIcon,
   CheckCircle as ChecklistIcon,
+  PhotoCamera as ReportCardIcon,
   Chat as ChatIcon,
   CalendarMonth as ScheduleIcon,
 } from '@mui/icons-material';
@@ -29,8 +30,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   const getActiveTab = () => {
     const path = location.pathname;
     if (path.includes('/mobile/checklists')) return 1;
-    if (path.includes('/mobile/chat')) return 2;
-    if (path.includes('/mobile/schedule')) return 3;
+    if (path.includes('/mobile/report-cards')) return 2;
+    if (path.includes('/mobile/chat')) return 3;
+    if (path.includes('/mobile/schedule')) return 4;
     return 0; // dashboard
   };
 
@@ -38,6 +40,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     const routes = [
       '/mobile/dashboard',
       '/mobile/checklists',
+      '/mobile/report-cards',
       '/mobile/chat',
       '/mobile/schedule',
     ];
@@ -87,6 +90,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               <ChecklistIcon />
             </Badge>
           }
+        />
+        <BottomNavigationAction
+          label="Reports"
+          icon={<ReportCardIcon />}
         />
         <BottomNavigationAction
           label="Chat"
