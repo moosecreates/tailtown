@@ -456,6 +456,16 @@ app.use('/schedules', authenticate, scheduleRoutes);
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Simple ping endpoint (no database, no dependencies)
+app.get('/ping', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    service: 'customer-service',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'unknown'
+  });
+});
+
 // Health check endpoint with database connectivity test
 app.get('/health', async (req, res) => {
   const health: any = {
