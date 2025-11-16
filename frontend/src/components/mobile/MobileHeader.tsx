@@ -25,6 +25,7 @@ interface MobileHeaderProps {
   userName?: string;
   onMenuClick?: () => void;
   onNotificationsClick?: () => void;
+  onBack?: () => void;
 }
 
 export const MobileHeader: React.FC<MobileHeaderProps> = ({
@@ -37,11 +38,29 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   userName,
   onMenuClick,
   onNotificationsClick,
+  onBack,
 }) => {
   const navigate = useNavigate();
 
   const handleBack = () => {
-    navigate(-1);
+    if (onBack) {
+      onBack();
+    } else {
+      navigate(-1);
+    }
+  };
+
+  const handleNotificationsClick = () => {
+    if (onNotificationsClick) {
+      onNotificationsClick();
+    } else {
+      // Default: navigate to chat page (where messages/notifications are)
+      navigate('/mobile/chat');
+    }
+  };
+
+  const handleProfileClick = () => {
+    navigate('/mobile/profile');
   };
 
   return (
@@ -97,7 +116,7 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
         {/* Right side - Notifications and Avatar */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {showNotifications && (
-            <IconButton onClick={onNotificationsClick}>
+            <IconButton onClick={handleNotificationsClick}>
               <Badge badgeContent={notificationCount} color="error" max={99}>
                 <NotificationsIcon />
               </Badge>
@@ -105,17 +124,23 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
           )}
           
           {userAvatar || userName ? (
-            <Avatar
-              src={userAvatar}
-              alt={userName}
-              sx={{
-                width: 32,
-                height: 32,
-                fontSize: '0.875rem',
-              }}
+            <IconButton 
+              onClick={handleProfileClick}
+              sx={{ p: 0.5 }}
             >
-              {!userAvatar && userName ? userName.charAt(0).toUpperCase() : null}
-            </Avatar>
+              <Avatar
+                src={userAvatar}
+                alt={userName}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                }}
+              >
+                {!userAvatar && userName ? userName.charAt(0).toUpperCase() : null}
+              </Avatar>
+            </IconButton>
           ) : null}
         </Box>
       </Toolbar>

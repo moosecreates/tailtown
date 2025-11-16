@@ -125,6 +125,9 @@ const GroomerAppointments = lazy(() => import('./pages/grooming/GroomerAppointme
 const TrainingClasses = lazy(() => import('./pages/training/TrainingClasses'));
 const ClassEnrollments = lazy(() => import('./pages/training/ClassEnrollments'));
 
+// Lazy loaded pages - Report Cards
+const ReportCards = lazy(() => import('./pages/reportCards/ReportCards'));
+
 // Public Booking Portal
 const BookingPortal = lazy(() => import('./pages/booking/BookingPortal'));
 
@@ -134,6 +137,7 @@ const Checklists = lazy(() => import('./pages/mobile/Checklists'));
 const TeamChat = lazy(() => import('./pages/mobile/TeamChat'));
 const MySchedule = lazy(() => import('./pages/mobile/MySchedule'));
 const MobileProfile = lazy(() => import('./pages/mobile/Profile'));
+const MobileReportCards = lazy(() => import('./pages/mobile/ReportCards'));
 
 // Custom event and utility components
 
@@ -270,6 +274,9 @@ const AppRoutes = () => {
         <Route path="/training/classes" element={isAuthenticated ? <TrainingClasses /> : <Navigate to="/login" />} />
         <Route path="/training/classes/:classId/enrollments" element={isAuthenticated ? <ClassEnrollments /> : <Navigate to="/login" />} />
         
+        {/* Report Card Routes */}
+        <Route path="/report-cards" element={isAuthenticated ? <ReportCards /> : <Navigate to="/login" />} />
+        
         {/* Debug routes */}
         <Route path="/debug/api" element={<ApiTester />} />
       </Route>
@@ -279,6 +286,7 @@ const AppRoutes = () => {
       <Route path="/mobile/checklists" element={isAuthenticated ? <Checklists /> : <Navigate to="/login" />} />
       <Route path="/mobile/chat" element={isAuthenticated ? <TeamChat /> : <Navigate to="/login" />} />
       <Route path="/mobile/schedule" element={isAuthenticated ? <MySchedule /> : <Navigate to="/login" />} />
+      <Route path="/mobile/report-cards" element={isAuthenticated ? <MobileReportCards /> : <Navigate to="/login" />} />
       <Route path="/mobile/profile" element={isAuthenticated ? <MobileProfile /> : <Navigate to="/login" />} />
       <Route path="/mobile" element={isAuthenticated ? <Navigate to="/mobile/dashboard" /> : <Navigate to="/login" />} />
 

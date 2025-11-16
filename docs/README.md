@@ -29,6 +29,8 @@ This directory contains all project-wide documentation for the Tailtown Pet Reso
   - [Reservations](./features/Reservations.md) - Reservation system details
   - [Add-On System](./features/AddOnSystem.md) - Service add-on implementation
   - [Checkout Process](./features/CheckoutProcess.md) - End-to-end checkout workflow
+  - [Pet Report Cards](./REPORT-CARD-DESIGN.md) - Photo-rich report card system (NEW - v1.2.0)
+  - [Report Card Deployment](./REPORT-CARD-DEPLOYMENT.md) - Deployment guide for report cards
 
 - **Operations** (`/docs/operations/`)
   - [Environment Variables](./operations/Environment-Variables.md) - Documentation of environment variables

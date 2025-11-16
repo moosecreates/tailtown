@@ -9,6 +9,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [1.2.0] - 2025-11-15
+
+### Added
+- **Pet Report Card System** - Photo-rich report cards for pet parents
+  - Mobile-first creation interface with native camera integration
+  - Activity ratings (mood, energy, appetite, social) with emoji display (😢 to 😄)
+  - Multiple photo upload with captions, ordering, and auto-compression
+  - Bulk report card generation for multiple pets at once
+  - Email/SMS delivery with tracking and view analytics
+  - 14 REST API endpoints (CRUD, photos, bulk operations, send)
+  - 37+ automated tests (unit + integration + E2E)
+  - Mobile app integration at `/mobile/report-cards` with bottom nav tab
+  - Database: 2 tables (`report_cards`, `report_card_photos`), 3 enums, auto-update triggers
+  - Backend: 850 lines (controller + routes)
+  - Frontend: 3 UI components (1,300+ lines)
+    - `QuickReportCard` - Mobile-first creation form
+    - `BulkReportCardDashboard` - Staff bulk operations
+    - `ReportCardViewer` - Customer-facing display
+  - Templates: Daycare Daily, Boarding Daily, Boarding Checkout, Grooming Complete, Training Session
+  - <3 minute report creation workflow
+  - Photo count auto-tracking with database triggers
+  - View count and delivery status tracking
+  - Staff attribution and tenant isolation
+  - See: `docs/REPORT-CARD-DESIGN.md`, `docs/REPORT-CARD-DEPLOYMENT.md`
+
+### Changed
+- Version bump from 1.1.0 to 1.2.0
+- Updated mobile bottom navigation to 5 tabs (added Reports tab with camera icon)
+- Updated ROADMAP.md with report card completion status
+- Updated SYSTEM-FEATURES-OVERVIEW.md with report card section
+- Updated README.md with report card documentation links
+
 ## [1.1.0] - 2025-11-14
 
 ### Added

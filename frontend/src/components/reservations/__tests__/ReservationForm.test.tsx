@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -135,7 +135,7 @@ describe('ReservationForm - Kennel Assignment Validation', () => {
       data: mockCustomers
     });
 
-    mockPetService.getPetsByCustomer = jest.fn().mockResolvedValue({
+    mockPetService.getPetsByCustomer.mockResolvedValue({
       status: 'success',
       data: mockPets
     });

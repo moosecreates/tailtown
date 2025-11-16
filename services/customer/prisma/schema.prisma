@@ -47,6 +47,8 @@ model Customer {
   groomerPreferences  GroomerPreference[]  @relation("CustomerGroomerPreferences")
   classEnrollments    ClassEnrollment[]    @relation("CustomerClassEnrollments")
   classWaitlist       ClassWaitlist[]      @relation("CustomerClassWaitlist")
+  waitlistEntries     WaitlistEntry[]
+  reportCards         ReportCard[]
 
   @@index([firstName, lastName], map: "customers_name_search_idx")
   @@index([email], map: "customers_email_search_idx")
@@ -101,6 +103,8 @@ model Pet {
   classEnrollments    ClassEnrollment[]    @relation("PetClassEnrollments")
   sessionAttendance   SessionAttendance[]  @relation("PetSessionAttendance")
   classWaitlist       ClassWaitlist[]      @relation("PetClassWaitlist")
+  waitlistEntries     WaitlistEntry[]
+  reportCards         ReportCard[]
 
   @@index([customerId], map: "pets_customer_id_idx")
   @@index([isActive, type], map: "pets_active_type_idx")
@@ -147,6 +151,8 @@ model Reservation {
   resource           Resource?          @relation(fields: [resourceId], references: [id])
   service            Service            @relation(fields: [serviceId], references: [id])
   staffAssigned      Staff?             @relation(fields: [staffAssignedId], references: [id])
+  waitlistConversions WaitlistEntry[]   @relation("ConvertedReservation")
+  reportCards        ReportCard[]
 
   @@index([startDate, endDate], map: "reservations_date_range_idx")
   @@index([status, startDate], map: "reservations_status_date_idx")
@@ -180,6 +186,7 @@ model Service {
   priceRules      PriceRuleService[]
   reservations    Reservation[]
   groomerAppointments GroomerAppointment[]
+  waitlistEntries WaitlistEntry[]
 
   @@index([tenantId, isActive], map: "services_tenant_active_idx")
   @@index([tenantId, name], map: "services_tenant_name_idx")
@@ -240,6 +247,7 @@ model Resource {
   maintenanceStatus   String?
   suiteNumber         Int?
   reservations        Reservation[]
+  waitlistEntries     WaitlistEntry[]
   availabilitySlots   ResourceAvailability[]
 
   @@index([tenantId, type, isActive], map: "resources_tenant_type_active_idx")
@@ -316,6 +324,9 @@ model Staff {
   pinnedMessages       PinnedMessage[]
   typingIndicators     TypingIndicator[]
   communicationPrefs   CommunicationNotificationPreference?
+  groomerWaitlist      WaitlistEntry[]      @relation("GroomerWaitlist")
+  createdReportCards   ReportCard[]         @relation("StaffCreatedReportCards")
+  uploadedPhotos       ReportCardPhoto[]    @relation("StaffUploadedPhotos")
 
   @@unique([tenantId, email], map: "staff_tenant_email_unique")
   @@index([tenantId, isActive], map: "staff_tenant_active_idx")
@@ -1203,9 +1214,10 @@ model TrainingClass {
   instructor      Staff           @relation("InstructorClasses", fields: [instructorId], references: [id], onDelete: Cascade)
   sessions        ClassSession[]
   enrollments     ClassEnrollment[]
-  waitlist        ClassWaitlist[]
+  classWaitlist   ClassWaitlist[]
+  waitlistEntries WaitlistEntry[]
   
-  @@index([tenantId, status, isActive], map: "training_classes_tenant_status_idx")
+  @@index([tenantId, startDate], map: "training_class_tenant_start_idx")
   @@index([startDate, endDate], map: "training_classes_dates_idx")
   @@index([instructorId], map: "training_classes_instructor_idx")
   @@map("training_classes")
@@ -1982,4 +1994,327 @@ enum MentionType {
   USER            // @username
   CHANNEL         // @channel (notify all)
   HERE            // @here (notify online users)
+}
+
+// ============================================================================
+// WAITLIST SYSTEM
+// ============================================================================
+
+// Waitlist entry for fully booked services
+model WaitlistEntry {
+  id                        String                @id @default(uuid())
+  tenantId                  String                @default("dev")
+  customerId                String
+  petId                     String
+  serviceType               WaitlistServiceType
+  
+  // Date/Time
+  requestedStartDate        DateTime
+  requestedEndDate          DateTime?             // For boarding/daycare
+  requestedTime             String?               // For grooming (HH:MM format)
+  flexibleDates             Boolean               @default(false)
+  dateFlexibilityDays       Int?                  // ±N days
+  
+  // Service Details
+  serviceId                 String?               // Specific service
+  resourceId                String?               // Specific suite/room
+  groomerId                 String?               // Specific groomer
+  classId                   String?               // Specific training class
+  
+  // Preferences (JSON)
+  preferences               String                @default("{}")  // JSON: suiteType, groomerPreference, timePreference
+  
+  // Status & Priority
+  status                    WaitlistStatus        @default(ACTIVE)
+  priority                  BigInt                // Timestamp-based (earlier = lower number = higher priority)
+  position                  Int                   // Current position in queue
+  
+  // Metadata
+  notes                     String?               // Staff notes
+  customerNotes             String?               // Customer notes/requirements
+  notificationsSent         Int                   @default(0)
+  lastNotifiedAt            DateTime?
+  
+  // Conversion
+  convertedToReservationId  String?
+  convertedAt               DateTime?
+  
+  // Expiration
+  expiresAt                 DateTime?             // Auto-expire after N days
+  
+  // Timestamps
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime              @updatedAt
+  
+  // Relations
+  customer                  Customer              @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  pet                       Pet                   @relation(fields: [petId], references: [id], onDelete: Cascade)
+  service                   Service?              @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  resource                  Resource?             @relation(fields: [resourceId], references: [id], onDelete: SetNull)
+  groomer                   Staff?                @relation("GroomerWaitlist", fields: [groomerId], references: [id], onDelete: SetNull)
+  trainingClass             TrainingClass?        @relation(fields: [classId], references: [id], onDelete: SetNull)
+  convertedReservation      Reservation?          @relation("ConvertedReservation", fields: [convertedToReservationId], references: [id], onDelete: SetNull)
+  notifications             WaitlistNotification[]
+  
+  @@index([tenantId, status], map: "idx_waitlist_tenant_status")
+  @@index([tenantId, serviceType, status], map: "idx_waitlist_service_status")
+  @@index([tenantId, requestedStartDate], map: "idx_waitlist_start_date")
+  @@index([priority], map: "idx_waitlist_priority")
+  @@index([position], map: "idx_waitlist_position")
+  @@index([expiresAt], map: "idx_waitlist_expires")
+  @@index([customerId], map: "idx_waitlist_customer")
+  @@map("waitlist_entries")
+}
+
+// Notifications sent for waitlist entries
+model WaitlistNotification {
+  id                  String                      @id @default(uuid())
+  waitlistEntryId     String
+  notificationType    WaitlistNotificationType
+  recipientType       WaitlistRecipientType
+  recipientId         String                      // Staff ID or Customer ID
+  channel             NotificationChannel
+  status              NotificationStatus          @default(PENDING)
+  
+  // Message
+  subject             String?
+  message             String
+  
+  // Metadata
+  sentAt              DateTime?
+  readAt              DateTime?
+  actionTaken         WaitlistAction?
+  actionTakenAt       DateTime?
+  errorMessage        String?
+  
+  // Expiration (for spot available notifications)
+  expiresAt           DateTime?
+  
+  // Timestamps
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
+  
+  // Relations
+  waitlistEntry       WaitlistEntry               @relation(fields: [waitlistEntryId], references: [id], onDelete: Cascade)
+  
+  @@index([waitlistEntryId], map: "idx_waitlist_notif_entry")
+  @@index([recipientId, status], map: "idx_waitlist_notif_recipient")
+  @@index([status, sentAt], map: "idx_waitlist_notif_status")
+  @@index([expiresAt], map: "idx_waitlist_notif_expires")
+  @@map("waitlist_notifications")
+}
+
+// Waitlist configuration per tenant
+model WaitlistConfig {
+  id                                String    @id @default(uuid())
+  tenantId                          String    @unique
+  
+  // Feature flags
+  enabled                           Boolean   @default(true)
+  boardingEnabled                   Boolean   @default(true)
+  daycareEnabled                    Boolean   @default(true)
+  groomingEnabled                   Boolean   @default(true)
+  trainingEnabled                   Boolean   @default(true)
+  
+  // Expiration settings
+  entryExpirationDays               Int       @default(30)
+  notificationExpirationHours       Int       @default(24)
+  
+  // Notification settings
+  maxNotificationsPerAvailability   Int       @default(3)
+  autoNotifyOnCancellation          Boolean   @default(true)
+  customerNotificationChannels      String[]  @default(["SMS", "EMAIL"])
+  staffNotificationChannels         String[]  @default(["IN_APP", "EMAIL"])
+  
+  // Flexible dates
+  flexibleDatesEnabled              Boolean   @default(true)
+  maxFlexibilityDays                Int       @default(7)
+  
+  // Priority algorithm
+  useLoyaltyBonus                   Boolean   @default(false)
+  useFlexibilityBonus               Boolean   @default(true)
+  
+  // Timestamps
+  createdAt                         DateTime  @default(now())
+  updatedAt                         DateTime  @updatedAt
+  
+  @@map("waitlist_config")
+}
+
+// Waitlist enums
+
+enum WaitlistServiceType {
+  BOARDING
+  DAYCARE
+  GROOMING
+  TRAINING
+}
+
+enum WaitlistStatus {
+  ACTIVE          // Waiting for availability
+  NOTIFIED        // Customer notified of availability
+  CONVERTED       // Converted to reservation
+  EXPIRED         // Entry expired
+  CANCELLED       // Cancelled by customer or staff
+}
+
+enum WaitlistNotificationType {
+  SPOT_AVAILABLE      // Spot opened up
+  POSITION_UPDATE     // Moved up in queue
+  EXPIRING_SOON       // Entry expiring soon
+  CONVERTED           // Successfully converted to reservation
+  CANCELLED           // Entry cancelled
+}
+
+enum WaitlistRecipientType {
+  STAFF
+  CUSTOMER
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  IN_APP
+  PUSH
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  READ
+}
+
+enum WaitlistAction {
+  BOOKED          // Customer booked the spot
+  DECLINED        // Customer declined the spot
+  EXPIRED         // Notification expired
+  NO_RESPONSE     // No response from customer
+}
+
+// ============================================================================
+// REPORT CARD SYSTEM
+// ============================================================================
+
+model ReportCard {
+  id                String                    @id @default(uuid())
+  tenantId          String
+  
+  // Relationships
+  petId             String
+  pet               Pet                       @relation(fields: [petId], references: [id])
+  customerId        String
+  customer          Customer                  @relation(fields: [customerId], references: [id])
+  reservationId     String?
+  reservation       Reservation?              @relation(fields: [reservationId], references: [id])
+  createdByStaffId  String
+  createdByStaff    Staff                     @relation("StaffCreatedReportCards", fields: [createdByStaffId], references: [id])
+  
+  // Report Details
+  reportDate        DateTime                  @default(now())
+  serviceType       ReportCardServiceType
+  templateType      ReportCardTemplate?
+  
+  // Content
+  title             String?
+  summary           String?
+  
+  // Activity Ratings (1-5 scale)
+  moodRating        Int?
+  energyRating      Int?
+  appetiteRating    Int?
+  socialRating      Int?
+  
+  // Activity Details
+  activities        String[]                  @default([])
+  mealsEaten        String[]                  @default([])
+  bathroomBreaks    Int?
+  medicationGiven   Boolean                   @default(false)
+  medicationNotes   String?
+  
+  // Behavioral Notes
+  behaviorNotes     String?
+  highlights        String[]                  @default([])
+  concerns          String[]                  @default([])
+  
+  // Photos
+  photos            ReportCardPhoto[]
+  photoCount        Int                       @default(0)
+  
+  // Delivery
+  status            ReportCardStatus          @default(DRAFT)
+  sentAt            DateTime?
+  sentViaEmail      Boolean                   @default(false)
+  sentViaSMS        Boolean                   @default(false)
+  emailDeliveredAt  DateTime?
+  smsDeliveredAt    DateTime?
+  viewedAt          DateTime?
+  viewCount         Int                       @default(0)
+  
+  // Metadata
+  isTemplate        Boolean                   @default(false)
+  tags              String[]                  @default([])
+  notes             String?
+  
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  
+  @@index([tenantId, reportDate])
+  @@index([petId, reportDate])
+  @@index([customerId, reportDate])
+  @@index([reservationId])
+  @@index([status])
+  @@index([createdByStaffId])
+  @@map("report_cards")
+}
+
+model ReportCardPhoto {
+  id                String        @id @default(uuid())
+  reportCardId      String
+  reportCard        ReportCard    @relation(fields: [reportCardId], references: [id], onDelete: Cascade)
+  
+  // Photo Details
+  url               String
+  thumbnailUrl      String?
+  caption           String?
+  order             Int           @default(0)
+  
+  // Metadata
+  uploadedByStaffId String?
+  uploadedByStaff   Staff?        @relation("StaffUploadedPhotos", fields: [uploadedByStaffId], references: [id])
+  fileSize          Int?
+  width             Int?
+  height            Int?
+  mimeType          String?
+  
+  createdAt         DateTime      @default(now())
+  
+  @@index([reportCardId, order])
+  @@map("report_card_photos")
+}
+
+enum ReportCardServiceType {
+  BOARDING
+  DAYCARE
+  GROOMING
+  TRAINING
+  GENERAL
+}
+
+enum ReportCardTemplate {
+  DAYCARE_DAILY
+  BOARDING_DAILY
+  BOARDING_CHECKOUT
+  GROOMING_COMPLETE
+  TRAINING_SESSION
+  CUSTOM
+}
+
+enum ReportCardStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  SENT
+  VIEWED
+  ARCHIVED
 }

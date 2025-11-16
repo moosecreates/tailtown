@@ -200,6 +200,108 @@ Tailtown is a comprehensive pet resort management system designed for high-volum
 
 ---
 
+## 📸 Pet Report Cards (NEW - v1.2.0)
+
+### Overview
+A comprehensive system for creating and delivering photo-rich report cards to pet parents, keeping them updated about their pets' activities, mood, and well-being.
+
+### Report Card Creation
+- **Mobile-First Design**
+  - Native camera integration for quick photo capture
+  - Take photos directly from mobile device
+  - Client-side image compression for faster uploads
+  - Photo preview grid with drag-and-drop ordering
+  - <3 minute report creation workflow
+
+- **Activity Tracking**
+  - Mood rating (1-5 scale with emoji display 😢 to 😄)
+  - Energy level rating
+  - Appetite rating
+  - Social behavior rating
+  - Activities list (playtime, nap time, etc.)
+  - Meals eaten tracking
+  - Bathroom breaks count
+  - Medication administration tracking
+
+- **Rich Content**
+  - Multiple photos per report (unlimited)
+  - Photo captions and ordering
+  - Quick summary text
+  - Detailed behavioral notes
+  - Highlights (positive moments)
+  - Concerns (items needing attention)
+  - Custom tags for organization
+
+### Bulk Operations
+- **Efficiency Tools**
+  - Create multiple report cards at once
+  - Apply templates to selected pets
+  - Bulk send to all parents
+  - Today's pets dashboard
+  - Pets needing reports list
+  - Progress tracking
+
+- **Templates**
+  - Daycare Daily template
+  - Boarding Daily template
+  - Boarding Checkout template
+  - Grooming Complete template
+  - Training Session template
+  - Custom templates
+
+### Delivery & Tracking
+- **Multi-Channel Delivery**
+  - Email with photos and full report
+  - SMS with link to view online
+  - Delivery status tracking
+  - Email/SMS delivery timestamps
+  - Failed delivery alerts
+
+- **Analytics**
+  - View count tracking
+  - View timestamps
+  - Customer engagement metrics
+  - Most popular report times
+  - Staff productivity metrics
+
+### Mobile App Integration
+- **Mobile Features**
+  - Dedicated "Reports" tab in bottom navigation
+  - Camera icon for quick access
+  - Floating action button for new reports
+  - Today's report statistics
+  - Send to parents with one tap
+  - Draft/sent status indicators
+
+### API Endpoints
+- 14 REST endpoints for full CRUD operations
+- Photo upload/delete/reorder
+- Bulk create and send
+- Customer/pet/reservation queries
+- View tracking
+- Delivery status updates
+
+### Technical Features
+- **Database**
+  - 2 tables with auto-update triggers
+  - Photo count auto-calculation
+  - Comprehensive indexes for performance
+  - Cascade delete for photos
+
+- **Testing**
+  - 37+ automated tests
+  - Unit tests for all operations
+  - Integration tests for workflows
+  - End-to-end API tests
+
+- **Security**
+  - Tenant isolation
+  - Staff attribution
+  - Permission-based access
+  - Secure photo URLs
+
+---
+
 ## 💰 Point of Sale (POS) System
 
 ### Order Management

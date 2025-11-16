@@ -100,11 +100,11 @@ describe('Availability Service - Business Logic', () => {
     it('should find next available date', () => {
       const calendar: AvailabilityCalendar = {
         month: 11,
-        year: 2025,
+        year: 2026,
         dates: [
-          { date: '2025-11-01', status: 'UNAVAILABLE', availableCount: 0, totalCount: 10, availableSuites: [] },
-          { date: '2025-11-02', status: 'AVAILABLE', availableCount: 10, totalCount: 10, availableSuites: ['s1', 's2'] },
-          { date: '2025-11-03', status: 'AVAILABLE', availableCount: 8, totalCount: 10, availableSuites: ['s1'] }
+          { date: '2026-11-01', status: 'UNAVAILABLE', availableCount: 0, totalCount: 10, availableSuites: [] },
+          { date: '2026-11-02', status: 'AVAILABLE', availableCount: 10, totalCount: 10, availableSuites: ['s1', 's2'] },
+          { date: '2026-11-03', status: 'AVAILABLE', availableCount: 8, totalCount: 10, availableSuites: ['s1'] }
         ],
         summary: {
           totalDays: 3,
@@ -115,7 +115,7 @@ describe('Availability Service - Business Logic', () => {
       };
 
       const nextDate = availabilityService.getNextAvailableDate(calendar);
-      expect(nextDate).toBe('2025-11-02');
+      expect(nextDate).toBe('2026-11-02');
     });
 
     it('should return null when no dates available', () => {
