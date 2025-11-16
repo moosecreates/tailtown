@@ -104,10 +104,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Real API call to login endpoint - uses dynamic URL for multi-tenant support
       const apiUrl = process.env.NODE_ENV === 'production' ? window.location.origin : (process.env.REACT_APP_API_URL || 'http://localhost:4004');
+      
+      // Extract tenant subdomain from hostname
+      const hostname = window.location.hostname;
+      const parts = hostname.split('.');
+      const subdomain = parts.length >= 3 ? parts[0] : (localStorage.getItem('tailtown_tenant_id') || 'dev');
+      
       const response = await fetch(`${apiUrl}/api/staff/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Tenant-Subdomain': subdomain,
         },
         body: JSON.stringify({ email, password }),
       });
