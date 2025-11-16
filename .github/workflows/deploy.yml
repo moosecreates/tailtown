@@ -117,12 +117,7 @@ jobs:
           fi
           cd ../..
           
-          # Regenerate Prisma clients after migrations
-          echo "Regenerating Prisma clients after migrations..."
-          cd services/customer && node_modules/.bin/prisma generate && cd ../..
-          cd services/reservation-service && node_modules/.bin/prisma generate && cd ../..
-          
-          # Full restart after migrations (required for Prisma client to reinitialize)
+          # Full restart after migrations (Prisma client already generated in CI)
           echo "Restarting services..."
           pm2 restart customer-service --update-env || pm2 start ecosystem.config.js --only customer-service
           pm2 restart reservation-service --update-env || pm2 start ecosystem.config.js --only reservation-service
