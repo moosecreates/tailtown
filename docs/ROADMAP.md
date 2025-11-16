@@ -611,10 +611,17 @@ Split customer service into domain services:
 - ✅ Mobile-optimized interface (Dashboard, Checklists, Chat, Schedule, Profile)
 - ✅ Bottom navigation with 5 tabs
 - ✅ Responsive layouts and device detection
+- ✅ Report Cards with photo upload (Nov 15, 2025)
 - ⏭️ Swipeable message actions (Future)
 - ⏭️ Quick reply enhancements (Future)
 
 **Phase 4: Advanced Features** (1 week) - February
+- **Staff Messaging** - Direct messages and group chats
+  - Message individual staff members
+  - Create and manage staff groups
+  - Group messaging for teams/departments
+  - Message history and threading
+  - Push notifications for new messages
 - File uploads
 - Message search
 - Notification preferences
