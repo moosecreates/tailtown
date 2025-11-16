@@ -89,6 +89,10 @@ jobs:
           cp -r /tmp/deploy/customer/* services/customer/dist/
           cp -r /tmp/deploy/reservation/* services/reservation-service/dist/
           
+          # Run database migrations
+          cd services/customer && npx prisma migrate deploy && cd ../..
+          cd services/reservation-service && npx prisma migrate deploy && cd ../..
+          
           # Zero-downtime reload (instead of restart)
           pm2 reload customer-service --update-env || pm2 start ecosystem.config.js --only customer-service
           pm2 reload reservation-service --update-env || pm2 start ecosystem.config.js --only reservation-service
