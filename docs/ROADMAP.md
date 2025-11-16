@@ -709,6 +709,21 @@ Split customer service into domain services:
    - Template management
    - **Workaround**: Paper contracts or PDFs
 
+4. **Package Sales & Multi-Pass System** (2 weeks) - Jul 15, 2026
+   - Create service packages (e.g., 10-pack daycare passes)
+   - Discounted bulk pricing tiers
+   - Package inventory tracking (remaining passes)
+   - Automatic deduction on service use
+   - Package expiration dates
+   - Gift packages for customers
+   - Package types:
+     - Daycare passes (5, 10, 20 pack)
+     - Grooming packages (monthly plans)
+     - Training class bundles
+     - Boarding credit packages
+   - **Benefits**: Increased revenue, customer loyalty, reduced per-visit admin
+   - **Workaround**: Manual tracking in notes or spreadsheets
+
 #### Testing & Quality (2-3 weeks)
 
 4. **Frontend Component Tests** (2-3 weeks) - Jun 30, 2026
