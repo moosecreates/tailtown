@@ -29,8 +29,12 @@ jobs:
     
     - name: Generate Prisma clients
       run: |
-        cd services/customer && npx prisma generate
-        cd ../reservation-service && npx prisma generate
+        cd services/customer
+        rm -rf node_modules/.prisma node_modules/@prisma/client
+        npx prisma generate
+        cd ../reservation-service
+        rm -rf node_modules/.prisma node_modules/@prisma/client
+        npx prisma generate
     
     - name: Build frontend
       env:
