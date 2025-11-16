@@ -27,6 +27,11 @@ jobs:
         cd ../services/customer && npm ci
         cd ../reservation-service && npm ci
     
+    - name: Generate Prisma clients
+      run: |
+        cd services/customer && npx prisma generate
+        cd ../reservation-service && npx prisma generate
+    
     - name: Build frontend
       env:
         REACT_APP_TENANT_ID: dev
