@@ -51,7 +51,8 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
     onNext();
   };
 
-  const handleStartDateChange = (date: Date | null) => {
+  const handleStartDateChange = (value: unknown) => {
+    const date = value as Date | null;
     setStartDate(date);
     // If end date is before new start date, clear it
     if (date && endDate && endDate < date) {
@@ -64,7 +65,8 @@ const DateTimeSelection: React.FC<DateTimeSelectionProps> = ({
     }
   };
 
-  const handleEndDateChange = (date: Date | null) => {
+  const handleEndDateChange = (value: unknown) => {
+    const date = value as Date | null;
     setEndDate(date);
     if (date) {
       setEndDateOpen(false);
