@@ -57,7 +57,7 @@ import announcementRoutes from './routes/announcement.routes';
 import superAdminRoutes from './routes/super-admin.routes';
 import businessSettingsRoutes from './routes/business-settings.routes';
 import messagingRoutes from './routes/messaging.routes';
-import waitlistRoutes from './routes/waitlist.routes';
+// import waitlistRoutes from './routes/waitlist.routes'; // TODO: Enable when waitlist feature is complete
 import reportCardRoutes from './routes/reportCard.routes';
 import { systemRoutes } from './routes/system.routes';
 import { errorHandler } from './middleware/error.middleware';
@@ -439,8 +439,8 @@ app.use('/api/business-settings', requireTenant, authenticate, requireTenantAdmi
 // Messaging Routes (staff only, authenticated)
 app.use('/api/messaging', requireTenant, messagingRoutes);
 
-// Waitlist Routes (authenticated)
-app.use('/api/waitlist', requireTenant, waitlistRoutes);
+// Waitlist Routes (authenticated) - TODO: Enable when waitlist feature is complete
+// app.use('/api/waitlist', requireTenant, waitlistRoutes);
 
 // Report Card Routes (authenticated)
 app.use('/api/report-cards', requireTenant, reportCardRoutes);

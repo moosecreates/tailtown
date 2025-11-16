@@ -568,7 +568,7 @@ async function updateWaitlistPositions(tenantId: string, serviceType: string) {
   const entries = await prisma.waitlistEntry.findMany({
     where: {
       tenantId,
-      serviceType,
+      serviceType: serviceType as any,
       status: 'ACTIVE'
     },
     orderBy: {

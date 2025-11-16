@@ -38,8 +38,8 @@ export const getAllTrainingClasses = async (req: TenantRequest, res: Response, n
         _count: {
           select: {
             enrollments: true,
-            sessions: true,
-            waitlist: true
+            sessions: true
+            // classWaitlist: true // TODO: Enable when waitlist feature is complete
           }
         }
       },
@@ -79,20 +79,20 @@ export const getTrainingClassById = async (req: TenantRequest, res: Response, ne
             }
           }
         },
-        waitlist: {
-          include: {
-            pet: true,
-            customer: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                phone: true
-              }
-            }
-          },
-          orderBy: { position: 'asc' }
-        }
+        // classWaitlist: { // TODO: Enable when waitlist feature is complete
+        //   include: {
+        //     pet: true,
+        //     customer: {
+        //       select: {
+        //         id: true,
+        //         firstName: true,
+        //         lastName: true,
+        //         phone: true
+        //       }
+        //     }
+        //   },
+        //   orderBy: { position: 'asc' }
+        // }
       }
     });
     
