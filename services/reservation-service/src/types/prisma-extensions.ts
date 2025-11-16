@@ -58,7 +58,7 @@ export type ExtendedReservation = Prisma.ReservationGetPayload<{}> & {
 export interface ExtendedReservationInclude extends Omit<Prisma.ReservationInclude, 'service'> {
   // We're keeping this simple to avoid complex Prisma type constraint issues
   addOns?: any;
-  service?: boolean | Prisma.ServiceArgs;
+  service?: any; // Using any to avoid Prisma type generation issues
 }
 
 export interface ExtendedPetSelect extends Prisma.PetSelect {
