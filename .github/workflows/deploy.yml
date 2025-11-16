@@ -125,10 +125,10 @@ jobs:
           echo "Regenerating Prisma clients on server..."
           cd services/customer
           rm -rf node_modules/.prisma node_modules/@prisma/client
-          npx prisma generate
+          node_modules/.bin/prisma generate
           cd ../reservation-service
           rm -rf node_modules/.prisma node_modules/@prisma/client
-          npx prisma generate
+          node_modules/.bin/prisma generate
           cd ../..
           
           # Full restart after migrations and Prisma regeneration
