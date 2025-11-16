@@ -456,13 +456,43 @@ app.use('/schedules', authenticate, scheduleRoutes);
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
+// Health check endpoint with database connectivity test
+app.get('/health', async (req, res) => {
+  const health: any = {
     status: 'up',
     service: 'customer-service',
-    timestamp: new Date().toISOString()
-  });
+    timestamp: new Date().toISOString(),
+    database: {
+      connected: false,
+      error: null
+    },
+    tenant: {
+      canQuery: false,
+      count: 0,
+      error: null
+    }
+  };
+
+  try {
+    // Test database connection
+    const { prisma } = await import('./config/prisma');
+    await prisma.$queryRaw`SELECT 1`;
+    health.database.connected = true;
+
+    // Test Tenant table query
+    try {
+      const tenantCount = await prisma.tenant.count();
+      health.tenant.canQuery = true;
+      health.tenant.count = tenantCount;
+    } catch (tenantError: any) {
+      health.tenant.error = tenantError.message;
+    }
+  } catch (dbError: any) {
+    health.database.error = dbError.message;
+    health.status = 'degraded';
+  }
+
+  res.status(health.status === 'up' ? 200 : 503).json(health);
 });
 
 // Error handling middleware
