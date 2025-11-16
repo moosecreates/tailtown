@@ -146,7 +146,8 @@ const ReservationCreation: React.FC<ReservationCreationProps> = ({
   }, [startDate, endDate, selectedService, selectedResource]);
 
   // Handle start date change
-  const handleStartDateChange = (newStartDate: Date | null) => {
+  const handleStartDateChange = (value: unknown) => {
+    const newStartDate = value as Date | null;
     setStartDate(newStartDate);
     
     // Ensure end date is after start date

@@ -275,7 +275,8 @@ const PrintKennelCards: React.FC = () => {
   }, [reservations, petData, customerData]); // All data used in filtering
   
   // Handle date change
-  const handleDateChange = (date: Date | null) => {
+  const handleDateChange = (value: unknown) => {
+    const date = value as Date | null;
     setSelectedDate(date);
   };
   

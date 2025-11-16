@@ -95,7 +95,8 @@ const StaffScheduleForm: React.FC<StaffScheduleFormProps> = ({
     }
   };
   
-  const handleDateChange = (date: Date | null) => {
+  const handleDateChange = (value: unknown) => {
+    const date = value as Date | null;
     if (date) {
       // Format date in local timezone to avoid timezone shift
       const year = date.getFullYear();
