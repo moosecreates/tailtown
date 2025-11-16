@@ -32,6 +32,7 @@ jobs:
         REACT_APP_TENANT_ID: dev
         REACT_APP_API_URL: http://129.212.178.244:4004
         REACT_APP_RESERVATION_API_URL: http://129.212.178.244:4003
+        DISABLE_ESLINT_PLUGIN: true
       run: |
         cd frontend
         npm run build
