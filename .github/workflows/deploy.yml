@@ -105,6 +105,9 @@ jobs:
           
           echo "Running reservation service migrations..."
           cd services/reservation-service
+          # Resolve the same failed migration in reservation service
+          echo "Attempting to resolve failed migration..."
+          npx prisma migrate resolve --rolled-back 20251023144036_add_check_in_system || echo "Migration resolve failed or not needed"
           if npx prisma migrate deploy; then
             echo "✅ Reservation migrations successful"
           else
