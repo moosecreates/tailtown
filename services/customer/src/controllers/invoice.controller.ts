@@ -145,9 +145,10 @@ export const createInvoice = async (req: TenantRequest, res: Response, next: Nex
       status: 'success',
       data: invoice,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating invoice:', error);
-    return next(new AppError('Error creating invoice', 500));
+    const errorMessage = error.message || 'Error creating invoice';
+    return next(new AppError(errorMessage, 500));
   }
 };
 

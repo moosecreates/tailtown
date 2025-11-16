@@ -250,7 +250,7 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
         `${RESERVATION_SERVICE_URL}/api/resources?type=STANDARD_SUITE&limit=1`,
         { headers: { 'x-tenant-id': 'dev' } }
       );
-      const resourceData = await resourceResponse.json();
+      const resourceData = await resourceResponse.json() as any;
       const resources = resourceData.data?.resources || [];
       if (resources.length > 0) {
         defaultResourceId = resources[0].id;
@@ -286,7 +286,7 @@ export const startMigration = async (req: Request, res: Response, next: NextFunc
           }
         );
         
-        const existingReservations = await checkResponse.json();
+        const existingReservations = await checkResponse.json() as any;
         
         if (!existingReservations || existingReservations.length === 0) {
           const reservationData = transformReservationToReservation(

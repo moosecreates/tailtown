@@ -39,7 +39,7 @@ export const getAllTrainingClasses = async (req: TenantRequest, res: Response, n
           select: {
             enrollments: true,
             sessions: true,
-            waitlist: true
+            classWaitlist: true
           }
         }
       },
@@ -79,7 +79,7 @@ export const getTrainingClassById = async (req: TenantRequest, res: Response, ne
             }
           }
         },
-        waitlist: {
+        classWaitlist: {
           include: {
             pet: true,
             customer: {
