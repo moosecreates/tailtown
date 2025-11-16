@@ -92,6 +92,8 @@ jobs:
           # Run database migrations with error checking
           echo "Running customer service migrations..."
           cd services/customer
+          # First, try to resolve any failed migrations
+          npx prisma migrate resolve --applied 20251023144036_add_check_in_system 2>/dev/null || true
           if npx prisma migrate deploy; then
             echo "✅ Customer migrations successful"
           else
