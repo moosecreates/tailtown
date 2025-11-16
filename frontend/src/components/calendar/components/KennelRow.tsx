@@ -79,11 +79,6 @@ const KennelRow: React.FC<KennelRowProps> = memo(({
     let cursor = 'pointer';
     let border = '1px solid rgba(224, 224, 224, 1)';
 
-    // Debug logging
-    if (Math.random() < 0.1) {
-      console.log('[getCellStyle] Debug:', { occupied, available, hasRes: !!reservation, category: reservation?.service?.serviceCategory });
-    }
-
     if (reservation) {
       // Check if service category is DAYCARE - use orange, otherwise use blue tint
       const isDaycare = reservation.service?.serviceCategory === 'DAYCARE';
