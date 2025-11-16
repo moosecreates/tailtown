@@ -125,6 +125,9 @@ const GroomerAppointments = lazy(() => import('./pages/grooming/GroomerAppointme
 const TrainingClasses = lazy(() => import('./pages/training/TrainingClasses'));
 const ClassEnrollments = lazy(() => import('./pages/training/ClassEnrollments'));
 
+// Lazy loaded pages - Report Cards
+const ReportCards = lazy(() => import('./pages/reportCards/ReportCards'));
+
 // Public Booking Portal
 const BookingPortal = lazy(() => import('./pages/booking/BookingPortal'));
 
@@ -270,6 +273,9 @@ const AppRoutes = () => {
         {/* Training Routes */}
         <Route path="/training/classes" element={isAuthenticated ? <TrainingClasses /> : <Navigate to="/login" />} />
         <Route path="/training/classes/:classId/enrollments" element={isAuthenticated ? <ClassEnrollments /> : <Navigate to="/login" />} />
+        
+        {/* Report Card Routes */}
+        <Route path="/report-cards" element={isAuthenticated ? <ReportCards /> : <Navigate to="/login" />} />
         
         {/* Debug routes */}
         <Route path="/debug/api" element={<ApiTester />} />
