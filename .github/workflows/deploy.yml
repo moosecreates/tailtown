@@ -30,8 +30,8 @@ jobs:
     - name: Build frontend
       env:
         REACT_APP_TENANT_ID: dev
-        REACT_APP_API_URL: http://129.212.178.244:4004
-        REACT_APP_RESERVATION_API_URL: http://129.212.178.244:4003
+        REACT_APP_API_URL: https://dev.canicloud.com
+        REACT_APP_RESERVATION_API_URL: https://dev.canicloud.com
         DISABLE_ESLINT_PLUGIN: true
       run: |
         cd frontend
@@ -84,10 +84,16 @@ jobs:
           cp -r /tmp/deploy/customer/* services/customer/dist/
           cp -r /tmp/deploy/reservation/* services/reservation-service/dist/
           
-          # Zero-downtime reload (instead of restart)
-          pm2 reload customer-service --update-env || pm2 start ecosystem.config.js --only customer-service
-          pm2 reload reservation-service --update-env || pm2 start ecosystem.config.js --only reservation-service
+          # Force full restart to clear any broken state
+          echo "Stopping all services..."
+          pm2 delete all || true
+          echo "Starting services fresh..."
+          pm2 start ecosystem.config.js --only customer-service
+          pm2 start ecosystem.config.js --only reservation-service
+          pm2 start ecosystem.config.js --only frontend
           pm2 save
+          echo "Waiting for services to stabilize..."
+          sleep 5
           
           # Cleanup
           rm -rf /tmp/deploy /tmp/deploy.tar.gz
