@@ -89,14 +89,33 @@ jobs:
           cp -r /tmp/deploy/customer/* services/customer/dist/
           cp -r /tmp/deploy/reservation/* services/reservation-service/dist/
           
-          # Run database migrations
-          cd services/customer && npx prisma migrate deploy && cd ../..
-          cd services/reservation-service && npx prisma migrate deploy && cd ../..
+          # Run database migrations with error checking
+          echo "Running customer service migrations..."
+          cd services/customer
+          if npx prisma migrate deploy; then
+            echo "✅ Customer migrations successful"
+          else
+            echo "❌ Customer migrations failed"
+            exit 1
+          fi
+          cd ../..
+          
+          echo "Running reservation service migrations..."
+          cd services/reservation-service
+          if npx prisma migrate deploy; then
+            echo "✅ Reservation migrations successful"
+          else
+            echo "❌ Reservation migrations failed"
+            exit 1
+          fi
+          cd ../..
           
           # Full restart after migrations (required for Prisma client to reinitialize)
+          echo "Restarting services..."
           pm2 restart customer-service --update-env || pm2 start ecosystem.config.js --only customer-service
           pm2 restart reservation-service --update-env || pm2 start ecosystem.config.js --only reservation-service
           pm2 save
+          echo "✅ Services restarted"
           
           # Cleanup
           rm -rf /tmp/deploy /tmp/deploy.tar.gz
