@@ -10,7 +10,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
-import { AppError } from '../utils/appError';
+import AppError from '../utils/appError';
 
 const prisma = new PrismaClient();
 
