@@ -25,6 +25,7 @@ interface MobileHeaderProps {
   userName?: string;
   onMenuClick?: () => void;
   onNotificationsClick?: () => void;
+  onBack?: () => void;
 }
 
 export const MobileHeader: React.FC<MobileHeaderProps> = ({
@@ -37,11 +38,16 @@ export const MobileHeader: React.FC<MobileHeaderProps> = ({
   userName,
   onMenuClick,
   onNotificationsClick,
+  onBack,
 }) => {
   const navigate = useNavigate();
 
   const handleBack = () => {
-    navigate(-1);
+    if (onBack) {
+      onBack();
+    } else {
+      navigate(-1);
+    }
   };
 
   const handleNotificationsClick = () => {
