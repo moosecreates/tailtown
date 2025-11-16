@@ -125,26 +125,14 @@ jobs:
           fi
           cd ../..
           
-          # Copy generated Prisma clients from CI build to server
-          echo "Copying Prisma clients from CI build..."
-          # Remove parent node_modules/@prisma to force services to use their own
-          rm -rf node_modules/@prisma
-          
-          # Copy fresh Prisma clients to each service
+          # Regenerate Prisma clients on server using deployed schema
+          echo "Regenerating Prisma clients on server..."
           cd services/customer
-          if [ -d "/tmp/deploy/customer/node_modules/@prisma/client" ]; then
-            rm -rf node_modules/@prisma/client
-            mkdir -p node_modules/@prisma
-            cp -r /tmp/deploy/customer/node_modules/@prisma/client node_modules/@prisma/
-            echo "✅ Customer service Prisma client updated"
-          fi
+          # Use the Prisma CLI that's already installed, just regenerate the client
+          # This uses the deployed schema.prisma and the existing @prisma/client package
+          npx --yes prisma@4.16.2 generate --schema=./prisma/schema.prisma || echo "Customer Prisma generation had issues"
           cd ../reservation-service
-          if [ -d "/tmp/deploy/reservation/node_modules/@prisma/client" ]; then
-            rm -rf node_modules/@prisma/client
-            mkdir -p node_modules/@prisma
-            cp -r /tmp/deploy/reservation/node_modules/@prisma/client node_modules/@prisma/
-            echo "✅ Reservation service Prisma client updated"
-          fi
+          npx --yes prisma@4.16.2 generate --schema=./prisma/schema.prisma || echo "Reservation Prisma generation had issues"
           cd ../..
           
           # Full restart after migrations and Prisma client update
