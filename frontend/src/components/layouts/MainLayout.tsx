@@ -40,7 +40,8 @@ import {
   CreditCard as PaymentIcon,
   AssessmentOutlined as ReportIcon,
   ShoppingCart as ShoppingCartIcon,
-  PhotoCamera as ReportCardIcon
+  PhotoCamera as ReportCardIcon,
+  NotificationsActive as WaitlistIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import ImpersonationBanner from '../super-admin/ImpersonationBanner';
@@ -216,6 +217,7 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     { path: '/customers', label: 'Customers', icon: PeopleIcon },
     { path: '/pets', label: 'Pets', icon: PetsIcon },
     { path: '/report-cards', label: 'Report Cards', icon: ReportCardIcon },
+    { path: '/waitlist', label: 'Waitlist', icon: WaitlistIcon },
     { path: '/products', label: 'Products & POS', icon: ShoppingCartIcon },
     { 
       path: '/suites', 

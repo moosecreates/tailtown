@@ -128,6 +128,9 @@ const ClassEnrollments = lazy(() => import('./pages/training/ClassEnrollments'))
 // Lazy loaded pages - Report Cards
 const ReportCards = lazy(() => import('./pages/reportCards/ReportCards'));
 
+// Lazy loaded pages - Waitlist
+const Waitlist = lazy(() => import('./pages/waitlist/Waitlist'));
+
 // Public Booking Portal
 const BookingPortal = lazy(() => import('./pages/booking/BookingPortal'));
 
@@ -276,6 +279,9 @@ const AppRoutes = () => {
         
         {/* Report Card Routes */}
         <Route path="/report-cards" element={isAuthenticated ? <ReportCards /> : <Navigate to="/login" />} />
+        
+        {/* Waitlist Routes */}
+        <Route path="/waitlist" element={isAuthenticated ? <Waitlist /> : <Navigate to="/login" />} />
         
         {/* Debug routes */}
         <Route path="/debug/api" element={<ApiTester />} />
