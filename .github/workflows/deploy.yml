@@ -46,18 +46,20 @@ jobs:
     
     - name: Create deployment package
       run: |
-        mkdir -p deploy
-        cp -r frontend/build deploy/frontend
-        cp -r services/customer/dist deploy/customer/dist
-        cp -r services/customer/src deploy/customer/src
-        cp -r services/customer/prisma deploy/customer/prisma
-        cp -r services/customer/package.json deploy/customer/
-        cp -r services/customer/tsconfig.json deploy/customer/
-        cp -r services/reservation-service/dist deploy/reservation/dist
-        cp -r services/reservation-service/src deploy/reservation/src
-        cp -r services/reservation-service/prisma deploy/reservation/prisma
-        cp -r services/reservation-service/package.json deploy/reservation/
-        cp -r services/reservation-service/tsconfig.json deploy/reservation/
+        mkdir -p deploy/frontend
+        mkdir -p deploy/customer
+        mkdir -p deploy/reservation
+        cp -r frontend/build/* deploy/frontend/
+        cp -r services/customer/dist deploy/customer/
+        cp -r services/customer/src deploy/customer/
+        cp -r services/customer/prisma deploy/customer/
+        cp services/customer/package.json deploy/customer/
+        cp services/customer/tsconfig.json deploy/customer/
+        cp -r services/reservation-service/dist deploy/reservation/
+        cp -r services/reservation-service/src deploy/reservation/
+        cp -r services/reservation-service/prisma deploy/reservation/
+        cp services/reservation-service/package.json deploy/reservation/
+        cp services/reservation-service/tsconfig.json deploy/reservation/
         tar -czf deploy.tar.gz deploy/
     
     - name: Deploy to Digital Ocean
