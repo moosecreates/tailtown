@@ -84,9 +84,50 @@ jobs:
           cp -r /tmp/deploy/customer/* services/customer/dist/
           cp -r /tmp/deploy/reservation/* services/reservation-service/dist/
           
-          # Force full restart to clear any broken state
+          # DIAGNOSTICS - Check what's actually wrong
+          echo "================================"
+          echo "🔍 DIAGNOSTICS"
+          echo "================================"
+          
+          echo "📊 PM2 Status:"
+          pm2 list
+          
+          echo ""
+          echo "📝 Customer Service Logs (last 50 lines):"
+          pm2 logs customer-service --lines 50 --nostream || echo "No logs available"
+          
+          echo ""
+          echo "📝 Reservation Service Logs (last 50 lines):"
+          pm2 logs reservation-service --lines 50 --nostream || echo "No logs available"
+          
+          echo ""
+          echo "🔌 Testing Database Connection:"
+          cd services/customer
+          node -e "const { PrismaClient } = require('@prisma/client'); const prisma = new PrismaClient(); prisma.\$connect().then(() => { console.log('✅ Customer DB: Connected'); return prisma.\$disconnect(); }).catch(e => { console.error('❌ Customer DB Error:', e.message); });" || echo "Failed to test DB"
+          cd ../..
+          
+          echo ""
+          echo "📦 Prisma Client Version:"
+          cd services/customer
+          node -e "try { const pkg = require('@prisma/client/package.json'); console.log('Version:', pkg.version); } catch(e) { console.log('❌ Not found'); }" || echo "Failed to check version"
+          cd ../..
+          
+          echo ""
+          echo "================================"
+          echo "🔧 ATTEMPTING FIX"
+          echo "================================"
+          
+          # Now try to fix
           echo "Stopping all services..."
           pm2 delete all || true
+          
+          echo "Regenerating Prisma clients..."
+          cd services/customer
+          npx prisma generate || echo "Customer Prisma generation failed"
+          cd ../reservation-service
+          npx prisma generate || echo "Reservation Prisma generation failed"
+          cd ../..
+          
           echo "Starting services fresh..."
           pm2 start ecosystem.config.js --only customer-service
           pm2 start ecosystem.config.js --only reservation-service
