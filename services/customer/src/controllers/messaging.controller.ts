@@ -328,9 +328,10 @@ export const getOrCreateDirectMessage = async (
         tenantId,
         type: 'PRIVATE',
         isArchived: false,
-        name: {
-          in: [`dm-${staffId}-${recipientId}`, `dm-${recipientId}-${staffId}`]
-        }
+        OR: [
+          { name: `dm-${staffId}-${recipientId}` },
+          { name: `dm-${recipientId}-${staffId}` }
+        ]
       },
       include: {
         members: {
