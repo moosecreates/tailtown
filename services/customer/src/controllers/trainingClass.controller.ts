@@ -39,7 +39,7 @@ export const getAllTrainingClasses = async (req: TenantRequest, res: Response, n
           select: {
             enrollments: true,
             sessions: true,
-            classWaitlist: true
+            waitlist: true
           }
         }
       },
