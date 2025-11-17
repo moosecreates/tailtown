@@ -185,8 +185,9 @@ const TeamChat: React.FC = () => {
 
   // Channel list view
   if (viewMode === 'channels') {
-    const groupChannels = channels.filter(c => c.type !== 'DIRECT');
-    const directChannels = channels.filter(c => c.type === 'DIRECT');
+    // Direct messages are PRIVATE channels with names starting with "dm-"
+    const groupChannels = channels.filter(c => !c.name.startsWith('dm-'));
+    const directChannels = channels.filter(c => c.name.startsWith('dm-'));
 
     return (
       <Box sx={{ pb: 8 }}>

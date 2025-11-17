@@ -6,7 +6,7 @@ export interface Channel {
   name: string;
   displayName: string;
   description?: string;
-  type: 'PUBLIC' | 'PRIVATE' | 'DIRECT';
+  type: 'PUBLIC' | 'PRIVATE' | 'ANNOUNCEMENT' | 'ARCHIVED';
   icon?: string;
   color?: string;
   isDefault: boolean;
@@ -18,6 +18,8 @@ export interface Channel {
     senderId: string;
   } | null;
   messageCount: number;
+  // Helper to identify direct messages (PRIVATE channels with dm- prefix)
+  isDirect?: boolean;
 }
 
 export interface Message {
