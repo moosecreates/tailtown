@@ -326,16 +326,10 @@ export const getOrCreateDirectMessage = async (
     const existingChannel = await prisma.communicationChannel.findFirst({
       where: {
         tenantId,
-        type: 'DIRECT',
+        type: 'PRIVATE',
         isArchived: false,
-        members: {
-          every: {
-            staffId: { in: [staffId, recipientId] },
-            leftAt: null
-          }
-        },
-        _count: {
-          members: 2 // Exactly 2 members
+        name: {
+          in: [`dm-${staffId}-${recipientId}`, `dm-${recipientId}-${staffId}`]
         }
       },
       include: {
@@ -386,7 +380,7 @@ export const getOrCreateDirectMessage = async (
         tenantId,
         name: `dm-${staffId}-${recipientId}`,
         displayName: `${recipient.firstName} ${recipient.lastName}`,
-        type: 'DIRECT',
+        type: 'PRIVATE',
         isDefault: false,
         isArchived: false,
         members: {
