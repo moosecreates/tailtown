@@ -306,9 +306,13 @@ export const getOrCreateDirectMessage = async (
   next: NextFunction
 ) => {
   try {
-    const tenantId = req.user?.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
+    const tenantId = req.user?.tenantId || (process.env.NODE_ENV !== 'production' ? 'dev' : undefined);
     const staffId = req.user?.id;
     const { recipientId } = req.body;
+
+    if (!tenantId) {
+      return next(new AppError('Tenant ID is required', 401, ErrorType.AUTHENTICATION_ERROR));
+    }
 
     if (!staffId) {
       return next(new AppError('Staff ID is required', 401, ErrorType.AUTHENTICATION_ERROR));
@@ -406,6 +410,7 @@ export const getOrCreateDirectMessage = async (
       messageCount: 0
     });
   } catch (error) {
+    console.error('Error in getOrCreateDirectMessage:', error);
     next(error);
   }
 };
