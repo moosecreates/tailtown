@@ -48,10 +48,16 @@ jobs:
       run: |
         mkdir -p deploy
         cp -r frontend/build deploy/frontend
-        cp -r services/customer/dist deploy/customer
-        cp -r services/customer/prisma deploy/customer/
-        cp -r services/reservation-service/dist deploy/reservation
-        cp -r services/reservation-service/prisma deploy/reservation/
+        cp -r services/customer/dist deploy/customer/dist
+        cp -r services/customer/src deploy/customer/src
+        cp -r services/customer/prisma deploy/customer/prisma
+        cp -r services/customer/package.json deploy/customer/
+        cp -r services/customer/tsconfig.json deploy/customer/
+        cp -r services/reservation-service/dist deploy/reservation/dist
+        cp -r services/reservation-service/src deploy/reservation/src
+        cp -r services/reservation-service/prisma deploy/reservation/prisma
+        cp -r services/reservation-service/package.json deploy/reservation/
+        cp -r services/reservation-service/tsconfig.json deploy/reservation/
         tar -czf deploy.tar.gz deploy/
     
     - name: Deploy to Digital Ocean
@@ -81,8 +87,8 @@ jobs:
           
           # Update files
           cp -r /tmp/deploy/frontend/* frontend/build/
-          cp -r /tmp/deploy/customer/* services/customer/dist/
-          cp -r /tmp/deploy/reservation/* services/reservation-service/dist/
+          cp -r /tmp/deploy/customer/* services/customer/
+          cp -r /tmp/deploy/reservation/* services/reservation-service/
           
           # DIAGNOSTICS - Check what's actually wrong
           echo "================================"
