@@ -8,12 +8,13 @@
 
 | Document | Last Updated | Last Reviewed | Next Review | Trigger |
 |----------|--------------|---------------|-------------|---------|
+| DEPLOYMENT-FIX-SESSION-NOV-16-2025.md | 2025-11-16 | 2025-11-16 | 2026-02-16 | Production deployment fixes |
 | DISASTER-RECOVERY-PLAN.md | 2025-11-07 | 2025-11-07 | 2026-02-07 | DigitalOcean backups enabled |
 | CURRENT-SYSTEM-ARCHITECTURE.md | 2025-11-01 | 2025-11-01 | 2026-02-01 | Service updates |
 | SECURITY-CHECKLIST.md | 2025-11-07 | 2025-11-07 | 2026-02-07 | Security implementation |
 | DEVELOPMENT-BEST-PRACTICES.md | 2025-11-07 | 2025-11-07 | 2026-02-07 | Best practices added |
 | TESTING-STRATEGY.md | 2025-10-30 | 2025-10-30 | 2026-01-30 | Test updates |
-| ROADMAP.md | 2025-11-07 | 2025-11-07 | 2026-02-07 | Feature planning |
+| ROADMAP.md | 2025-11-16 | 2025-11-16 | 2026-02-16 | Feature planning + v1.2.1 release |
 
 ---
 
@@ -199,14 +200,15 @@ When reviewing PRs, check:
 - **Red (> 3 months old):** 🔴 Update needed
 
 ### Current Status
+- DEPLOYMENT-FIX-SESSION-NOV-16-2025.md: ✅ Green (created Nov 16, 2025)
 - DISASTER-RECOVERY-PLAN.md: ✅ Green (updated Nov 7, 2025)
 - CURRENT-SYSTEM-ARCHITECTURE.md: ⚠️ Yellow (updated Nov 1, 2025)
 - SECURITY-CHECKLIST.md: ✅ Green (updated Nov 7, 2025)
 - DEVELOPMENT-BEST-PRACTICES.md: ✅ Green (updated Nov 7, 2025)
 - TESTING-STRATEGY.md: ⚠️ Yellow (updated Oct 30, 2025)
-- ROADMAP.md: ✅ Green (updated Nov 7, 2025)
+- ROADMAP.md: ✅ Green (updated Nov 16, 2025)
 
 ---
 
-**Last Registry Update:** November 7, 2025  
+**Last Registry Update:** November 16, 2025  
 **Next Registry Review:** December 1, 2025

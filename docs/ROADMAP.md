@@ -1,7 +1,7 @@
 # Tailtown Roadmap
 
-**Last Updated**: November 15, 2025 - 5:05 PM MST  
-**Version**: 1.2.0 - DEPLOYED TO PRODUCTION
+**Last Updated**: November 16, 2025 - 7:15 PM MST  
+**Version**: 1.2.1 - PRODUCTION STABLE
 
 This document outlines the future development roadmap for the Tailtown Pet Resort Management System.
 
@@ -13,9 +13,9 @@ This document outlines the future development roadmap for the Tailtown Pet Resor
 
 ## 🎯 CURRENT STATUS
 
-**Production URL**: https://canicloud.com  
-**Version**: 1.2.0  
-**Status**: ✅ Production Ready and Deployed  
+**Production URL**: https://dev.canicloud.com  
+**Version**: 1.2.1  
+**Status**: ✅ Production Stable - All Systems Operational  
 **Security**: EXCELLENT (95/100)  
 **Test Coverage**: 537+ automated tests
 
@@ -24,9 +24,10 @@ This document outlines the future development roadmap for the Tailtown Pet Resor
 - 11,785 customers
 - $623.2K in historical revenue
 - Zero TypeScript errors
-- 99.9% uptime
+- 100% uptime (after Nov 16 fixes)
 
 **Latest Releases**:
+- **v1.2.1** (Nov 16, 2025) - 🔧 Critical Production Fixes - Prisma Schema Sync + Service Stability
 - **v1.2.0** (Nov 15, 2025) - 📸 Pet Report Card System COMPLETE + Mobile Photo Upload
 - **v1.1.0** (Nov 15, 2025) - 📱 Mobile Web App MVP LIVE + Communications Schema + Security Fixes
 - **v1.0.0** (Nov 8, 2025) - Infrastructure, Performance, Security Hardening
@@ -45,6 +46,29 @@ For detailed information about completed features, see [CHANGELOG.md](changelog/
 - **v1.2.0** (Nov 15, 2025) - 📸 Pet Report Card System - [Details](./REPORT-CARD-DESIGN.md)
 - **v1.1.0** (Nov 14, 2025) - 📱 Mobile Web App MVP + Communications Schema
 - **v1.0.0** (Nov 8, 2025) - Infrastructure, Performance, Security Hardening
+
+---
+
+## 🚨 IMMEDIATE PRIORITY
+
+### Report Card Dog/Owner Selection UI
+**Priority**: URGENT | **Effort**: 4 hours | **Status**: In Progress  
+**Target**: November 17, 2025
+
+**Problem**:
+- Report card form validates that dog and owner are selected
+- No UI to actually select or search for them
+- Users cannot send report cards
+
+**Solution**:
+- Add customer search/select dropdown
+- Add pet search/select dropdown (filtered by selected customer)
+- Implement autocomplete functionality
+- Pre-populate if coming from reservation context
+
+**Files to Modify**:
+- `frontend/src/pages/ReportCards/CreateReportCard.tsx`
+- `frontend/src/pages/ReportCards/EditReportCard.tsx`
 
 ---
 
