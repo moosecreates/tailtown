@@ -181,12 +181,6 @@ export const getMyWaitlistEntries = async (req: AuthRequest, res: Response, next
             name: true,
             type: true
           }
-        },
-        service: {
-          select: {
-            id: true,
-            name: true
-          }
         }
       },
       orderBy: {
@@ -350,18 +344,6 @@ export const listWaitlistEntries = async (req: AuthRequest, res: Response, next:
             name: true,
             type: true,
             breed: true
-          }
-        },
-        service: {
-          select: {
-            id: true,
-            name: true
-          }
-        },
-        resource: {
-          select: {
-            id: true,
-            name: true
           }
         }
       },
