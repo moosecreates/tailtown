@@ -379,30 +379,37 @@ export const getOrCreateDirectMessage = async (
       return next(new AppError('Recipient not found', 404, ErrorType.VALIDATION_ERROR));
     }
 
-    // Create new direct message channel
-    const channel = await prisma.communicationChannel.create({
-      data: {
-        tenantId,
-        name: `dm-${staffId}-${recipientId}`,
-        displayName: `${recipient.firstName} ${recipient.lastName}`,
-        type: 'PRIVATE',
-        isDefault: false,
-        isArchived: false,
-        createdById: staffId,
-        members: {
-          create: [
-            { staffId, joinedAt: new Date() },
-            { staffId: recipientId, joinedAt: new Date() }
-          ]
+    // Create new direct message channel and members in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create the channel
+      const newChannel = await tx.communicationChannel.create({
+        data: {
+          tenantId,
+          name: `dm-${staffId}-${recipientId}`,
+          displayName: `${recipient.firstName} ${recipient.lastName}`,
+          type: 'PRIVATE',
+          isDefault: false,
+          isArchived: false,
+          createdById: staffId
         }
-      }
+      });
+
+      // Add both members
+      await tx.channelMember.createMany({
+        data: [
+          { channelId: newChannel.id, staffId, joinedAt: new Date() },
+          { channelId: newChannel.id, staffId: recipientId, joinedAt: new Date() }
+        ]
+      });
+
+      return newChannel;
     });
 
     res.status(201).json({
-      id: channel.id,
-      name: channel.name,
-      displayName: channel.displayName,
-      type: channel.type,
+      id: result.id,
+      name: result.name,
+      displayName: result.displayName,
+      type: result.type,
       isDefault: false,
       isMuted: false,
       unreadCount: 0,
