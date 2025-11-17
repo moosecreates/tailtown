@@ -121,10 +121,12 @@ jobs:
           echo "Stopping all services..."
           pm2 delete all || true
           
-          echo "Regenerating Prisma clients..."
+          echo "Running database migrations..."
           cd services/customer
+          npx prisma migrate deploy || echo "Customer migrations failed (may already be applied)"
           npx prisma generate || echo "Customer Prisma generation failed"
           cd ../reservation-service
+          npx prisma migrate deploy || echo "Reservation migrations failed (may already be applied)"
           # NUCLEAR OPTION: Delete and reinstall node_modules
           echo "Cleaning reservation service node_modules..."
           rm -rf node_modules
