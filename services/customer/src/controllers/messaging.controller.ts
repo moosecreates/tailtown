@@ -383,6 +383,7 @@ export const getOrCreateDirectMessage = async (
         type: 'PRIVATE',
         isDefault: false,
         isArchived: false,
+        createdById: staffId,
         members: {
           create: [
             { staffId, joinedAt: new Date() },
