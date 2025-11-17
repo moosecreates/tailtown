@@ -298,6 +298,123 @@ export const markChannelAsRead = async (
 };
 
 /**
+ * Get or create a direct message channel with another staff member
+ */
+export const getOrCreateDirectMessage = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const tenantId = req.user?.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
+    const staffId = req.user?.id;
+    const { recipientId } = req.body;
+
+    if (!staffId) {
+      return next(new AppError('Staff ID is required', 401, ErrorType.AUTHENTICATION_ERROR));
+    }
+
+    if (!recipientId) {
+      return next(new AppError('Recipient ID is required', 400, ErrorType.VALIDATION_ERROR));
+    }
+
+    if (staffId === recipientId) {
+      return next(new AppError('Cannot create direct message with yourself', 400, ErrorType.VALIDATION_ERROR));
+    }
+
+    // Check if direct message channel already exists between these two users
+    const existingChannel = await prisma.communicationChannel.findFirst({
+      where: {
+        tenantId,
+        type: 'DIRECT',
+        isArchived: false,
+        members: {
+          every: {
+            staffId: { in: [staffId, recipientId] },
+            leftAt: null
+          }
+        },
+        _count: {
+          members: 2 // Exactly 2 members
+        }
+      },
+      include: {
+        members: {
+          where: { leftAt: null },
+          include: {
+            staff: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (existingChannel) {
+      // Return existing channel with formatted display name
+      const otherMember = existingChannel.members.find(m => m.staffId !== staffId);
+      return res.json({
+        id: existingChannel.id,
+        name: existingChannel.name,
+        displayName: otherMember ? `${otherMember.staff.firstName} ${otherMember.staff.lastName}` : 'Direct Message',
+        type: existingChannel.type,
+        isDefault: false,
+        isMuted: false,
+        unreadCount: 0,
+        lastMessage: null,
+        messageCount: 0
+      });
+    }
+
+    // Get recipient info for channel name
+    const recipient = await prisma.staff.findUnique({
+      where: { id: recipientId },
+      select: { firstName: true, lastName: true }
+    });
+
+    if (!recipient) {
+      return next(new AppError('Recipient not found', 404, ErrorType.VALIDATION_ERROR));
+    }
+
+    // Create new direct message channel
+    const channel = await prisma.communicationChannel.create({
+      data: {
+        tenantId,
+        name: `dm-${staffId}-${recipientId}`,
+        displayName: `${recipient.firstName} ${recipient.lastName}`,
+        type: 'DIRECT',
+        isDefault: false,
+        isArchived: false,
+        members: {
+          create: [
+            { staffId, joinedAt: new Date() },
+            { staffId: recipientId, joinedAt: new Date() }
+          ]
+        }
+      }
+    });
+
+    res.status(201).json({
+      id: channel.id,
+      name: channel.name,
+      displayName: channel.displayName,
+      type: channel.type,
+      isDefault: false,
+      isMuted: false,
+      unreadCount: 0,
+      lastMessage: null,
+      messageCount: 0
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Get unread message count across all channels
  */
 export const getUnreadCount = async (

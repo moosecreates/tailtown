@@ -6,6 +6,7 @@ import {
   sendChannelMessage,
   markChannelAsRead,
   getUnreadCount,
+  getOrCreateDirectMessage,
 } from '../controllers/messaging.controller';
 
 const router = express.Router();
@@ -47,5 +48,12 @@ router.post('/channels/:channelId/read', markChannelAsRead);
  * @access  Private (Staff only)
  */
 router.get('/unread-count', getUnreadCount);
+
+/**
+ * @route   POST /api/messaging/direct
+ * @desc    Get or create a direct message channel with another staff member
+ * @access  Private (Staff only)
+ */
+router.post('/direct', getOrCreateDirectMessage);
 
 export default router;
