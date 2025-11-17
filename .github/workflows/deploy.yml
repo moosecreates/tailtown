@@ -125,6 +125,8 @@ jobs:
           cd services/customer
           npx prisma generate || echo "Customer Prisma generation failed"
           cd ../reservation-service
+          # Ensure Prisma dependencies are present
+          npm install @prisma/client@4.16.2 @prisma/engines@4.16.2 --no-save || echo "Failed to install Prisma deps"
           npx prisma generate || echo "Reservation Prisma generation failed"
           cd ../..
           
