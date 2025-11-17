@@ -128,7 +128,7 @@ jobs:
           # NUCLEAR OPTION: Delete and reinstall node_modules
           echo "Cleaning reservation service node_modules..."
           rm -rf node_modules
-          npm ci || echo "npm ci failed"
+          npm ci --legacy-peer-deps || echo "npm ci failed"
           npx prisma generate || echo "Reservation Prisma generation failed"
           cd ../..
           
