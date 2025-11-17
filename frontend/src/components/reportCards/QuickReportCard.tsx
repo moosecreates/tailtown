@@ -4,7 +4,7 @@
  * Mobile-first component for quickly creating report cards with photos
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Box,
   Card,
@@ -22,7 +22,8 @@ import {
   Alert,
   CircularProgress,
   Stack,
-  Divider
+  Divider,
+  Autocomplete
 } from '@mui/material';
 import {
   PhotoCamera,
@@ -32,6 +33,8 @@ import {
   Close
 } from '@mui/icons-material';
 import { reportCardService, CreateReportCardRequest } from '../../services/reportCardService';
+import { customerService } from '../../services/customerService';
+import { petService, Pet } from '../../services/petService';
 
 interface QuickReportCardProps {
   petId?: string;
@@ -69,6 +72,80 @@ const QuickReportCard: React.FC<QuickReportCardProps> = ({
   const [behaviorNotes, setBehaviorNotes] = useState('');
   const [highlights, setHighlights] = useState<string[]>([]);
   const [highlightInput, setHighlightInput] = useState('');
+
+  // Customer and Pet selection state
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<any | null>(null);
+  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+  const [customerSearchInput, setCustomerSearchInput] = useState('');
+  const [loadingCustomers, setLoadingCustomers] = useState(false);
+  const [loadingPets, setLoadingPets] = useState(false);
+
+  // Load customers on search
+  useEffect(() => {
+    const loadCustomers = async () => {
+      if (customerSearchInput.length < 2) {
+        setCustomers([]);
+        return;
+      }
+
+      setLoadingCustomers(true);
+      try {
+        const response = await customerService.searchCustomers(customerSearchInput, 1, 20);
+        setCustomers(response.data || []);
+      } catch (err) {
+        console.error('Failed to load customers:', err);
+      } finally {
+        setLoadingCustomers(false);
+      }
+    };
+
+    const timeoutId = setTimeout(loadCustomers, 300);
+    return () => clearTimeout(timeoutId);
+  }, [customerSearchInput]);
+
+  // Load pets when customer is selected
+  useEffect(() => {
+    const loadPets = async () => {
+      if (!selectedCustomer?.id) {
+        setPets([]);
+        setSelectedPet(null);
+        return;
+      }
+
+      setLoadingPets(true);
+      try {
+        const response = await petService.getPetsByCustomer(selectedCustomer.id);
+        setPets(response.data || []);
+        
+        // Auto-select if only one pet
+        if (response.data?.length === 1) {
+          setSelectedPet(response.data[0]);
+          setPetId(response.data[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to load pets:', err);
+      } finally {
+        setLoadingPets(false);
+      }
+    };
+
+    loadPets();
+  }, [selectedCustomer]);
+
+  // Update IDs when selections change
+  useEffect(() => {
+    if (selectedCustomer) {
+      setCustomerId(selectedCustomer.id);
+    }
+  }, [selectedCustomer]);
+
+  useEffect(() => {
+    if (selectedPet) {
+      setPetId(selectedPet.id);
+    }
+  }, [selectedPet]);
 
   const handlePhotoCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -203,6 +280,101 @@ const QuickReportCard: React.FC<QuickReportCardProps> = ({
         )}
 
         <Stack spacing={3}>
+          {/* Customer Selection */}
+          <Autocomplete
+            options={customers}
+            value={selectedCustomer}
+            onChange={(_, newValue) => setSelectedCustomer(newValue)}
+            inputValue={customerSearchInput}
+            onInputChange={(_, newInputValue) => setCustomerSearchInput(newInputValue)}
+            getOptionLabel={(option) => `${option.firstName} ${option.lastName}`}
+            loading={loadingCustomers}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Customer *"
+                placeholder="Search by name..."
+                helperText="Type at least 2 characters to search"
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {loadingCustomers ? <CircularProgress size={20} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
+            )}
+            renderOption={(props, option) => (
+              <li {...props} key={option.id}>
+                <Box>
+                  <Typography variant="body1">
+                    {option.firstName} {option.lastName}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {option.email} • {option.phone || 'No phone'}
+                  </Typography>
+                </Box>
+              </li>
+            )}
+            noOptionsText={
+              customerSearchInput.length < 2
+                ? "Type to search customers"
+                : "No customers found"
+            }
+          />
+
+          {/* Pet Selection */}
+          <Autocomplete
+            options={pets}
+            value={selectedPet}
+            onChange={(_, newValue) => setSelectedPet(newValue)}
+            getOptionLabel={(option) => option.name}
+            loading={loadingPets}
+            disabled={!selectedCustomer}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Pet *"
+                placeholder={selectedCustomer ? "Select a pet" : "Select customer first"}
+                helperText={
+                  selectedCustomer
+                    ? pets.length === 0
+                      ? "No pets found for this customer"
+                      : `${pets.length} pet(s) available`
+                    : "Please select a customer first"
+                }
+                InputProps={{
+                  ...params.InputProps,
+                  endAdornment: (
+                    <>
+                      {loadingPets ? <CircularProgress size={20} /> : null}
+                      {params.InputProps.endAdornment}
+                    </>
+                  ),
+                }}
+              />
+            )}
+            renderOption={(props, option) => (
+              <li {...props} key={option.id}>
+                <Box>
+                  <Typography variant="body1">
+                    {option.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {option.breed || option.type} • {option.color || 'No color specified'}
+                  </Typography>
+                </Box>
+              </li>
+            )}
+            noOptionsText={
+              !selectedCustomer
+                ? "Select a customer first"
+                : "No pets found"
+            }
+          />
+
           {/* Service Type */}
           <TextField
             select
