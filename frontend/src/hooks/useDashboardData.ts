@@ -2,21 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { reservationService } from '../services/reservationService';
 import { logger } from '../utils/logger';
 import { getTenantTimezone } from '../config';
+import { enhanceReservationsWithVaccinationIcons } from '../utils/vaccinationIconUtils';
 
 interface DashboardMetrics {
   inCount: number | null;
   outCount: number | null;
   overnightCount: number | null;
-}
-
-interface DashboardData extends DashboardMetrics {
-  allReservations: any[];
-  filteredReservations: any[];
-  loading: boolean;
-  error: string | null;
-  appointmentFilter: 'in' | 'out' | 'all';
-  selectedDate: Date;
-  setSelectedDate: (date: Date) => void;
 }
 
 /**
@@ -169,18 +160,22 @@ export const useDashboardData = () => {
       
       console.log('[Dashboard] Extracted reservations:', reservations.length, 'reservations');
 
+      // Enhance reservations with vaccination icons
+      const enhancedReservations = enhanceReservationsWithVaccinationIcons(reservations);
+      console.log('[Dashboard] Enhanced reservations with vaccination icons');
+
       // Calculate metrics using local timezone dates
-      const checkIns = reservations.filter((res: any) => {
+      const checkIns = enhancedReservations.filter((res: any) => {
         const startDateStr = getLocalDateString(res.startDate);
         return startDateStr === formattedDate;
       }).length;
 
-      const checkOuts = reservations.filter((res: any) => {
+      const checkOuts = enhancedReservations.filter((res: any) => {
         const endDateStr = getLocalDateString(res.endDate);
         return endDateStr === formattedDate;
       }).length;
 
-      const overnight = reservations.filter((res: any) => {
+      const overnight = enhancedReservations.filter((res: any) => {
         const startDateStr = getLocalDateString(res.startDate);
         const endDateStr = getLocalDateString(res.endDate);
         return startDateStr < formattedDate && endDateStr >= formattedDate;
@@ -190,7 +185,7 @@ export const useDashboardData = () => {
         checkIns,
         checkOuts,
         overnight,
-        totalReservations: reservations.length
+        totalReservations: enhancedReservations.length
       });
 
       setMetrics({
@@ -199,10 +194,10 @@ export const useDashboardData = () => {
         overnightCount: overnight
       });
 
-      setAllReservations(reservations);
+      setAllReservations(enhancedReservations);
       
       // Apply initial filter (check-ins by default to show today's appointments in local timezone)
-      const checkInsToday = reservations.filter((res: any) => {
+      const checkInsToday = enhancedReservations.filter((res: any) => {
         const startDateStr = getLocalDateString(res.startDate);
         return startDateStr === formattedDate;
       });

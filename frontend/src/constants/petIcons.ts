@@ -208,6 +208,20 @@ export const MEDICAL_ICONS: PetIcon[] = [
     label: 'Skin Condition',
     description: 'Has skin allergies or sensitivities',
   },
+  {
+    id: 'vaccinations-current',
+    category: 'medical',
+    icon: '💉',
+    label: 'Vaccinations Current',
+    description: 'All required vaccinations are up to date',
+  },
+  {
+    id: 'vaccinations-overdue',
+    category: 'medical',
+    icon: '⚠️',
+    label: 'Vaccinations Overdue',
+    description: 'Vaccinations are expired or need updating',
+  },
 ];
 
 // Handling Icons (removed "Use Gloves" as requested)

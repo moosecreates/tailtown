@@ -5,7 +5,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
-import fetch from 'node-fetch';
+// Use native fetch (Node 18+) instead of node-fetch
 import GingrApiClient from '../services/gingr-api.service';
 import {
   transformOwnerToCustomer,

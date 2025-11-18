@@ -7,7 +7,7 @@
  * - Lodging Label: "A 02", "A 01", etc.
  */
 
-import fetch from 'node-fetch';
+// Use native fetch (Node 18+) instead of node-fetch
 
 interface ResourceCache {
   [gingrLodging: string]: string; // Gingr lodging → Tailtown resource ID

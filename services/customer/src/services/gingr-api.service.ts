@@ -3,7 +3,7 @@
  * Handles all communication with Gingr API for data migration
  */
 
-import fetch from 'node-fetch';
+// Use native fetch (Node 18+) instead of node-fetch to avoid ESM issues
 
 interface GingrApiConfig {
   subdomain: string;

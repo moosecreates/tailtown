@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [1.2.1] - 2025-11-18
+
+### Fixed
+- **Customer Service Deployment Issues** - Critical fixes for production service crashes
+  - Fixed rate limiter IPv6 validation error (`ERR_ERL_KEY_GEN_IPV6`) by using `req.tenantId` instead of `req.ip`
+  - Resolved node-fetch ESM compatibility issue by downgrading to v2.x (CommonJS compatible)
+  - Performed manual deployment on production server due to automated deployment failure
+  - Service restored from 45+ PM2 restarts to stable "online" status
+  - All APIs now responding correctly without 502 errors
+  - See: `docs/changelog/2025-11-18-customer-service-deployment-fix.md`
+
+### Changed
+- Downgraded node-fetch from v3+ to v2.x for CommonJS compatibility
+- Updated rate limiter key generation to use tenant-based keys
+- Manual deployment process documented for future emergencies
+
 ## [1.2.0] - 2025-11-15
 
 ### Added

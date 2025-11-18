@@ -11,6 +11,8 @@ export const PET_ICON_MAP: Record<string, string> = {
   'senior': '👴',
   'puppy': '🐶',
   'kitten': '🐱',
+  'vaccinations-current': '💉',
+  'vaccinations-overdue': '⚠️',
   
   // Behavioral Icons
   'aggressive': '⚠️',
