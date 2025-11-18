@@ -64,7 +64,7 @@ export const perTenantRateLimiter = rateLimit({
   // Key by tenantId instead of IP
   keyGenerator: (req: any) => {
     // Use tenantId from request (set by tenant middleware)
-    return req.tenantId || req.ip; // Fallback to IP if no tenantId
+    return req.tenantId || 'unknown';
   },
   // Custom handler for rate limit exceeded
   handler: (req: any, res: any) => {
