@@ -131,8 +131,6 @@ jobs:
           
           echo "Running database migrations..."
           cd services/customer
-          echo "Installing customer service dependencies..."
-          npm install || echo "Customer npm install failed"
           npx prisma migrate deploy || echo "Customer migrations failed (may already be applied)"
           npx prisma generate || echo "Customer Prisma generation failed"
           echo "Rebuilding customer service..."
