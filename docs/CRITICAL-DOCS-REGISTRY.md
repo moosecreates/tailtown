@@ -13,7 +13,8 @@
 | SECURITY-CHECKLIST.md | 2025-11-07 | 2025-11-07 | 2026-02-07 | Security implementation |
 | DEVELOPMENT-BEST-PRACTICES.md | 2025-11-07 | 2025-11-07 | 2026-02-07 | Best practices added |
 | TESTING-STRATEGY.md | 2025-10-30 | 2025-10-30 | 2026-01-30 | Test updates |
-| ROADMAP.md | 2025-11-07 | 2025-11-07 | 2026-02-07 | Feature planning |
+| ROADMAP.md | 2025-11-18 | 2025-11-18 | 2026-02-18 | Feature planning |
+| DEPLOYMENT-TROUBLESHOOTING.md | 2025-11-18 | 2025-11-18 | 2026-02-18 | Production deployment fixes |
 
 ---
 
@@ -84,6 +85,17 @@
 
 **Last major changes:**
 - Nov 7, 2025: Created clean roadmap with v1.1, v1.2, v2.0 plans
+
+### DEPLOYMENT-TROUBLESHOOTING.md
+**Update when:**
+- ✅ New deployment issues discovered
+- ✅ Production fixes implemented
+- ✅ PM2 configuration changes
+- ✅ Server environment changes
+- ✅ New troubleshooting procedures developed
+
+**Last major changes:**
+- Nov 18, 2025: Created comprehensive deployment troubleshooting guide based on production IPv6 and node-fetch issues
 
 ---
 
