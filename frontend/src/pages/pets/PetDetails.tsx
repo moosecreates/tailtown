@@ -839,6 +839,7 @@ const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaEl
             {/* Vaccination Status */}
             <Box sx={{ mt: 2 }}>
               <VaccinationStatus
+                petType={pet.type || 'DOG'}
                 vaccinationStatus={mapVaccinationData(pet.vaccinationStatus)}
                 vaccineExpirations={mapVaccinationExpirations(pet.vaccineExpirations)}
                 onVaccinationStatusChange={(key, value) => {

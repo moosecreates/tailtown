@@ -8,6 +8,7 @@ import {
   MenuItem,
   InputLabel,
 } from '@mui/material';
+import { getRequiredVaccines } from '../utils/vaccineUtils';
 
 interface VaccineInfo {
   status: 'CURRENT' | 'EXPIRED' | 'PENDING';
@@ -24,23 +25,28 @@ interface VaccinationStatusProps {
   vaccineExpirations: VaccineExpirations | undefined;
   onVaccinationStatusChange: (key: string, value: VaccineInfo | string) => void;
   onVaccineExpirationChange: (key: string, value: string) => void;
+  petType?: string; // Add petType to determine which vaccines to show
 }
-
-const VACCINE_TYPES = [
-  'Rabies',
-  'DHPP',
-  'Bordetella',
-  'FVRCP',
-  'Lepto',
-  'Influenza',
-];
 
 export const VaccinationStatus: React.FC<VaccinationStatusProps> = ({
   vaccinationStatus,
   vaccineExpirations,
   onVaccinationStatusChange,
   onVaccineExpirationChange,
+  petType = 'DOG', // Default to DOG if not provided
 }) => {
+  // Get required vaccines based on pet type (returns lowercase names)
+  const requiredVaccinesLower = getRequiredVaccines(petType);
+  
+  // Convert to capitalized format to match existing data structure
+  const VACCINE_TYPES = requiredVaccinesLower.map(vaccine => 
+    vaccine.charAt(0).toUpperCase() + vaccine.slice(1).toLowerCase()
+  ).map(vaccine => {
+    // Special case for DHPP and FVRCP which should be all caps
+    if (vaccine === 'Dhpp') return 'DHPP';
+    if (vaccine === 'Fvrcp') return 'FVRCP';
+    return vaccine;
+  });
   return (
     <Box sx={{ display: 'grid', gap: 2 }}>
       <Typography variant="h6" gutterBottom>
