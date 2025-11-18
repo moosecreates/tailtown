@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunktailtown_frontend=self.webpackChunktailtown_frontend||[]).push([[9443],{59443:(t,e,n)=>{n.r(e),n.d(e,{default:()=>r});var s=n(9950),c=n(28429);const r=()=>{const{id:t}=(0,c.g)(),e=(0,c.Zp)();return(0,s.useEffect)(()=>{e("/settings/price-rules/".concat(t))},[t,e]),null}}}]);

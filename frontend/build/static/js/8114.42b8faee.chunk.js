@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunktailtown_frontend=self.webpackChunktailtown_frontend||[]).push([[8114],{78114:(n,t,A)=>{A.d(t,{V:()=>N,e:()=>E});let E=function(n){return n.DAYCARE="DAYCARE",n.BOARDING="BOARDING",n.GROOMING="GROOMING",n.TRAINING="TRAINING",n.OTHER="OTHER",n}({}),N=function(n){return n.PERCENTAGE="PERCENTAGE",n.FIXED_AMOUNT="FIXED_AMOUNT",n}({})}}]);
