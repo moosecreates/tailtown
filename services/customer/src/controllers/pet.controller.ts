@@ -195,18 +195,13 @@ export const createPet = async (
       petData.birthdate = new Date(petData.birthdate);
     }
 
-    // Handle vaccine data
+    // Handle vaccine data - keep as JSON strings, don't convert to Date objects
     if (petData.vaccineExpirations) {
       try {
         if (typeof petData.vaccineExpirations === 'string') {
           petData.vaccineExpirations = JSON.parse(petData.vaccineExpirations);
         }
-        // Convert date strings to Date objects
-        for (const key in petData.vaccineExpirations) {
-          if (petData.vaccineExpirations[key]) {
-            petData.vaccineExpirations[key] = new Date(petData.vaccineExpirations[key]);
-          }
-        }
+        // JSON fields need strings, not Date objects - leave dates as strings
       } catch (e) {
         return next(new AppError('Invalid vaccine expiration data', 400));
       }
@@ -276,18 +271,13 @@ export const updatePet = async (
       petData.birthdate = new Date(petData.birthdate);
     }
 
-    // Handle vaccine data
+    // Handle vaccine data - keep as JSON strings, don't convert to Date objects
     if (petData.vaccineExpirations) {
       try {
         if (typeof petData.vaccineExpirations === 'string') {
           petData.vaccineExpirations = JSON.parse(petData.vaccineExpirations);
         }
-        // Convert date strings to Date objects
-        for (const key in petData.vaccineExpirations) {
-          if (petData.vaccineExpirations[key]) {
-            petData.vaccineExpirations[key] = new Date(petData.vaccineExpirations[key]);
-          }
-        }
+        // JSON fields need strings, not Date objects - leave dates as strings
       } catch (e) {
         return next(new AppError('Invalid vaccine expiration data', 400));
       }
