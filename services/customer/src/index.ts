@@ -439,10 +439,10 @@ app.use('/api/business-settings', requireTenant, authenticate, requireTenantAdmi
 // Messaging Routes (staff only, authenticated)
 app.use('/api/messaging', requireTenant, messagingRoutes);
 
-// Waitlist Routes (authenticated)
+// Waitlist Routes (authenticated - auth handled in router)
 app.use('/api/waitlist', requireTenant, waitlistRoutes);
 
-// Report Card Routes (authenticated)
+// Report Card Routes (authenticated - auth handled in router)
 app.use('/api/report-cards', requireTenant, reportCardRoutes);
 
 // Serve uploaded icons statically
