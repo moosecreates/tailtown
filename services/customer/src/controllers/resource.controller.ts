@@ -2,6 +2,8 @@ import { Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import AppError from '../utils/appError';
 import { TenantRequest } from '../middleware/tenant.middleware';
+import { logger } from '../utils/logger';
+import { getCache, setCache, deleteCache, getCacheKey, deleteCachePattern } from '../utils/redis';
 
 const prisma = new PrismaClient();
 
@@ -58,7 +60,7 @@ const validateResourceType = (type: string): string => {
   });
   
   if (similarTypes.length > 0) {
-    console.log(`Resource type '${type}' is not exact, but matched with '${similarTypes[0]}'`);
+    logger.debug('Resource type matched with alias', { inputType: type, matchedType: similarTypes[0] });
     return validTypeMap[similarTypes[0]];
   }
   
@@ -78,6 +80,18 @@ export const getAllResources = async (
     
     // Extract query parameters
     const { sortBy, sortOrder, type } = req.query;
+    
+    // Check cache for simple queries (no filters)
+    const isSimpleQuery = !sortBy && !sortOrder && !type;
+    const cacheKey = getCacheKey(tenantId, 'resources', 'all');
+    
+    if (isSimpleQuery) {
+      const cachedResources = await getCache<any>(cacheKey);
+      if (cachedResources) {
+        logger.debug('Resource list cache hit', { tenantId });
+        return res.status(200).json(cachedResources);
+      }
+    }
     
     // Build the query with tenant filter
     const query: any = {
@@ -134,11 +148,19 @@ export const getAllResources = async (
     }
     
     const resources = await prisma.resource.findMany(query);
-
-    res.status(200).json({
+    
+    const response = {
       status: 'success',
       data: resources
-    });
+    };
+    
+    // Cache simple queries for 15 minutes (resources change rarely)
+    if (isSimpleQuery) {
+      await setCache(cacheKey, response, 900);
+      logger.debug('Resource list cached', { tenantId, count: resources.length, ttl: 900 });
+    }
+
+    res.status(200).json(response);
   } catch (error) {
     next(error);
   }
@@ -152,6 +174,18 @@ export const getResource = async (
 ) => {
   try {
     const { id } = req.params;
+    const tenantId = req.tenantId!;
+    
+    // Try cache first
+    const cacheKey = getCacheKey(tenantId, 'resource', id);
+    const cachedResource = await getCache<any>(cacheKey);
+    if (cachedResource) {
+      logger.debug('Resource cache hit', { tenantId, resourceId: id });
+      return res.status(200).json({
+        status: 'success',
+        data: cachedResource
+      });
+    }
     
     const resource = await prisma.resource.findUnique({
       where: { id },
@@ -172,6 +206,10 @@ export const getResource = async (
     if (!resource) {
       return next(new AppError('Resource not found', 404));
     }
+    
+    // Cache for 15 minutes
+    await setCache(cacheKey, resource, 900);
+    logger.debug('Resource cached', { tenantId, resourceId: id, ttl: 900 });
 
     res.status(200).json({
       status: 'success',
@@ -200,8 +238,9 @@ export const createResource = async (
       return next(typeError);
     }
     
-    console.log('Creating resource with data:', { 
-      ...resourceData, 
+    logger.info('Creating resource', { 
+      tenantId,
+      name: resourceData.name,
       type: validType, 
       capacity: capacity ? parseInt(capacity, 10) : 1 
     });
@@ -220,13 +259,17 @@ export const createResource = async (
         availabilitySlots: true
       }
     });
+    
+    // Invalidate resource list cache
+    await deleteCachePattern(`${tenantId}:resources:*`);
+    logger.debug('Resource list cache invalidated', { tenantId, resourceId: resource.id });
 
     res.status(201).json({
       status: 'success',
       data: resource
     });
-  } catch (error) {
-    console.error('Error creating resource:', error);
+  } catch (error: any) {
+    logger.error('Error creating resource', { tenantId: req.tenantId, error: error.message });
     next(error);
   }
 };
@@ -268,6 +311,12 @@ export const updateResource = async (
         availabilitySlots: true
       }
     });
+    
+    // Invalidate caches
+    const cacheKey = getCacheKey(req.tenantId!, 'resource', id);
+    await deleteCache(cacheKey);
+    await deleteCachePattern(`${req.tenantId}:resources:*`);
+    logger.debug('Resource caches invalidated', { tenantId: req.tenantId, resourceId: id });
 
     res.status(200).json({
       status: 'success',
