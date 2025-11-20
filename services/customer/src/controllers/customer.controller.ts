@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 import { TenantRequest } from '../middleware/tenant.middleware';
 import { logger } from '../utils/logger';
+import { getCache, setCache, deleteCache, getCacheKey } from '../utils/redis';
 
 const prisma = new PrismaClient();
 
@@ -106,15 +107,29 @@ export const getCustomerById = async (
     const { id } = req.params;
     const tenantId = req.tenantId!;
     
-    const customer = await prisma.customer.findFirst({
-      where: { 
-        id,
-        tenantId
-      },
-      include: {
-        pets: true
+    // Try cache first
+    const cacheKey = getCacheKey(tenantId, 'customer', id);
+    let customer = await getCache<any>(cacheKey);
+    
+    if (!customer) {
+      customer = await prisma.customer.findFirst({
+        where: { 
+          id,
+          tenantId
+        },
+        include: {
+          pets: true
+        }
+      });
+      
+      // Cache for 5 minutes if found
+      if (customer) {
+        await setCache(cacheKey, customer, 300);
+        logger.debug('Customer cached', { tenantId, customerId: id });
       }
-    });
+    } else {
+      logger.debug('Customer cache hit', { tenantId, customerId: id });
+    }
     
     if (!customer) {
       return next(new AppError('Customer not found', 404));
@@ -325,12 +340,17 @@ export const updateCustomer = async (
       });
     });
     
+    // Invalidate customer cache
+    const cacheKey = getCacheKey(req.tenantId!, 'customer', id);
+    await deleteCache(cacheKey);
+    logger.debug('Customer cache invalidated', { tenantId: req.tenantId, customerId: id });
+    
     res.status(200).json({
       status: 'success',
       data: updatedCustomer,
     });
   } catch (error) {
-    console.error('Error updating customer:', error);
+    logger.error('Error updating customer', { tenantId: req.tenantId, customerId: req.params.id, error: error.message });
     next(error);
   }
 };
