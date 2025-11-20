@@ -1,14 +1,22 @@
 /**
- * Tenant Data Isolation Tests
+ * Comprehensive Tenant Data Isolation Tests
  * 
  * These tests ensure that multi-tenant data isolation is working correctly.
  * Each tenant should only be able to access their own data.
+ * 
+ * Test Coverage:
+ * 1. Middleware UUID conversion
+ * 2. Controller tenant filtering
+ * 3. Cross-tenant data leakage prevention
+ * 4. Tenant context validation
+ * 5. Database query isolation
  */
 
 import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
 import { generateToken } from '../../utils/jwt';
 import app from '../../index';
+import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
