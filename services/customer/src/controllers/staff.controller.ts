@@ -64,6 +64,7 @@ export const getAllStaff = async (
       take: limit,
       select: {
         id: true,
+        tenantId: true,
         firstName: true,
         lastName: true,
         email: true,
@@ -107,10 +108,14 @@ export const getStaffById = async (
   try {
     const { id } = req.params;
     
-    const staff = await prisma.staff.findUnique({
-      where: { id },
+    const staff = await prisma.staff.findFirst({
+      where: { 
+        id,
+        tenantId: (req as any).tenantId
+      },
       select: {
         id: true,
+        tenantId: true,
         firstName: true,
         lastName: true,
         email: true,
