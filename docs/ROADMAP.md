@@ -6,18 +6,7 @@
 
 ## Priority 1: CRITICAL (Before 50 Tenants)
 
-### 1. Redis Caching - Phase 2
-**Effort**: 1-2 weeks
-
-Expand Redis caching beyond tenant lookups:
-- Customer/Pet data caching
-- Service catalog caching
-- Session data caching
-- API response caching for read-heavy endpoints
-- Cache warming strategies
-- Cache hit rate monitoring
-
-### 2. Increase Test Coverage
+### 1. Increase Test Coverage
 **Effort**: 2 weeks
 
 Expand automated testing:
@@ -27,7 +16,7 @@ Expand automated testing:
 - Reservation creation tests
 - Data integrity tests
 
-### 3. SendGrid and Twilio Configuration
+### 2. SendGrid and Twilio Configuration
 **Effort**: 2-4 hours
 
 Configure production email and SMS:
@@ -41,7 +30,7 @@ Configure production email and SMS:
 
 ## Priority 2: HIGH
 
-### 4. Request ID Tracking
+### 3. Request ID Tracking
 **Effort**: 1 hour
 
 Implement distributed tracing:
@@ -49,7 +38,7 @@ Implement distributed tracing:
 - Correlate logs across services
 - Better debugging capabilities
 
-### 5. Optimize Prisma Queries
+### 4. Optimize Prisma Queries
 **Effort**: 8 hours
 
 Fix N+1 query problems:
@@ -58,7 +47,7 @@ Fix N+1 query problems:
 - Reduce unnecessary database calls
 - Implement query result caching
 
-### 6. Reservation Service - Performance Optimization
+### 5. Reservation Service - Performance Optimization
 **Effort**: 1-2 weeks
 
 Optimize reservation service queries:
@@ -68,7 +57,7 @@ Optimize reservation service queries:
 - Optimize batch operations
 - Add query performance monitoring
 
-### 7. Reservation Service - Test Coverage Expansion
+### 6. Reservation Service - Test Coverage Expansion
 **Effort**: 2-3 weeks
 
 Expand test coverage from 21% to 70%+:
@@ -77,7 +66,7 @@ Expand test coverage from 21% to 70%+:
 - Integration tests for invoices, payments, check-ins
 - Performance benchmarks
 
-### 8. Grooming Calendar Testing
+### 7. Grooming Calendar Testing
 **Effort**: 1-2 days
 
 Test and fix grooming calendar functionality:
@@ -87,7 +76,7 @@ Test and fix grooming calendar functionality:
 - Time slot management
 - Conflict detection
 
-### 9. Loyalty Rewards & Coupons Testing
+### 8. Loyalty Rewards & Coupons Testing
 **Effort**: 1-2 days
 
 Test loyalty and coupon systems:
@@ -97,7 +86,7 @@ Test loyalty and coupon systems:
 - Usage limit enforcement
 - Loyalty points accrual and redemption
 
-### 10. Multi-Pet Room Check-in Testing
+### 9. Multi-Pet Room Check-in Testing
 **Effort**: 2-3 days
 
 Test multi-pet reservation functionality:
@@ -107,7 +96,7 @@ Test multi-pet reservation functionality:
 - Billing accuracy
 - Kennel card generation
 
-### 11. Notification System Testing
+### 10. Notification System Testing
 **Effort**: 1 week
 
 Audit and fix notification system:
@@ -117,7 +106,7 @@ Audit and fix notification system:
 - Notification preferences
 - Delivery logs and tracking
 
-### 12. Code Optimization and Cleanup
+### 11. Code Optimization and Cleanup
 **Effort**: 1-2 weeks
 
 Clean up codebase:
@@ -131,6 +120,17 @@ Clean up codebase:
 ---
 
 ## Priority 3: MEDIUM (SaaS Readiness)
+
+### 12. Redis Caching - Phase 2
+**Effort**: 1-2 weeks
+
+Expand Redis caching beyond tenant lookups:
+- Customer/Pet data caching
+- Service catalog caching
+- Session data caching
+- API response caching for read-heavy endpoints
+- Cache warming strategies
+- Cache hit rate monitoring
 
 ### 13. Feature Flags System
 **Effort**: 1 week
