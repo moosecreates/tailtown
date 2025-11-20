@@ -50,9 +50,132 @@ For detailed information about completed features, see [CHANGELOG.md](changelog/
 
 ## 🔴 CRITICAL PRIORITY
 
+### Performance & Scaling (Before 50 Tenants)
+
+#### 1. 🟡 Remove Console.log from Production Code (IN PROGRESS)
+**Priority**: CRITICAL | **Effort**: 4 hours total | **Status**: 50% Complete  
+**Target**: This Week
+
+**Progress:**
+- ✅ **Controllers**: customer.controller.ts (6 fixed), staff.controller.ts (10 fixed)
+- ⏳ **Middleware**: tenant.middleware.ts (4 instances), error.middleware.ts (3 instances)
+- ⏳ **Reservation Service**: check-in-template.controller.ts (20+ instances)
+- ⏳ **Other Controllers**: Multiple files with console statements
+
+**Completed:**
+- 16 console.log/console.error statements replaced in customer service controllers
+- Proper logging with tenant context
+- No more PII/sensitive data in logs
+- GDPR/HIPAA compliant logging
+
+**Remaining Work:**
+- Middleware files (tenant, error handling)
+- Reservation service controllers
+- Check-in and service agreement controllers
+- Resource availability controllers
+
+**Reference**: See `docs/CONSOLE-LOG-REMOVAL-SUMMARY.md` for completed work
+
+---
+
+#### 2. Implement Redis Caching Layer
+**Priority**: CRITICAL | **Effort**: 8 hours | **Status**: Not Started  
+**Target**: This Month (Before 30 tenants)
+
+**Impact**: 80% reduction in database load
+
+**Current Problem:**
+- Every request hits database for tenant lookup (~10ms)
+- No caching of frequently accessed data
+- Database will be overwhelmed at 50+ tenants
+
+**Implementation:**
+- Cache tenant metadata (subdomain → UUID mapping)
+- Cache frequently accessed customer/pet data
+- Session data caching
+- API response caching for read-heavy endpoints
+
+**Expected Performance:**
+- Tenant lookup: 10ms → <1ms
+- API response time: 50-200ms → 20-50ms
+- Database load: -80%
+
+**Reference**: See `docs/ARCHITECTURAL-REVIEW-2025.md` Section 2
+
+---
+
+#### 3. ✅ Database Indexes (WELL COVERED)
+**Priority**: ~~CRITICAL~~ → OPTIONAL | **Effort**: 2 hours | **Status**: ✅ 95% COMPLETE  
+**Reviewed**: November 20, 2025
+
+**Current Coverage**: 95/100 - Excellent ✅
+
+**Existing Indexes** (All critical queries covered):
+- ✅ Customer: 7 indexes (name, email, phone, tenant isolation)
+- ✅ Pet: 5 indexes (customer, active, check-in, tenant isolation)
+- ✅ Reservation: 8 indexes (dates, status, customer, tenant isolation)
+- ✅ Invoice: 4 indexes (number, customer, status, dates, tenant isolation)
+- ✅ Service: 2 indexes (active, name, tenant isolation)
+- ✅ Staff: 3 indexes (active, email, role, tenant isolation)
+- ✅ Payment: 4 indexes (customer, status, dates, tenant isolation)
+
+**Optional Additions** (Minor optimization):
+```prisma
+model Pet {
+  @@index([tenantId, isActive], map: "pets_tenant_active_idx")
+}
+
+model Reservation {
+  @@index([tenantId, petId], map: "reservations_tenant_pet_idx")
+}
+```
+
+**Impact**: 5-10% improvement on specific queries (not critical)  
+**Reference**: See `docs/DATABASE-INDEX-ANALYSIS.md` for full analysis
+
+---
+
+#### 4. ✅ Database Connection Pooling (COMPLETE)
+**Priority**: CRITICAL | **Effort**: 1 hour | **Status**: ✅ COMPLETE  
+**Implemented**: November 2025
+
+**Implementation:**
+- ✅ Singleton pattern to prevent multiple Prisma instances
+- ✅ Graceful shutdown handling
+- ✅ Development logging enabled
+- ✅ Load tested with 200 concurrent users - zero connection errors
+- ✅ Handles 947 req/s without issues
+- **Location**: `services/customer/src/config/prisma.ts`
+
+**Optional Enhancement**: Add explicit limits in DATABASE_URL
+```bash
+DATABASE_URL="postgresql://user:pass@host:5432/db?connection_limit=20&pool_timeout=10"
+```
+
+**Status**: Default configuration sufficient for current scale
+
+---
+
+#### 5. ✅ Per-Tenant Rate Limiting (COMPLETE)
+**Priority**: CRITICAL | **Effort**: 4 hours | **Status**: ✅ COMPLETE  
+**Implemented**: November 2025
+
+**Implementation**: Each tenant gets their own rate limit bucket
+- Current limit: 1000 requests per 15 minutes per tenant
+- Uses `req.tenantId` as key generator
+- Custom error messages with tenant context
+- **Location**: `services/customer/src/middleware/rateLimiter.middleware.ts`
+
+**Future Enhancement**: Tier-based limits
+- FREE tier: 100 requests/15min
+- PRO tier: 1000 requests/15min (current)
+- ENTERPRISE: 5000 requests/15min
+
+---
+
 ### Security & Testing
 
-#### 1. Increase Test Coverage
+#### 6. Increase Test Coverage
 **Priority**: HIGH | **Effort**: 2 weeks | **Status**: Not Started  
 **Target**: December 2025
 
@@ -66,7 +189,7 @@ For detailed information about completed features, see [CHANGELOG.md](changelog/
 - Reservation creation
 - Data integrity
 
-#### 2. Configure SendGrid and Twilio with Live Credentials
+#### 7. Configure SendGrid and Twilio with Live Credentials
 **Priority**: CRITICAL | **Effort**: 2-4 hours | **Status**: Not Started  
 **Target**: December 2025
 
@@ -106,9 +229,97 @@ TWILIO_PHONE_NUMBER=+1xxxxxxxxxx
 
 ## 🟠 HIGH PRIORITY
 
+### Performance & Monitoring
+
+#### 1. Implement Request ID Tracking
+**Priority**: HIGH | **Effort**: 1 hour | **Status**: Not Started  
+**Target**: This Week
+
+**Problem**: Difficult to trace requests through distributed system
+
+**Solution:**
+```typescript
+// Add request ID middleware
+app.use((req, res, next) => {
+  req.id = req.headers['x-request-id'] || uuidv4();
+  res.setHeader('x-request-id', req.id);
+  next();
+});
+```
+
+**Benefits**: Better debugging, log correlation, distributed tracing
+
+---
+
+#### 2. Add Proper Logging with Winston
+**Priority**: HIGH | **Effort**: 4 hours | **Status**: Not Started  
+**Target**: This Week
+
+**Replace console.log with structured logging:**
+- Winston or Pino for logging
+- Log levels (error, warn, info, debug)
+- JSON format for production
+- Log rotation and retention
+- Sanitize sensitive data
+
+**Reference**: See `docs/SCALING-ACTION-PLAN.md` Section 1
+
+---
+
+#### 3. Optimize Prisma Queries (Fix N+1 Problems)
+**Priority**: HIGH | **Effort**: 8 hours | **Status**: Not Started  
+**Target**: This Month
+
+**Current Issues:**
+- N+1 queries in customer/pet loading
+- Missing `include` statements
+- Fetching unnecessary fields
+
+**Solution:**
+```typescript
+// Use include and select properly
+const customers = await prisma.customer.findMany({
+  where: { tenantId },
+  select: { id: true, firstName: true, lastName: true },
+  include: { pets: { where: { isActive: true } } }
+});
+```
+
+**Impact**: 50-70% faster response times
+
+---
+
+#### 4. Implement Health Check Endpoints
+**Priority**: HIGH | **Effort**: 4 hours | **Status**: Not Started  
+**Target**: This Month
+
+**Add comprehensive health checks:**
+- `/health` - Basic health status
+- `/health/ready` - Readiness probe (DB, Redis)
+- `/health/live` - Liveness probe
+- Include database, Redis, external service checks
+
+**Why**: Better monitoring, uptime tracking, load balancer integration
+
+---
+
+#### 5. Set Up Monitoring (Sentry)
+**Priority**: HIGH | **Effort**: 4 hours | **Status**: Not Started  
+**Target**: This Month
+
+**Implement:**
+- Error tracking with Sentry
+- Performance monitoring
+- Transaction tracing
+- Custom alerts
+
+**Benefits**: Proactive issue detection, better debugging
+
+---
+
 ### Developer Experience & Operations
 
-#### 1. Update Clone Script to Include Reservations
+#### 6. Update Clone Script to Include Reservations
 **Priority**: HIGH | **Effort**: 2 hours | **Status**: Not Started  
 **Target**: November 2025
 
@@ -755,13 +966,29 @@ Split customer service into domain services:
 ---
 
 **Version**: 1.2.4  
-**Last Updated**: November 19, 2025 - 11:56 PM MST  
+**Last Updated**: November 20, 2025 - 12:14 AM MST  
 **Next Review**: December 1, 2025
 
+**Codebase Stats**:
+- **Lines of Code**: 291,302 (TypeScript/JavaScript)
+- **Test Coverage**: 563+ automated tests
+- **Services**: 3 (customer, reservation, payment)
+- **Architecture**: Multi-tenant SaaS
+
 **Current Focus**:
+- 🔴 **CRITICAL**: Remove console.log, add Redis caching, database indexes (This Week)
+- ✅ Per-tenant rate limiting (COMPLETE - 1000 req/15min per tenant)
+- ✅ Connection pooling (COMPLETE - Load tested 947 req/s)
 - ✅ Tenant isolation tests (COMPLETE - 26 tests, CI/CD integrated)
 - 🎯 Production credentials (SendGrid, Twilio)
-- 🎯 Test coverage improvements
+- 🎯 Performance optimization before 50 tenants
 - 🚀 Production stable with automated sync
 
-**For Completed Features**: See [CHANGELOG.md](changelog/CHANGELOG.md)
+**Scaling Readiness**:
+- Current capacity: 20-30 tenants
+- With quick wins: 50-75 tenants
+- With full optimization: 100-200 tenants
+
+**For Completed Features**: See [CHANGELOG.md](changelog/CHANGELOG.md)  
+**For Architectural Review**: See [docs/ARCHITECTURAL-REVIEW-2025.md](docs/ARCHITECTURAL-REVIEW-2025.md)  
+**For Action Plan**: See [docs/SCALING-ACTION-PLAN.md](docs/SCALING-ACTION-PLAN.md)

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient, Prisma } from '@prisma/client';
+import { logger } from '../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -42,8 +43,8 @@ export const getAllTemplates = async (req: Request, res: Response) => {
       results: templates.length,
       data: templates
     });
-  } catch (error) {
-    console.error('Error fetching check-in templates:', error);
+  } catch (error: any) {
+    logger.error('Error fetching check-in templates', { tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch check-in templates'

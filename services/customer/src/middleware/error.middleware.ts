@@ -7,6 +7,7 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
+import { logger as appLogger } from '../utils/logger';
 
 /**
  * Standardized error types
@@ -168,14 +169,8 @@ export class AppError extends Error {
   }
 }
 
-// Simple logger for the error handler
-const logger = {
-  error: (message: string, ...args: any[]) => console.error(`[ERROR] ${message}`, ...args),
-  warn: (message: string, ...args: any[]) => console.warn(`[WARN] ${message}`, ...args),
-  info: (message: string, ...args: any[]) => console.info(`[INFO] ${message}`, ...args),
-  debug: (message: string, ...args: any[]) => console.debug(`[DEBUG] ${message}`, ...args),
-  success: (message: string, ...args: any[]) => console.info(`[SUCCESS] ${message}`, ...args)
-};
+// Use the application logger
+const logger = appLogger;
 
 /**
  * Handle Prisma-specific errors

@@ -7,6 +7,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/super-admin-jwt';
+import { logger } from '../utils/logger';
 
 export interface SuperAdminRequest extends Request {
   superAdmin?: {
@@ -63,7 +64,7 @@ export const requireSuperAdmin = async (
       });
     }
 
-    console.error('[SuperAdmin] Auth middleware error:', error);
+    logger.error('SuperAdmin auth middleware error', { error: error instanceof Error ? error.message : String(error) });
     return res.status(401).json({
       success: false,
       message: 'Authentication failed'
