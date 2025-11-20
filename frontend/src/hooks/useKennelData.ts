@@ -258,7 +258,7 @@ export const useKennelData = ({
         params: {
           startDate,
           endDate,
-          limit: 1000
+          limit: 500 // API max limit is 500
         }
       });
       

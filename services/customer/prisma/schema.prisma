@@ -74,6 +74,7 @@ model Pet {
   microchipNumber    String?
   rabiesTagNumber    String?
   specialNeeds       String?
+  notes              String?         // General notes from Gingr
   foodNotes          String?
   medicationNotes    String?
   behaviorNotes      String?

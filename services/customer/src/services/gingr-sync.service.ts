@@ -258,6 +258,7 @@ export class GingrSyncService {
           birthdate: animal.birthday ? new Date(animal.birthday * 1000) : undefined,
           weight: animal.weight ? parseFloat(animal.weight) : undefined,
           microchipNumber: animal.microchip,
+          notes: animal.notes,
           medicationNotes: animal.medicines,
           allergies: animal.allergies,
           foodNotes: animal.feeding_notes,
@@ -296,17 +297,27 @@ export class GingrSyncService {
    * Sync reservations from Gingr
    */
   private async syncReservations(tenantId: string, gingrClient: GingrApiClient): Promise<number> {
+    console.log(`      Starting reservation sync for tenant ${tenantId}...`);
+    
     // Get reservations for last 30 days to next 90 days
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + 90);
+    
+    console.log(`      Fetching reservations from ${startDate.toISOString()} to ${endDate.toISOString()}`);
 
     const reservations = await gingrClient.fetchAllReservations(startDate, endDate);
+    console.log(`      Gingr API returned ${reservations.length} reservations`);
     let syncCount = 0;
     const BATCH_SIZE = 50;
 
     console.log(`      Found ${reservations.length} reservations to sync`);
+    
+    // Debug: Show first reservation structure
+    if (reservations.length > 0) {
+      console.log(`      Sample reservation structure:`, JSON.stringify(reservations[0], null, 2).substring(0, 500));
+    }
 
     for (let i = 0; i < reservations.length; i++) {
       const reservation = reservations[i];
@@ -325,7 +336,10 @@ export class GingrSyncService {
         });
 
         if (!customer || !pet) {
-          console.error(`      Warning: Customer or pet not found for reservation ${reservation.reservation_id}`);
+          if (i < 5) { // Log first 5 failures
+            console.error(`      Warning: Customer or pet not found for reservation ${reservation.reservation_id}`);
+            console.error(`        Looking for owner.id: ${reservation.owner?.id}, pet.id: ${reservation.animal?.id}`);
+          }
           continue;
         }
 
@@ -337,20 +351,43 @@ export class GingrSyncService {
           }
         });
 
-        // Parse Gingr dates correctly - they come as ISO strings but represent local time
-        // We need to treat them as Mountain Time (UTC-7) and convert to UTC for storage
+        // Parse Gingr dates correctly - they come with timezone info already
+        // Gingr sends dates like "2025-11-17T13:00:00-07:00" which already includes the timezone
+        // Just parse as-is, no offset needed
         const parseGingrDate = (dateStr: string): Date => {
-          // Gingr sends dates like "2025-10-13T12:30:00" which represents Mountain Time
-          // We need to add the timezone offset to convert to UTC
-          const date = new Date(dateStr);
-          // Add 7 hours (Mountain Time offset) to get correct UTC time
-          date.setHours(date.getHours() + 7);
-          return date;
+          return new Date(dateStr);
         };
+
+        // Map Gingr reservation type to service
+        // Use reservation_type.type field (e.g., "Boarding", "Day Camp")
+        const serviceType = (reservation.reservation_type as any)?.type || 'Boarding';
+        
+        let service = await prisma.service.findFirst({
+          where: {
+            tenantId,
+            name: serviceType
+          }
+        });
+
+        // If service doesn't exist, create a default one
+        if (!service) {
+          console.log(`      Creating service: ${serviceType}`);
+          service = await prisma.service.create({
+            data: {
+              tenantId,
+              name: serviceType,
+              serviceCategory: serviceType.includes('Day Camp') && !serviceType.includes('Lodging') ? 'DAYCARE' : 'BOARDING',
+              duration: 1440, // Default 1 day in minutes
+              price: 0,
+              isActive: true
+            }
+          });
+        }
 
         const reservationData: any = {
           customerId: customer.id,
           petId: pet.id,
+          serviceId: service.id,
           startDate: parseGingrDate(reservation.start_date),
           endDate: parseGingrDate(reservation.end_date),
           status: reservation.cancelled_date ? 'CANCELLED' : 

@@ -142,21 +142,33 @@ export const useDashboardData = () => {
       // Only fetch active/current reservations, exclude COMPLETED (past) reservations
       const activeStatuses = 'PENDING,CONFIRMED,CHECKED_IN';
       
-      // Fetch reservations - don't filter by date, we'll filter client-side
+      // Fetch reservations with pagination (up to 2 pages = 1000 reservations)
       console.log('[Dashboard] Fetching reservations...');
-      const reservationsResponse = await reservationService.getAllReservations(1, 250, 'startDate', 'asc', activeStatuses);
-      console.log('[Dashboard] Reservations response:', reservationsResponse);
-
-      // Extract reservations from response
-      let reservations: any[] = [];
-      const resResponse = reservationsResponse as any;
-      if (resResponse?.data && Array.isArray(resResponse.data)) {
-        reservations = resResponse.data;
-      } else if (resResponse?.data?.data && Array.isArray(resResponse.data.data)) {
-        reservations = resResponse.data.data;
-      } else if (resResponse?.data?.reservations && Array.isArray(resResponse.data.reservations)) {
-        reservations = resResponse.data.reservations;
+      let allReservations: any[] = [];
+      for (let page = 1; page <= 2; page++) {
+        const pageResponse = await reservationService.getAllReservations(page, 500, 'startDate', 'asc', activeStatuses);
+        console.log(`[Dashboard] Page ${page} response:`, pageResponse);
+        
+        // Extract reservations from response
+        const resResponse = pageResponse as any;
+        let pageReservations: any[] = [];
+        if (resResponse?.data && Array.isArray(resResponse.data)) {
+          pageReservations = resResponse.data;
+        } else if (resResponse?.data?.data && Array.isArray(resResponse.data.data)) {
+          pageReservations = resResponse.data.data;
+        } else if (resResponse?.data?.reservations && Array.isArray(resResponse.data.reservations)) {
+          pageReservations = resResponse.data.reservations;
+        }
+        
+        allReservations = allReservations.concat(pageReservations);
+        console.log(`[Dashboard] Page ${page}: ${pageReservations.length} reservations, total: ${allReservations.length}`);
+        
+        if (!resResponse?.pagination?.hasNextPage) break;
       }
+      
+      let reservations = allReservations;
+      const reservationsResponse = { data: { reservations: allReservations } };
+      console.log('[Dashboard] Total reservations fetched:', allReservations.length);
       
       console.log('[Dashboard] Extracted reservations:', reservations.length, 'reservations');
 
@@ -176,9 +188,12 @@ export const useDashboardData = () => {
       }).length;
 
       const overnight = enhancedReservations.filter((res: any) => {
+        // Only count boarding reservations as overnight, not day camp
+        if (res.service?.serviceCategory !== 'BOARDING') return false;
+        
         const startDateStr = getLocalDateString(res.startDate);
         const endDateStr = getLocalDateString(res.endDate);
-        return startDateStr < formattedDate && endDateStr >= formattedDate;
+        return startDateStr <= formattedDate && endDateStr > formattedDate;
       }).length;
 
       console.log('[Dashboard] Calculated metrics:', {
