@@ -3,6 +3,7 @@
  * Configures environment for integration tests with real database
  */
 
+// @ts-nocheck - Jest globals
 // Set test environment variables
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5434/reservation';
