@@ -194,7 +194,7 @@ DATABASE_URL="postgresql://user:pass@host:5432/db?connection_limit=20&pool_timeo
 
 ### Security & Testing
 
-#### 6. Increase Test Coverage
+#### 1. Increase Test Coverage
 **Priority**: HIGH | **Effort**: 2 weeks | **Status**: Not Started  
 **Target**: December 2025
 
@@ -208,7 +208,7 @@ DATABASE_URL="postgresql://user:pass@host:5432/db?connection_limit=20&pool_timeo
 - Reservation creation
 - Data integrity
 
-#### 7. Configure SendGrid and Twilio with Live Credentials
+#### 2. Configure SendGrid and Twilio with Live Credentials
 **Priority**: CRITICAL | **Effort**: 2-4 hours | **Status**: Not Started  
 **Target**: December 2025
 
