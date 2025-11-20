@@ -52,7 +52,7 @@ export const deleteReservation = catchAsync(async (
       return await prisma.reservation.findFirst({
         where: {
           id,
-          // organizationId removed as it's not in the schema
+          tenantId // CRITICAL: Enforce tenant isolation
         } as ExtendedReservationWhereInput,
         select: {
           id: true,

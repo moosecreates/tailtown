@@ -102,9 +102,9 @@ describe('Reservation Tenant Isolation', () => {
         .set('x-tenant-id', 'tenant-a-res')
 
       expect(response.status).toBe(200);
-      expect(response.body.data).toBeDefined();
-      expect(response.body.data.length).toBeGreaterThan(0);
-      response.body.data.forEach((res) => {
+      expect(response.body.data.reservations).toBeDefined();
+      expect(response.body.data.reservations.length).toBeGreaterThan(0);
+      response.body.data.reservations.forEach((res) => {
         expect(res.tenantId).toBe(tenantAId);
       });
     });
@@ -115,7 +115,7 @@ describe('Reservation Tenant Isolation', () => {
         .set('x-tenant-id', 'tenant-a-res')
 
       expect(response.status).toBe(200);
-      const reservationIds = response.body.data.map((r) => r.id);
+      const reservationIds = response.body.data.reservations.map((r) => r.id);
       expect(reservationIds).not.toContain(reservationBId);
     });
   });
@@ -135,15 +135,15 @@ describe('Reservation Tenant Isolation', () => {
         .set('x-tenant-id', 'tenant-b-res')
 
       expect(response.status).toBe(200);
-      expect(response.body.data.id).toBe(reservationBId);
-      expect(response.body.data.tenantId).toBe(tenantBId);
+      expect(response.body.data.reservation.id).toBe(reservationBId);
+      expect(response.body.data.reservation.tenantId).toBe(tenantBId);
     });
   });
 
-  describe('PUT /api/reservations/:id', () => {
+  describe('PATCH /api/reservations/:id', () => {
     test('Tenant A can update own reservation', async () => {
       const response = await request(app)
-        .put(`/api/reservations/${reservationAId}`)
+        .patch(`/api/reservations/${reservationAId}`)
         .set('x-tenant-id', 'tenant-a-res')
         .send({ notes: 'Updated by A' });
 
@@ -152,7 +152,7 @@ describe('Reservation Tenant Isolation', () => {
 
     test('Tenant A cannot update Tenant B reservation', async () => {
       const response = await request(app)
-        .put(`/api/reservations/${reservationBId}`)
+        .patch(`/api/reservations/${reservationBId}`)
         .set('x-tenant-id', 'tenant-a-res')
         .send({ notes: 'Hacked' });
 
