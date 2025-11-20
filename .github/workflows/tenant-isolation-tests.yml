@@ -61,7 +61,7 @@ jobs:
         JWT_SECRET: test-secret-key-for-ci
       run: |
         echo "Running comprehensive tenant isolation tests..."
-        npm test -- tenant-isolation-comprehensive --watchAll=false --verbose
+        npm test -- tenant-isolation-comprehensive --watchAll=false --verbose --forceExit
     
     - name: Run middleware tests
       env:
