@@ -1,7 +1,8 @@
 # Multi-Pet Room Check-in Testing Plan
 
 **Date**: November 20, 2025  
-**Tester**: [Your Name]  
+**Environment**: dev.canicloud.com (Development)  
+**Tester**: Rob Weinstein  
 **Status**: In Progress
 
 ---
