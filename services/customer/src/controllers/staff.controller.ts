@@ -5,6 +5,7 @@ import { AppError } from '../middleware/error.middleware';
 import bcrypt from 'bcrypt';
 import { validatePasswordOrThrow } from '../utils/passwordValidator';
 import { generateToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt';
+import { logger } from '../utils/logger';
 import fs from 'fs';
 import path from 'path';
 
@@ -500,10 +501,11 @@ export const requestPasswordReset = async (
     
     // TODO: Send email with reset link
     // Reset link format: https://app.tailtown.com/reset-password?token={resetToken}
-    // For now, log the token (remove in production)
     if (process.env.NODE_ENV === 'development') {
-      console.log(`Password reset token for ${staff.email}: ${resetToken}`);
-      console.log(`Reset link: http://localhost:3000/reset-password?token=${resetToken}`);
+      logger.debug('Password reset token generated', { 
+        email: staff.email, 
+        resetLink: `http://localhost:3000/reset-password?token=${resetToken}` 
+      });
     }
     
     res.status(200).json({
@@ -639,7 +641,7 @@ export const createStaffAvailability = async (
       createData.effectiveUntil = new Date(availabilityData.effectiveUntil);
     }
     
-    console.log('Creating staff availability with data:', createData);
+    logger.debug('Creating staff availability', { tenantId: (req as any).tenantId, staffId, dayOfWeek: availabilityData.dayOfWeek });
     
     // Create availability record
     const newAvailability = await prisma.staffAvailability.create({
@@ -711,7 +713,7 @@ export const updateStaffAvailability = async (
       updateData.effectiveUntil = availabilityData.effectiveUntil ? new Date(availabilityData.effectiveUntil) : null;
     }
     
-    console.log('Updating staff availability with data:', updateData);
+    logger.debug('Updating staff availability', { availabilityId: id, tenantId: (req as any).tenantId });
     
     // Update availability
     const updatedAvailability = await prisma.staffAvailability.update({
@@ -723,8 +725,8 @@ export const updateStaffAvailability = async (
       status: 'success',
       data: updatedAvailability
     });
-  } catch (error) {
-    console.error('Error updating staff availability:', error);
+  } catch (error: any) {
+    logger.error('Error updating staff availability', { availabilityId: req.params.id, error: error.message });
     next(error);
   }
 };
@@ -832,7 +834,7 @@ export const createStaffTimeOff = async (
       createData.approvedDate = new Date(timeOffData.approvedDate);
     }
     
-    console.log('Creating staff time off with data:', createData);
+    logger.debug('Creating staff time off', { tenantId: (req as any).tenantId, staffId, type: timeOffData.type });
     
     // Create time off record
     const newTimeOff = await prisma.staffTimeOff.create({
@@ -843,8 +845,8 @@ export const createStaffTimeOff = async (
       status: 'success',
       data: newTimeOff
     });
-  } catch (error) {
-    console.error('Error creating staff time off:', error);
+  } catch (error: any) {
+    logger.error('Error creating staff time off', { staffId: req.params.staffId, error: error.message });
     next(error);
   }
 };
@@ -906,7 +908,7 @@ export const updateStaffTimeOff = async (
       updateData.approvedDate = timeOffData.approvedDate ? new Date(timeOffData.approvedDate) : null;
     }
     
-    console.log('Updating staff time off with data:', updateData);
+    logger.debug('Updating staff time off', { timeOffId: id, tenantId: (req as any).tenantId });
     
     // Update time off
     const updatedTimeOff = await prisma.staffTimeOff.update({
@@ -918,8 +920,8 @@ export const updateStaffTimeOff = async (
       status: 'success',
       data: updatedTimeOff
     });
-  } catch (error) {
-    console.error('Error updating staff time off:', error);
+  } catch (error: any) {
+    logger.error('Error updating staff time off', { timeOffId: req.params.id, error: error.message });
     next(error);
   }
 };
@@ -1154,8 +1156,11 @@ export const getAllSchedules = async (
   next: NextFunction
 ) => {
   try {
-    console.log('getAllSchedules called with params:', req.params);
-    console.log('getAllSchedules called with query:', req.query);
+    logger.debug('getAllSchedules called', { 
+      tenantId: (req as any).tenantId,
+      startDate: req.query.startDate, 
+      endDate: req.query.endDate 
+    });
     
     const { startDate, endDate } = req.query;
     
@@ -1258,8 +1263,8 @@ export const createStaffSchedule = async (
       status: 'success',
       data: newSchedule
     });
-  } catch (error) {
-    console.error('Error creating staff schedule:', error);
+  } catch (error: any) {
+    logger.error('Error creating staff schedule', { staffId: req.params.staffId, error: error.message });
     next(error);
   }
 };
@@ -1317,8 +1322,8 @@ export const updateStaffSchedule = async (
       status: 'success',
       data: updatedSchedule
     });
-  } catch (error) {
-    console.error('Error updating staff schedule:', error);
+  } catch (error: any) {
+    logger.error('Error updating staff schedule', { scheduleId: req.params.scheduleId, error: error.message });
     next(error);
   }
 };
@@ -1345,8 +1350,8 @@ export const deleteStaffSchedule = async (
       status: 'success',
       message: 'Schedule deleted successfully'
     });
-  } catch (error) {
-    console.error('Error deleting staff schedule:', error);
+  } catch (error: any) {
+    logger.error('Error deleting staff schedule', { scheduleId: req.params.scheduleId, error: error.message });
     next(error);
   }
 };
@@ -1418,8 +1423,11 @@ export const bulkCreateSchedules = async (
       results: createdSchedules.length,
       data: createdSchedules
     });
-  } catch (error) {
-    console.error('Error creating bulk schedules:', error);
+  } catch (error: any) {
+    logger.error('Error creating bulk schedules', { 
+      count: req.body.schedules?.length, 
+      error: error.message 
+    });
     next(error);
   }
 };

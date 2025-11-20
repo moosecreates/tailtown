@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/prisma';
+import { logger } from '../utils/logger';
+import { getCache, setCache, getCacheKey } from '../utils/redis';
 
 // Extended Request type to include tenant info
 export interface TenantRequest extends Request {
@@ -38,7 +40,7 @@ export const extractTenantContext = async (
     const forwardedHost = req.headers['x-forwarded-host'] as string;
     const hostname = forwardedHost || req.hostname;
     
-    console.log('[Tenant Middleware] Hostname:', hostname, 'Forwarded:', forwardedHost, 'Original:', req.hostname);
+    logger.debug('Tenant middleware - hostname detection', { hostname, forwardedHost, original: req.hostname });
     
     // Check if it's a subdomain (not localhost, not main domain, not IP)
     if (hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.startsWith('192.168') && !hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) {
@@ -47,31 +49,31 @@ export const extractTenantContext = async (
       // If we have at least 3 parts (subdomain.domain.tld), extract subdomain
       if (parts.length >= 3) {
         subdomain = parts[0];
-        console.log('[Tenant Middleware] Extracted subdomain from hostname:', subdomain);
+        logger.debug('Extracted subdomain from hostname', { subdomain });
       }
     }
 
     // Method 2: Development - Check X-Tenant-Subdomain header
     if (!subdomain && req.headers['x-tenant-subdomain']) {
       subdomain = req.headers['x-tenant-subdomain'] as string;
-      console.log('[Tenant Middleware] Using X-Tenant-Subdomain header:', subdomain);
+      logger.debug('Using X-Tenant-Subdomain header', { subdomain });
     }
 
     // Method 2b: Check X-Tenant-ID header (for impersonation)
     if (!subdomain && req.headers['x-tenant-id']) {
       subdomain = req.headers['x-tenant-id'] as string;
-      console.log('[Tenant Middleware] Using X-Tenant-ID header:', subdomain);
+      logger.debug('Using X-Tenant-ID header', { subdomain });
     }
 
     // Method 3: Development - Check query parameter
     if (!subdomain && req.query.subdomain) {
       subdomain = req.query.subdomain as string;
-      console.log('[Tenant Middleware] Using query parameter:', subdomain);
+      logger.debug('Using query parameter', { subdomain });
     }
 
     // Method 4: Fail if no tenant context found
     if (!subdomain) {
-      console.error('[Tenant Middleware] No tenant context found. Hostname:', hostname, 'Headers:', JSON.stringify(req.headers));
+      logger.error('No tenant context found', { hostname, path: req.path });
       return res.status(400).json({
         success: false,
         error: 'Tenant required',
@@ -79,18 +81,39 @@ export const extractTenantContext = async (
       });
     }
 
-    // Look up tenant by subdomain
-    const tenant = await prisma.tenant.findUnique({
-      where: { subdomain },
-      select: {
-        id: true,
-        subdomain: true,
-        businessName: true,
-        status: true,
-        isActive: true,
-        isPaused: true,
-      },
-    });
+    // Try to get tenant from cache first
+    const cacheKey = getCacheKey('global', 'tenant', subdomain);
+    let tenant = await getCache<{
+      id: string;
+      subdomain: string;
+      businessName: string;
+      status: string;
+      isActive: boolean;
+      isPaused: boolean;
+    }>(cacheKey);
+
+    // If not in cache, look up in database
+    if (!tenant) {
+      tenant = await prisma.tenant.findUnique({
+        where: { subdomain },
+        select: {
+          id: true,
+          subdomain: true,
+          businessName: true,
+          status: true,
+          isActive: true,
+          isPaused: true,
+        },
+      });
+
+      // Cache the tenant for 5 minutes if found
+      if (tenant) {
+        await setCache(cacheKey, tenant, 300); // 5 min TTL
+        logger.debug('Tenant cached', { subdomain, tenantId: tenant.id });
+      }
+    } else {
+      logger.debug('Tenant cache hit', { subdomain, tenantId: tenant.id });
+    }
 
     if (!tenant) {
       return res.status(404).json({
@@ -120,11 +143,11 @@ export const extractTenantContext = async (
       isActive: tenant.isActive,
     };
 
-    console.log(`[Tenant Middleware] Tenant context set: ${tenant.businessName} (${tenant.subdomain})`);
+    logger.debug('Tenant context set', { businessName: tenant.businessName, subdomain: tenant.subdomain, tenantId: tenant.id });
     
     next();
   } catch (error: any) {
-    console.error('[Tenant Middleware] Error:', error);
+    logger.error('Tenant middleware error', { error: error.message, stack: error.stack });
     return res.status(500).json({
       success: false,
       error: 'Internal server error',
