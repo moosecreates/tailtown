@@ -267,9 +267,12 @@ export const updateCustomer = async (
     const { id } = req.params;
     const customerData = req.body;
     
-    // Check if customer exists
-    const customerExists = await prisma.customer.findUnique({
-      where: { id },
+    // Check if customer exists and belongs to this tenant
+    const customerExists = await prisma.customer.findFirst({
+      where: { 
+        id,
+        tenantId: req.tenantId
+      },
       include: {
         pets: true
       }
@@ -341,9 +344,12 @@ export const deleteCustomer = async (
     const { id } = req.params;
     const { permanent } = req.query;
     
-    // Check if customer exists
-    const customerExists = await prisma.customer.findUnique({
-      where: { id },
+    // Check if customer exists and belongs to this tenant
+    const customerExists = await prisma.customer.findFirst({
+      where: { 
+        id,
+        tenantId: req.tenantId
+      },
       select: { id: true }
     });
     

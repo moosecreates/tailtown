@@ -326,10 +326,25 @@ export const updatePet = async (
       }
     }
     
-    // If customerId is being updated, check if the customer exists
+    // Check if pet exists and belongs to this tenant
+    const existingPet = await prisma.pet.findFirst({
+      where: {
+        id,
+        tenantId: req.tenantId
+      }
+    });
+    
+    if (!existingPet) {
+      return next(new AppError('Pet not found', 404));
+    }
+    
+    // If customerId is being updated, check if the customer exists and belongs to this tenant
     if (petData.customerId) {
-      const customer = await prisma.customer.findUnique({
-        where: { id: petData.customerId },
+      const customer = await prisma.customer.findFirst({
+        where: { 
+          id: petData.customerId,
+          tenantId: req.tenantId
+        },
       });
       
       if (!customer) {
