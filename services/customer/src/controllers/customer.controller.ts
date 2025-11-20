@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware';
 import { TenantRequest } from '../middleware/tenant.middleware';
+import { logger } from '../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -172,7 +173,7 @@ export const createCustomer = async (
   try {
     const customerData = req.body;
     const tenantId = req.tenantId!;
-    console.log('Creating customer with data:', JSON.stringify(customerData, null, 2));
+    logger.debug('Creating customer', { tenantId, customerEmail: customerData.email });
     
     // Create customer with transaction to ensure all related records are created
     const newCustomer = await prisma.$transaction(async (prismaClient) => {
@@ -224,7 +225,7 @@ export const createCustomer = async (
       // Emergency contacts are not in the current schema
       // Just log that we received them but can't store them
       if (emergencyContacts && Array.isArray(emergencyContacts) && emergencyContacts.length > 0) {
-        console.log(`Received ${emergencyContacts.length} emergency contacts but cannot store them as the model doesn't exist in schema`);
+        logger.warn(`Received ${emergencyContacts.length} emergency contacts but cannot store them - model not in schema`, { tenantId, customerId: customer.id });
       }
       
       // Get customer with all related data
@@ -238,13 +239,13 @@ export const createCustomer = async (
       return customerWithRelations;
     });
     
-    console.log('Customer created successfully:', newCustomer?.id || 'unknown');
+    logger.info('Customer created successfully', { tenantId, customerId: newCustomer?.id });
     res.status(201).json({
       status: 'success',
       data: newCustomer,
     });
   } catch (error: any) {
-    console.error('Error creating customer:', error);
+    logger.error('Error creating customer', { tenantId: req.tenantId, error: error.message, code: error.code });
     
     // Provide more specific error messages for common issues
     if (error.code === 'P2002') {
@@ -378,7 +379,7 @@ export const deleteCustomer = async (
     } else {
       // We can't mark as inactive since isActive doesn't exist in schema
     // Just return success without actually deleting
-    console.log(`Customer ${id} would be marked inactive, but isActive field doesn't exist in schema`);
+    logger.warn(`Customer would be marked inactive, but isActive field doesn't exist in schema`, { tenantId: req.tenantId, customerId: id });
       
       res.status(200).json({
         status: 'success',
@@ -567,7 +568,7 @@ export const getCustomerInvoices = async (
     } catch (error) {
       // If the table doesn't exist, just return an empty array
       // No need to propagate the error
-      console.log('Invoice table may not exist in the database');
+      logger.warn('Invoice table may not exist in the database', { tenantId: req.tenantId, customerId: id });
     }
     
     res.status(200).json({
