@@ -245,13 +245,58 @@ Total: $6X (or discounted rate if applicable)
 
 ## Issues Found
 
-### Issue #1: [Title]
-**Severity**: Critical / High / Medium / Low  
+### Issue #1: Cannot Assign Multiple Pets to Same Suite
+**Severity**: High  
+**Status**: Confirmed - Needs Implementation  
+**Date Found**: November 20, 2025
+
 **Description**:  
+The reservation system prevents assigning multiple pets to the same kennel/suite, even for multi-pet capable suites (VIP_SUITE, STANDARD_PLUS_SUITE). Each pet must be assigned to a separate kennel, which doesn't support true family suites.
+
 **Steps to Reproduce**:  
-**Expected**:  
-**Actual**:  
-**Screenshots**:  
+1. Create reservation with 2 pets (Bunny and Charlie Brown)
+2. Select "Boarding | Indoor Suite" service
+3. Try to assign both pets to kennel A03R
+4. System marks A03R as "Selected for another pet" and prevents selection
+
+**Expected Behavior**:  
+- VIP_SUITE and STANDARD_PLUS_SUITE should allow 2+ pets in the same physical suite
+- System should validate capacity (e.g., VIP = 2 pets max, STANDARD_PLUS = 2 pets max)
+- Single kennel assignment for multiple pets from same family
+
+**Actual Behavior**:  
+- System prevents selecting the same kennel for multiple pets
+- Each pet requires a separate kennel assignment
+- No capacity-based multi-pet suite support
+
+**Root Cause**:  
+Frontend code in `ReservationForm.tsx` (lines ~1402-1411) disables suite options that are already assigned to another pet in the same booking:
+```typescript
+getOptionDisabled={(option) => {
+  if (!option.id) return false;
+  const isAssignedToOtherPet = Object.entries(petSuiteAssignments).some(
+    ([assignedPetId, assignedSuiteId]) => 
+      assignedPetId !== petId && assignedSuiteId === option.id
+  );
+  const isOccupied = occupiedSuiteIds.has(option.id);
+  return isAssignedToOtherPet || isOccupied;
+}}
+```
+
+**Proposed Solution**:  
+1. Add suite capacity metadata to Resource model (maxPets field)
+2. Modify frontend logic to allow same suite selection if capacity permits
+3. Add capacity validation in backend reservation controller
+4. Update UI to show capacity indicators (e.g., "VIP Suite - 2 pets max")
+
+**Impact**:  
+- Blocks true multi-pet family suite functionality
+- Forces customers to book multiple adjacent kennels instead of one family suite
+- Affects pricing and customer experience
+
+**Priority**: High - Core feature for multi-pet reservations
+
+**Screenshots**: See images in testing session  
 
 ---
 
