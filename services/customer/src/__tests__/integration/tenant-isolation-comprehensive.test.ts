@@ -160,6 +160,9 @@ describe('Comprehensive Tenant Isolation', () => {
       where: { id: { in: [tenantAId, tenantBId] } }
     });
     await prisma.$disconnect();
+    
+    // Close any open handles to allow Jest to exit
+    await new Promise(resolve => setTimeout(resolve, 100));
   });
 
   describe('1. Middleware UUID Conversion', () => {
