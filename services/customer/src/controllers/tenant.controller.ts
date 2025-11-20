@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { tenantService, CreateTenantDto, UpdateTenantDto } from '../services/tenant.service';
 import { TenantStatus } from '@prisma/client';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { logger } from '../utils/logger';
+import { deleteCache, getCacheKey } from '../utils/redis';
 
 export class TenantController {
   
@@ -26,7 +28,7 @@ export class TenantController {
         count: tenants.length,
       });
     } catch (error: any) {
-      console.error('Error fetching tenants:', error);
+      logger.error('Error fetching tenants', { error: error.message });
       res.status(500).json({
         success: false,
         error: 'Failed to fetch tenants',
@@ -56,7 +58,7 @@ export class TenantController {
         data: tenant,
       });
     } catch (error: any) {
-      console.error('Error fetching tenant:', error);
+      logger.error('Error fetching tenant', { tenantId: req.params.id, error: error.message });
       res.status(500).json({
         success: false,
         error: 'Failed to fetch tenant',
@@ -86,7 +88,7 @@ export class TenantController {
         data: tenant,
       });
     } catch (error: any) {
-      console.error('Error fetching tenant by subdomain:', error);
+      logger.error('Error fetching tenant by subdomain', { subdomain: req.params.subdomain, error: error.message });
       res.status(500).json({
         success: false,
         error: 'Failed to fetch tenant',
@@ -162,13 +164,20 @@ export class TenantController {
 
       const tenant = await tenantService.updateTenant(id, data);
 
+      // Invalidate tenant cache when updated
+      if (tenant.subdomain) {
+        const cacheKey = getCacheKey('global', 'tenant', tenant.subdomain);
+        await deleteCache(cacheKey);
+        logger.debug('Tenant cache invalidated', { subdomain: tenant.subdomain, tenantId: id });
+      }
+
       res.json({
         success: true,
         data: tenant,
         message: 'Tenant updated successfully',
       });
     } catch (error: any) {
-      console.error('Error updating tenant:', error);
+      logger.error('Error updating tenant', { tenantId: req.params.id, error: error.message });
       res.status(500).json({
         success: false,
         error: 'Failed to update tenant',

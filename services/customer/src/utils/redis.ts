@@ -10,6 +10,7 @@
  */
 
 import { createClient, RedisClientType } from 'redis';
+import { logger } from './logger';
 
 // Redis configuration
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
@@ -25,7 +26,7 @@ let isConnected = false;
  */
 export async function initRedis(): Promise<void> {
   if (!REDIS_ENABLED) {
-    console.log('📦 Redis caching is disabled');
+    logger.info('Redis caching is disabled');
     return;
   }
 
@@ -35,7 +36,7 @@ export async function initRedis(): Promise<void> {
       socket: {
         reconnectStrategy: (retries) => {
           if (retries > 10) {
-            console.error('❌ Redis: Max reconnection attempts reached');
+            logger.error('Redis max reconnection attempts reached', { retries });
             return new Error('Max reconnection attempts reached');
           }
           // Exponential backoff: 100ms, 200ms, 400ms, etc.
@@ -46,33 +47,33 @@ export async function initRedis(): Promise<void> {
 
     // Error handling
     redisClient.on('error', (err) => {
-      console.error('❌ Redis Client Error:', err);
+      logger.error('Redis client error', { error: err.message });
       isConnected = false;
     });
 
     redisClient.on('connect', () => {
-      console.log('🔄 Redis: Connecting...');
+      logger.info('Redis connecting');
     });
 
     redisClient.on('ready', () => {
-      console.log('✅ Redis: Connected and ready');
+      logger.info('Redis connected and ready');
       isConnected = true;
     });
 
     redisClient.on('reconnecting', () => {
-      console.log('🔄 Redis: Reconnecting...');
+      logger.warn('Redis reconnecting');
       isConnected = false;
     });
 
     redisClient.on('end', () => {
-      console.log('⚠️  Redis: Connection closed');
+      logger.warn('Redis connection closed');
       isConnected = false;
     });
 
     // Connect to Redis
     await redisClient.connect();
-  } catch (error) {
-    console.error('❌ Failed to initialize Redis:', error);
+  } catch (error: any) {
+    logger.error('Failed to initialize Redis', { error: error.message });
     redisClient = null;
     isConnected = false;
   }
@@ -94,8 +95,8 @@ export async function getCache<T>(key: string): Promise<T | null> {
       return null;
     }
     return JSON.parse(value) as T;
-  } catch (error) {
-    console.error(`❌ Redis GET error for key "${key}":`, error);
+  } catch (error: any) {
+    logger.error('Redis GET error', { key, error: error.message });
     return null;
   }
 }
@@ -117,8 +118,8 @@ export async function setCache(
 
   try {
     await redisClient.setEx(key, ttl, JSON.stringify(value));
-  } catch (error) {
-    console.error(`❌ Redis SET error for key "${key}":`, error);
+  } catch (error: any) {
+    logger.error('Redis SET error', { key, error: error.message });
   }
 }
 
@@ -133,8 +134,8 @@ export async function deleteCache(key: string): Promise<void> {
 
   try {
     await redisClient.del(key);
-  } catch (error) {
-    console.error(`❌ Redis DEL error for key "${key}":`, error);
+  } catch (error: any) {
+    logger.error('Redis DEL error', { key, error: error.message });
   }
 }
 
@@ -152,8 +153,8 @@ export async function deleteCachePattern(pattern: string): Promise<void> {
     if (keys.length > 0) {
       await redisClient.del(keys);
     }
-  } catch (error) {
-    console.error(`❌ Redis DEL pattern error for "${pattern}":`, error);
+  } catch (error: any) {
+    logger.error('Redis DEL pattern error', { pattern, error: error.message });
   }
 }
 
@@ -170,7 +171,7 @@ export function isRedisConnected(): boolean {
 export async function closeRedis(): Promise<void> {
   if (redisClient && isConnected) {
     await redisClient.quit();
-    console.log('👋 Redis: Connection closed gracefully');
+    logger.info('Redis connection closed gracefully');
   }
 }
 

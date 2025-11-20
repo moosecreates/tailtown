@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/prisma';
 import { logger } from '../utils/logger';
+import { getCache, setCache, getCacheKey } from '../utils/redis';
 
 // Extended Request type to include tenant info
 export interface TenantRequest extends Request {
@@ -80,18 +81,39 @@ export const extractTenantContext = async (
       });
     }
 
-    // Look up tenant by subdomain
-    const tenant = await prisma.tenant.findUnique({
-      where: { subdomain },
-      select: {
-        id: true,
-        subdomain: true,
-        businessName: true,
-        status: true,
-        isActive: true,
-        isPaused: true,
-      },
-    });
+    // Try to get tenant from cache first
+    const cacheKey = getCacheKey('global', 'tenant', subdomain);
+    let tenant = await getCache<{
+      id: string;
+      subdomain: string;
+      businessName: string;
+      status: string;
+      isActive: boolean;
+      isPaused: boolean;
+    }>(cacheKey);
+
+    // If not in cache, look up in database
+    if (!tenant) {
+      tenant = await prisma.tenant.findUnique({
+        where: { subdomain },
+        select: {
+          id: true,
+          subdomain: true,
+          businessName: true,
+          status: true,
+          isActive: true,
+          isPaused: true,
+        },
+      });
+
+      // Cache the tenant for 5 minutes if found
+      if (tenant) {
+        await setCache(cacheKey, tenant, 300); // 5 min TTL
+        logger.debug('Tenant cached', { subdomain, tenantId: tenant.id });
+      }
+    } else {
+      logger.debug('Tenant cache hit', { subdomain, tenantId: tenant.id });
+    }
 
     if (!tenant) {
       return res.status(404).json({
