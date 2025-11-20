@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { AppError } from '../../utils/appError';
 import { TenantRequest } from '../../types/request';
 import { ExtendedReservationWhereInput, ExtendedReservationStatus, ExtendedReservationInclude } from '../../types/prisma-extensions';
+import { logger } from '../../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -10,8 +11,8 @@ const prisma = new PrismaClient();
 async function safeExecutePrismaQuery<T>(queryFn: () => Promise<T>, fallbackValue: T, errorMessage: string): Promise<T> {
   try {
     return await queryFn();
-  } catch (error) {
-    console.error(`${errorMessage}:`, error);
+  } catch (error: any) {
+    logger.error(errorMessage, { error: error.message });
     return fallbackValue;
   }
 }
@@ -156,8 +157,8 @@ export const batchCheckResourceAvailability = async (
         resources: availabilityData
       }
     });
-  } catch (error) {
-    console.error('Error batch checking resource availability:', error);
+  } catch (error: any) {
+    logger.error('Error batch checking resource availability', { resourceCount: req.body?.resources?.length || req.body?.resourceIds?.length, tenantId: req.tenantId, error: error.message });
     // More graceful error handling - return an empty result instead of a 500 error
     return res.status(200).json({
       status: 'success',
