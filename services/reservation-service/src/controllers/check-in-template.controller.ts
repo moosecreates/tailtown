@@ -86,8 +86,8 @@ export const getTemplateById = async (req: Request, res: Response) => {
       status: 'success',
       data: template
     });
-  } catch (error) {
-    console.error('Error fetching check-in template:', error);
+  } catch (error: any) {
+    logger.error('Error fetching check-in template', { templateId: req.params.id, error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch check-in template'
@@ -132,8 +132,8 @@ export const getDefaultTemplate = async (req: Request, res: Response) => {
       status: 'success',
       data: template
     });
-  } catch (error) {
-    console.error('Error fetching default template:', error);
+  } catch (error: any) {
+    logger.error('Error fetching default template', { tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch default template'
@@ -200,8 +200,8 @@ export const createTemplate = async (req: Request, res: Response) => {
       status: 'success',
       data: template
     });
-  } catch (error) {
-    console.error('Error creating check-in template:', error);
+  } catch (error: any) {
+    logger.error('Error creating check-in template', { tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to create check-in template'
@@ -219,14 +219,13 @@ export const updateTemplate = async (req: Request, res: Response) => {
     const tenantId = req.headers['x-tenant-id'] as string;
     const { name, description, isActive, isDefault, sections } = req.body;
 
-    console.log('=== UPDATE TEMPLATE REQUEST ===');
-    console.log('Template ID:', id);
-    console.log('Tenant ID:', tenantId);
-    console.log('Request body keys:', Object.keys(req.body));
-    console.log('Sections count:', sections?.length || 0);
-    if (sections && sections.length > 0) {
-      console.log('First section:', JSON.stringify(sections[0], null, 2));
-    }
+    logger.debug('Update template request', { 
+      templateId: id, 
+      tenantId, 
+      bodyKeys: Object.keys(req.body),
+      sectionsCount: sections?.length || 0,
+      hasFirstSection: sections && sections.length > 0
+    });
 
     // Verify template exists and belongs to tenant
     const existing = await prisma.checkInTemplate.findFirst({
@@ -249,7 +248,7 @@ export const updateTemplate = async (req: Request, res: Response) => {
     }
 
     // Update basic fields first
-    console.log('Step 1: Updating basic fields...');
+    logger.debug('Updating template basic fields', { templateId: id });
     await prisma.checkInTemplate.update({
       where: { id },
       data: {
@@ -259,11 +258,11 @@ export const updateTemplate = async (req: Request, res: Response) => {
         isDefault: isDefault !== undefined ? isDefault : existing.isDefault
       }
     });
-    console.log('Step 1: Basic fields updated successfully');
+    logger.debug('Template basic fields updated', { templateId: id });
 
     // If sections are provided, delete existing sections and recreate
     if (sections && Array.isArray(sections)) {
-      console.log('Step 2: Deleting existing sections...');
+      logger.debug('Deleting existing template sections', { templateId: id });
       
       // First, get all sections for this template
       const existingSections = await prisma.checkInSection.findMany({
@@ -284,13 +283,18 @@ export const updateTemplate = async (req: Request, res: Response) => {
       await prisma.checkInSection.deleteMany({
         where: { templateId: id }
       });
-      console.log('Step 2: Existing sections deleted');
+      logger.debug('Template sections deleted', { templateId: id });
 
-      console.log('Step 3: Creating new sections...');
+      logger.debug('Creating new template sections', { templateId: id, count: sections.length });
       // Create new sections with questions
       for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
         const section = sections[sectionIndex];
-        console.log(`Creating section ${sectionIndex + 1}/${sections.length}: ${section.title}`);
+        logger.debug('Creating template section', { 
+          templateId: id, 
+          sectionIndex: sectionIndex + 1, 
+          totalSections: sections.length, 
+          sectionTitle: section.title 
+        });
         
         await prisma.checkInSection.create({
           data: {
@@ -312,7 +316,7 @@ export const updateTemplate = async (req: Request, res: Response) => {
           }
         });
       }
-      console.log('Step 3: All sections created successfully');
+      logger.debug('All template sections created', { templateId: id, count: sections.length });
     }
 
     // Fetch and return the updated template
@@ -335,12 +339,15 @@ export const updateTemplate = async (req: Request, res: Response) => {
       data: template
     });
   } catch (error: any) {
-    console.error('Error updating check-in template:', error);
-    console.error('Error details:', {
-      message: error.message,
-      code: error.code,
-      meta: error.meta,
-      stack: error.stack
+    logger.error('Error updating check-in template', { 
+      templateId: req.params.id, 
+      error: error.message,
+      details: {
+        message: error.message,
+        code: error.code,
+        meta: error.meta,
+        stack: error.stack
+      }
     });
     res.status(500).json({
       status: 'error',
@@ -392,8 +399,8 @@ export const deleteTemplate = async (req: Request, res: Response) => {
       status: 'success',
       message: 'Template deleted successfully'
     });
-  } catch (error) {
-    console.error('Error deleting check-in template:', error);
+  } catch (error: any) {
+    logger.error('Error deleting check-in template', { templateId: req.params.id, error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to delete check-in template'
@@ -473,8 +480,8 @@ export const cloneTemplate = async (req: Request, res: Response) => {
       status: 'success',
       data: clonedTemplate
     });
-  } catch (error) {
-    console.error('Error cloning check-in template:', error);
+  } catch (error: any) {
+    logger.error('Error cloning check-in template', { templateId: req.params.id, error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to clone check-in template'
