@@ -182,7 +182,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get('/api/customers')
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId);
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test');
 
       expect(response.status).toBe(200);
       const customers = response.body.data;
@@ -228,7 +228,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get('/api/customers')
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId);
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test');
 
       expect(response.status).toBe(200);
       
@@ -246,7 +246,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get(`/api/customers/${tenantBCustomerId}`)
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId);
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test');
 
       expect(response.status).toBe(404);
     });
@@ -255,7 +255,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .put(`/api/customers/${tenantBCustomerId}`)
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId)
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test')
         .send({
           firstName: 'Hacked',
           lastName: 'Customer'
@@ -274,7 +274,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .delete(`/api/customers/${tenantBCustomerId}`)
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId);
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test');
 
       expect(response.status).toBe(404);
       
@@ -291,7 +291,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get('/api/pets')
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId);
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test');
 
       expect(response.status).toBe(200);
       
@@ -309,7 +309,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get(`/api/pets/${tenantBPetId}`)
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId);
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test');
 
       expect(response.status).toBe(404);
     });
@@ -318,7 +318,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .put(`/api/pets/${tenantBPetId}`)
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId)
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test')
         .send({
           name: 'Hacked Pet'
         });
@@ -332,7 +332,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get('/api/staff')
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId);
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test');
 
       expect(response.status).toBe(200);
       
@@ -350,7 +350,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get(`/api/staff/${tenantBStaffId}`)
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId);
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test');
 
       expect(response.status).toBe(404);
     });
@@ -361,7 +361,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get('/api/customers?search=Customer')
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId);
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test');
 
       expect(response.status).toBe(200);
       
@@ -375,7 +375,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get('/api/customers?page=1&limit=100')
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId);
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test');
 
       expect(response.status).toBe(200);
       
@@ -389,7 +389,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get(`/api/customers/${tenantACustomerId}`)
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId);
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test');
 
       expect(response.status).toBe(200);
       
@@ -405,7 +405,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get('/api/customers')
         .set('Authorization', `Bearer ${tokenB}`)
-        .set('x-tenant-id', tenantBId);
+        .set('x-tenant-subdomain', 'tenant-b-isolation-test');
 
       expect(response.status).toBe(200);
       
@@ -434,7 +434,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get('/api/customers')
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', inactiveTenantId);
+        .set('x-tenant-subdomain', 'inactive-isolation-test');
 
       expect(response.status).toBe(403);
       expect(response.body.error).toMatch(/inactive/i);
@@ -462,7 +462,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .get('/api/customers')
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', pausedTenantId);
+        .set('x-tenant-subdomain', 'paused-isolation-test');
 
       expect(response.status).toBe(403);
 
@@ -546,7 +546,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .post('/api/customers')
         .set('Authorization', `Bearer ${tokenB}`)
-        .set('x-tenant-id', tenantBId)
+        .set('x-tenant-subdomain', 'tenant-b-isolation-test')
         .send({
           email: 'customer-a-isolation@test.com', // Same as tenant A
           firstName: 'Different',
@@ -568,7 +568,7 @@ describe('Comprehensive Tenant Isolation', () => {
       const response = await request(app)
         .post('/api/customers')
         .set('Authorization', `Bearer ${tokenA}`)
-        .set('x-tenant-id', tenantAId)
+        .set('x-tenant-subdomain', 'tenant-a-isolation-test')
         .send({
           email: 'customer-a-isolation@test.com', // Duplicate in same tenant
           firstName: 'Duplicate',
