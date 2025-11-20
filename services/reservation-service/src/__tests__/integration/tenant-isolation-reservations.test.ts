@@ -99,7 +99,7 @@ describe('Reservation Tenant Isolation', () => {
     test('Tenant A can view own reservations', async () => {
       const response = await request(app)
         .get('/api/reservations')
-        .set('x-tenant-subdomain', 'tenant-a-res');
+        .set('x-tenant-id', 'tenant-a-res')
 
       expect(response.status).toBe(200);
       expect(response.body.data).toBeDefined();
@@ -112,7 +112,7 @@ describe('Reservation Tenant Isolation', () => {
     test('Tenant A cannot see Tenant B reservations in list', async () => {
       const response = await request(app)
         .get('/api/reservations')
-        .set('x-tenant-subdomain', 'tenant-a-res');
+        .set('x-tenant-id', 'tenant-a-res')
 
       expect(response.status).toBe(200);
       const reservationIds = response.body.data.map((r) => r.id);
@@ -124,7 +124,7 @@ describe('Reservation Tenant Isolation', () => {
     test('Tenant A cannot view Tenant B reservation by ID', async () => {
       const response = await request(app)
         .get(`/api/reservations/${reservationBId}`)
-        .set('x-tenant-subdomain', 'tenant-a-res');
+        .set('x-tenant-id', 'tenant-a-res')
 
       expect(response.status).toBe(404);
     });
@@ -132,7 +132,7 @@ describe('Reservation Tenant Isolation', () => {
     test('Tenant B can view own reservation', async () => {
       const response = await request(app)
         .get(`/api/reservations/${reservationBId}`)
-        .set('x-tenant-subdomain', 'tenant-b-res');
+        .set('x-tenant-id', 'tenant-b-res')
 
       expect(response.status).toBe(200);
       expect(response.body.data.id).toBe(reservationBId);
@@ -144,7 +144,7 @@ describe('Reservation Tenant Isolation', () => {
     test('Tenant A can update own reservation', async () => {
       const response = await request(app)
         .put(`/api/reservations/${reservationAId}`)
-        .set('x-tenant-subdomain', 'tenant-a-res')
+        .set('x-tenant-id', 'tenant-a-res')
         .send({ notes: 'Updated by A' });
 
       expect(response.status).toBe(200);
@@ -153,7 +153,7 @@ describe('Reservation Tenant Isolation', () => {
     test('Tenant A cannot update Tenant B reservation', async () => {
       const response = await request(app)
         .put(`/api/reservations/${reservationBId}`)
-        .set('x-tenant-subdomain', 'tenant-a-res')
+        .set('x-tenant-id', 'tenant-a-res')
         .send({ notes: 'Hacked' });
 
       expect(response.status).toBe(404);
@@ -169,7 +169,7 @@ describe('Reservation Tenant Isolation', () => {
     test('Tenant A cannot delete Tenant B reservation', async () => {
       const response = await request(app)
         .delete(`/api/reservations/${reservationBId}`)
-        .set('x-tenant-subdomain', 'tenant-a-res');
+        .set('x-tenant-id', 'tenant-a-res')
 
       expect(response.status).toBe(404);
     });
