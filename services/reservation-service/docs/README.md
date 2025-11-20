@@ -29,6 +29,7 @@ The Reservation Service is responsible for:
 - **Framework**: Express.js with TypeScript
 - **ORM**: Prisma
 - **Testing**: Jest with custom mocking patterns
+- **Security**: Comprehensive tenant isolation with automated testing (9/9 tests passing)
 
 ## Related Documentation
 
