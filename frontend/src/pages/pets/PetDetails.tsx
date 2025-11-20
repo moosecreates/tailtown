@@ -167,15 +167,15 @@ const PetDetails = () => {
           
           petData.medicalRecords.forEach((record: any) => {
             if (record.recordType === 'VACCINATION' && record.description) {
-              // Map vaccine descriptions to field names
+              // Map vaccine descriptions to field names (use lowercase to match backend)
               const vaccineMap: { [key: string]: string } = {
-                'Rabies vaccination': 'Rabies',
-                'DHPP vaccination': 'DHPP',
-                'Bordetella vaccination': 'Bordetella',
-                'FVRCP vaccination': 'FVRCP',
-                'Canine Influenza vaccination': 'Influenza',
-                'Lepto vaccination': 'Lepto',
-                'Leptospirosis vaccination': 'Lepto'
+                'Rabies vaccination': 'rabies',
+                'DHPP vaccination': 'dhpp',
+                'Bordetella vaccination': 'bordetella',
+                'FVRCP vaccination': 'fvrcp',
+                'Canine Influenza vaccination': 'influenza',
+                'Lepto vaccination': 'lepto',
+                'Leptospirosis vaccination': 'lepto'
               };
               
               const vaccineName = vaccineMap[record.description];

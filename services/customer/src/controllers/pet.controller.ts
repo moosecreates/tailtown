@@ -112,7 +112,7 @@ export const getPetById = async (
   try {
     const { id } = req.params;
     const tenantId = req.tenantId!;
-    
+
     const pet = await prisma.pet.findFirst({
       where: { id, tenantId },
       include: {
@@ -125,11 +125,43 @@ export const getPetById = async (
     });
 
     // Photo handling removed as profilePhoto is not in the current schema
-    
+
     if (!pet) {
       return next(new AppError('Pet not found', 404));
     }
-    
+
+    // Populate vaccination data from medical records if not already set
+    if (pet.medicalRecords && pet.medicalRecords.length > 0) {
+      const vaccinationStatus: any = pet.vaccinationStatus || {};
+      const vaccineExpirations: any = pet.vaccineExpirations || {};
+
+      // Map medical records to vaccination data
+      pet.medicalRecords.forEach((record: any) => {
+        const desc = record.description.toLowerCase();
+        let vaccineName = null;
+
+        if (desc.includes('rabies')) vaccineName = 'rabies';
+        else if (desc.includes('dhpp')) vaccineName = 'dhpp';
+        else if (desc.includes('bordetella')) vaccineName = 'bordetella';
+        else if (desc.includes('fvrcp')) vaccineName = 'fvrcp';
+        else if (desc.includes('lepto')) vaccineName = 'lepto';
+        else if (desc.includes('influenza')) vaccineName = 'influenza';
+
+        if (vaccineName && record.expirationDate) {
+          const expDate = new Date(record.expirationDate);
+          const today = new Date();
+          const status = expDate >= today ? 'CURRENT' : 'EXPIRED';
+
+          vaccinationStatus[vaccineName] = { status };
+          vaccineExpirations[vaccineName] = record.expirationDate.toISOString().split('T')[0];
+        }
+      });
+
+      // Update pet object with populated vaccination data
+      pet.vaccinationStatus = vaccinationStatus;
+      pet.vaccineExpirations = vaccineExpirations;
+    }
+
     res.status(200).json({
       status: 'success',
       data: pet,
