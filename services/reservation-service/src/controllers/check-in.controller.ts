@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { logger } from '../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -84,8 +85,8 @@ export const getAllCheckIns = async (req: Request, res: Response) => {
       results: checkIns.length,
       data: checkIns
     });
-  } catch (error) {
-    console.error('Error fetching check-ins:', error);
+  } catch (error: any) {
+    logger.error('Error fetching check-ins', { tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch check-ins'
@@ -148,8 +149,8 @@ export const getCheckInById = async (req: Request, res: Response) => {
       status: 'success',
       data: checkIn
     });
-  } catch (error) {
-    console.error('Error fetching check-in:', error);
+  } catch (error: any) {
+    logger.error('Error fetching check-in', { checkInId: req.params.id, tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch check-in'
@@ -246,8 +247,8 @@ export const createCheckIn = async (req: Request, res: Response) => {
       status: 'success',
       data: checkIn
     });
-  } catch (error) {
-    console.error('Error creating check-in:', error);
+  } catch (error: any) {
+    logger.error('Error creating check-in', { petId: req.body.petId, tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to create check-in'
@@ -319,8 +320,8 @@ export const updateCheckIn = async (req: Request, res: Response) => {
       status: 'success',
       data: checkIn
     });
-  } catch (error) {
-    console.error('Error updating check-in:', error);
+  } catch (error: any) {
+    logger.error('Error updating check-in', { checkInId: req.params.id, tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to update check-in'
@@ -371,8 +372,8 @@ export const addMedication = async (req: Request, res: Response) => {
       status: 'success',
       data: medication
     });
-  } catch (error) {
-    console.error('Error adding medication:', error);
+  } catch (error: any) {
+    logger.error('Error adding medication', { checkInId: req.params.id, tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to add medication'
@@ -423,8 +424,8 @@ export const updateMedication = async (req: Request, res: Response) => {
       status: 'success',
       data: medication
     });
-  } catch (error) {
-    console.error('Error updating medication:', error);
+  } catch (error: any) {
+    logger.error('Error updating medication', { checkInId: req.params.checkInId, medicationId: req.params.medicationId, tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to update medication'
@@ -448,8 +449,8 @@ export const deleteMedication = async (req: Request, res: Response) => {
       status: 'success',
       message: 'Medication deleted successfully'
     });
-  } catch (error) {
-    console.error('Error deleting medication:', error);
+  } catch (error: any) {
+    logger.error('Error deleting medication', { medicationId: req.params.medicationId, error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to delete medication'
@@ -478,8 +479,8 @@ export const returnBelonging = async (req: Request, res: Response) => {
       status: 'success',
       data: belonging
     });
-  } catch (error) {
-    console.error('Error marking belonging as returned:', error);
+  } catch (error: any) {
+    logger.error('Error marking belonging as returned', { belongingId: req.params.belongingId, error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to mark belonging as returned'

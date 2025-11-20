@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { AppError } from '../../utils/appError';
 import { TenantRequest } from '../../types/request';
 import { ExtendedReservationWhereInput, ExtendedReservationStatus } from '../../types/prisma-extensions';
+import { logger } from '../../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -10,8 +11,8 @@ const prisma = new PrismaClient();
 async function safeExecutePrismaQuery<T>(queryFn: () => Promise<T>, fallbackValue: T, errorMessage: string): Promise<T> {
   try {
     return await queryFn();
-  } catch (error) {
-    console.error(`${errorMessage}:`, error);
+  } catch (error: any) {
+    logger.error(errorMessage, { error: error.message });
     return fallbackValue;
   }
 }
@@ -99,7 +100,7 @@ export const checkResourceAvailability = async (
         } as any
       });
       
-      console.log(`Found ${resources.length} resources of type ${resourceType}`);
+      logger.debug('Found resources by type', { count: resources.length, resourceType });
     }
     
     // If no resources found, return empty result
@@ -200,8 +201,8 @@ export const checkResourceAvailability = async (
         resources: resourcesData
       }
     });
-  } catch (error) {
-    console.error('Error checking resource availability:', error);
+  } catch (error: any) {
+    logger.error('Error checking resource availability', { resourceId: req.query.resourceId, tenantId: req.tenantId, error: error.message });
     // More graceful error handling - return an empty result instead of a 500 error
     // This follows our schema alignment strategy of providing fallbacks
     return res.status(200).json({

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
+import { logger } from '../utils/logger';
 
 const prisma = new PrismaClient();
 
@@ -32,8 +33,8 @@ export const getAllTemplates = async (req: Request, res: Response) => {
       results: templates.length,
       data: templates
     });
-  } catch (error) {
-    console.error('Error fetching service agreement templates:', error);
+  } catch (error: any) {
+    logger.error('Error fetching service agreement templates', { tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch service agreement templates'
@@ -65,8 +66,8 @@ export const getTemplateById = async (req: Request, res: Response) => {
       status: 'success',
       data: template
     });
-  } catch (error) {
-    console.error('Error fetching service agreement template:', error);
+  } catch (error: any) {
+    logger.error('Error fetching service agreement template', { templateId: req.params.id, tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch service agreement template'
@@ -101,8 +102,8 @@ export const getDefaultTemplate = async (req: Request, res: Response) => {
       status: 'success',
       data: template
     });
-  } catch (error) {
-    console.error('Error fetching default service agreement template:', error);
+  } catch (error: any) {
+    logger.error('Error fetching default service agreement template', { tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch default service agreement template'
@@ -141,8 +142,8 @@ export const createTemplate = async (req: Request, res: Response) => {
       status: 'success',
       data: template
     });
-  } catch (error) {
-    console.error('Error creating service agreement template:', error);
+  } catch (error: any) {
+    logger.error('Error creating service agreement template', { tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to create service agreement template'
@@ -194,8 +195,8 @@ export const updateTemplate = async (req: Request, res: Response) => {
       status: 'success',
       data: template
     });
-  } catch (error) {
-    console.error('Error updating service agreement template:', error);
+  } catch (error: any) {
+    logger.error('Error updating service agreement template', { templateId: req.params.id, tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to update service agreement template'
@@ -232,8 +233,8 @@ export const deleteTemplate = async (req: Request, res: Response) => {
       status: 'success',
       message: 'Template deleted successfully'
     });
-  } catch (error) {
-    console.error('Error deleting service agreement template:', error);
+  } catch (error: any) {
+    logger.error('Error deleting service agreement template', { templateId: req.params.id, tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to delete service agreement template'
@@ -306,8 +307,8 @@ export const createAgreement = async (req: Request, res: Response) => {
       status: 'success',
       data: agreement
     });
-  } catch (error) {
-    console.error('Error creating service agreement:', error);
+  } catch (error: any) {
+    logger.error('Error creating service agreement', { checkInId: req.body.checkInId, tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to create service agreement'
@@ -350,8 +351,8 @@ export const getAgreementByCheckIn = async (req: Request, res: Response) => {
       status: 'success',
       data: agreement
     });
-  } catch (error) {
-    console.error('Error fetching service agreement:', error);
+  } catch (error: any) {
+    logger.error('Error fetching service agreement', { checkInId: req.params.checkInId, tenantId: req.headers['x-tenant-id'], error: error.message });
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch service agreement'
