@@ -261,10 +261,12 @@ export class GingrApiClient {
           end_date: this.formatDate(chunkEnd)
         });
         
-        // Gingr returns reservations as an object with reservation IDs as keys
+        // Gingr returns reservations in response.data as an object with reservation IDs as keys
         // Convert to array
-        const reservationsObj = response.data || response || {};
-        const chunk = Object.values(reservationsObj) as GingrReservation[];
+        const reservationsData = response.data || {};
+        const chunk = Array.isArray(reservationsData) 
+          ? reservationsData 
+          : Object.values(reservationsData) as GingrReservation[];
         
         allReservations.push(...chunk);
         
