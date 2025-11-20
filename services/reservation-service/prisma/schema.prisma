@@ -157,9 +157,9 @@ model Service {
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
   capacityLimit   Int                @default(0)
-  depositRequired Boolean            @default(false)
-  depositType     DepositType?
-  depositAmount   Float?
+  // depositRequired Boolean            @default(false)  // TODO: Column doesn't exist in DB yet
+  // depositType     DepositType?  // TODO: Column doesn't exist in DB yet
+  // depositAmount   Float?  // TODO: Column doesn't exist in DB yet
   availableAddOns AddOnService[]
   priceRules      PriceRuleService[]
   reservations    Reservation[]
