@@ -48,7 +48,48 @@ This release fixes a critical security vulnerability in the reservation service 
 - **Quality**: 100% tenant isolation test coverage for reservation CRUD operations
 - **Confidence**: Automated verification prevents regression
 
-## [1.2.6] - 2025-11-20
+## [1.2.6] - 2025-08-03
+
+### 🏗️ Reservation Service Refactoring - Foundation Complete
+
+This release completes the foundational refactoring work for the reservation service, establishing robust patterns for schema alignment, database migrations, and API optimization.
+
+### Added
+
+#### Schema Alignment Strategy
+- **Defensive Programming**: Implemented try/catch blocks for all database operations
+- **Graceful Fallbacks**: Empty arrays and default values when tables/fields don't exist
+- **Type Safety**: Explicit typing for all raw query results
+- **Shared Database**: Synchronized Prisma schemas between customer and reservation services
+- **Documentation**: Comprehensive README-SCHEMA-ALIGNMENT.md
+
+#### Database Migration Infrastructure
+- **Migration Directory**: Created `prisma/migrations` with proper structure
+- **Raw SQL Scripts**: Comprehensive migration scripts for critical tables
+- **Migration Runner**: Node.js script with error handling and rollback support
+- **Connection Testing**: Troubleshooting script for database connectivity
+- **Schema Validation**: Detailed reporting for schema mismatches
+
+#### API Route Optimization
+- **Route Ordering**: Fixed critical routing issues (specific before parameterized)
+- **Resource Filtering**: Enhanced to handle multiple resource types with Prisma `in` filter
+- **Availability API**: Fixed both single and batch resource availability endpoints
+- **Tenant Middleware**: Enhanced for development mode support
+- **Documentation**: Best practices documented in API-SERVICE-LAYER.md
+
+### Fixed
+- Removed all references to non-existent `organizationId` field
+- Fixed field name inconsistencies (e.g., `birthdate` vs `age` in Pet model)
+- Corrected resource type query parameter handling
+- Enhanced error handling and logging throughout
+
+### Technical Details
+- All controllers use defensive programming patterns
+- Database operations have proper fallbacks
+- API routes follow consistent ordering patterns
+- Tenant isolation properly enforced
+
+## [1.2.6-alpha] - 2025-11-20
 
 ### 🔒 Security & Testing Infrastructure
 

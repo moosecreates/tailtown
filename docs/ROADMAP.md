@@ -414,9 +414,54 @@ const customers = await prisma.customer.findMany({
 - Add notification logs
 - Test notification preferences
 
+### Reservation Service Completion
+
+#### 8. Reservation Service - Performance Optimization
+**Priority**: HIGH | **Effort**: 1-2 weeks | **Status**: Not Started  
+**Target**: December 2025
+
+**Tasks**:
+- Add database indexes for frequently queried fields (tenantId, startDate, endDate, status)
+- Implement query optimization for availability checks
+- Add caching for resource availability results (Redis)
+- Optimize batch operations for multiple resources
+- Implement proper pagination for large result sets
+- Add query performance logging and monitoring
+
+**Success Criteria**:
+- Resource availability checks complete in under 200ms
+- Batch operations show linear scaling with number of resources
+- Large result sets properly paginated
+- Query performance metrics logged for monitoring
+
+**Reference**: `services/reservation-service/docs/REFACTORING-ROADMAP.md` - Stage 5
+
+#### 9. Reservation Service - Test Coverage Expansion
+**Priority**: HIGH | **Effort**: 2-3 weeks | **Status**: Partially Complete  
+**Target**: January 2026
+
+**Completed**:
+- ✅ Tenant isolation integration tests (9/9 passing)
+- ✅ Critical security vulnerability testing
+
+**Remaining Tasks**:
+- Create unit tests for controllers and utilities
+- Add schema validation tests
+- Expand integration tests to invoices, payments, check-ins
+- Increase code coverage from 21% to 70%+
+- Add performance benchmarks for critical paths
+
+**Success Criteria**:
+- 70%+ code coverage for critical paths
+- All API endpoints have integration tests
+- Schema validation thoroughly tested
+- Performance benchmarks established
+
+**Reference**: `services/reservation-service/docs/REFACTORING-ROADMAP.md` - Stage 6
+
 ### Code Quality
 
-#### 8. Code Optimization and Cleanup
+#### 10. Code Optimization and Cleanup
 **Priority**: HIGH | **Effort**: 1-2 weeks | **Status**: Not Started  
 **Target**: December 2025
 
