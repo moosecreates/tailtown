@@ -134,20 +134,30 @@ test('cannot update other tenant data', async () => {
 
 ## 🎯 Next Steps (Recommended)
 
-### Immediate
-- [x] Tenant isolation tests integrated
-- [x] Security vulnerabilities fixed
+### ✅ Completed (Nov 20, 2025)
+- [x] Tenant isolation tests integrated (customer service)
+- [x] Security vulnerabilities fixed (customer service)
 - [x] Documentation complete
+- [x] Redis caching with tenant isolation
+- [x] Tenant isolation checklist created
 
-### Short Term
-- [ ] Add tenant isolation tests for remaining controllers
+### 🔴 HIGH PRIORITY (This Week)
+- [ ] **Add tenant isolation tests for reservation service** (CRITICAL)
+  - Reservations, invoices, payments
+  - Check-ins, service agreements
+  - See: `docs/TENANT-ISOLATION-RESERVATION-SERVICE-TODO.md`
+- [ ] Verify Redis cache tenant isolation
+- [ ] Use checklist for all new PRs
+
+### 🟡 MEDIUM PRIORITY (This Month)
 - [ ] Implement tenant isolation middleware for all routes
 - [ ] Add tenant data seeding scripts
-
-### Long Term
 - [ ] Performance tests for multi-tenant queries
+
+### 🟢 LOW PRIORITY (This Quarter)
 - [ ] Tenant isolation audit logging
 - [ ] Automated security scanning
+- [ ] Training materials
 
 ## 🔗 Quick Links
 

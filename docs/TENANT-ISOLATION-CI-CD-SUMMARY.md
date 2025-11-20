@@ -198,23 +198,70 @@ npm test -- tenant-isolation-comprehensive --watchAll=false --verbose
 - ✅ **Automated on every push** to main
 - ✅ **Coverage reports** generated and stored
 
+## Redis Caching & Tenant Isolation
+
+**Added**: November 20, 2025
+
+### Cache Key Strategy
+All Redis cache keys MUST include `tenantId` to prevent cross-tenant data leakage:
+
+```typescript
+// ✅ SECURE: Cache key includes tenantId
+const cacheKey = getCacheKey(tenantId, 'customer', customerId);
+// Result: "tenant-uuid:customer:customer-uuid"
+
+// ❌ INSECURE: Cache key without tenantId
+const cacheKey = `customer:${customerId}`;
+// Risk: Tenant A could get Tenant B's cached data
+```
+
+### Cache Invalidation
+Cache invalidation must be tenant-scoped:
+
+```typescript
+// ✅ SECURE: Invalidate only tenant's cache
+await deleteCache(getCacheKey(tenantId, 'customer', customerId));
+await deleteCachePattern(`${tenantId}:customers:*`);
+
+// ❌ INSECURE: Global cache invalidation
+await deleteCachePattern(`customers:*`);
+// Risk: Affects all tenants
+```
+
+### Implemented Caching (All Tenant-Safe)
+- ✅ Tenant lookups: `global:tenant:{subdomain}`
+- ✅ Customer data: `{tenantId}:customer:{customerId}`
+- ✅ Service catalog: `{tenantId}:services:all`
+- ✅ Resources: `{tenantId}:resources:all`
+
+**Documentation**: See `docs/REDIS-CACHING-IMPLEMENTATION.md`
+
+---
+
 ## Next Steps
 
-### Recommended Enhancements
-1. Add tenant isolation tests for remaining controllers:
-   - Reservations
-   - Services
-   - Resources
-   - Invoices
-   - Payments
+### 🔴 HIGH PRIORITY
+1. **Add tenant isolation tests for reservation service** (CRITICAL)
+   - Reservations (financial data)
+   - Invoices & Payments
+   - Service agreements
+   - Check-ins
+   - See: `docs/TENANT-ISOLATION-RESERVATION-SERVICE-TODO.md`
 
-2. Implement tenant isolation middleware for all routes
+2. **Verify Redis caching tenant isolation**
+   - Test cache key generation
+   - Verify no cross-tenant cache hits
+   - Add cache isolation tests
 
-3. Add performance tests for multi-tenant queries
+### 🟡 MEDIUM PRIORITY
+3. Implement tenant isolation middleware for all routes
+4. Add performance tests for multi-tenant queries
+5. Create tenant data seeding scripts for testing
 
-4. Create tenant data seeding scripts for testing
-
-5. Add tenant isolation checks to code review checklist
+### 🟢 LOW PRIORITY
+6. Add tenant isolation checks to code review checklist
+7. Create tenant isolation training materials
+8. Automated security scanning
 
 ## Conclusion
 
