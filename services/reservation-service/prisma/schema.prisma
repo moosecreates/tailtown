@@ -209,6 +209,7 @@ model Resource {
   tenantId            String                 @default("dev")
   name                String
   type                ResourceType
+  size                RoomSize?              // Room size for kennels (JUNIOR, QUEEN, KING, etc.)
   description         String?
   capacity            Int                    @default(1)
   maxPets             Int                    @default(1) // Maximum pets allowed in this resource
@@ -228,6 +229,7 @@ model Resource {
 
   @@index([tenantId, type, isActive], map: "resources_tenant_type_active_idx")
   @@index([tenantId, name], map: "resources_tenant_name_idx")
+  @@index([tenantId, size], map: "resources_tenant_size_idx")
   @@map("resources")
 }
 
@@ -809,6 +811,15 @@ enum ResourceType {
   ATTENDANT
   BATHER
   OTHER
+}
+
+enum RoomSize {
+  JUNIOR    // Regular suite - 1 pet (suffix: R)
+  QUEEN     // Queen suite - 2 pets (suffix: Q)
+  KING      // King suite - 4 pets (suffix: K)
+  VIP       // VIP suite - 4 pets (suffix: V)
+  CAT       // Cat kennel - 2 pets (suffix: C)
+  OVERFLOW  // Overflow kennel - 2 pets (suffix: O)
 }
 
 enum AvailabilityStatus {

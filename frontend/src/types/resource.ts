@@ -49,10 +49,20 @@ export interface ResourceAvailability {
   updatedAt: string;
 }
 
+export enum RoomSize {
+  JUNIOR = 'JUNIOR',
+  QUEEN = 'QUEEN',
+  KING = 'KING',
+  VIP = 'VIP',
+  CAT = 'CAT',
+  OVERFLOW = 'OVERFLOW'
+}
+
 export interface Resource {
   id: string;
   name: string;
   type: string | ResourceType; // Allow both string and enum types
+  size?: string | RoomSize; // Room size for kennels (JUNIOR, QUEEN, KING, etc.)
   description?: string;
   capacity?: number;
   maxPets?: number; // Maximum number of pets allowed in this resource (for multi-pet suites)
@@ -109,5 +119,51 @@ export const getResourceTypeCategory = (type: string | ResourceType): string => 
   // Default
   else {
     return 'other';
+  }
+};
+
+// Helper function to get room size display name
+export const getRoomSizeDisplayName = (size: string | RoomSize | undefined): string => {
+  if (!size) return '';
+  
+  const sizeStr = typeof size === 'string' ? size : String(size);
+  
+  switch (sizeStr) {
+    case 'JUNIOR':
+      return 'Junior Suite';
+    case 'QUEEN':
+      return 'Queen Suite';
+    case 'KING':
+      return 'King Suite';
+    case 'VIP':
+      return 'VIP Suite';
+    case 'CAT':
+      return 'Cat Kennel';
+    case 'OVERFLOW':
+      return 'Overflow';
+    default:
+      return '';
+  }
+};
+
+// Helper function to get max pets for a room size
+export const getMaxPetsForSize = (size: string | RoomSize | undefined): number => {
+  if (!size) return 1;
+  
+  const sizeStr = typeof size === 'string' ? size : String(size);
+  
+  switch (sizeStr) {
+    case 'JUNIOR':
+      return 1;
+    case 'QUEEN':
+      return 2;
+    case 'KING':
+    case 'VIP':
+      return 4;
+    case 'CAT':
+    case 'OVERFLOW':
+      return 2;
+    default:
+      return 1;
   }
 };

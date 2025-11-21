@@ -33,6 +33,7 @@ import { customerService } from '../../services/customerService';
 import { petService } from '../../services/petService';
 import { serviceManagement } from '../../services/serviceManagement';
 import { resourceService, type Resource } from '../../services/resourceService';
+import { getRoomSizeDisplayName } from '../../types/resource';
 import { useResponsive, getResponsiveButtonSize } from '../../utils/responsive';
 import AddOnSelectionDialogEnhanced from './AddOnSelectionDialogEnhanced';
 import GroomerSelector from './GroomerSelector';
@@ -528,48 +529,29 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
   // Fetch available suites when suite type changes
   useEffect(() => {
     const loadAvailableSuites = async () => {
-      if (!selectedSuiteType) return;
+      // Always load kennels when a boarding service is selected
+      // selectedSuiteType is now used as an optional filter, not a requirement
       
       setDropdownReady(false); // Reset dropdown ready state
       try {
         setSuiteLoading(true);
         let suites: Resource[] = [];
         
-        // Get all suite types when multiple pets are selected, otherwise just the selected type
-        if (selectedPets.length > 1) {
-          // Fetch all suite types separately and combine
-          const suiteTypes = ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'];
-          const responses = await Promise.all(
-            suiteTypes.map(type => 
-              resourceService.getAllResources(
-                1, // page
-                500, // limit - get all suites (we have ~165 total)
-                'name', // sortBy
-                'asc', // sortOrder
-                type // type filter
-              )
-            )
-          );
+        // Fetch all KENNEL type resources
+        const response = await resourceService.getAllResources(
+          1, // page
+          500, // limit - get all kennels
+          'name', // sortBy
+          'asc', // sortOrder
+          'KENNEL' // type filter - get all kennels
+        );
+        
+        if (response?.status === 'success' && response?.data) {
+          suites = response.data;
           
-          // Combine all suites from all responses
-          responses.forEach(response => {
-            if (response?.status === 'success' && response?.data) {
-              suites = [...suites, ...response.data];
-            }
-          });
-          
-        } else {
-          // Single pet - just fetch the selected type
-          const response = await resourceService.getAllResources(
-            1, // page
-            500, // limit - get all suites
-            'name', // sortBy
-            'asc', // sortOrder
-            selectedSuiteType // type filter
-          );
-          
-          if (response?.status === 'success' && response?.data) {
-            suites = response.data;
+          // Apply size filter if one is selected
+          if (selectedSuiteType) {
+            suites = suites.filter(suite => (suite as any).size === selectedSuiteType);
           }
         }
         
@@ -1320,54 +1302,46 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
             // If the service doesn't require a suite type, don't show the dropdown
             if (!requiresSuiteType) return null;
             
-            // If no suite type is selected yet and we need one, set a default
-            if (requiresSuiteType && !selectedSuiteType) {
-              // Set a default suite type when a service that requires it is selected
-              setTimeout(() => setSelectedSuiteType('STANDARD_SUITE'), 0);
-            }
-            
             return (
               <>
-                {/* Only show kennel type selector if no specific kennel is pre-selected */}
+                {/* Room Size Filter - Optional filter to show only specific room sizes */}
                 {!selectedSuiteId && (
-                  <FormControl fullWidth required size="small" sx={{ mb: 1 }}>
-                    <InputLabel id="kennel-type-label" shrink={true}>Kennel Type</InputLabel>
+                  <FormControl fullWidth size="small" sx={{ mb: 1 }}>
+                    <InputLabel id="room-size-label" shrink={true}>Room Size (Optional Filter)</InputLabel>
                     <Select
-                      labelId="kennel-type-label"
-                      id="kennel-type-select"
-                      value={selectedSuiteType && ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE'].includes(selectedSuiteType) ? selectedSuiteType : ""}
-                      label="Kennel Type"
-                      // Add proper ARIA attributes to fix accessibility warning
+                      labelId="room-size-label"
+                      id="room-size-select"
+                      value={selectedSuiteType || ""}
+                      label="Room Size (Optional Filter)"
                       inputProps={{
-                        'aria-label': 'Select kennel type',
+                        'aria-label': 'Filter by room size',
                         'aria-hidden': 'false'
                       }}
                       onChange={e => {
-                        const newSuiteType = e.target.value;
-                        setSelectedSuiteType(newSuiteType);
+                        const newSize = e.target.value;
+                        setSelectedSuiteType(newSize);
                         
-                        // Only reset suite selection if the currently selected suite doesn't match the new type
+                        // Reset suite selection when filter changes
                         if (selectedSuiteId) {
-                          const currentSuite = availableSuites.find(s => s.id === selectedSuiteId);
-                          if (currentSuite && currentSuite.type !== newSuiteType) {
-                            setSelectedSuiteId(''); // Reset only if type doesn't match
-                          }
+                          setSelectedSuiteId('');
                         }
                       }}
-                      required
                       displayEmpty
                       notched
                     >
-                      <MenuItem value="" disabled>Select kennel type</MenuItem>
-                      <MenuItem value="VIP_SUITE">VIP Suite</MenuItem>
-                      <MenuItem value="STANDARD_PLUS_SUITE">Standard Plus Suite</MenuItem>
-                      <MenuItem value="STANDARD_SUITE">Standard Suite</MenuItem>
+                      <MenuItem value="">All Sizes</MenuItem>
+                      <MenuItem value="JUNIOR">Junior Suite (1 pet)</MenuItem>
+                      <MenuItem value="QUEEN">Queen Suite (2 pets)</MenuItem>
+                      <MenuItem value="KING">King Suite (4 pets)</MenuItem>
+                      <MenuItem value="VIP">VIP Suite (4 pets)</MenuItem>
+                      <MenuItem value="CAT">Cat Kennel (2 pets)</MenuItem>
+                      <MenuItem value="OVERFLOW">Overflow (2 pets)</MenuItem>
                     </Select>
                   </FormControl>
                 )}
                 
                 {/* Kennel/Suite Number Selection - Per Pet when multiple pets selected */}
-                {requiresSuiteType && selectedSuiteType && selectedPets.length > 1 && (
+                {requiresSuiteType && selectedPets.length > 1 && (
                   <Box sx={{ mt: 2, mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                       <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
@@ -1378,6 +1352,10 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                         variant="outlined"
                         color="primary"
                         onClick={() => {
+                          console.log('Board Together clicked');
+                          console.log('Available suites:', availableSuites.length);
+                          console.log('Selected pets:', selectedPets.length);
+                          
                           // Get the first pet's assigned suite (or first available multi-pet suite)
                           const firstPetSuite = petSuiteAssignments[selectedPets[0]];
                           let targetSuiteId = firstPetSuite;
@@ -1386,9 +1364,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                           if (!targetSuiteId) {
                             const multiPetSuite = availableSuites.find(s => {
                               const capacity = (s as any).maxPets || 1;
-                              return capacity >= selectedPets.length && !occupiedSuiteIds.has(s.id);
+                              const isAvailable = capacity >= selectedPets.length && !occupiedSuiteIds.has(s.id);
+                              console.log(`Suite ${s.name}: capacity=${capacity}, needed=${selectedPets.length}, available=${isAvailable}`);
+                              return isAvailable;
                             });
                             targetSuiteId = multiPetSuite?.id || '';
+                            console.log('Found multi-pet suite:', multiPetSuite?.name, targetSuiteId);
                           }
                           
                           // Assign all pets to the same suite
@@ -1398,6 +1379,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                               newAssignments[petId] = targetSuiteId;
                             });
                             setPetSuiteAssignments(newAssignments);
+                            alert(`All pets assigned to the same suite!`);
+                          } else {
+                            alert(`No suitable multi-pet suite found. Available suites: ${availableSuites.length}. Please select a STANDARD_PLUS_SUITE or VIP_SUITE from the Suite Type dropdown above.`);
                           }
                         }}
                         sx={{ textTransform: 'none' }}
@@ -1463,6 +1447,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                             const atCapacity = petsInSuite >= suiteCapacity;
                             
                             const displayName = option.name || `Suite #${(option as any).attributes?.suiteNumber || option.id.substring(0, 8)}`;
+                            const roomSize = getRoomSizeDisplayName((option as any).size);
+                            const sizeText = roomSize ? ` - ${roomSize}` : '';
                             const capacityText = suiteCapacity > 1 
                               ? ` (${petsInSuite}/${suiteCapacity} pets)` 
                               : '';
@@ -1475,7 +1461,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                                 {isOccupied && '🔴 '}
                                 {atCapacity && !isOccupied && '🟡 '}
                                 {!isOccupied && !atCapacity && '🟢 '}
-                                {displayName}{capacityText}
+                                {displayName}{sizeText}{capacityText}
                                 {isOccupied && ' (Occupied)'}
                                 {atCapacity && !isOccupied && ' (At Capacity)'}
                               </li>
