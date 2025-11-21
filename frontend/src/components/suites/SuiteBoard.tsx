@@ -282,7 +282,7 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
     notes?: string;
     lastCleaned?: string | Date | null;
   }) => {
-    const bgColor = suiteColors[suite.suiteType as SuiteType] || '#E0E0E0';
+    const bgColor = roomSizeColors[suite.suiteType as RoomSize] || '#E0E0E0';
     const statusColor = statusColors[suite.status as keyof typeof statusColors] || '#E0E0E0';
     
     return (
@@ -317,8 +317,8 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
             <Chip 
               label={suite.suiteType} 
               size="small" 
-              color={suite.suiteType === SuiteType.VIP ? 'warning' : 
-                    suite.suiteType === SuiteType.STANDARD_PLUS ? 'info' : 'default'}
+              color={suite.suiteType === RoomSize.VIP ? 'warning' : 
+                    suite.suiteType === RoomSize.KING ? 'info' : 'default'}
             />
           </Box>
           
@@ -402,10 +402,11 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
               setFilter({ ...filter, suiteType: e.target.value });
             }}
           >
-            <MenuItem value="all">All Types</MenuItem>
-            <MenuItem value={SuiteType.STANDARD}>Standard</MenuItem>
-            <MenuItem value={SuiteType.STANDARD_PLUS}>Standard Plus</MenuItem>
-            <MenuItem value={SuiteType.VIP}>VIP</MenuItem>
+            <MenuItem value="all">All Sizes</MenuItem>
+            <MenuItem value={RoomSize.JUNIOR}>Junior (1)</MenuItem>
+            <MenuItem value={RoomSize.QUEEN}>Queen (2)</MenuItem>
+            <MenuItem value={RoomSize.KING}>King (3)</MenuItem>
+            <MenuItem value={RoomSize.VIP}>VIP (4)</MenuItem>
           </Select>
         </FormControl>
         
