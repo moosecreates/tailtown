@@ -17,14 +17,16 @@ import {
   CircularProgress
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { Resource, ResourceType, AvailabilityStatus } from '../../types/resource';
+import { Resource, ResourceType, RoomSize, AvailabilityStatus, getRoomSizeDisplayName, getMaxPetsForSize } from '../../types/resource';
 import * as resourceManagement from '../../services/resourceManagement';
 
 const initialResource: Partial<Resource> = {
   name: '',
   type: ResourceType.OTHER,
+  size: undefined,
   description: '',
   capacity: 1,
+  maxPets: 1,
   location: '',
   attributes: {},
   isActive: true,
@@ -52,6 +54,25 @@ const ResourceDetails: React.FC = () => {
     try {
       const loadedResource = await resourceManagement.getResourceById(id);
       if (loadedResource) {
+        // Auto-populate size and maxPets if not already set
+        if (!loadedResource.size && loadedResource.name && loadedResource.type === 'KENNEL') {
+          const lastChar = loadedResource.name.slice(-1).toUpperCase();
+          let autoSize: RoomSize | undefined;
+          
+          switch (lastChar) {
+            case 'R': autoSize = RoomSize.JUNIOR; break;
+            case 'Q': autoSize = RoomSize.QUEEN; break;
+            case 'K': autoSize = RoomSize.KING; break;
+            case 'V': autoSize = RoomSize.VIP; break;
+            case 'C': autoSize = RoomSize.CAT; break;
+            case 'O': autoSize = RoomSize.OVERFLOW; break;
+          }
+          
+          if (autoSize) {
+            loadedResource.size = autoSize;
+            loadedResource.maxPets = getMaxPetsForSize(autoSize);
+          }
+        }
         setResource(loadedResource);
       } else {
         throw new Error('Resource not found');
@@ -112,8 +133,10 @@ const ResourceDetails: React.FC = () => {
         const resourceToCreate = {
           ...cleanResource,
           capacity: typeof cleanResource.capacity === 'string' ? parseInt(cleanResource.capacity, 10) : cleanResource.capacity,
+          maxPets: typeof cleanResource.maxPets === 'string' ? parseInt(cleanResource.maxPets, 10) : cleanResource.maxPets,
           isActive: true,
           type: resource.type || ResourceType.OTHER,
+          size: resource.size || undefined,
           attributes: resource.attributes || {}
         } as Resource;
 
@@ -129,11 +152,12 @@ const ResourceDetails: React.FC = () => {
         await resourceManagement.updateResource(id, {
           name: resource.name,
           type: resource.type,
+          size: resource.size,
           description: resource.description,
-          capacity: resource.capacity,
+          maxPets: resource.maxPets,
           location: resource.location,
           maintenanceSchedule: resource.maintenanceSchedule,
-          attributes: resource.attributes,
+          attributes: resource.attributes || undefined,
           isActive: resource.isActive,
           notes: resource.notes
         });
@@ -229,6 +253,38 @@ const ResourceDetails: React.FC = () => {
                 </TextField>
               </Grid>
 
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  select
+                  label="Room Size (for Kennels)"
+                  name="size"
+                  value={resource.size || ''}
+                  onChange={handleChange}
+                  helperText="Select room size for kennels. Determines max pets capacity."
+                >
+                  <MenuItem value="">None</MenuItem>
+                  {Object.entries(RoomSize).map(([key, value]) => (
+                    <MenuItem key={key} value={value}>
+                      {getRoomSizeDisplayName(value)}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Max Pets"
+                  name="maxPets"
+                  value={resource.maxPets || 1}
+                  onChange={handleChange}
+                  inputProps={{ min: 1, max: 10 }}
+                  helperText="Maximum pets allowed in this resource (auto-set based on room size)"
+                />
+              </Grid>
+
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -241,26 +297,13 @@ const ResourceDetails: React.FC = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
                   label="Location"
                   name="location"
                   value={resource.location || ''}
                   onChange={handleChange}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Capacity"
-                  name="capacity"
-                  value={resource.capacity || ''}
-                  onChange={handleChange}
-                  inputProps={{ min: 1, max: 10 }}
-                  helperText="Maximum number of pets (1-10). For multi-pet suites, set to 2 or more."
                 />
               </Grid>
 
