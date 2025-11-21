@@ -293,7 +293,8 @@ The old `capacity` field is still populated, so no data migration is needed for 
 4. ✅ Distributed 7,172 historical reservations across 104 kennels using round-robin
 5. ✅ Rebuilt frontend with new room size UI components
 6. ✅ Restarted PM2 services (customer-service, reservation-service, frontend)
-7. ✅ Verified nginx routing for `/api/resources` endpoint
+7. ✅ Updated nginx routing for all customer-service endpoints
+8. ✅ Fixed Kennels page to use room sizes instead of suite types
 
 #### Production Environment
 - **Server**: tailtown-prod (129.212.178.244)
@@ -308,7 +309,8 @@ The old `capacity` field is still populated, so no data migration is needed for 
 - ✅ Room Size filter dropdown functional
 - ✅ Resources page showing Max Pets instead of Capacity
 - ✅ Reservations displaying across all kennels
-- ✅ API endpoints responding correctly
+- ✅ Kennels page (/suites) loading all 104 kennels with room sizes
+- ✅ All API endpoints responding correctly (resources, reservations, waitlist, products, analytics, reports, training-classes)
 
 #### Known Issues & Resolutions
 1. **Issue**: Initial reservation assignment put all reservations on one kennel
@@ -318,6 +320,17 @@ The old `capacity` field is still populated, so no data migration is needed for 
 2. **Issue**: Frontend caching old JavaScript files after rebuild
    - **Resolution**: Hard refresh browser (Ctrl+Shift+R / Cmd+Shift+R)
    - **Note**: Build hash changes confirm new code deployed
+
+3. **Issue**: Kennels page showing 0 kennels after initial deployment
+   - **Resolution**: Updated `resourceService.getSuites()` to use `type: 'KENNEL'` instead of old suite types
+   - **Files Changed**: `frontend/src/services/resourceService.ts`, `frontend/src/components/suites/SuiteBoard.tsx`
+   - **PR**: #181, #182
+
+4. **Issue**: Missing nginx routes for customer-service endpoints (404 errors)
+   - **Resolution**: Updated nginx config to include all customer-service routes
+   - **Routes Added**: `/api/waitlist`, `/api/products`, `/api/analytics`, `/api/reports`, `/api/training-classes`
+   - **Config**: `/etc/nginx/sites-enabled/tailtown`
+   - **Final Route**: `location ~ ^/api/(staff|customers|pets|services|waitlist|products|analytics|reports|training-classes)`
 
 ## Related Documentation
 
