@@ -5,6 +5,61 @@ All notable changes to the Tailtown Pet Resort Management System will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-11-21
+
+### 🏠 Room Size System Refactor
+
+This release introduces a major refactoring of the kennel/suite system, replacing arbitrary suite types with a standardized room size classification based on capacity.
+
+### Changed
+
+#### Backend - Resource Schema
+- **Deprecated**: Old suite types (`STANDARD_SUITE`, `STANDARD_PLUS_SUITE`, `VIP_SUITE`)
+- **Added**: `RoomSize` enum with values: `JUNIOR`, `QUEEN`, `KING`, `VIP`, `CAT`, `OVERFLOW`
+- **Added**: `size` field to Resource model for room size classification
+- **Added**: `maxPets` field to replace deprecated `capacity` field
+- **Migration**: Automatic parsing of kennel names to determine room size (e.g., "A01R" → JUNIOR, "B02Q" → QUEEN)
+- **Database**: SQL migrations to add room_size enum and populate existing data
+
+#### Frontend - Resource Management
+- **Resources Page**: 
+  - Replaced "Capacity" column with "Max Pets" column
+  - Updated ResourceDetails form to show Room Size and Max Pets fields
+  - Auto-population of size and maxPets based on kennel name suffix
+  - Removed deprecated capacity field from all forms
+- **Calendar View**:
+  - Replaced suite type labels ("Standard", "Standard+") with room sizes
+  - Display format: "Junior (1)", "Queen (2)", "King (3)", "VIP (4)"
+  - Updated kennel data loading to use `type: 'KENNEL'` instead of `type: 'suite'`
+  - Color-coded chips for different room sizes
+
+#### API Changes
+- **Resource Controller**: Added `size` field to create/update operations
+- **Response Format**: Resources now include `size` and `maxPets` fields
+- **Filtering**: Supports filtering by `type: 'KENNEL'` for all boarding resources
+
+### Fixed
+- **Nginx Routing**: Fixed `/api/resources` routing in wildcard-subdomains config
+- **Tenant Resolution**: Ensured proper tenant ID forwarding through nginx proxy
+- **Database Duplicates**: Removed duplicate resource records with old suite types
+- **Frontend Pagination**: Handle API responses with missing pagination metadata
+
+### Technical Details
+- Schema changes: `services/reservation-service/prisma/schema.prisma`
+- Migrations: `services/reservation-service/prisma/migrations/`
+- Frontend updates: `frontend/src/pages/resources/`, `frontend/src/components/calendar/`
+- Nginx config: `/etc/nginx/sites-enabled/wildcard-subdomains`
+
+### Migration Notes
+- Existing kennels automatically classified by name suffix (R=Junior, Q=Queen, K=King, V=VIP)
+- Old suite type fields deprecated but not removed for backward compatibility
+- No action required for existing reservations
+
+### Impact
+- **User Experience**: Clearer room capacity display across all interfaces
+- **Data Consistency**: Standardized room classification system
+- **Maintainability**: Simplified codebase with single source of truth for capacity
+
 ## [1.2.8] - 2025-11-20
 
 ### ⚡ Performance & Infrastructure

@@ -1431,6 +1431,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                             // Get suite capacity (default to 1 if not specified)
                             const suiteCapacity = (option as any).maxPets || 1;
                             
+                            // Debug logging
+                            if (suiteCapacity > 1) {
+                              console.log(`Kennel ${option.name}: ${petsInSuite}/${suiteCapacity} pets, disabled: ${petsInSuite >= suiteCapacity}`);
+                            }
+                            
                             // Disable if suite is at capacity
                             return petsInSuite >= suiteCapacity;
                           }}

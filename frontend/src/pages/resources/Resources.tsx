@@ -198,7 +198,7 @@ const Resources: React.FC = () => {
                 <TableCell>Name</TableCell>
                 <TableCell>Type</TableCell>
                 <TableCell>Location</TableCell>
-                <TableCell>Capacity</TableCell>
+                <TableCell>Max Pets</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
@@ -223,7 +223,7 @@ const Resources: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>{resource.location || '-'}</TableCell>
-                  <TableCell>{resource.capacity || '-'}</TableCell>
+                  <TableCell>{resource.maxPets || '-'}</TableCell>
                   <TableCell>
                     <Chip
                       label={resource.isActive ? 'Active' : 'Inactive'}

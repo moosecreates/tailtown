@@ -202,25 +202,27 @@ const KennelCalendarHeader: React.FC<KennelCalendarHeaderProps> = memo(({
             </Tooltip>
           </Box>
 
-          {/* Kennel Type Filter */}
-          <FormControl 
-            size="small"
-            sx={{ 
-              minWidth: { xs: 140, sm: 150 },
+          {/* Room Size Filter */}
+          <FormControl
+            variant="outlined"
+            size={isMobile ? 'small' : 'medium'}
+            sx={{
+              minWidth: { xs: 120, sm: 150 },
               maxWidth: { xs: 180, sm: 200 },
               flexShrink: 1
             }}
           >
-            <InputLabel>Kennel Type</InputLabel>
+            <InputLabel>Room Size</InputLabel>
             <Select
               value={kennelTypeFilter}
-              label="Kennel Type"
+              label="Room Size"
               onChange={(e) => onKennelTypeFilterChange(e.target.value as KennelType | 'ALL')}
             >
-              <MenuItem value="ALL">All Types</MenuItem>
-              <MenuItem value="STANDARD_SUITE">{isMobile ? 'Std' : 'Standard'}</MenuItem>
-              <MenuItem value="STANDARD_PLUS_SUITE">{isMobile ? 'Std+' : 'Standard Plus'}</MenuItem>
-              <MenuItem value="VIP_SUITE">VIP</MenuItem>
+              <MenuItem value="ALL">All Sizes</MenuItem>
+              <MenuItem value="JUNIOR">Junior (1)</MenuItem>
+              <MenuItem value="QUEEN">Queen (2)</MenuItem>
+              <MenuItem value="KING">King (3)</MenuItem>
+              <MenuItem value="VIP">VIP (4)</MenuItem>
             </Select>
           </FormControl>
         </Box>

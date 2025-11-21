@@ -93,6 +93,8 @@ export const getAllResources = catchAsync(async (req: TenantRequest, res: Respon
     throw AppError.authorizationError('Tenant ID is required');
   }
 
+  logger.info(`[RESOURCES] Getting resources for tenantId: ${tenantId}, header: ${req.headers['x-tenant-id']}`);
+
   // Parse pagination parameters
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 20;
@@ -100,6 +102,8 @@ export const getAllResources = catchAsync(async (req: TenantRequest, res: Respon
 
   // Build filter conditions (tenant-scoped)
   const whereConditions: any = { tenantId };
+  
+  logger.info(`[RESOURCES] Where conditions: ${JSON.stringify(whereConditions)}`);
 
   // Add type filter if provided
   if (req.query.type) {

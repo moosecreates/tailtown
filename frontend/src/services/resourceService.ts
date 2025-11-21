@@ -61,9 +61,21 @@ export const resourceService = {
           }
         });
         
+        console.log('[ResourceService] Response keys:', Object.keys(firstResponse.data));
+        console.log('[ResourceService] Response status:', firstResponse.data.status);
+        console.log('[ResourceService] Response data type:', typeof firstResponse.data.data, 'isArray:', Array.isArray(firstResponse.data.data));
+        console.log('[ResourceService] Response data length:', firstResponse.data.data?.length);
+        
         if (firstResponse.data.status === 'success') {
           allResources = firstResponse.data.data || [];
-          totalPages = firstResponse.data.totalPages || 1;
+          // If we have data but no totalPages, we got all data in one response
+          if (allResources.length > 0 && (firstResponse.data.totalPages === null || firstResponse.data.totalPages === undefined)) {
+            // All data was returned in this single response, no pagination needed
+            totalPages = 1;
+            console.log('[ResourceService] No pagination metadata in response, got all', allResources.length, 'resources in one response');
+          } else {
+            totalPages = firstResponse.data.totalPages || 1;
+          }
           console.log('[ResourceService] First page fetched:', allResources.length, 'resources, totalPages:', totalPages);
           
           // Fetch remaining pages if there are any
