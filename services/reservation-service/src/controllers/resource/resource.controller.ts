@@ -254,7 +254,7 @@ export const createResource = catchAsync(async (req: TenantRequest, res: Respons
     throw AppError.authorizationError('Tenant ID is required');
   }
 
-  const { name, type, capacity, description, isActive } = req.body;
+  const { name, type, capacity, maxPets, description, isActive } = req.body;
 
   // Validate required fields with factory methods
   if (!name) {
@@ -275,6 +275,7 @@ export const createResource = catchAsync(async (req: TenantRequest, res: Respons
         name,
         type,
         capacity: capacity ? parseInt(capacity) : undefined,
+        maxPets: maxPets ? parseInt(maxPets) : 1,
         description,
         isActive: isActive !== undefined ? isActive : true,
         tenantId: tenantId
@@ -318,11 +319,11 @@ export const updateResource = catchAsync(async (req: TenantRequest, res: Respons
     throw AppError.validationError('Resource ID is required');
   }
 
-  const { name, type, capacity, description, isActive } = req.body;
+  const { name, type, capacity, maxPets, description, isActive } = req.body;
 
   // Validate that at least one field is being updated
   if (name === undefined && type === undefined && capacity === undefined && 
-      description === undefined && isActive === undefined) {
+      maxPets === undefined && description === undefined && isActive === undefined) {
     throw AppError.validationError('At least one field must be provided for update');
   }
 
@@ -334,6 +335,7 @@ export const updateResource = catchAsync(async (req: TenantRequest, res: Respons
   if (name !== undefined) updateData.name = name;
   if (type !== undefined) updateData.type = type;
   if (capacity !== undefined) updateData.capacity = parseInt(capacity);
+  if (maxPets !== undefined) updateData.maxPets = parseInt(maxPets);
   if (description !== undefined) updateData.description = description;
   if (isActive !== undefined) updateData.isActive = isActive;
 

@@ -211,6 +211,7 @@ model Resource {
   type                ResourceType
   description         String?
   capacity            Int                    @default(1)
+  maxPets             Int                    @default(1) // Maximum pets allowed in this resource
   isActive            Boolean                @default(true)
   notes               String?
   createdAt           DateTime               @default(now())
