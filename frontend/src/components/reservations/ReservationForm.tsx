@@ -1369,9 +1369,42 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                 {/* Kennel/Suite Number Selection - Per Pet when multiple pets selected */}
                 {requiresSuiteType && selectedSuiteType && selectedPets.length > 1 && (
                   <Box sx={{ mt: 2, mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
-                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold' }}>
-                      Assign Kennels for Each Pet:
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                        Assign Kennels for Each Pet:
+                      </Typography>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => {
+                          // Get the first pet's assigned suite (or first available multi-pet suite)
+                          const firstPetSuite = petSuiteAssignments[selectedPets[0]];
+                          let targetSuiteId = firstPetSuite;
+                          
+                          // If first pet has no suite, find a multi-pet suite
+                          if (!targetSuiteId) {
+                            const multiPetSuite = availableSuites.find(s => {
+                              const capacity = (s as any).maxPets || 1;
+                              return capacity >= selectedPets.length && !occupiedSuiteIds.has(s.id);
+                            });
+                            targetSuiteId = multiPetSuite?.id || '';
+                          }
+                          
+                          // Assign all pets to the same suite
+                          if (targetSuiteId) {
+                            const newAssignments: {[key: string]: string} = {};
+                            selectedPets.forEach(petId => {
+                              newAssignments[petId] = targetSuiteId;
+                            });
+                            setPetSuiteAssignments(newAssignments);
+                          }
+                        }}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        🏠 Board Together
+                      </Button>
+                    </Box>
                     <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
                       Multi-pet suites allow multiple pets from the same family. Capacity is shown for each suite.
                     </Typography>
