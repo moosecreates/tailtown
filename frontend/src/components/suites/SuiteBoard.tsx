@@ -53,18 +53,20 @@ interface ResourceWithReservations extends Resource {
   }>;
 }
 
-// Suite types we store in the attributes
-enum SuiteType {
-  STANDARD = 'STANDARD_SUITE',
-  STANDARD_PLUS = 'STANDARD_PLUS_SUITE',
-  VIP = 'VIP_SUITE'
+// Room sizes for kennels
+enum RoomSize {
+  JUNIOR = 'JUNIOR',
+  QUEEN = 'QUEEN',
+  KING = 'KING',
+  VIP = 'VIP'
 }
 
-// Suite colors for different types
-const suiteColors = {
-  [SuiteType.STANDARD]: '#E0E0E0',
-  [SuiteType.STANDARD_PLUS]: '#BBDEFB',
-  [SuiteType.VIP]: '#FFECB3'
+// Room size colors
+const roomSizeColors = {
+  [RoomSize.JUNIOR]: '#E0E0E0',
+  [RoomSize.QUEEN]: '#BBDEFB',
+  [RoomSize.KING]: '#90CAF9',
+  [RoomSize.VIP]: '#FFECB3'
 };
 
 // Suite colors for different statuses
@@ -178,14 +180,14 @@ const SuiteBoard: React.FC<SuiteBoardProps> = ({ onSelectSuite, reloadTrigger, f
           // Use the utility function to determine the suite status
           const status = determineSuiteStatus(suite);
           
-          // Use the suite.type directly from the database, or fall back to attributes.suiteType, or default to STANDARD_SUITE
-          const suiteType = suite.type || suite.attributes?.suiteType || 'STANDARD_SUITE';
+          // Use the suite.size for room size, fallback to JUNIOR if not set
+          const roomSize = suite.size || 'JUNIOR';
           
           return {
             id: suite.id,
             name: suite.name,
             suiteNumber: suite.attributes?.suiteNumber || suite.name || 'N/A',
-            suiteType: suiteType, // Use the properly extracted suite type
+            suiteType: roomSize, // Use room size instead of old suite type
             status: status,
             pet: pet,
             owner: owner,
