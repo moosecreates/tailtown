@@ -280,6 +280,45 @@ The old `capacity` field is still populated, so no data migration is needed for 
 - Remove old suite type enum values
 - Update all legacy references to suite types
 
+## Deployment
+
+### Production Deployment - November 21, 2025
+
+**Status**: ✅ Successfully deployed to production
+
+#### Deployment Steps Completed
+1. ✅ Pulled latest code from `main` branch
+2. ✅ Ran database migrations to add `room_size` and `max_pets` fields
+3. ✅ Executed data migration SQL to populate room sizes from kennel names
+4. ✅ Distributed 7,172 historical reservations across 104 kennels using round-robin
+5. ✅ Rebuilt frontend with new room size UI components
+6. ✅ Restarted PM2 services (customer-service, reservation-service, frontend)
+7. ✅ Verified nginx routing for `/api/resources` endpoint
+
+#### Production Environment
+- **Server**: tailtown-prod (129.212.178.244)
+- **Database**: PostgreSQL (Docker container `tailtown-postgres`)
+- **Tenant**: Tailtown (UUID: `b696b4e8-6e86-4d4b-a0c2-1da0e4b1ae05`)
+- **Resources**: 104 kennels with room sizes
+- **Reservations**: 7,172 reservations properly distributed
+
+#### Post-Deployment Verification
+- ✅ All 104 kennels loading in calendar
+- ✅ Room size badges displaying correctly (Junior (1), Queen (2), King (3), VIP (4))
+- ✅ Room Size filter dropdown functional
+- ✅ Resources page showing Max Pets instead of Capacity
+- ✅ Reservations displaying across all kennels
+- ✅ API endpoints responding correctly
+
+#### Known Issues & Resolutions
+1. **Issue**: Initial reservation assignment put all reservations on one kennel
+   - **Resolution**: Used round-robin SQL script to distribute evenly
+   - **Reference**: See troubleshooting memory for diagnostic steps
+
+2. **Issue**: Frontend caching old JavaScript files after rebuild
+   - **Resolution**: Hard refresh browser (Ctrl+Shift+R / Cmd+Shift+R)
+   - **Note**: Build hash changes confirm new code deployed
+
 ## Related Documentation
 
 - **Changelog**: `/CHANGELOG.md` - Version 1.3.0
@@ -288,6 +327,7 @@ The old `capacity` field is still populated, so no data migration is needed for 
 - **Frontend Components**: 
   - `/frontend/src/pages/resources/`
   - `/frontend/src/components/calendar/`
+- **Troubleshooting**: See memory "Calendar Reservations Not Displaying - Troubleshooting Guide"
 
 ## Support
 
@@ -296,9 +336,11 @@ For questions or issues related to this refactoring:
 - Review the migration SQL scripts
 - Verify nginx configuration is correct
 - Ensure Prisma client is regenerated after schema changes
+- See troubleshooting memory for common calendar display issues
 
 ---
 
 **Last Updated**: November 21, 2025  
 **Author**: Development Team  
-**Review Status**: Completed
+**Review Status**: Completed  
+**Deployment Status**: ✅ Production (Nov 21, 2025)
