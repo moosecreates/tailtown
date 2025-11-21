@@ -55,6 +55,7 @@ export interface Resource {
   type: string | ResourceType; // Allow both string and enum types
   description?: string;
   capacity?: number;
+  maxPets?: number; // Maximum number of pets allowed in this resource (for multi-pet suites)
   availability?: any; // Weekly schedule of availability
   location?: string;
   maintenanceSchedule?: any; // Schedule for cleaning, maintenance, etc.

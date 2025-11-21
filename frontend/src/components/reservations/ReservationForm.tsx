@@ -1373,10 +1373,10 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                       Assign Kennels for Each Pet:
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                      The first pet is pre-assigned to the initially selected kennel. Subsequent pets are suggested to adjacent kennels.
+                      Multi-pet suites allow multiple pets from the same family. Capacity is shown for each suite.
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-                      🟢 Available • 🟡 Selected for another pet • 🔴 Occupied by existing reservation
+                      🟢 Available • 🟡 At Capacity • 🔴 Occupied by existing reservation
                     </Typography>                    {selectedPets.map((petId, index) => {
                       const pet = pets.find(p => p.id === petId);
                       const isFirstPet = index === 0;
@@ -1401,37 +1401,50 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSubmit, initialData
                           }}
                           getOptionDisabled={(option) => {
                             if (!option.id) return false; // Auto-assign is always enabled
-                            // Check if assigned to another pet in this booking
-                            const isAssignedToOtherPet = Object.entries(petSuiteAssignments).some(
-                              ([assignedPetId, assignedSuiteId]) => 
-                                assignedPetId !== petId && assignedSuiteId === option.id
-                            );
+                            
                             // Check if occupied by existing reservation
                             const isOccupied = occupiedSuiteIds.has(option.id);
-                            return isAssignedToOtherPet || isOccupied;
+                            if (isOccupied) return true;
+                            
+                            // Count how many pets already assigned to this suite
+                            const petsInSuite = Object.values(petSuiteAssignments).filter(
+                              id => id === option.id
+                            ).length;
+                            
+                            // Get suite capacity (default to 1 if not specified)
+                            const suiteCapacity = (option as any).maxPets || 1;
+                            
+                            // Disable if suite is at capacity
+                            return petsInSuite >= suiteCapacity;
                           }}
                           renderOption={(props, option) => {
                             if (!option.id) {
                               return <li {...props}><em>Auto-assign</em></li>;
                             }
-                            const isAssignedToOtherPet = Object.entries(petSuiteAssignments).some(
-                              ([assignedPetId, assignedSuiteId]) => 
-                                assignedPetId !== petId && assignedSuiteId === option.id
-                            );
+                            
                             const isOccupied = occupiedSuiteIds.has(option.id);
+                            const petsInSuite = Object.values(petSuiteAssignments).filter(
+                              id => id === option.id
+                            ).length;
+                            const suiteCapacity = (option as any).maxPets || 1;
+                            const atCapacity = petsInSuite >= suiteCapacity;
+                            
                             const displayName = option.name || `Suite #${(option as any).attributes?.suiteNumber || option.id.substring(0, 8)}`;
+                            const capacityText = suiteCapacity > 1 
+                              ? ` (${petsInSuite}/${suiteCapacity} pets)` 
+                              : '';
                             
                             return (
                               <li {...props} style={{
-                                color: isOccupied ? '#d32f2f' : isAssignedToOtherPet ? '#ff9800' : '#2e7d32',
-                                opacity: (isAssignedToOtherPet || isOccupied) ? 0.6 : 1
+                                color: isOccupied ? '#d32f2f' : atCapacity ? '#ff9800' : '#2e7d32',
+                                opacity: (atCapacity || isOccupied) ? 0.6 : 1
                               }}>
                                 {isOccupied && '🔴 '}
-                                {isAssignedToOtherPet && !isOccupied && '🟡 '}
-                                {!isOccupied && !isAssignedToOtherPet && '🟢 '}
-                                {displayName}
+                                {atCapacity && !isOccupied && '🟡 '}
+                                {!isOccupied && !atCapacity && '🟢 '}
+                                {displayName}{capacityText}
                                 {isOccupied && ' (Occupied)'}
-                                {isAssignedToOtherPet && !isOccupied && ' (Selected for another pet)'}
+                                {atCapacity && !isOccupied && ' (At Capacity)'}
                               </li>
                             );
                           }}
