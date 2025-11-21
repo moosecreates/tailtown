@@ -207,10 +207,9 @@ export const resourceService = {
     date?: string
   ): Promise<{ status: string; data: ResourceWithReservations[]; results?: number }> => {
     try {
-      // Use the resources endpoint with type filter for suites
-      // All suites are resources with type containing "SUITE"
-      // Use a dynamic type filter to match all suite types in the database
-      const suiteTypes = ['STANDARD_SUITE', 'STANDARD_PLUS_SUITE', 'VIP_SUITE', 'SUITE'];
+      // Use the resources endpoint with type filter for kennels
+      // All kennels are resources with type='KENNEL'
+      // Room sizes are now stored in the 'size' field (JUNIOR, QUEEN, KING, VIP)
       
       // To get all resources, implement pagination
       let allResources: Resource[] = [];
@@ -221,7 +220,7 @@ export const resourceService = {
       do {
         const response: AxiosResponse = await api.get('/api/resources', {
           params: { 
-            type: suiteTypes.join(','),
+            type: 'KENNEL', // Use KENNEL type instead of old suite types
             page: currentPage,
             limit: pageSize,
             date: date // Include date parameter for potential filtering
