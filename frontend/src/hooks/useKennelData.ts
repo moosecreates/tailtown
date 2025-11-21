@@ -29,7 +29,8 @@ export interface Reservation extends BaseReservation {
 }
 
 // Define the kennel types
-export type KennelType = 'STANDARD_SUITE' | 'STANDARD_PLUS_SUITE' | 'VIP_SUITE';
+export type RoomSize = 'JUNIOR' | 'QUEEN' | 'KING' | 'VIP' | 'CAT' | 'OVERFLOW';
+export type KennelType = RoomSize; // Alias for backward compatibility
 
 interface UseKennelDataProps {
   currentDate: Date;
@@ -77,13 +78,13 @@ export const useKennelData = ({
       
       // First, get all resources of type suite
       try {
-        // Get all suite resources
+        // Get all kennel resources
         const suitesResponse = await resourceService.getAllResources(
           1, // page
           1000, // large limit to get all resources
           'name', // sortBy
           'asc', // sortOrder
-          'suite' // type
+          'KENNEL' // type
         );
         
         // Extract resources from the response
@@ -187,7 +188,7 @@ export const useKennelData = ({
               // Create placeholder kennels if we don't have real data
               if (!kennelData.length) {
                 try {
-                  const allSuites = await resourceService.getAllResources(1, 1000, 'name', 'asc', 'suite');
+                  const allSuites = await resourceService.getAllResources(1, 1000, 'name', 'asc', 'KENNEL');
                   if (allSuites && Array.isArray(allSuites)) {
                     kennelData = allSuites.map((suite: any) => ({
                       ...suite,
@@ -277,11 +278,11 @@ export const useKennelData = ({
     loadReservations();
   }, [loadKennelsAndAvailability, loadReservations]);
 
-  // Filter kennels based on type filter
+  // Filter kennels based on room size filter
   const filteredKennels = kennels.filter((kennel) => {
     if (kennelTypeFilter === 'ALL') return true;
-    const kennelType = kennel.type || kennel.attributes?.suiteType || 'STANDARD_SUITE';
-    return kennelType === kennelTypeFilter;
+    const roomSize = kennel.size || 'JUNIOR';
+    return roomSize === kennelTypeFilter;
   });
 
   return {

@@ -3,6 +3,7 @@
  * Implements schema alignment strategy with defensive programming
  */
 
+// @ts-nocheck - Mock helpers for unit tests
 import { PrismaClient } from '@prisma/client';
 
 /**

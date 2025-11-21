@@ -31,25 +31,31 @@ const KennelRow: React.FC<KennelRowProps> = memo(({
   onCellClick,
   isKennelOccupied
 }) => {
-  // Get kennel display name and type
+  // Get kennel display name and size
   const kennelName = kennel.suiteNumber || kennel.name || `Kennel ${kennel.id}`;
-  const kennelType = kennel.type || kennel.attributes?.suiteType || 'STANDARD_SUITE';
+  const roomSize = kennel.size || 'JUNIOR';
   
-  // Get type display and color
-  const getTypeDisplay = (type: string) => {
-    switch (type) {
-      case 'STANDARD_SUITE':
-        return { label: 'Standard', color: 'default' as const };
-      case 'STANDARD_PLUS_SUITE':
-        return { label: 'Standard+', color: 'primary' as const };
-      case 'VIP_SUITE':
-        return { label: 'VIP', color: 'secondary' as const };
+  // Get size display and color based on room size
+  const getSizeDisplay = (size: string) => {
+    switch (size) {
+      case 'JUNIOR':
+        return { label: 'Junior (1)', color: 'default' as const };
+      case 'QUEEN':
+        return { label: 'Queen (2)', color: 'primary' as const };
+      case 'KING':
+        return { label: 'King (3)', color: 'secondary' as const };
+      case 'VIP':
+        return { label: 'VIP (4)', color: 'error' as const };
+      case 'CAT':
+        return { label: 'Cat (1)', color: 'info' as const };
+      case 'OVERFLOW':
+        return { label: 'Overflow', color: 'warning' as const };
       default:
-        return { label: 'Standard', color: 'default' as const };
+        return { label: 'Junior (1)', color: 'default' as const };
     }
   };
 
-  const typeInfo = getTypeDisplay(kennelType);
+  const typeInfo = getSizeDisplay(roomSize);
 
   // Function to get the status color (restored from legacy)
   const getStatusColor = (status: string): string => {

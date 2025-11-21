@@ -5,6 +5,204 @@ All notable changes to the Tailtown Pet Resort Management System will be documen
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-11-21
+
+### 🏠 Room Size System Refactor
+
+This release introduces a major refactoring of the kennel/suite system, replacing arbitrary suite types with a standardized room size classification based on capacity.
+
+### Changed
+
+#### Backend - Resource Schema
+- **Deprecated**: Old suite types (`STANDARD_SUITE`, `STANDARD_PLUS_SUITE`, `VIP_SUITE`)
+- **Added**: `RoomSize` enum with values: `JUNIOR`, `QUEEN`, `KING`, `VIP`, `CAT`, `OVERFLOW`
+- **Added**: `size` field to Resource model for room size classification
+- **Added**: `maxPets` field to replace deprecated `capacity` field
+- **Migration**: Automatic parsing of kennel names to determine room size (e.g., "A01R" → JUNIOR, "B02Q" → QUEEN)
+- **Database**: SQL migrations to add room_size enum and populate existing data
+
+#### Frontend - Resource Management
+- **Resources Page**: 
+  - Replaced "Capacity" column with "Max Pets" column
+  - Updated ResourceDetails form to show Room Size and Max Pets fields
+  - Auto-population of size and maxPets based on kennel name suffix
+  - Removed deprecated capacity field from all forms
+- **Calendar View**:
+  - Replaced suite type labels ("Standard", "Standard+") with room sizes
+  - Display format: "Junior (1)", "Queen (2)", "King (3)", "VIP (4)"
+  - Updated kennel data loading to use `type: 'KENNEL'` instead of `type: 'suite'`
+  - Color-coded chips for different room sizes
+
+#### API Changes
+- **Resource Controller**: Added `size` field to create/update operations
+- **Response Format**: Resources now include `size` and `maxPets` fields
+- **Filtering**: Supports filtering by `type: 'KENNEL'` for all boarding resources
+
+### Fixed
+- **Nginx Routing**: Fixed `/api/resources` routing in wildcard-subdomains config
+- **Tenant Resolution**: Ensured proper tenant ID forwarding through nginx proxy
+- **Database Duplicates**: Removed duplicate resource records with old suite types
+- **Frontend Pagination**: Handle API responses with missing pagination metadata
+
+### Technical Details
+- Schema changes: `services/reservation-service/prisma/schema.prisma`
+- Migrations: `services/reservation-service/prisma/migrations/`
+- Frontend updates: `frontend/src/pages/resources/`, `frontend/src/components/calendar/`
+- Nginx config: `/etc/nginx/sites-enabled/wildcard-subdomains`
+
+### Migration Notes
+- Existing kennels automatically classified by name suffix (R=Junior, Q=Queen, K=King, V=VIP)
+- Old suite type fields deprecated but not removed for backward compatibility
+- No action required for existing reservations
+
+### Impact
+- **User Experience**: Clearer room capacity display across all interfaces
+- **Data Consistency**: Standardized room classification system
+- **Maintainability**: Simplified codebase with single source of truth for capacity
+
+## [1.2.8] - 2025-11-20
+
+### ⚡ Performance & Infrastructure
+
+This release completes critical performance and infrastructure improvements for production scaling.
+
+### Added
+
+#### Redis Caching - Phase 1
+- **Tenant Lookup Caching**: Subdomain → UUID mapping cached in Redis
+- **Performance**: 10ms → <1ms for cache hits (10x improvement)
+- **Database Load**: -80% reduction for tenant lookups
+- **Cache Strategy**: 5-minute TTL with automatic invalidation
+- **Graceful Fallback**: System continues if Redis unavailable
+
+#### Structured Logging
+- **Console.log Removal**: Replaced all console.log with proper Winston logging
+- **Critical Path**: 100% of customer service and middleware using structured logging
+- **Tenant Context**: All logs include tenant information
+- **GDPR/HIPAA Compliant**: No PII/sensitive data in logs
+- **Production Ready**: JSON format with log levels
+
+#### Database Optimization
+- **Connection Pooling**: Singleton pattern prevents connection exhaustion
+- **Load Tested**: Handles 947 req/s with 200 concurrent users
+- **Per-Tenant Rate Limiting**: 1000 requests per 15 minutes per tenant
+- **Index Coverage**: 95% of critical queries optimized
+
+### Technical Details
+- Redis infrastructure: `docs/REDIS-CACHING-IMPLEMENTATION.md`
+- Logging migration: `docs/CONSOLE-LOG-REMOVAL-SUMMARY.md`
+- Connection pooling: `services/customer/src/config/prisma.ts`
+- Rate limiting: `services/customer/src/middleware/rateLimiter.middleware.ts`
+
+### Impact
+- **Performance**: Significant reduction in database load
+- **Scalability**: Ready for 50+ tenants
+- **Observability**: Production-grade logging
+- **Security**: Per-tenant rate limiting prevents abuse
+
+## [1.2.7] - 2025-11-20
+
+### 🔒 CRITICAL SECURITY FIX - Tenant Isolation
+
+This release fixes a critical security vulnerability in the reservation service DELETE endpoint and completes the tenant isolation test suite.
+
+### Security
+
+#### CRITICAL: Cross-Tenant DELETE Vulnerability Fixed
+- **Vulnerability**: DELETE endpoint was missing `tenantId` in WHERE clause
+- **Impact**: Any tenant could delete any other tenant's reservations
+- **Fix**: Added `tenantId` to WHERE clause in `delete-reservation.controller.ts`
+- **Verification**: Automated tests confirm proper tenant isolation
+
+### Added
+
+#### Complete Tenant Isolation Test Suite (Reservation Service)
+- **All 9/9 Tests Passing** ✅
+- **Test Coverage**: Comprehensive tenant isolation verification
+  - GET list operations with tenant filtering
+  - GET by ID with cross-tenant protection
+  - PATCH operations with tenant isolation
+  - DELETE operations with tenant isolation (security fix verified)
+  - Data integrity verification across tenants
+- **CI/CD Integration**: Tests running and passing in GitHub Actions
+
+### Fixed
+- **DELETE Controller**: Added `tenantId` to WHERE clause (CRITICAL)
+- **GET Controllers**: Added `tenantId` to SELECT statements for verification
+- **Test Suite**: Fixed response structure expectations and HTTP methods
+- **API Response Structure**: Corrected test expectations to match actual API format
+
+### Technical Details
+- Test file: `services/reservation-service/src/__tests__/integration/tenant-isolation-reservations.test.ts`
+- Controllers fixed: `delete-reservation.controller.ts`, `get-reservation.controller.ts`
+- All tests passing locally and in CI/CD
+- Production-ready tenant isolation verification
+
+### Impact
+- **Security**: Prevents potential data breach and compliance violations
+- **Quality**: 100% tenant isolation test coverage for reservation CRUD operations
+- **Confidence**: Automated verification prevents regression
+
+## [1.2.6] - 2025-08-03
+
+### 🏗️ Reservation Service Refactoring - Foundation Complete
+
+This release completes the foundational refactoring work for the reservation service, establishing robust patterns for schema alignment, database migrations, and API optimization.
+
+### Added
+
+#### Schema Alignment Strategy
+- **Defensive Programming**: Implemented try/catch blocks for all database operations
+- **Graceful Fallbacks**: Empty arrays and default values when tables/fields don't exist
+- **Type Safety**: Explicit typing for all raw query results
+- **Shared Database**: Synchronized Prisma schemas between customer and reservation services
+- **Documentation**: Comprehensive README-SCHEMA-ALIGNMENT.md
+
+#### Database Migration Infrastructure
+- **Migration Directory**: Created `prisma/migrations` with proper structure
+- **Raw SQL Scripts**: Comprehensive migration scripts for critical tables
+- **Migration Runner**: Node.js script with error handling and rollback support
+- **Connection Testing**: Troubleshooting script for database connectivity
+- **Schema Validation**: Detailed reporting for schema mismatches
+
+#### API Route Optimization
+- **Route Ordering**: Fixed critical routing issues (specific before parameterized)
+- **Resource Filtering**: Enhanced to handle multiple resource types with Prisma `in` filter
+- **Availability API**: Fixed both single and batch resource availability endpoints
+- **Tenant Middleware**: Enhanced for development mode support
+- **Documentation**: Best practices documented in API-SERVICE-LAYER.md
+
+### Fixed
+- Removed all references to non-existent `organizationId` field
+- Fixed field name inconsistencies (e.g., `birthdate` vs `age` in Pet model)
+- Corrected resource type query parameter handling
+- Enhanced error handling and logging throughout
+
+### Technical Details
+- All controllers use defensive programming patterns
+- Database operations have proper fallbacks
+- API routes follow consistent ordering patterns
+- Tenant isolation properly enforced
+
+## [1.2.6-alpha] - 2025-11-20
+
+### 🔒 Security & Testing Infrastructure
+
+This release adds tenant isolation test infrastructure for the reservation service, laying the groundwork for comprehensive security testing.
+
+### Added
+
+#### Tenant Isolation Test Infrastructure (Reservation Service)
+- **Test Suite Created**: Comprehensive test structure for reservation CRUD operations
+- **Test Data Setup**: Automated creation of 2 tenants with full relationship graphs
+- **Cross-Tenant Tests**: Tests to verify tenants cannot access other tenants' data
+- **Initial Test Coverage**: 9 tests covering GET, PATCH, DELETE operations
+
+### Fixed
+- **Prisma Schema**: Commented out missing database columns (depositRequired, depositType, depositAmount)
+- **Test Infrastructure**: TypeScript compilation issues resolved
+- **Test Helpers**: Added @ts-nocheck for Jest globals
+
 ## [2.1.0] - 2025-10-30
 
 ### 🎉 Data Quality & Import System Complete

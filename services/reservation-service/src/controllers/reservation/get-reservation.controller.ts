@@ -262,6 +262,7 @@ export const getAllReservations = catchAsync(async (req: Request, res: Response)
         select: {
           // Base fields (explicitly exclude cutOffDate and organizationId by not selecting them)
           id: true,
+          tenantId: true, // CRITICAL: Include for tenant isolation verification
           startDate: true,
           endDate: true,
           status: true,
@@ -396,6 +397,7 @@ export const getReservationById = catchAsync(async (req: Request, res: Response)
         select: {
           // Base fields (explicitly exclude cutOffDate and organizationId by not selecting them)
           id: true,
+          tenantId: true, // CRITICAL: Include for tenant isolation verification
           startDate: true,
           endDate: true,
           status: true,

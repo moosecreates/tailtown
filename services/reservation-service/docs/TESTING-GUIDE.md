@@ -123,9 +123,38 @@ See `reservation.controller.final.test.ts` for a complete example of these patte
 - Ensure all mocks are properly reset in beforeEach
 - Check for asynchronous operations that might be affecting other tests
 
+## Integration Tests
+
+### Tenant Isolation Tests
+
+We have implemented comprehensive tenant isolation integration tests to ensure proper multi-tenancy security.
+
+**Test File**: `src/__tests__/integration/tenant-isolation-reservations.test.ts`
+
+**Coverage** (All 9/9 tests passing ✅):
+1. GET list operations with tenant filtering
+2. GET by ID with cross-tenant protection
+3. PATCH operations with tenant isolation
+4. DELETE operations with tenant isolation
+5. Data integrity verification across tenants
+
+**Key Features**:
+- Automated test data setup with 2 complete tenant environments
+- Real API calls through Supertest
+- Verifies tenant boundaries at the HTTP layer
+- Runs in CI/CD pipeline
+
+**Running the tests**:
+```bash
+npm test -- tenant-isolation-reservations --watchAll=false
+```
+
+**Security Impact**:
+These tests have identified and verified fixes for critical security vulnerabilities, including a cross-tenant DELETE vulnerability that could have allowed data breaches.
+
 ## Next Steps
 
 1. Apply these patterns to all controller tests
 2. Create shared test utilities for common operations
-3. Implement integration tests for critical paths
-4. Set up CI/CD to run tests automatically
+3. Expand tenant isolation tests to other services (invoices, payments, check-ins)
+4. Add performance benchmarks for critical paths
