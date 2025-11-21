@@ -264,7 +264,12 @@ export const useKennelData = ({
       });
       
       // Handle the nested response format: data.reservations
-      const reservationsData = response?.data?.data?.reservations || response?.data?.reservations || [];
+      console.log('[useKennelData] Reservations response:', response?.data);
+      const reservationsData = response?.data?.data?.reservations || response?.data?.reservations || response?.data?.data || [];
+      console.log('[useKennelData] Extracted reservations:', reservationsData.length, 'reservations');
+      if (reservationsData.length > 0) {
+        console.log('[useKennelData] First reservation:', reservationsData[0]);
+      }
       setReservations(reservationsData);
     } catch (error) {
       console.error('Error loading reservations:', error);
