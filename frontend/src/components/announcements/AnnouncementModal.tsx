@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,21 +9,21 @@ import {
   Box,
   IconButton,
   Chip,
-  Alert
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import DeleteIcon from '@mui/icons-material/Delete';
-import InfoIcon from '@mui/icons-material/Info';
-import WarningIcon from '@mui/icons-material/Warning';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
+  Alert,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import DeleteIcon from "@mui/icons-material/Delete";
+import InfoIcon from "@mui/icons-material/Info";
+import WarningIcon from "@mui/icons-material/Warning";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ErrorIcon from "@mui/icons-material/Error";
 
 export interface Announcement {
   id: string;
   title: string;
   message: string;
-  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  type: 'INFO' | 'WARNING' | 'SUCCESS' | 'ERROR';
+  priority: "LOW" | "NORMAL" | "HIGH" | "URGENT";
+  type: "INFO" | "WARNING" | "SUCCESS" | "ERROR";
   startDate: string;
   endDate?: string | null;
   isActive: boolean;
@@ -35,13 +35,15 @@ interface AnnouncementModalProps {
   announcements: Announcement[];
   onClose: () => void;
   onDismiss: (id: string) => void;
+  isAuthenticated?: boolean;
 }
 
 const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
   open,
   announcements,
   onClose,
-  onDismiss
+  onDismiss,
+  isAuthenticated = false,
 }) => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
 
@@ -63,7 +65,7 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
   const handleDismiss = () => {
     if (currentAnnouncement) {
       onDismiss(currentAnnouncement.id);
-      
+
       // Move to next announcement or close if this was the last one
       if (currentIndex < announcements.length - 1) {
         setCurrentIndex(currentIndex);
@@ -82,40 +84,42 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'WARNING':
+      case "WARNING":
         return <WarningIcon />;
-      case 'SUCCESS':
+      case "SUCCESS":
         return <CheckCircleIcon />;
-      case 'ERROR':
+      case "ERROR":
         return <ErrorIcon />;
       default:
         return <InfoIcon />;
     }
   };
 
-  const getTypeSeverity = (type: string): 'info' | 'warning' | 'success' | 'error' => {
+  const getTypeSeverity = (
+    type: string
+  ): "info" | "warning" | "success" | "error" => {
     switch (type) {
-      case 'WARNING':
-        return 'warning';
-      case 'SUCCESS':
-        return 'success';
-      case 'ERROR':
-        return 'error';
+      case "WARNING":
+        return "warning";
+      case "SUCCESS":
+        return "success";
+      case "ERROR":
+        return "error";
       default:
-        return 'info';
+        return "info";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'URGENT':
-        return 'error';
-      case 'HIGH':
-        return 'warning';
-      case 'NORMAL':
-        return 'primary';
+      case "URGENT":
+        return "error";
+      case "HIGH":
+        return "warning";
+      case "NORMAL":
+        return "primary";
       default:
-        return 'default';
+        return "default";
     }
   };
 
@@ -132,19 +136,26 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
       PaperProps={{
         sx: {
           borderTop: 4,
-          borderColor: getPriorityColor(currentAnnouncement.priority) + '.main'
-        }
+          borderColor: getPriorityColor(currentAnnouncement.priority) + ".main",
+        },
       }}
     >
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <DialogTitle
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          pb: 1,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {getTypeIcon(currentAnnouncement.type)}
           <Typography variant="h6" component="span">
             {currentAnnouncement.title}
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {currentAnnouncement.priority !== 'NORMAL' && (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {currentAnnouncement.priority !== "NORMAL" && (
             <Chip
               label={currentAnnouncement.priority}
               color={getPriorityColor(currentAnnouncement.priority) as any}
@@ -158,20 +169,27 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
       </DialogTitle>
 
       <DialogContent>
-        <Alert severity={getTypeSeverity(currentAnnouncement.type)} sx={{ mb: 2 }}>
-          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
+        <Alert
+          severity={getTypeSeverity(currentAnnouncement.type)}
+          sx={{ mb: 2 }}
+        >
+          <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
             {currentAnnouncement.message}
           </Typography>
         </Alert>
 
         {hasMultiple && (
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: "block", textAlign: "center", mt: 1 }}
+          >
             Announcement {currentIndex + 1} of {announcements.length}
           </Typography>
         )}
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'space-between' }}>
+      <DialogActions sx={{ px: 3, pb: 2, justifyContent: "space-between" }}>
         <Box>
           {hasMultiple && (
             <>
@@ -192,18 +210,20 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
             </>
           )}
         </Box>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: "flex", gap: 1 }}>
           <Button onClick={handleClose} variant="contained" color="primary">
             Close
           </Button>
-          <Button 
-            onClick={handleDismiss} 
-            variant="outlined" 
-            color="error"
-            startIcon={<DeleteIcon />}
-          >
-            Dismiss Forever
-          </Button>
+          {isAuthenticated && (
+            <Button
+              onClick={handleDismiss}
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+            >
+              Dismiss Forever
+            </Button>
+          )}
         </Box>
       </DialogActions>
     </Dialog>

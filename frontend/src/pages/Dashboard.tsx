@@ -1,21 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, IconButton } from '@mui/material';
-import { Today as TodayIcon, ChevronLeft, ChevronRight } from '@mui/icons-material';
-import DashboardMetrics from '../components/dashboard/DashboardMetrics';
-import ReservationList from '../components/dashboard/ReservationList';
-import AnnouncementModal from '../components/announcements/AnnouncementModal';
-import ResponsiveContainer from '../components/common/ResponsiveContainer';
-import { useDashboardData } from '../hooks/useDashboardData';
-import { usePageHelp } from '../hooks/usePageHelp';
-import { useResponsive, getResponsiveButtonSize } from '../utils/responsive';
-import announcementService from '../services/announcementService';
-import type { Announcement } from '../components/announcements/AnnouncementModal';
-import { dashboardHelp } from '../content/help/dashboardHelp';
+import React, { useState, useEffect } from "react";
+import { Box, Typography, TextField, Button, IconButton } from "@mui/material";
+import {
+  Today as TodayIcon,
+  ChevronLeft,
+  ChevronRight,
+} from "@mui/icons-material";
+import DashboardMetrics from "../components/dashboard/DashboardMetrics";
+import ReservationList from "../components/dashboard/ReservationList";
+import AnnouncementModal from "../components/announcements/AnnouncementModal";
+import ResponsiveContainer from "../components/common/ResponsiveContainer";
+import { useDashboardData } from "../hooks/useDashboardData";
+import { usePageHelp } from "../hooks/usePageHelp";
+import { useResponsive, getResponsiveButtonSize } from "../utils/responsive";
+import announcementService from "../services/announcementService";
+import type { Announcement } from "../components/announcements/AnnouncementModal";
+import { dashboardHelp } from "../content/help/dashboardHelp";
+import { useAuth } from "../contexts/AuthContext";
 
 /**
  * Dashboard component displays key business metrics and upcoming reservations.
  * Shows reservation counts (In, Out, Overnight), revenue, and recent activity.
- * 
+ *
  * Refactored to use:
  * - useDashboardData hook for data management
  * - DashboardMetrics component for metric cards
@@ -24,7 +29,7 @@ import { dashboardHelp } from '../content/help/dashboardHelp';
 const Dashboard = () => {
   // Set up page help
   usePageHelp(dashboardHelp);
-  
+
   // Responsive hooks
   const { isMobile } = useResponsive();
 
@@ -38,12 +43,13 @@ const Dashboard = () => {
     appointmentFilter,
     selectedDate,
     setSelectedDate,
-    filterReservations
+    filterReservations,
   } = useDashboardData();
 
   // Announcement state
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const { user } = useAuth();
 
   // Load announcements on mount
   useEffect(() => {
@@ -53,7 +59,7 @@ const Dashboard = () => {
   const loadAnnouncements = async () => {
     const data = await announcementService.getActiveAnnouncements();
     setAnnouncements(data);
-    
+
     // Show modal if there are announcements
     if (data.length > 0) {
       setShowAnnouncementModal(true);
@@ -64,26 +70,26 @@ const Dashboard = () => {
     try {
       await announcementService.dismissAnnouncement(id);
       // Only remove if dismiss was successful
-      setAnnouncements(prev => prev.filter(a => a.id !== id));
-      console.log('Announcement dismissed successfully');
+      setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+      console.log("Announcement dismissed successfully");
     } catch (error) {
-      console.error('Failed to dismiss announcement:', error);
+      console.error("Failed to dismiss announcement:", error);
       // Don't remove from state if dismiss failed
-      alert('Unable to dismiss announcement. Please try again later.');
+      alert("Unable to dismiss announcement. Please try again later.");
     }
   };
 
   // Format date for input (YYYY-MM-DD)
   const formatDateForInput = (date: Date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
   // Handle date change from input
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = new Date(event.target.value + 'T00:00:00');
+    const newDate = new Date(event.target.value + "T00:00:00");
     setSelectedDate(newDate);
   };
 
@@ -114,92 +120,99 @@ const Dashboard = () => {
         announcements={announcements}
         onClose={() => setShowAnnouncementModal(false)}
         onDismiss={handleDismissAnnouncement}
+        isAuthenticated={!!user}
       />
 
       {/* Header with Date Selector */}
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: { xs: 'column', sm: 'row' },
-        justifyContent: 'space-between', 
-        alignItems: { xs: 'stretch', sm: 'center' },
-        mb: 2,
-        gap: { xs: 2, sm: 0 }
-      }}>
-        <Typography variant={isMobile ? 'h6' : 'h5'} component="h1">
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "stretch", sm: "center" },
+          mb: 2,
+          gap: { xs: 2, sm: 0 },
+        }}
+      >
+        <Typography variant={isMobile ? "h6" : "h5"} component="h1">
           Dashboard
         </Typography>
-        
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 1, 
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          justifyContent: { xs: 'flex-start', sm: 'flex-end' }
-        }}>
+
+        <Box
+          sx={{
+            display: "flex",
+            gap: 1,
+            alignItems: "center",
+            flexWrap: "wrap",
+            justifyContent: { xs: "flex-start", sm: "flex-end" },
+          }}
+        >
           {/* Previous Day Button */}
           <IconButton
             size={getResponsiveButtonSize(isMobile)}
             onClick={handlePreviousDay}
-            sx={{ 
-              border: '1px solid',
-              borderColor: 'divider',
+            sx={{
+              border: "1px solid",
+              borderColor: "divider",
               borderRadius: 1,
-              flexShrink: 0
+              flexShrink: 0,
             }}
             title="Previous day"
           >
             <ChevronLeft />
           </IconButton>
-          
+
           {/* Date Picker */}
           <TextField
             type="date"
-            size={isMobile ? 'small' : 'medium'}
+            size={isMobile ? "small" : "medium"}
             value={formatDateForInput(selectedDate)}
             onChange={handleDateChange}
             InputLabelProps={{
               shrink: true,
             }}
-            sx={{ 
+            sx={{
               width: { xs: 140, sm: 180 },
-              minWidth: 'fit-content',
-              flexShrink: 1
+              minWidth: "fit-content",
+              flexShrink: 1,
             }}
           />
-          
+
           {/* Next Day Button */}
           <IconButton
             size={getResponsiveButtonSize(isMobile)}
             onClick={handleNextDay}
-            sx={{ 
-              border: '1px solid',
-              borderColor: 'divider',
+            sx={{
+              border: "1px solid",
+              borderColor: "divider",
               borderRadius: 1,
-              flexShrink: 0
+              flexShrink: 0,
             }}
             title="Next day"
           >
             <ChevronRight />
           </IconButton>
-          
+
           {/* Today Button */}
           <Button
             variant="outlined"
             size={getResponsiveButtonSize(isMobile)}
             startIcon={!isMobile ? <TodayIcon /> : undefined}
             onClick={handleTodayClick}
-            sx={{ 
-              whiteSpace: 'nowrap',
+            sx={{
+              whiteSpace: "nowrap",
               flexShrink: 0,
-              display: { xs: 'none', sm: 'inline-flex' }
+              display: { xs: "none", sm: "inline-flex" },
             }}
           >
-            {isMobile ? <TodayIcon /> : 'Today'}
+            {isMobile ? <TodayIcon /> : "Today"}
           </Button>
         </Box>
       </Box>
-      
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, md: 3 } }}>
+
+      <Box
+        sx={{ display: "flex", flexDirection: "column", gap: { xs: 2, md: 3 } }}
+      >
         {/* Metrics Cards */}
         <DashboardMetrics
           inCount={inCount}
