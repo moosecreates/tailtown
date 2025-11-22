@@ -1,24 +1,53 @@
-import { Router } from 'express';
-import * as announcementController from '../controllers/announcement.controller';
+import { Router } from "express";
+import * as announcementController from "../controllers/announcement.controller";
+import {
+  authenticate,
+  requireTenantAdmin,
+} from "../middleware/auth.middleware";
 
 const router = Router();
 
 // Get active announcements for current user (excludes dismissed)
-router.get('/announcements', announcementController.getActiveAnnouncements);
+// No auth required - announcements should be visible to all
+router.get("/", announcementController.getActiveAnnouncements);
 
-// Get all announcements (admin view)
-router.get('/announcements/all', announcementController.getAllAnnouncements);
+// Get all announcements (admin view) - requires admin auth
+router.get(
+  "/all",
+  authenticate,
+  requireTenantAdmin,
+  announcementController.getAllAnnouncements
+);
 
-// Create new announcement
-router.post('/announcements', announcementController.createAnnouncement);
+// Create new announcement - requires admin auth
+router.post(
+  "/",
+  authenticate,
+  requireTenantAdmin,
+  announcementController.createAnnouncement
+);
 
-// Update announcement
-router.put('/announcements/:id', announcementController.updateAnnouncement);
+// Update announcement - requires admin auth
+router.put(
+  "/:id",
+  authenticate,
+  requireTenantAdmin,
+  announcementController.updateAnnouncement
+);
 
-// Delete announcement
-router.delete('/announcements/:id', announcementController.deleteAnnouncement);
+// Delete announcement - requires admin auth
+router.delete(
+  "/:id",
+  authenticate,
+  requireTenantAdmin,
+  announcementController.deleteAnnouncement
+);
 
-// Dismiss announcement for current user
-router.post('/announcements/:id/dismiss', announcementController.dismissAnnouncement);
+// Dismiss announcement for current user - requires auth
+router.post(
+  "/:id/dismiss",
+  authenticate,
+  announcementController.dismissAnnouncement
+);
 
 export default router;
