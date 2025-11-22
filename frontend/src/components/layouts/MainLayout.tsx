@@ -1,26 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { SvgIconComponent } from '@mui/icons-material';
-import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
-import logoImage from '../../assets/images/tail town logo.jpg';
-import { 
-  AppBar, 
-  Box, 
+import React, { useState, useEffect } from "react";
+import { SvgIconComponent } from "@mui/icons-material";
+import {
+  Outlet,
+  Link,
+  useLocation,
+  useNavigate,
+  Navigate,
+} from "react-router-dom";
+import logoImage from "../../assets/images/tail town logo.jpg";
+import {
+  AppBar,
+  Box,
   CircularProgress,
   CssBaseline,
-  Divider, 
-  Drawer, 
-  IconButton, 
-  List, 
-  ListItem, 
-  ListItemButton, 
-  ListItemIcon, 
-  ListItemText, 
-  Toolbar, 
-  Typography, 
+  Divider,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Toolbar,
+  Typography,
   Avatar,
   Menu,
-  MenuItem
-} from '@mui/material';
+  MenuItem,
+} from "@mui/material";
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
@@ -41,16 +47,16 @@ import {
   AssessmentOutlined as ReportIcon,
   ShoppingCart as ShoppingCartIcon,
   PhotoCamera as ReportCardIcon,
-  NotificationsActive as WaitlistIcon
-} from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
-import ImpersonationBanner from '../super-admin/ImpersonationBanner';
-import AnnouncementBell from '../announcements/AnnouncementBell';
-import AnnouncementModal from '../announcements/AnnouncementModal';
-import announcementService from '../../services/announcementService';
-import type { Announcement } from '../announcements/AnnouncementModal';
-import { useHelp } from '../../contexts/HelpContext';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+  NotificationsActive as WaitlistIcon,
+} from "@mui/icons-material";
+import { useAuth } from "../../contexts/AuthContext";
+import ImpersonationBanner from "../super-admin/ImpersonationBanner";
+import AnnouncementBell from "../announcements/AnnouncementBell";
+import AnnouncementModal from "../announcements/AnnouncementModal";
+import announcementService from "../../services/announcementService";
+import type { Announcement } from "../announcements/AnnouncementModal";
+import { useHelp } from "../../contexts/HelpContext";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 const drawerWidth = 240;
 
@@ -66,19 +72,24 @@ interface NavItem {
  * @param profilePhoto - Relative path to profile photo
  * @returns Full URL to profile photo or undefined if invalid
  */
-const getProfilePhotoUrl = (profilePhoto: string | null | undefined): string | undefined => {
+const getProfilePhotoUrl = (
+  profilePhoto: string | null | undefined
+): string | undefined => {
   if (!profilePhoto) return undefined;
-  
+
   try {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? window.location.origin 
-      : (process.env.REACT_APP_API_URL || 'http://localhost:4004');
-    
+    const baseUrl =
+      process.env.NODE_ENV === "production"
+        ? window.location.origin
+        : process.env.REACT_APP_API_URL || "http://localhost:4004";
+
     // Ensure profilePhoto starts with /
-    const path = profilePhoto.startsWith('/') ? profilePhoto : `/${profilePhoto}`;
+    const path = profilePhoto.startsWith("/")
+      ? profilePhoto
+      : `/${profilePhoto}`;
     return `${baseUrl}${path}`;
   } catch (error) {
-    console.error('Error constructing profile photo URL:', error);
+    console.error("Error constructing profile photo URL:", error);
     return undefined;
   }
 };
@@ -124,40 +135,42 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     try {
       // Use dynamic API URL based on environment
       const getApiUrl = () => {
-        if (process.env.NODE_ENV === 'production') {
+        if (process.env.NODE_ENV === "production") {
           return window.location.origin;
         }
-        return process.env.REACT_APP_API_URL || 'http://localhost:4004';
+        return process.env.REACT_APP_API_URL || "http://localhost:4004";
       };
       const API_URL = getApiUrl();
-      const tenantId = localStorage.getItem('tailtown_tenant_id') || localStorage.getItem('tenantId');
+      const tenantId =
+        localStorage.getItem("tailtown_tenant_id") ||
+        localStorage.getItem("tenantId");
       const headers: Record<string, string> = {
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
       };
-      
+
       // Add tenant subdomain header if available (backend expects x-tenant-subdomain)
       if (tenantId) {
-        headers['x-tenant-subdomain'] = tenantId;
+        headers["x-tenant-subdomain"] = tenantId;
       }
-      
+
       const response = await fetch(`${API_URL}/api/business-settings`, {
-        headers
+        headers,
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.logoUrl) {
           const logoUrl = `${API_URL}${data.logoUrl}`;
           setCustomLogo(logoUrl);
           // Cache in localStorage to prevent flash on reload
-          localStorage.setItem('businessLogo', logoUrl);
+          localStorage.setItem("businessLogo", logoUrl);
         } else {
           // No custom logo, remove from cache
-          localStorage.removeItem('businessLogo');
+          localStorage.removeItem("businessLogo");
         }
       }
     } catch (error) {
-      console.error('Error loading business settings:', error);
+      console.error("Error loading business settings:", error);
     }
   };
 
@@ -165,12 +178,12 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
     try {
       await announcementService.dismissAnnouncement(id);
       // Only remove if dismiss was successful
-      setAnnouncements(prev => prev.filter(a => a.id !== id));
-      console.log('Announcement dismissed successfully');
+      setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+      console.log("Announcement dismissed successfully");
     } catch (error) {
-      console.error('Failed to dismiss announcement:', error);
+      console.error("Failed to dismiss announcement:", error);
       // Don't remove from state if dismiss failed
-      alert('Unable to dismiss announcement. Please try again later.');
+      alert("Unable to dismiss announcement. Please try again later.");
     }
   };
 
@@ -189,13 +202,20 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   // 3. Early returns for loading and unauthenticated states
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -210,59 +230,83 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   };
 
   const navItems: NavItem[] = [
-    { path: '/dashboard', label: 'Dashboard', icon: DashboardIcon },
-    { path: '/calendar', label: 'Boarding & Daycare', icon: DaycareIcon },
-    { path: '/calendar/grooming', label: 'Grooming', icon: GroomingIcon },
-    { path: '/calendar/training', label: 'Training', icon: TrainingIcon },
-    { path: '/customers', label: 'Customers', icon: PeopleIcon },
-    { path: '/pets', label: 'Pets', icon: PetsIcon },
-    { path: '/report-cards', label: 'Report Cards', icon: ReportCardIcon },
-    { path: '/waitlist', label: 'Waitlist', icon: WaitlistIcon },
-    { path: '/products', label: 'Products & POS', icon: ShoppingCartIcon },
-    { 
-      path: '/suites', 
-      label: 'Kennels', 
+    { path: "/dashboard", label: "Dashboard", icon: DashboardIcon },
+    { path: "/calendar", label: "Boarding & Daycare", icon: DaycareIcon },
+    { path: "/calendar/grooming", label: "Grooming", icon: GroomingIcon },
+    { path: "/calendar/training", label: "Training", icon: TrainingIcon },
+    { path: "/customers", label: "Customers", icon: PeopleIcon },
+    { path: "/pets", label: "Pets", icon: PetsIcon },
+    { path: "/report-cards", label: "Report Cards", icon: ReportCardIcon },
+    { path: "/waitlist", label: "Waitlist", icon: WaitlistIcon },
+    { path: "/products", label: "Products & POS", icon: ShoppingCartIcon },
+    {
+      path: "/suites",
+      label: "Kennels",
       icon: SuitesIcon,
       children: [
-        { path: '/suites', label: 'Kennel Board', icon: SuitesIcon },
-        { path: '/kennels/print-cards', label: 'Print Kennel Cards', icon: PrintIcon },
-      ] 
+        { path: "/suites", label: "Kennel Board", icon: SuitesIcon },
+        {
+          path: "/kennels/print-cards",
+          label: "Print Kennel Cards",
+          icon: PrintIcon,
+        },
+      ],
     },
     // Hidden while building calendar-integrated ordering functionality
     // { path: '/reservations', label: 'Reservations', icon: EventNoteIcon },
     // { path: '/orders/new', label: 'New Order', icon: OrdersIcon },
-    { 
-      path: '/reports', 
-      label: 'Reports', 
+    {
+      path: "/reports",
+      label: "Reports",
       icon: AnalyticsIcon,
       children: [
-        { path: '/reports', label: 'All Reports', icon: ReportIcon },
-        { path: '/analytics', label: 'Sales Dashboard', icon: ReportIcon },
-        { path: '/analytics/customers', label: 'Customer Value', icon: PaymentIcon },
-      ] 
+        { path: "/reports", label: "All Reports", icon: ReportIcon },
+        { path: "/analytics", label: "Sales Dashboard", icon: ReportIcon },
+        {
+          path: "/analytics/customers",
+          label: "Customer Value",
+          icon: PaymentIcon,
+        },
+      ],
     },
   ];
 
   const drawer = (
     <div>
-      <Toolbar sx={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        py: 2,
-        px: 1
-      }}>
-        <Box sx={{ width: '140px', height: '140px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <img 
-            src={customLogo || logoImage} 
-            alt="Business Logo" 
-            style={{ width: '100%', height: '100%', objectFit: 'contain', transform: customLogo ? 'scale(1)' : 'scale(1.2)' }} 
+      <Toolbar
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          py: 2,
+          px: 1,
+        }}
+      >
+        <Box
+          sx={{
+            width: "140px",
+            height: "140px",
+            overflow: "hidden",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <img
+            src={customLogo || logoImage}
+            alt="Business Logo"
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              transform: customLogo ? "scale(1)" : "scale(1.2)",
+            }}
           />
         </Box>
       </Toolbar>
       <Divider />
       <List>
-        {navItems.map((item) => 
+        {navItems.map((item) =>
           item.children ? (
             <React.Fragment key={item.path}>
               <ListItem disablePadding>
@@ -270,14 +314,14 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
                   onClick={() => handleSubMenuToggle(item.label)}
                   selected={location.pathname.startsWith(item.path)}
                   sx={{
-                    '&.Mui-selected': {
-                      backgroundColor: 'primary.light',
-                      color: 'primary.contrastText',
-                      '&:hover': {
-                        backgroundColor: 'primary.main',
+                    "&.Mui-selected": {
+                      backgroundColor: "primary.light",
+                      color: "primary.contrastText",
+                      "&:hover": {
+                        backgroundColor: "primary.main",
                       },
-                      '& .MuiListItemIcon-root': {
-                        color: 'primary.contrastText',
+                      "& .MuiListItemIcon-root": {
+                        color: "primary.contrastText",
                       },
                     },
                   }}
@@ -286,7 +330,11 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
                     <item.icon />
                   </ListItemIcon>
                   <ListItemText primary={item.label} />
-                  {openSubMenu === item.label ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  {openSubMenu === item.label ? (
+                    <ExpandLessIcon />
+                  ) : (
+                    <ExpandMoreIcon />
+                  )}
                 </ListItemButton>
               </ListItem>
               {openSubMenu === item.label && (
@@ -300,14 +348,14 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
                         onClick={handleDrawerToggle}
                         sx={{
                           pl: 4,
-                          '&.Mui-selected': {
-                            backgroundColor: 'primary.light',
-                            color: 'primary.contrastText',
-                            '&:hover': {
-                              backgroundColor: 'primary.main',
+                          "&.Mui-selected": {
+                            backgroundColor: "primary.light",
+                            color: "primary.contrastText",
+                            "&:hover": {
+                              backgroundColor: "primary.main",
                             },
-                            '& .MuiListItemIcon-root': {
-                              color: 'primary.contrastText',
+                            "& .MuiListItemIcon-root": {
+                              color: "primary.contrastText",
                             },
                           },
                         }}
@@ -330,14 +378,14 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
                 selected={location.pathname === item.path}
                 onClick={handleDrawerToggle}
                 sx={{
-                  '&.Mui-selected': {
-                    backgroundColor: 'primary.light',
-                    color: 'primary.contrastText',
-                    '&:hover': {
-                      backgroundColor: 'primary.main',
+                  "&.Mui-selected": {
+                    backgroundColor: "primary.light",
+                    color: "primary.contrastText",
+                    "&:hover": {
+                      backgroundColor: "primary.main",
                     },
-                    '& .MuiListItemIcon-root': {
-                      color: 'primary.contrastText',
+                    "& .MuiListItemIcon-root": {
+                      color: "primary.contrastText",
                     },
                   },
                 }}
@@ -366,17 +414,18 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      
+
       {/* Announcement Modal */}
       <AnnouncementModal
         open={showAnnouncementModal}
         announcements={announcements}
         onClose={() => setShowAnnouncementModal(false)}
         onDismiss={handleDismissAnnouncement}
+        isAuthenticated={!!user}
       />
-      
+
       <AppBar
         position="fixed"
         sx={{
@@ -390,26 +439,34 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ mr: 2, display: { sm: "none" } }}
           >
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {navItems.find((item) => item.path === location.pathname)?.label || 'Dashboard'}
+            {navItems.find((item) => item.path === location.pathname)?.label ||
+              "Dashboard"}
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-              <Typography variant="body2" sx={{ textAlign: 'right', lineHeight: 1.2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={{ display: { xs: "none", sm: "block" } }}>
+              <Typography
+                variant="body2"
+                sx={{ textAlign: "right", lineHeight: 1.2 }}
+              >
                 {user?.firstName} {user?.lastName}
               </Typography>
-              <Typography variant="caption" color="inherit" sx={{ opacity: 0.8 }}>
-                {user?.role || 'Staff'}
+              <Typography
+                variant="caption"
+                color="inherit"
+                sx={{ opacity: 0.8 }}
+              >
+                {user?.role || "Staff"}
               </Typography>
             </Box>
             <AnnouncementBell
               announcements={announcements}
               onAnnouncementClick={() => setShowAnnouncementModal(true)}
-              onCreateClick={() => navigate('/admin/announcements')}
+              onCreateClick={() => navigate("/admin/announcements")}
             />
             <IconButton
               color="inherit"
@@ -428,14 +485,14 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
               aria-haspopup="true"
               onClick={handleProfileMenuOpen}
             >
-              <Avatar 
+              <Avatar
                 src={getProfilePhotoUrl((user as any)?.profilePhoto)}
-                sx={{ 
-                  bgcolor: 'secondary.main',
-                  border: '2px solid white',
+                sx={{
+                  bgcolor: "secondary.main",
+                  border: "2px solid white",
                 }}
               >
-                {!(user as any)?.profilePhoto && (user?.firstName?.[0] || 'U')}
+                {!(user as any)?.profilePhoto && (user?.firstName?.[0] || "U")}
               </Avatar>
             </IconButton>
           </Box>
@@ -443,21 +500,23 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
             id="menu-appbar"
             anchorEl={anchorEl}
             anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
+              vertical: "bottom",
+              horizontal: "right",
             }}
             keepMounted
             transformOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
+              vertical: "top",
+              horizontal: "right",
             }}
             open={Boolean(anchorEl)}
             onClose={handleProfileMenuClose}
           >
-            <MenuItem onClick={() => {
-              handleProfileMenuClose();
-              navigate('/profile');
-            }}>
+            <MenuItem
+              onClick={() => {
+                handleProfileMenuClose();
+                navigate("/profile");
+              }}
+            >
               <ListItemIcon>
                 <AccountCircleIcon fontSize="small" />
               </ListItemIcon>
@@ -485,8 +544,11 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
             keepMounted: true, // Better open performance on mobile
           }}
           sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "block", sm: "none" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
         >
           {drawer}
@@ -494,8 +556,11 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
         <Drawer
           variant="permanent"
           sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            display: { xs: "none", sm: "block" },
+            "& .MuiDrawer-paper": {
+              boxSizing: "border-box",
+              width: drawerWidth,
+            },
           }}
           open
         >
@@ -508,13 +573,13 @@ const MainLayout = ({ children }: { children?: React.ReactNode }) => {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          minHeight: '100vh',
-          backgroundColor: 'background.default',
+          minHeight: "100vh",
+          backgroundColor: "background.default",
         }}
       >
         <Toolbar />
         {/* Show impersonation banner if active */}
-        {localStorage.getItem('impersonationSession') && (
+        {localStorage.getItem("impersonationSession") && (
           <ImpersonationBanner onExit={() => {}} />
         )}
         {children || <Outlet />}

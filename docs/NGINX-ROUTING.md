@@ -33,6 +33,7 @@ location ~ ^/api/(staff|customers|pets|services|waitlist|products|analytics|repo
 ```
 
 **Endpoints**:
+
 - `/api/staff/*` - Staff management
 - `/api/customers/*` - Customer management
 - `/api/pets/*` - Pet management
@@ -42,6 +43,7 @@ location ~ ^/api/(staff|customers|pets|services|waitlist|products|analytics|repo
 - `/api/analytics/*` - Analytics dashboard
 - `/api/reports/*` - Sales and tax reports
 - `/api/training-classes/*` - Training class management
+- `/api/announcements/*` - Announcement management (public read, admin write)
 
 ### Reservation Service Routes (Port 4003)
 
@@ -62,6 +64,7 @@ location ~ ^/api/(reservations|resources) {
 ```
 
 **Endpoints**:
+
 - `/api/reservations/*` - Reservation management
 - `/api/resources/*` - Resource (kennel) management
 
@@ -106,6 +109,7 @@ systemctl restart nginx
 **Solution**: Add the endpoint to the appropriate `location` block regex pattern
 
 **Example**: Adding `/api/announcements` to customer-service:
+
 ```nginx
 # Before
 location ~ ^/api/(staff|customers|pets|services) {
@@ -120,7 +124,8 @@ location ~ ^/api/(staff|customers|pets|services|announcements) {
 
 **Cause**: Backend service is not running or not listening on expected port
 
-**Solution**: 
+**Solution**:
+
 1. Check service status: `pm2 status`
 2. Check service logs: `pm2 logs customer-service` or `pm2 logs reservation-service`
 3. Restart service: `pm2 restart customer-service`
@@ -132,6 +137,7 @@ location ~ ^/api/(staff|customers|pets|services|announcements) {
 **Cause**: Configuration not reloaded or syntax error preventing reload
 
 **Solution**:
+
 1. Test config: `nginx -t`
 2. Check for errors in output
 3. Reload: `nginx -s reload`
@@ -148,12 +154,40 @@ When adding new API endpoints:
 - [ ] Verify endpoint works in browser/Postman
 - [ ] Update this documentation
 
+## Critical Configuration Notes
+
+### Port Routing
+
+**IMPORTANT**: The `/api/` location block must route to port **4004** (customer-service), NOT 4003 (reservation-service).
+
+```nginx
+# CORRECT
+location /api/ {
+    proxy_pass http://localhost:4004;  # Customer service
+}
+
+# Reservations are a specific exception
+location /api/reservations/ {
+    proxy_pass http://localhost:4003;  # Reservation service
+}
+```
+
+**Common Mistake**: During deployment on Nov 21-22, 2025, the `/api/` block was incorrectly pointing to 4003, causing all API requests (including announcements) to fail with 404 errors. Always verify port routing after nginx configuration changes.
+
+### Route Order Matters
+
+More specific routes must be defined BEFORE general routes in nginx configuration. For example:
+
+- `/api/reservations/` must come before `/api/`
+- `/api/announcements` must come before `/api/`
+
 ## Version History
 
+- **November 22, 2025**: Fixed announcements routing, added critical port configuration notes
 - **November 21, 2025**: Added waitlist, products, analytics, reports, training-classes routes
 - **Initial**: Basic customer-service and reservation-service routing
 
 ---
 
-**Last Updated**: November 21, 2025  
+**Last Updated**: November 22, 2025  
 **Maintainer**: Development Team
