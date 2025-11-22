@@ -1,6 +1,6 @@
-import { Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { Response } from "express";
+import { PrismaClient } from "@prisma/client";
+import { AuthRequest } from "../middleware/auth.middleware";
 
 const prisma = new PrismaClient();
 
@@ -12,9 +12,13 @@ interface TenantRequest extends AuthRequest {
  * Get all active announcements for the current tenant
  * Returns announcements that are active and within their date range
  */
-export const getActiveAnnouncements = async (req: TenantRequest, res: Response) => {
+export const getActiveAnnouncements = async (
+  req: TenantRequest,
+  res: Response
+) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
+    const tenantId =
+      req.tenantId || (process.env.NODE_ENV !== "production" && "dev");
     // Get user ID from authenticated session (if available)
     const userId = req.user?.id;
     const now = new Date();
@@ -25,42 +29,36 @@ export const getActiveAnnouncements = async (req: TenantRequest, res: Response) 
         tenantId,
         isActive: true,
         startDate: { lte: now },
-        OR: [
-          { endDate: null },
-          { endDate: { gte: now } }
-        ]
+        OR: [{ endDate: null }, { endDate: { gte: now } }],
       },
-      orderBy: [
-        { priority: 'desc' },
-        { createdAt: 'desc' }
-      ]
+      orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
     };
 
     // Only include dismissals if user is authenticated
     if (userId) {
       queryOptions.include = {
         dismissals: {
-          where: { userId }
-        }
+          where: { userId },
+        },
       };
     }
 
     const announcements = await prisma.announcement.findMany(queryOptions);
 
     // Filter out dismissed announcements for this user
-    const undismissed = announcements.filter((a: any) => 
-      !userId || !a.dismissals || a.dismissals.length === 0
+    const undismissed = announcements.filter(
+      (a: any) => !userId || !a.dismissals || a.dismissals.length === 0
     );
 
     res.json({
       success: true,
-      data: undismissed
+      data: undismissed,
     });
   } catch (error) {
-    console.error('Error fetching announcements:', error);
+    console.error("Error fetching announcements:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch announcements'
+      error: "Failed to fetch announcements",
     });
   }
 };
@@ -68,32 +66,33 @@ export const getActiveAnnouncements = async (req: TenantRequest, res: Response) 
 /**
  * Get all announcements (admin view)
  */
-export const getAllAnnouncements = async (req: TenantRequest, res: Response) => {
+export const getAllAnnouncements = async (
+  req: TenantRequest,
+  res: Response
+) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
+    const tenantId =
+      req.tenantId || (process.env.NODE_ENV !== "production" && "dev");
 
     const announcements = await prisma.announcement.findMany({
       where: { tenantId },
       include: {
         _count: {
-          select: { dismissals: true }
-        }
+          select: { dismissals: true },
+        },
       },
-      orderBy: [
-        { isActive: 'desc' },
-        { createdAt: 'desc' }
-      ]
+      orderBy: [{ isActive: "desc" }, { createdAt: "desc" }],
     });
 
     res.json({
       success: true,
-      data: announcements
+      data: announcements,
     });
   } catch (error) {
-    console.error('Error fetching all announcements:', error);
+    console.error("Error fetching all announcements:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch announcements'
+      error: "Failed to fetch announcements",
     });
   }
 };
@@ -103,14 +102,16 @@ export const getAllAnnouncements = async (req: TenantRequest, res: Response) => 
  */
 export const createAnnouncement = async (req: TenantRequest, res: Response) => {
   try {
-    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
+    const tenantId =
+      req.tenantId || (process.env.NODE_ENV !== "production" && "dev");
     const createdBy = req.user?.id;
-    const { title, message, priority, type, startDate, endDate, isActive } = req.body;
+    const { title, message, priority, type, startDate, endDate, isActive } =
+      req.body;
 
     if (!title || !message) {
       return res.status(400).json({
         success: false,
-        error: 'Title and message are required'
+        error: "Title and message are required",
       });
     }
 
@@ -119,24 +120,24 @@ export const createAnnouncement = async (req: TenantRequest, res: Response) => {
         tenantId,
         title,
         message,
-        priority: priority || 'NORMAL',
-        type: type || 'INFO',
+        priority: priority || "NORMAL",
+        type: type || "INFO",
         startDate: startDate ? new Date(startDate) : new Date(),
         endDate: endDate ? new Date(endDate) : null,
         isActive: isActive !== undefined ? isActive : true,
-        createdBy
-      }
+        createdBy,
+      },
     });
 
     res.status(201).json({
       success: true,
-      data: announcement
+      data: announcement,
     });
   } catch (error) {
-    console.error('Error creating announcement:', error);
+    console.error("Error creating announcement:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create announcement'
+      error: "Failed to create announcement",
     });
   }
 };
@@ -147,12 +148,14 @@ export const createAnnouncement = async (req: TenantRequest, res: Response) => {
 export const updateAnnouncement = async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
-    const { title, message, priority, type, startDate, endDate, isActive } = req.body;
+    const tenantId =
+      req.tenantId || (process.env.NODE_ENV !== "production" && "dev");
+    const { title, message, priority, type, startDate, endDate, isActive } =
+      req.body;
 
     const announcement = await prisma.announcement.update({
       where: {
-        id
+        id,
       },
       data: {
         ...(title && { title }),
@@ -160,20 +163,22 @@ export const updateAnnouncement = async (req: TenantRequest, res: Response) => {
         ...(priority && { priority }),
         ...(type && { type }),
         ...(startDate && { startDate: new Date(startDate) }),
-        ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
-        ...(isActive !== undefined && { isActive })
-      }
+        ...(endDate !== undefined && {
+          endDate: endDate ? new Date(endDate) : null,
+        }),
+        ...(isActive !== undefined && { isActive }),
+      },
     });
 
     res.json({
       success: true,
-      data: announcement
+      data: announcement,
     });
   } catch (error) {
-    console.error('Error updating announcement:', error);
+    console.error("Error updating announcement:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to update announcement'
+      error: "Failed to update announcement",
     });
   }
 };
@@ -184,23 +189,24 @@ export const updateAnnouncement = async (req: TenantRequest, res: Response) => {
 export const deleteAnnouncement = async (req: TenantRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
+    const tenantId =
+      req.tenantId || (process.env.NODE_ENV !== "production" && "dev");
 
     await prisma.announcement.delete({
       where: {
-        id
-      }
+        id,
+      },
     });
 
     res.json({
       success: true,
-      message: 'Announcement deleted successfully'
+      message: "Announcement deleted successfully",
     });
   } catch (error) {
-    console.error('Error deleting announcement:', error);
+    console.error("Error deleting announcement:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to delete announcement'
+      error: "Failed to delete announcement",
     });
   }
 };
@@ -209,17 +215,21 @@ export const deleteAnnouncement = async (req: TenantRequest, res: Response) => {
  * Dismiss an announcement for the current user
  * Requires authentication
  */
-export const dismissAnnouncement = async (req: TenantRequest, res: Response) => {
+export const dismissAnnouncement = async (
+  req: TenantRequest,
+  res: Response
+) => {
   try {
     const { id } = req.params;
-    const tenantId = req.tenantId || (process.env.NODE_ENV !== 'production' && 'dev');
+    const tenantId =
+      req.tenantId || (process.env.NODE_ENV !== "production" && "dev");
     const userId = req.user?.id;
 
     // Require authentication for dismissals
     if (!userId) {
       return res.status(401).json({
         success: false,
-        error: 'Authentication required to dismiss announcements'
+        error: "Authentication required to dismiss announcements",
       });
     }
 
@@ -228,15 +238,15 @@ export const dismissAnnouncement = async (req: TenantRequest, res: Response) => 
       where: {
         announcementId_userId: {
           announcementId: id,
-          userId
-        }
-      }
+          userId,
+        },
+      },
     });
 
     if (existing) {
       return res.json({
         success: true,
-        message: 'Already dismissed'
+        message: "Already dismissed",
       });
     }
 
@@ -244,19 +254,19 @@ export const dismissAnnouncement = async (req: TenantRequest, res: Response) => 
       data: {
         tenantId,
         announcementId: id,
-        userId
-      }
+        userId,
+      },
     });
 
     res.json({
       success: true,
-      message: 'Announcement dismissed'
+      message: "Announcement dismissed",
     });
   } catch (error) {
-    console.error('Error dismissing announcement:', error);
+    console.error("Error dismissing announcement:", error);
     res.status(500).json({
       success: false,
-      error: 'Failed to dismiss announcement'
+      error: "Failed to dismiss announcement",
     });
   }
 };
